@@ -1,0 +1,15 @@
+{
+  "name": "fyp-saturn",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace @fyp-saturn/server dev\" \"yarn workspace @fyp-saturn/client dev\"",
+    "build": "yarn workspaces run build",
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.1"
+  }
+}
