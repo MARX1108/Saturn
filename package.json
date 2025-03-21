@@ -2,7 +2,9 @@
   "name": "fyp-saturn",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently \"yarn workspace @fyp-saturn/server dev\" \"yarn workspace @fyp-saturn/client dev\"",
     "build": "yarn workspaces run build",
@@ -11,5 +13,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.1"
+  },
+  "dependencies": {
+    "gpt4all": "^4.0.0"
   }
 }

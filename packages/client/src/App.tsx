@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import "./index.css";
+import AITest from "./components/AITest";
 
 function App() {
   const [username, setUsername] = useState("");
@@ -48,14 +50,33 @@ function App() {
 
   return (
     <div className="app">
+      <div className="stars-container">
+        {[...Array(200)].map((_, i) => (
+          <div
+            key={i}
+            className="star"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 10}s`,
+              width: `${Math.max(1, Math.random() * 2)}px`,
+              height: `${Math.max(1, Math.random() * 2)}px`,
+            }}
+          />
+        ))}
+      </div>
+
       <header>
-        <h1>🪐 FYP Saturn</h1>
-        <p>A federated social platform</p>
+        <div className="logo-container">
+          <span className="saturn-emoji">🪐</span>
+          <h1 className="gradient-text">FYP Saturn</h1>
+        </div>
+        <p className="subtitle">A federated social platform</p>
       </header>
 
       <main>
-        <section>
-          <h2>Create Actor</h2>
+        <section className="glass-card">
+          <h2 className="section-title">Create Actor</h2>
           <div className="form-group">
             <label htmlFor="username">Username:</label>
             <input
@@ -64,6 +85,7 @@ function App() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={loading}
+              className="input-field"
             />
           </div>
 
@@ -75,10 +97,15 @@ function App() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               disabled={loading}
+              className="input-field"
             />
           </div>
 
-          <button onClick={createActor} disabled={loading}>
+          <button
+            onClick={createActor}
+            disabled={loading}
+            className="gradient-button"
+          >
             {loading ? "Creating..." : "Create Actor"}
           </button>
 
@@ -91,6 +118,9 @@ function App() {
             </div>
           )}
         </section>
+
+        {/* Add the AI Test Component */}
+        <AITest />
       </main>
     </div>
   );
