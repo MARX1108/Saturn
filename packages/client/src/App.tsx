@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 function App() {
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createActor = async () => {
     if (!username) {
-      setError('Username is required');
+      setError("Username is required");
       return;
     }
 
@@ -17,25 +17,30 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/create-actor', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, displayName }),
-      });
+      const response = await fetch(
+        import.meta.env.VITE_API_URL + "/create-actor",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, displayName }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create actor');
+        throw new Error(data.error || "Failed to create actor");
       }
 
       setResult(data);
-      setUsername('');
-      setDisplayName('');
+      setUsername("");
+      setDisplayName("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -74,11 +79,11 @@ function App() {
           </div>
 
           <button onClick={createActor} disabled={loading}>
-            {loading ? 'Creating...' : 'Create Actor'}
+            {loading ? "Creating..." : "Create Actor"}
           </button>
 
           {error && <div className="error">{error}</div>}
-          
+
           {result && (
             <div className="result">
               <h3>Actor Created:</h3>
