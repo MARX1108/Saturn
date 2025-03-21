@@ -1,7 +1,9 @@
+import { Request, Response, Application } from 'express';
+
 export interface ServerPlugin {
   name: string;
   version: string;
-  init?: (app: any) => void;
+  init?: (app: Application) => void;
   onNewPost?: (postData: any) => void;
 }
 
@@ -12,7 +14,7 @@ export function registerPlugin(plugin: ServerPlugin) {
   plugins.push(plugin);
 }
 
-export function initPlugins(app: any) {
+export function initPlugins(app: Application) {
   for (const plugin of plugins) {
     if (plugin.init) {
       plugin.init(app);

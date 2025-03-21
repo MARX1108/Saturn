@@ -1,7 +1,7 @@
 import express from 'express';
 import { MongoClient } from 'mongodb';
-import apex from 'activitypub-express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 // Load environment variables
 dotenv.config();
@@ -9,57 +9,31 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/fyp-saturn';
-const DOMAIN = process.env.DOMAIN || 'localhost:4000';
+
+// Import plugin system
+import { registerPlugin, initPlugins } from './plugins';
+import helloPlugin from './plugins/helloPlugin';
 
 async function startServer() {
   try {
+    console.log('Connecting to MongoDB...');
     // Connect to MongoDB
     const client = new MongoClient(MONGO_URI);
     await client.connect();
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
     const db = client.db();
 
-    // Initialize ActivityPub Express
-    const apexOptions = {
-      name: 'FYP Saturn',
-      domain: DOMAIN,
-      actorParam: 'actor',
-      objectParam: 'id',
-      routes: {
-        actor: '/u/:actor',
-        object: '/o/:id',
-        activity: '/s/:id',
-        inbox: '/u/:actor/inbox',
-        outbox: '/u/:actor/outbox',
-        followers: '/u/:actor/followers',
-        following: '/u/:actor/following',
-        liked: '/u/:actor/liked',
-      },
-      endpoints: {
-        proxyUrl: `https://${DOMAIN}/proxy`,
-        uploadMedia: `https://${DOMAIN}/upload`,
-        main: `https://${DOMAIN}/`,
-      },
-      // Use MongoDB for storage
-      storage: {
-        db,
-        // Collections
-        activities: 'apex_activities',
-        actors: 'apex_actors',
-        objects: 'apex_objects',
-        streams: 'apex_streams',
-      },
-    };
-
-    const apexInstance = apex(apexOptions);
-    
-    // Use ActivityPub Express
-    app.use(apexInstance);
-    
-    // Add JSON middleware
+    // Middleware
     app.use(express.json());
+    app.use(cors()); // Enable CORS for all routes
     
-    // Add a route to create an actor
+    console.log('Initializing server...');
+    
+    // Register plugins
+    registerPlugin(helloPlugin);
+    initPlugins(app);
+    
+    // Create a user/actor
     app.post('/api/create-actor', async (req, res) => {
       try {
         const { username, displayName } = req.body;
@@ -68,50 +42,60 @@ async function startServer() {
           return res.status(400).json({ error: 'Username is required' });
         }
         
-        // Check if actor already exists
-        const existingActor = await db.collection('apex_actors').findOne({ preferredUsername: username });
-        if (existingActor) {
-          return res.status(409).json({ error: 'Actor already exists' });
+        // Check if user already exists
+        const existingUser = await db.collection('users').findOne({ username });
+        if (existingUser) {
+          return res.status(409).json({ error: 'Username already exists' });
         }
         
-        // Generate actor ID
-        const actorId = `https://${DOMAIN}/u/${username}`;
-        
-        // Generate key pair
-        const { publicKey, privateKey } = await apexInstance.createKeypair();
-        
-        // Create actor
-        const actorData = {
-          id: actorId,
-          type: 'Person',
-          preferredUsername: username,
-          name: displayName || username,
-          inbox: `${actorId}/inbox`,
-          outbox: `${actorId}/outbox`,
-          followers: `${actorId}/followers`,
-          following: `${actorId}/following`,
-          liked: `${actorId}/liked`,
-          publicKey: {
-            id: `${actorId}#main-key`,
-            owner: actorId,
-            publicKeyPem: publicKey
-          },
-          privateKey: privateKey
+        // Create a new user
+        const user = {
+          username,
+          displayName: displayName || username,
+          createdAt: new Date(),
+          updatedAt: new Date()
         };
         
-        await db.collection('apex_actors').insertOne(actorData);
+        // Insert into database
+        await db.collection('users').insertOne(user);
         
         return res.status(201).json({
           success: true,
-          actor: {
-            id: actorId,
-            preferredUsername: username,
-            name: displayName || username
-          }
+          user
         });
       } catch (error) {
-        console.error('Error creating actor:', error);
-        return res.status(500).json({ error: 'Failed to create actor' });
+        console.error('Error creating user:', error);
+        return res.status(500).json({ error: 'Failed to create user' });
+      }
+    });
+    
+    // Get a user
+    app.get('/api/user/:username', async (req, res) => {
+      try {
+        const { username } = req.params;
+        
+        // Find user in database
+        const user = await db.collection('users').findOne({ username });
+        
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+        
+        return res.json({ user });
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        return res.status(500).json({ error: 'Failed to fetch user' });
+      }
+    });
+    
+    // List users
+    app.get('/api/users', async (req, res) => {
+      try {
+        const users = await db.collection('users').find().toArray();
+        return res.json({ users });
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        return res.status(500).json({ error: 'Failed to fetch users' });
       }
     });
     
@@ -123,6 +107,7 @@ async function startServer() {
     // Start the server
     app.listen(PORT, () => {
       console.log(`🚀 FYP Saturn server running at http://localhost:${PORT}`);
+      console.log(`API is available at http://localhost:${PORT}/api`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
