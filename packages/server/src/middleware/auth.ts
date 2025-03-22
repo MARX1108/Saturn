@@ -1,40 +1,70 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { AppError } from "../utils/errors";
+import { Db } from "mongodb";
 
-// Extend express Request type
+// Extend Express Request type to include user information
 declare global {
   namespace Express {
     interface Request {
-      userId?: string;
-      actorId?: string;
+      user?: any;
+      db?: Db;
     }
   }
 }
 
-export const authenticate = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const authHeader = req.headers.authorization;
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(new AppError("Authentication required", 401));
-  }
+export const generateToken = (user: any): string => {
+  return jwt.sign(
+    {
+      id: user._id || user.id,
+      username: user.preferredUsername || user.username,
+    },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+};
 
-  const token = authHeader.split(" ")[1];
-
+export const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "dev-secret"
-    ) as any;
-    req.userId = decoded.userId;
-    req.actorId = decoded.actorId;
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authorization header required" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: string;
+      username: string;
+    };
+
+    // Get database from app locals
+    const db = req.app.locals.db;
+
+    // Find user in database
+    const user = await db.collection("actors").findOne({
+      $or: [{ _id: decoded.id }, { preferredUsername: decoded.username }],
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Add user to request object
+    req.user = user;
+
     next();
   } catch (error) {
-    next(new AppError("Invalid or expired token", 401));
+    console.error("Auth middleware error:", error);
+    return res.status(401).json({ error: "Invalid token" });
   }
 };
 

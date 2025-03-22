@@ -1,0 +1,105 @@
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 60px);
+  padding: 20px;
+  background-color: #fafafa;
+}
+
+.auth-card {
+  background-color: white;
+  border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  padding: 40px;
+  width: 100%;
+  max-width: 350px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.auth-title {
+  font-family: "Billabong", cursive;
+  font-size: 42px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.auth-subtitle {
+  font-size: 17px;
+  line-height: 20px;
+  text-align: center;
+  color: #8e8e8e;
+  margin-bottom: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-group {
+  width: 100%;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 8px;
+  font-size: 14px;
+  border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  background-color: #fafafa;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.auth-button {
+  background-color: #0095f6;
+  color: white;
+  font-weight: 600;
+  padding: 8px 0;
+  border: none;
+  border-radius: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.auth-button:disabled {
+  background-color: #b2dffc;
+  cursor: not-allowed;
+}
+
+.auth-error {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 10px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.auth-alternate {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #dbdbdb;
+  font-size: 14px;
+}
+
+.auth-alternate a {
+  color: #0095f6;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (max-width: 450px) {
+  .auth-card {
+    padding: 20px;
+    border: none;
+    box-shadow: none;
+  }
+}

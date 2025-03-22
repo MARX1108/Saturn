@@ -18,11 +18,19 @@ import helloPlugin from "./plugins/helloPlugin";
 
 // Import routes
 import actorRoutes from "./routes/actors";
+import authRoutes from "./routes/auth";
+import { auth } from "./middleware/auth";
 
 // Extract route configuration to a separate function
 function configureRoutes(app: Application, db: Db, domain: string): void {
   // API routes
   app.use("/api/actors", actorRoutes(db, domain));
+  app.use("/api/auth", authRoutes(db, domain));
+
+  // Protected routes that require authentication
+  app.use("/api/me", auth, (req: Request, res: Response) => {
+    res.json({ user: req.user });
+  });
 
   // Legacy routes
   app.post("/api/create-actor", async (req: Request, res: Response) => {
@@ -85,6 +93,73 @@ function configureRoutes(app: Application, db: Db, domain: string): void {
     } catch (error) {
       console.error("Error fetching users:", error);
       return res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Add user search endpoint
+  app.get("/api/users/search", async (req: Request, res: Response) => {
+    try {
+      const { q } = req.query;
+
+      if (!q || typeof q !== "string") {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+
+      // Search by username or display name
+      const users = await db
+        .collection("users")
+        .find({
+          $or: [
+            { username: { $regex: q, $options: "i" } },
+            { displayName: { $regex: q, $options: "i" } },
+          ],
+        })
+        .toArray();
+
+      return res.json({ users });
+    } catch (error) {
+      console.error("Error searching users:", error);
+      return res.status(500).json({ error: "Failed to search users" });
+    }
+  });
+
+  // Add federation resolve endpoint
+  app.post("/api/federation/resolve", async (req: Request, res: Response) => {
+    try {
+      const { username, domain } = req.body;
+
+      if (!username || !domain) {
+        return res
+          .status(400)
+          .json({ error: "Username and domain are required" });
+      }
+
+      // In a real implementation, this would make a request to the remote server
+      // For now, just return a mock response
+      const actorUrl = `https://${domain}/users/${username}`;
+
+      // TODO: Add actual HTTP request to fetch remote actor
+      // const response = await fetch(actorUrl, {
+      //   headers: { 'Accept': 'application/activity+json' }
+      // });
+      // const actor = await response.json();
+
+      const mockActor = {
+        id: actorUrl,
+        type: "Person",
+        preferredUsername: username,
+        name: username,
+        inbox: `https://${domain}/users/${username}/inbox`,
+        outbox: `https://${domain}/users/${username}/outbox`,
+        followers: `https://${domain}/users/${username}/followers`,
+        following: `https://${domain}/users/${username}/following`,
+        url: actorUrl,
+      };
+
+      return res.json(mockActor);
+    } catch (error) {
+      console.error("Error resolving remote user:", error);
+      return res.status(500).json({ error: "Failed to resolve remote user" });
     }
   });
 

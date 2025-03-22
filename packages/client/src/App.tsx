@@ -2,6 +2,37 @@
 import React, { useState } from "react";
 import "./index.css";
 import AITest from "./components/AITest";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+// Import components
+import Profile from "./pages/Profile";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Home from "./pages/Home";
+import Navigation from "./components/Navigation";
+
+// Protected route component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   const [username, setUsername] = useState("");
@@ -74,114 +105,44 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <div className="stars-container">
-        {[...Array(200)].map((_, i) => (
-          <div
-            key={i}
-            className="star"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              width: `${Math.max(1, Math.random() * 2)}px`,
-              height: `${Math.max(1, Math.random() * 2)}px`,
-            }}
-          />
-        ))}
-      </div>
-
-      <header>
-        <div className="logo-container">
-          <span className="saturn-emoji">🪐</span>
-          <h1 className="gradient-text">FYP Saturn</h1>
+    <AuthProvider>
+      <Router>
+        <div className="app-container">
+          <Navigation />
+          <main className="main-content">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/:username"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile isCurrentUser={true} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </main>
         </div>
-        <p className="subtitle">A federated social platform</p>
-      </header>
-
-      <main>
-        <section className="glass-card">
-          <h2 className="section-title">Create Actor</h2>
-          <div className="form-group">
-            <label htmlFor="username">Username:</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={loading}
-              className="input-field"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="displayName">Display Name (optional):</label>
-            <input
-              type="text"
-              id="displayName"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              disabled={loading}
-              className="input-field"
-            />
-          </div>
-
-          <div style={styles.formGroup as React.CSSProperties}>
-            <label style={styles.label as React.CSSProperties} htmlFor="bio">
-              Bio (optional):
-            </label>
-            <textarea
-              id="bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              disabled={loading}
-              style={
-                {
-                  ...styles.inputField,
-                  minHeight: "100px",
-                } as React.CSSProperties
-              }
-              className="input-focus"
-            />
-          </div>
-
-          <div style={styles.formGroup as React.CSSProperties}>
-            <label style={styles.label as React.CSSProperties} htmlFor="avatar">
-              Profile Picture (optional):
-            </label>
-            <input
-              type="file"
-              id="avatar"
-              accept="image/*"
-              onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-              disabled={loading}
-              style={styles.inputField as React.CSSProperties}
-              className="input-focus"
-            />
-          </div>
-
-          <button
-            onClick={createActor}
-            disabled={loading}
-            className="gradient-button"
-          >
-            {loading ? "Creating..." : "Create Actor"}
-          </button>
-
-          {error && <div className="error">{error}</div>}
-
-          {result && (
-            <div className="result">
-              <h3>Actor Created:</h3>
-              <pre>{JSON.stringify(result, null, 2)}</pre>
-            </div>
-          )}
-        </section>
-
-        {/* Add the AI Test Component */}
-        <AITest />
-      </main>
-    </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
