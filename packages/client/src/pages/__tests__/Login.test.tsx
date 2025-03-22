@@ -6,13 +6,13 @@ import { AuthProvider } from "../../context/AuthContext";
 import { mockUnauthenticatedContextValue } from "../../test/mocks/authContext";
 
 // Mock the useAuth hook
-vi.mock("../../context/AuthContext", async () => {
+jest.mock("../../context/AuthContext", async () => {
   const actual = await vi.importActual("../../context/AuthContext");
   return {
     ...actual,
     useAuth: () => ({
       ...mockUnauthenticatedContextValue,
-      login: vi.fn().mockImplementation((username, password) => {
+      login: jest.fn().mockImplementation((username, password) => {
         if (!username || !password) {
           throw new Error("Missing credentials");
         }
@@ -23,8 +23,8 @@ vi.mock("../../context/AuthContext", async () => {
 });
 
 // Mock useNavigate
-const mockNavigate = vi.fn();
-vi.mock("react-router-dom", async () => {
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
@@ -34,7 +34,7 @@ vi.mock("react-router-dom", async () => {
 
 describe("Login Component", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("renders the login form", () => {

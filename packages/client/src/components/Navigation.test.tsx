@@ -5,7 +5,7 @@ import Navigation from "./Navigation";
 import { AuthProvider } from "../context/AuthContext";
 
 // Mock the useAuth hook
-vi.mock("../context/AuthContext", async () => {
+jest.mock("../context/AuthContext", async () => {
   const actual = await vi.importActual("../context/AuthContext");
   return {
     ...actual,
@@ -14,9 +14,9 @@ vi.mock("../context/AuthContext", async () => {
       isAuthenticated: false,
       loading: false,
       error: null,
-      login: vi.fn(),
-      register: vi.fn(),
-      logout: vi.fn(),
+      login: jest.fn(),
+      register: jest.fn(),
+      logout: jest.fn(),
     }),
   };
 });

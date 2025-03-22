@@ -3,10 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import AITest from "../AITest";
 
 // Mock the AI client
-vi.mock("../../services/aiClient", () => ({
+jest.mock("../../services/aiClient", () => ({
   default: {
-    loadModel: vi.fn().mockResolvedValue(true),
-    generateResponse: vi.fn().mockResolvedValue("Generated response"),
+    loadModel: jest.fn().mockResolvedValue(true),
+    generateResponse: jest.fn().mockResolvedValue("Generated response"),
     analyzeContent: vi
       .fn()
       .mockResolvedValue({ sentiment: "positive", topics: ["test"] }),
@@ -15,7 +15,7 @@ vi.mock("../../services/aiClient", () => ({
 
 describe("AITest Component", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("renders correctly with initial state", () => {

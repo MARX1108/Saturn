@@ -9,8 +9,8 @@ import {
 } from "../../test/mocks/authContext";
 
 // Mock useNavigate
-const mockNavigate = vi.fn();
-vi.mock("react-router-dom", async () => {
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
@@ -20,12 +20,12 @@ vi.mock("react-router-dom", async () => {
 
 describe("Navigation Component", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("renders login and signup links when not authenticated", () => {
     // Mock unauthenticated state
-    vi.mock("../../context/AuthContext", async () => {
+    jest.mock("../../context/AuthContext", async () => {
       const actual = await vi.importActual("../../context/AuthContext");
       return {
         ...actual,
@@ -48,7 +48,7 @@ describe("Navigation Component", () => {
 
   it("renders user navigation when authenticated", () => {
     // Mock authenticated state
-    vi.mock("../../context/AuthContext", async () => {
+    jest.mock("../../context/AuthContext", async () => {
       const actual = await vi.importActual("../../context/AuthContext");
       return {
         ...actual,
@@ -72,7 +72,7 @@ describe("Navigation Component", () => {
 
   it("handles search submission", () => {
     // Mock authenticated state
-    vi.mock("../../context/AuthContext", async () => {
+    jest.mock("../../context/AuthContext", async () => {
       const actual = await vi.importActual("../../context/AuthContext");
       return {
         ...actual,
@@ -102,8 +102,8 @@ describe("Navigation Component", () => {
 
   it("handles logout", () => {
     // Mock authenticated state with logout function
-    const mockLogout = vi.fn();
-    vi.mock("../../context/AuthContext", async () => {
+    const mockLogout = jest.fn();
+    jest.mock("../../context/AuthContext", async () => {
       const actual = await vi.importActual("../../context/AuthContext");
       return {
         ...actual,

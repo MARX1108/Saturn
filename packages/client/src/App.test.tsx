@@ -1,34 +1,34 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import App from "./App";
 
 // Mock the child components
-vi.mock("./components/AITest", () => ({
+jest.mock("./components/AITest", () => ({
   default: () => <div data-testid="ai-test-component">Mocked AITest</div>,
 }));
 
-vi.mock("./pages/Home", () => ({
+jest.mock("./pages/Home", () => ({
   default: () => <div data-testid="home-page">Mocked Home</div>,
 }));
 
-vi.mock("./pages/Login", () => ({
+jest.mock("./pages/Login", () => ({
   default: () => <div data-testid="login-page">Mocked Login</div>,
 }));
 
-vi.mock("./pages/Register", () => ({
+jest.mock("./pages/Register", () => ({
   default: () => <div data-testid="register-page">Mocked Register</div>,
 }));
 
-vi.mock("./pages/Profile", () => ({
+jest.mock("./pages/Profile", () => ({
   default: () => <div data-testid="profile-page">Mocked Profile</div>,
 }));
 
-vi.mock("./components/Navigation", () => ({
+jest.mock("./components/Navigation", () => ({
   default: () => <div data-testid="navigation">Mocked Navigation</div>,
 }));
 
 // Mock the auth context
-vi.mock("./context/AuthContext", async () => {
+jest.mock("./context/AuthContext", async () => {
   const actual = await vi.importActual("./context/AuthContext");
   return {
     ...actual,
@@ -36,9 +36,9 @@ vi.mock("./context/AuthContext", async () => {
       user: { preferredUsername: "testuser" },
       isAuthenticated: true,
       loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      register: vi.fn(),
+      login: jest.fn(),
+      logout: jest.fn(),
+      register: jest.fn(),
       error: null,
       token: "fake-token",
     }),
@@ -48,7 +48,7 @@ vi.mock("./context/AuthContext", async () => {
 // Mock fetch API
 vi.stubGlobal(
   "fetch",
-  vi.fn(() =>
+  jest.fn(() =>
     Promise.resolve({
       ok: true,
       json: () =>
@@ -59,7 +59,7 @@ vi.stubGlobal(
 
 describe("App Component", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("renders the app with navigation", () => {
@@ -71,7 +71,7 @@ describe("App Component", () => {
   it("creates an actor when form is submitted", async () => {
     render(<App />);
 
-    const mockCreateActor = vi.spyOn(global, "fetch");
+    const mockCreateActor = jest.spyOn(global, "fetch");
 
     // Fill in form values
     const usernameInput = screen.getByLabelText(/Username:/i);

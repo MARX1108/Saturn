@@ -4,7 +4,7 @@ import Home from "../Home";
 import { mockAuthContextValue } from "../../test/mocks/authContext";
 
 // Mock the useAuth hook
-vi.mock("../../context/AuthContext", async () => {
+jest.mock("../../context/AuthContext", async () => {
   const actual = await vi.importActual("../../context/AuthContext");
   return {
     ...actual,
@@ -13,11 +13,11 @@ vi.mock("../../context/AuthContext", async () => {
 });
 
 // Mock setTimeout to make tests faster
-vi.useFakeTimers();
+jest.useFakeTimers();
 
 describe("Home Component", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("shows loading state initially", () => {
@@ -29,7 +29,7 @@ describe("Home Component", () => {
     render(<Home />);
 
     // Advance all timers to complete loading
-    vi.runAllTimers();
+    jest.runAllTimers();
 
     await waitFor(() => {
       expect(screen.queryByText("Loading posts...")).not.toBeInTheDocument();
@@ -48,7 +48,7 @@ describe("Home Component", () => {
     render(<Home />);
 
     // Advance all timers to complete loading
-    vi.runAllTimers();
+    jest.runAllTimers();
 
     await waitFor(() => {
       expect(screen.queryByText("Loading posts...")).not.toBeInTheDocument();
@@ -65,7 +65,7 @@ describe("Home Component", () => {
     fireEvent.click(postButton);
 
     // Advance timers to complete post creation
-    vi.runAllTimers();
+    jest.runAllTimers();
 
     // Check that the new post appears
     await waitFor(() => {
@@ -80,7 +80,7 @@ describe("Home Component", () => {
     render(<Home />);
 
     // Advance all timers to complete loading
-    vi.runAllTimers();
+    jest.runAllTimers();
 
     await waitFor(() => {
       expect(screen.queryByText("Loading posts...")).not.toBeInTheDocument();

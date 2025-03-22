@@ -4,6 +4,7 @@ import { MongoClient, Db } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import actorRoutes from "../routes/actors";
+import { jest } from '@jest/globals';
 
 describe("Actor Routes", () => {
   let app: express.Application;

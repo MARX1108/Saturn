@@ -12,9 +12,9 @@ export const mockAuthContextValue = {
   isAuthenticated: true,
   loading: false,
   error: null,
-  login: vi.fn(),
-  register: vi.fn(),
-  logout: vi.fn(),
+  login: jest.fn(),
+  register: jest.fn(),
+  logout: jest.fn(),
 };
 
 export const mockUnauthenticatedContextValue = {
@@ -23,9 +23,9 @@ export const mockUnauthenticatedContextValue = {
   isAuthenticated: false,
   loading: false,
   error: null,
-  login: vi.fn(),
-  register: vi.fn(),
-  logout: vi.fn(),
+  login: jest.fn(),
+  register: jest.fn(),
+  logout: jest.fn(),
 };
 
 export const mockAuthContextWithLoading = {

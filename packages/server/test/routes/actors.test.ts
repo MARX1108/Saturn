@@ -18,7 +18,7 @@ import { ActorService } from "../../src/services/actorService";
 import actorsRouter from "../../routes/actors";
 
 // Mock ActorService
-vi.mock("../../src/services/actorService");
+jest.mock("../../src/services/actorService");
 
 // Create testing express app
 const app = express();
@@ -52,7 +52,7 @@ describe("Actor Routes", () => {
   });
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    jest.resetAllMocks();
   });
 
   describe("POST /actors", () => {
@@ -66,12 +66,12 @@ describe("Actor Routes", () => {
       };
 
       // Fix the type issues by using proper typing for the mocks
-      vi.spyOn(ActorService.prototype, "usernameExists").mockResolvedValue(
-        false
-      );
-      vi.spyOn(ActorService.prototype, "createActor").mockResolvedValue(
-        mockActor
-      );
+      jest
+        .spyOn(ActorService.prototype, "usernameExists")
+        .mockResolvedValue(false);
+      jest
+        .spyOn(ActorService.prototype, "createActor")
+        .mockResolvedValue(mockActor);
 
       const response = await request(app)
         .post("/actors")
@@ -101,9 +101,9 @@ describe("Actor Routes", () => {
     });
 
     it("should return 409 if username already exists", async () => {
-      vi.spyOn(ActorService.prototype, "usernameExists").mockResolvedValue(
-        true
-      );
+      jest
+        .spyOn(ActorService.prototype, "usernameExists")
+        .mockResolvedValue(true);
 
       const response = await request(app)
         .post("/actors")
@@ -126,12 +126,12 @@ describe("Actor Routes", () => {
         },
       };
 
-      vi.spyOn(ActorService.prototype, "usernameExists").mockResolvedValue(
-        false
-      );
-      vi.spyOn(ActorService.prototype, "createActor").mockResolvedValue(
-        mockActor
-      );
+      jest
+        .spyOn(ActorService.prototype, "usernameExists")
+        .mockResolvedValue(false);
+      jest
+        .spyOn(ActorService.prototype, "createActor")
+        .mockResolvedValue(mockActor);
 
       // Create a test image file
       const testImagePath = path.join(process.cwd(), "test-avatar.jpg");
@@ -168,9 +168,9 @@ describe("Actor Routes", () => {
         bio: "Test bio",
       };
 
-      vi.spyOn(ActorService.prototype, "getActorByUsername").mockResolvedValue(
-        mockActor
-      );
+      jest
+        .spyOn(ActorService.prototype, "getActorByUsername")
+        .mockResolvedValue(mockActor);
 
       const response = await request(app).get("/actors/testuser");
 
@@ -182,9 +182,9 @@ describe("Actor Routes", () => {
     });
 
     it("should return 404 when actor not found", async () => {
-      vi.spyOn(ActorService.prototype, "getActorByUsername").mockResolvedValue(
-        null
-      );
+      jest
+        .spyOn(ActorService.prototype, "getActorByUsername")
+        .mockResolvedValue(null);
 
       const response = await request(app).get("/actors/nonexistent");
 
@@ -201,12 +201,12 @@ describe("Actor Routes", () => {
         bio: "Updated bio",
       };
 
-      vi.spyOn(ActorService.prototype, "usernameExists").mockResolvedValue(
-        true
-      );
-      vi.spyOn(ActorService.prototype, "updateActor").mockResolvedValue(
-        mockUpdatedActor
-      );
+      jest
+        .spyOn(ActorService.prototype, "usernameExists")
+        .mockResolvedValue(true);
+      jest
+        .spyOn(ActorService.prototype, "updateActor")
+        .mockResolvedValue(mockUpdatedActor);
 
       const response = await request(app)
         .put("/actors/testuser")
@@ -226,9 +226,9 @@ describe("Actor Routes", () => {
     });
 
     it("should return 404 when actor not found", async () => {
-      vi.spyOn(ActorService.prototype, "usernameExists").mockResolvedValue(
-        false
-      );
+      jest
+        .spyOn(ActorService.prototype, "usernameExists")
+        .mockResolvedValue(false);
 
       const response = await request(app)
         .put("/actors/nonexistent")
@@ -241,7 +241,7 @@ describe("Actor Routes", () => {
 
   describe("DELETE /actors/:username", () => {
     it("should delete an existing actor", async () => {
-      vi.spyOn(ActorService.prototype, "deleteActor").mockResolvedValue(true);
+      jest.spyOn(ActorService.prototype, "deleteActor").mockResolvedValue(true);
 
       const response = await request(app).delete("/actors/testuser");
 
@@ -252,7 +252,9 @@ describe("Actor Routes", () => {
     });
 
     it("should return 404 when actor not found", async () => {
-      vi.spyOn(ActorService.prototype, "deleteActor").mockResolvedValue(false);
+      jest
+        .spyOn(ActorService.prototype, "deleteActor")
+        .mockResolvedValue(false);
 
       const response = await request(app).delete("/actors/nonexistent");
 
@@ -272,10 +274,9 @@ describe("Actor Routes", () => {
         outbox: "https://example.com/users/testuser/outbox",
       };
 
-      vi.spyOn(
-        ActorService.prototype,
-        "getFullActorByUsername"
-      ).mockResolvedValue(mockActor);
+      jest
+        .spyOn(ActorService.prototype, "getFullActorByUsername")
+        .mockResolvedValue(mockActor);
 
       const response = await request(app)
         .get("/users/testuser")
@@ -301,10 +302,9 @@ describe("Actor Routes", () => {
     });
 
     it("should return 404 when actor not found", async () => {
-      vi.spyOn(
-        ActorService.prototype,
-        "getFullActorByUsername"
-      ).mockResolvedValue(null);
+      jest
+        .spyOn(ActorService.prototype, "getFullActorByUsername")
+        .mockResolvedValue(null);
 
       const response = await request(app)
         .get("/users/nonexistent")

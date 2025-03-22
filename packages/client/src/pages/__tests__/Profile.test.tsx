@@ -6,7 +6,7 @@ import { AuthProvider } from "../../context/AuthContext";
 import { mockAuthContextValue } from "../../test/mocks/authContext";
 
 // Mock the useAuth hook
-vi.mock("../../context/AuthContext", async () => {
+jest.mock("../../context/AuthContext", async () => {
   const actual = await vi.importActual("../../context/AuthContext");
   return {
     ...actual,
@@ -15,7 +15,7 @@ vi.mock("../../context/AuthContext", async () => {
 });
 
 // Mock fetch API
-global.fetch = vi.fn().mockImplementation((url) => {
+global.fetch = jest.fn().mockImplementation((url) => {
   if (url.includes("/api/actors/")) {
     return Promise.resolve({
       ok: true,
@@ -38,24 +38,24 @@ global.fetch = vi.fn().mockImplementation((url) => {
 });
 
 // Mock useParams
-vi.mock("react-router-dom", async () => {
+jest.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useParams: () => ({ username: "testuser" }),
-    useNavigate: () => vi.fn(),
+    useNavigate: () => jest.fn(),
   };
 });
 
 // Mock FileReader for avatar changes
 class MockFileReader {
   onloadend: () => void;
-  readAsDataURL: vi.Mock;
+  readAsDataURL: jest.mock;
   result: string;
 
   constructor() {
-    this.onloadend = vi.fn();
-    this.readAsDataURL = vi.fn(() => {
+    this.onloadend = jest.fn();
+    this.readAsDataURL = jest.fn(() => {
       setTimeout(() => {
         this.result = "data:image/png;base64,mockbase64data";
         this.onloadend();
@@ -69,7 +69,7 @@ global.FileReader = MockFileReader as any;
 
 describe("Profile Component", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("shows loading state initially", () => {
@@ -148,7 +148,7 @@ describe("Profile Component", () => {
 
   it("handles profile update submission", async () => {
     // Mock the fetch API for PUT request
-    global.fetch = vi.fn().mockImplementation((url, options) => {
+    global.fetch = jest.fn().mockImplementation((url, options) => {
       if (url.includes("/api/actors/") && options.method === "PUT") {
         return Promise.resolve({
           ok: true,
