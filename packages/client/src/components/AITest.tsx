@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import aiService from "../services/aiService";
+import aiService from "../../../server/src/services/aiService";
 
 const AITest: React.FC = () => {
   const [prompt, setPrompt] = useState<string>("");

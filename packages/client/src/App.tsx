@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useState } from "react";
 import "./index.css";
 import AITest from "./components/AITest";
@@ -8,6 +9,24 @@ function App() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Enhanced form fields for actor creation
+  const [bio, setBio] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  const styles = {
+    formGroup: {
+      marginBottom: "1rem",
+    },
+    label: {
+      display: "block",
+      marginBottom: "0.5rem",
+    },
+    inputField: {
+      padding: "0.5rem",
+      border: "1px solid #ccc",
+      borderRadius: "4px",
+    },
+  };
 
   const createActor = async () => {
     if (!username) {
@@ -19,14 +38,18 @@ function App() {
     setError(null);
 
     try {
+      // Create form data to handle file upload
+      const formData = new FormData();
+      formData.append("username", username);
+      if (displayName) formData.append("displayName", displayName);
+      if (bio) formData.append("bio", bio);
+      if (avatarFile) formData.append("avatarFile", avatarFile);
+
       const response = await fetch(
         import.meta.env.VITE_API_URL + "/create-actor",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, displayName }),
+          body: formData, // Use FormData instead of JSON for file upload
         }
       );
 
@@ -39,6 +62,8 @@ function App() {
       setResult(data);
       setUsername("");
       setDisplayName("");
+      setBio("");
+      setAvatarFile(null);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
@@ -98,6 +123,40 @@ function App() {
               onChange={(e) => setDisplayName(e.target.value)}
               disabled={loading}
               className="input-field"
+            />
+          </div>
+
+          <div style={styles.formGroup as React.CSSProperties}>
+            <label style={styles.label as React.CSSProperties} htmlFor="bio">
+              Bio (optional):
+            </label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              disabled={loading}
+              style={
+                {
+                  ...styles.inputField,
+                  minHeight: "100px",
+                } as React.CSSProperties
+              }
+              className="input-focus"
+            />
+          </div>
+
+          <div style={styles.formGroup as React.CSSProperties}>
+            <label style={styles.label as React.CSSProperties} htmlFor="avatar">
+              Profile Picture (optional):
+            </label>
+            <input
+              type="file"
+              id="avatar"
+              accept="image/*"
+              onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+              disabled={loading}
+              style={styles.inputField as React.CSSProperties}
+              className="input-focus"
             />
           </div>
 

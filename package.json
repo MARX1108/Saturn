@@ -12,9 +12,12 @@
     "lint": "yarn workspaces run lint"
   },
   "devDependencies": {
-    "concurrently": "^8.2.1"
+    "@testing-library/react": "^16.2.0",
+    "concurrently": "^8.2.1",
+    "vitest": "^3.0.9"
   },
   "dependencies": {
-    "gpt4all": "^4.0.0"
+    "gpt4all": "^4.0.0",
+    "multer": "^1.4.5-lts.2"
   }
 }

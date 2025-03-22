@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
+    "target": "es2016",
+    "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "typeRoots": ["./src/types", "./node_modules/@types"]
+    "resolveJsonModule": true,
+    "types": ["node", "vitest/globals"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "routes/**/*", "test/**/*", "vitest.config.ts"],
+  "exclude": ["node_modules"]
 }
