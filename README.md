@@ -26,64 +26,74 @@ docker-compose up -d mongodb
 {
   "scripts": {
     // ...existing scripts...
-    "test:coverage": "vitest run --coverage",
-    "coverage:report": "vitest run --coverage && codecov -f coverage/lcov.info -F server"
+    "test:coverage": "jest --coverage",
+    "coverage:report": "jest --coverage && codecov -f coverage/lcov.info -F server"
   },
   "devDependencies": {
     // ...existing dependencies...
-    "@vitest/coverage-c8": "latest"
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
   }
 }
 ```
 
-### Vitest Configuration
+### Jest Configuration
 
-```typescript
-// In packages/client/vitest.config.ts
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
-    css: true,
-    coverage: {
-      provider: "c8", // or "v8"
-      reporter: ["text", "lcov", "html"],
-      exclude: [
-        "**/*.d.ts",
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/coverage/**",
-        "**/.{idea,git,cache,output,temp}/**",
-        "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*",
-      ],
+```javascript
+// In packages/client/jest.config.js
+module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "jsdom",
+  setupFilesAfterEnv: [
+    "<rootDir>/src/test/setup.ts",
+    "<rootDir>/jest.setup.js",
+  ],
+  moduleNameMapper: {
+    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
+  testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
+  transform: {
+    "^.+\\.(ts|tsx)$": [
+      "ts-jest",
+      {
+        isolatedModules: true,
+        diagnostics: {
+          warnOnly: true,
+        },
+      },
+    ],
+  },
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  collectCoverageFrom: [
+    "src/**/*.{ts,tsx}",
+    "!src/**/*.d.ts",
+    "!src/vite-env.d.ts",
+    "!**/node_modules/**",
+  ],
+  globals: {
+    "ts-jest": {
+      isolatedModules: true,
     },
   },
-});
+};
 ```
 
-```typescript
-// In packages/server/vitest.config.ts
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: "node",
-    include: ["test/**/*.test.ts"],
-    coverage: {
-      provider: "c8", // or "v8"
-      reporter: ["text", "lcov", "html"],
-      include: ["src/**/*.ts", "routes/**/*.ts"],
-      exclude: ["src/types/**", "**/*.d.ts"],
+```javascript
+// In packages/server/jest.config.js
+module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src", "<rootDir>/test"],
+  testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
+  globals: {
+    "ts-jest": {
+      isolatedModules: true,
     },
-    setupFiles: ["./test/setup.ts"],
   },
-});
+};
 ```
 
 ### GitHub Actions

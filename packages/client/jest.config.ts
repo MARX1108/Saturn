@@ -1,4 +1,3 @@
-// Replacing Vitest config with Jest config
 import type { Config } from "jest";
 import { defaults } from "jest-config";
 

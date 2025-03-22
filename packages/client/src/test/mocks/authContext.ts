@@ -1,4 +1,3 @@
-// Remove vitest import
 // Using Jest functions directly
 
 // Mock auth context values for testing
