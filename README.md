@@ -37,7 +37,9 @@ docker-compose up -d mongodb
 }
 ```
 
-### Jest Configuration
+## Testing Setup
+
+This project uses Jest for testing. The testing configuration is defined in:
 
 ```javascript
 // In packages/client/jest.config.js
@@ -51,6 +53,7 @@ module.exports = {
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^import\\.meta\\.env\\.(.*)$": "<rootDir>/src/test/environment.ts"
   },
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   transform: {
@@ -79,6 +82,8 @@ module.exports = {
 };
 ```
 
+For the server package:
+
 ```javascript
 // In packages/server/jest.config.js
 module.exports = {
@@ -94,6 +99,20 @@ module.exports = {
     },
   },
 };
+```
+
+### Running Tests
+
+To run tests for the client package:
+```bash
+cd packages/client
+yarn test
+```
+
+To run tests for the server package:
+```bash
+cd packages/server
+yarn test
 ```
 
 ### GitHub Actions

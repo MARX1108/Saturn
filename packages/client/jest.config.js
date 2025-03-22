@@ -8,6 +8,8 @@ module.exports = {
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     "^@/(.*)$": "<rootDir>/src/$1",
+    // Add this to handle import.meta.env in components
+    "^import\\.meta\\.env\\.(.*)$": "<rootDir>/src/test/environment.ts",
   },
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   transform: {

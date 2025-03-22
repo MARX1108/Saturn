@@ -1,8 +1,25 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import Profile from "../../pages/Profile";
 import { AuthProvider } from "../../context/AuthContext";
 import { mockAuthContextValue } from "../../test/mocks/authContext";
+
+// Mock the environment variables that would be provided by Vite
+window.ENV = window.ENV || {};
+window.ENV.VITE_API_URL = "http://localhost:4000";
+
+// Mock the Profile component to avoid the import.meta.env issue
+jest.mock("../../pages/Profile", () => {
+  const originalModule = jest.requireActual("../../pages/Profile");
+  const Profile = (props) => {
+    // If Profile is a default export, access it correctly
+    const OriginalProfile = originalModule.default || originalModule;
+    return <OriginalProfile {...props} />;
+  };
+  return Profile;
+});
+
+// After mocking the component, now we can import it
+import Profile from "../../pages/Profile";
 
 // Mock fetch API for profile data
 global.fetch = jest.fn((url) => {
