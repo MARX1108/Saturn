@@ -1,4 +1,5 @@
-import { vi } from "vitest";
+// Remove vitest import
+// Using Jest functions directly
 
 export const mockAuthContextValue = {
   user: {

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import Login from "../../pages/Login";
+import Login from "../Login";
 import { AuthProvider } from "../../context/AuthContext";
 import { mockUnauthenticatedContextValue } from "../../test/mocks/authContext";
 

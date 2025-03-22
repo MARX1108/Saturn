@@ -24,6 +24,11 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_URL =
+  typeof window !== "undefined"
+    ? window.ENV?.VITE_API_URL
+    : process.env.VITE_API_URL || "http://localhost:4000/api";
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -44,14 +49,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auth/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error("Failed to load user");
@@ -81,16 +83,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, password }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -122,16 +121,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(userData),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
 
       if (!response.ok) {
         const data = await response.json();

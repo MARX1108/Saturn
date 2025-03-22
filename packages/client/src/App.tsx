@@ -34,6 +34,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   return <>{children}</>;
 };
 
+// Replace import.meta.env with a constant
+const API_URL =
+  typeof window !== "undefined"
+    ? window.ENV?.VITE_API_URL
+    : process.env.VITE_API_URL || "http://localhost:4000/api";
+
 function App() {
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -76,13 +82,10 @@ function App() {
       if (bio) formData.append("bio", bio);
       if (avatarFile) formData.append("avatarFile", avatarFile);
 
-      const response = await fetch(
-        import.meta.env.VITE_API_URL + "/create-actor",
-        {
-          method: "POST",
-          body: formData, // Use FormData instead of JSON for file upload
-        }
-      );
+      const response = await fetch(API_URL + "/create-actor", {
+        method: "POST",
+        body: formData, // Use FormData instead of JSON for file upload
+      });
 
       const data = await response.json();
 

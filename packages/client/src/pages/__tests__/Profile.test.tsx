@@ -1,30 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Profile from "../Profile";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
+import Profile from "../../pages/Profile";
 import { AuthProvider } from "../../context/AuthContext";
 import { mockAuthContextValue } from "../../test/mocks/authContext";
 
-// Mock the useAuth hook
-jest.mock("../../context/AuthContext", async () => {
-  const actual = await vi.importActual("../../context/AuthContext");
-  return {
-    ...actual,
-    useAuth: () => mockAuthContextValue,
-  };
-});
-
-// Mock fetch API
-global.fetch = jest.fn().mockImplementation((url) => {
-  if (url.includes("/api/actors/")) {
+// Mock fetch API for profile data
+global.fetch = jest.fn((url) => {
+  if (url.includes("/actors/testuser")) {
     return Promise.resolve({
       ok: true,
       json: () =>
         Promise.resolve({
-          id: "https://example.com/users/testuser",
-          preferredUsername: "testuser",
-          name: "Test User",
-          summary: "This is a test bio",
+          id: "user123",
+          username: "testuser",
+          displayName: "Test User",
+          bio: "This is a test bio",
+          avatarUrl: "https://example.com/avatar.jpg",
           icon: {
             url: "https://example.com/avatar.jpg",
             mediaType: "image/jpeg",
@@ -35,11 +26,11 @@ global.fetch = jest.fn().mockImplementation((url) => {
     });
   }
   return Promise.reject(new Error("Not found"));
-});
+}) as jest.Mock;
 
 // Mock useParams
 jest.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
+  const actual = await jest.requireActual("react-router-dom");
   return {
     ...actual,
     useParams: () => ({ username: "testuser" }),
@@ -47,14 +38,13 @@ jest.mock("react-router-dom", async () => {
   };
 });
 
-// Mock FileReader for avatar changes
+// Fix MockFileReader class
 class MockFileReader {
-  onloadend: () => void;
-  readAsDataURL: jest.mock;
-  result: string;
+  onloadend: () => void = () => {};
+  readAsDataURL: jest.Mock = jest.fn();
+  result: string = ""; // Initialize the property
 
   constructor() {
-    this.onloadend = jest.fn();
     this.readAsDataURL = jest.fn(() => {
       setTimeout(() => {
         this.result = "data:image/png;base64,mockbase64data";
@@ -219,7 +209,7 @@ describe("Profile Component", () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     // Wait for FileReader to process (via our mock)
-    await vi.waitFor(() => {});
+    await waitFor(() => {});
 
     // Submit form
     fireEvent.click(screen.getByText("Save Changes"));

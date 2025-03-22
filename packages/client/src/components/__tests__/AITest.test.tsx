@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import AITest from "../AITest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import AITest from "../../components/AITest";
 
 // Mock the AI client
 jest.mock("../../services/aiClient", () => ({
@@ -10,6 +10,7 @@ jest.mock("../../services/aiClient", () => ({
     analyzeContent: vi
       .fn()
       .mockResolvedValue({ sentiment: "positive", topics: ["test"] }),
+    analyzeSentiment: jest.fn().mockResolvedValue("positive"),
   },
 }));
 
@@ -73,6 +74,27 @@ describe("AITest Component", () => {
 
     // Expect to see the analysis after API call completes
     await vi.waitFor(() => {
+      expect(getByText(/sentiment: positive/i)).toBeInTheDocument();
+    });
+  });
+
+  it("analyzes text sentiment when button is clicked", async () => {
+    jest.useFakeTimers();
+
+    const { getByText, getByPlaceholderText } = render(<AITest />);
+
+    // Fill in the text input
+    const input = getByPlaceholderText("Enter your text here");
+    fireEvent.change(input, { target: { value: "I am feeling great today!" } });
+
+    // Click the analyze button
+    const button = getByText("Analyze");
+    button.click();
+
+    // Advance timers and wait for update
+    jest.runAllTimers();
+
+    await waitFor(() => {
       expect(getByText(/sentiment: positive/i)).toBeInTheDocument();
     });
   });

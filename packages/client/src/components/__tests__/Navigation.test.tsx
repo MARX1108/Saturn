@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import Navigation from "../Navigation";
+import Navigation from "../../components/Navigation";
 import { AuthProvider } from "../../context/AuthContext";
 import {
   mockAuthContextValue,
@@ -15,6 +15,15 @@ jest.mock("react-router-dom", async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+  };
+});
+
+// Mock the useAuth hook
+jest.mock("../../context/AuthContext", async () => {
+  const actual = await jest.requireActual("../../context/AuthContext");
+  return {
+    ...actual,
+    useAuth: () => mockAuthContextValue,
   };
 });
 
@@ -93,8 +102,10 @@ describe("Navigation Component", () => {
     fireEvent.change(searchInput, { target: { value: "test query" } });
 
     // Submit search
-    const form = searchInput.closest("form");
-    fireEvent.submit(form);
+    const form = screen.getByRole("form");
+    if (form) {
+      fireEvent.submit(form);
+    }
 
     // Check navigation to search results
     expect(mockNavigate).toHaveBeenCalledWith("/search?q=test%20query");
@@ -128,5 +139,32 @@ describe("Navigation Component", () => {
     // Check logout called and navigation to login
     expect(mockLogout).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith("/login");
+  });
+
+  it("renders navigation links when user is logged in", () => {
+    render(
+      <BrowserRouter>
+        <AuthProvider>
+          <Navigation />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Profile")).toBeInTheDocument();
+    expect(screen.getByText("Log Out")).toBeInTheDocument();
+  });
+
+  it("should call logout when Log Out is clicked", () => {
+    render(
+      <BrowserRouter>
+        <AuthProvider>
+          <Navigation />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    fireEvent.click(screen.getByText("Log Out"));
+    expect(mockAuthContextValue.logout).toHaveBeenCalled();
   });
 });

@@ -2,22 +2,10 @@ import request from "supertest";
 import express from "express";
 import path from "path";
 import fs from "fs";
-// Replace Jest imports with Vitest
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-  vi,
-} from "vitest";
 import { ActorService } from "../../src/services/actorService";
-
-// Import the router
 import actorsRouter from "../../routes/actors";
 
-// Mock ActorService
+// Import Jest functions directly
 jest.mock("../../src/services/actorService");
 
 // Create testing express app

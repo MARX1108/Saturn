@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import App from "./App";
 
@@ -29,7 +28,7 @@ jest.mock("./components/Navigation", () => ({
 
 // Mock the auth context
 jest.mock("./context/AuthContext", async () => {
-  const actual = await vi.importActual("./context/AuthContext");
+  const actual = await jest.requireActual("./context/AuthContext");
   return {
     ...actual,
     useAuth: () => ({
@@ -46,16 +45,13 @@ jest.mock("./context/AuthContext", async () => {
 });
 
 // Mock fetch API
-vi.stubGlobal(
-  "fetch",
-  jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      json: () =>
-        Promise.resolve({ success: true, user: { username: "testuser" } }),
-    })
-  )
-);
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () =>
+      Promise.resolve({ success: true, user: { username: "testuser" } }),
+  })
+) as jest.Mock;
 
 describe("App Component", () => {
   beforeEach(() => {

@@ -1,13 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import Register from "../Register";
+import Register from "../../pages/Register";
 import { AuthProvider } from "../../context/AuthContext";
 import { mockUnauthenticatedContextValue } from "../../test/mocks/authContext";
 
 // Mock the useAuth hook
 jest.mock("../../context/AuthContext", async () => {
-  const actual = await vi.importActual("../../context/AuthContext");
+  const actual = await jest.requireActual("../../context/AuthContext");
   return {
     ...actual,
     useAuth: () => ({
@@ -25,7 +24,7 @@ jest.mock("../../context/AuthContext", async () => {
 // Mock useNavigate
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
+  const actual = await jest.requireActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,

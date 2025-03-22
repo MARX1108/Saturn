@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Navigation from "./Navigation";
 import { AuthProvider } from "../context/AuthContext";

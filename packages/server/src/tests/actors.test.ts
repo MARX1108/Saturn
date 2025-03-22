@@ -2,9 +2,8 @@ import request from "supertest";
 import express from "express";
 import { MongoClient, Db } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import actorRoutes from "../routes/actors";
-import { jest } from '@jest/globals';
+import { jest } from "@jest/globals";
 
 describe("Actor Routes", () => {
   let app: express.Application;
@@ -35,6 +34,8 @@ describe("Actor Routes", () => {
   });
 
   beforeEach(async () => {
+    // Use Jest cleanup
+    jest.clearAllMocks();
     // Clear collections before each test
     await db.collection("users").deleteMany({});
     await db.collection("actors").deleteMany({});
