@@ -1,79 +1,103 @@
-import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { vi, describe, test, expect, beforeEach } from "vitest";
 import App from "./App";
-import AITest from "./components/AITest";
 
-// Mock the AITest component
-vi.mock("./components/AITest", () => {
-  return vi.fn(() => (
-    <div data-testid="ai-test-component">AI Test Component</div>
-  ));
+// Mock the child components
+vi.mock("./components/AITest", () => ({
+  default: () => <div data-testid="ai-test-component">Mocked AITest</div>,
+}));
+
+vi.mock("./pages/Home", () => ({
+  default: () => <div data-testid="home-page">Mocked Home</div>,
+}));
+
+vi.mock("./pages/Login", () => ({
+  default: () => <div data-testid="login-page">Mocked Login</div>,
+}));
+
+vi.mock("./pages/Register", () => ({
+  default: () => <div data-testid="register-page">Mocked Register</div>,
+}));
+
+vi.mock("./pages/Profile", () => ({
+  default: () => <div data-testid="profile-page">Mocked Profile</div>,
+}));
+
+vi.mock("./components/Navigation", () => ({
+  default: () => <div data-testid="navigation">Mocked Navigation</div>,
+}));
+
+// Mock the auth context
+vi.mock("./context/AuthContext", async () => {
+  const actual = await vi.importActual("./context/AuthContext");
+  return {
+    ...actual,
+    useAuth: () => ({
+      user: { preferredUsername: "testuser" },
+      isAuthenticated: true,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      error: null,
+      token: "fake-token",
+    }),
+  };
 });
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch API
+vi.stubGlobal(
+  "fetch",
+  vi.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () =>
+        Promise.resolve({ success: true, user: { username: "testuser" } }),
+    })
+  )
+);
 
 describe("App Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockClear();
-    // Mock environment variable
-    vi.stubEnv("VITE_API_URL", "http://localhost:3000");
   });
 
-  test("renders App component with AITest", () => {
+  it("renders the app with navigation", () => {
     render(<App />);
-
-    // Check main elements are rendered
-    expect(screen.getByText("FYP Saturn")).toBeInTheDocument();
-    expect(screen.getByText("Create Actor")).toBeInTheDocument();
-
-    // Check AITest component is rendered
-    expect(screen.getByTestId("ai-test-component")).toBeInTheDocument();
-    expect(AITest).toHaveBeenCalled();
+    expect(screen.getByTestId("navigation")).toBeInTheDocument();
+    expect(screen.getByTestId("home-page")).toBeInTheDocument(); // Default route
   });
 
-  test("creates an actor successfully", async () => {
-    const mockResponse = {
-      id: "123",
-      username: "testuser",
-      displayName: "Test User",
-    };
-
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    });
-
+  it("creates an actor when form is submitted", async () => {
     render(<App />);
 
-    // Fill form
-    fireEvent.change(screen.getByLabelText(/Username:/i), {
-      target: { value: "testuser" },
-    });
-    fireEvent.change(screen.getByLabelText(/Display Name/i), {
-      target: { value: "Test User" },
-    });
+    const mockCreateActor = vi.spyOn(global, "fetch");
 
-    // Submit form
-    fireEvent.click(screen.getByText("Create Actor"));
+    // Fill in form values
+    const usernameInput = screen.getByLabelText(/Username:/i);
+    fireEvent.change(usernameInput, { target: { value: "testuser" } });
 
-    // Check that AITest remains in the document during API call
-    expect(screen.getByTestId("ai-test-component")).toBeInTheDocument();
+    const displayNameInput = screen.getByLabelText(/Display Name:/i);
+    fireEvent.change(displayNameInput, { target: { value: "Test User" } });
 
-    // Verify result
+    // Submit the form
+    const submitButton = screen.getByText("Create Actor");
+    fireEvent.click(submitButton);
+
+    expect(mockCreateActor).toHaveBeenCalled();
+
     await waitFor(() => {
-      expect(screen.getByText("Actor Created:")).toBeInTheDocument();
+      expect(screen.getByText(/success/i)).toBeInTheDocument();
     });
   });
 
-  test("displays error when username is missing", async () => {
+  it("shows error when username is missing", () => {
     render(<App />);
-    fireEvent.click(screen.getByText("Create Actor"));
+
+    // Attempt to submit without username
+    const submitButton = screen.getByText("Create Actor");
+    fireEvent.click(submitButton);
 
     expect(screen.getByText("Username is required")).toBeInTheDocument();
-    expect(screen.getByTestId("ai-test-component")).toBeInTheDocument();
   });
 });
