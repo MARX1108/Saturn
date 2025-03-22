@@ -8,8 +8,9 @@ module.exports = {
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     "^@/(.*)$": "<rootDir>/src/$1",
-    // Add this to handle import.meta.env in components
-    "^import\\.meta\\.env\\.(.*)$": "<rootDir>/src/test/environment.ts",
+    // Use a simple module for import.meta.env
+    "import\\.meta\\.env\\.VITE_API_URL": "<rootDir>/src/test/envMock.js",
+    "import\\.meta\\.env": "<rootDir>/src/test/envMock.js",
   },
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   transform: {
@@ -35,4 +36,11 @@ module.exports = {
       isolatedModules: true,
     },
   },
+  testEnvironmentOptions: {
+    customExportConditions: ["react-jsx"],
+  },
+  // Transform our test environment files
+  transformIgnorePatterns: [
+    "/node_modules/(?!(@testing-library/react|@testing-library/dom)/)",
+  ],
 };

@@ -1,4 +1,15 @@
-// This file is referenced in jest.config.js but doesn't exist
+// This file is referenced in jest.config.js
+
+// Set up global environment variables for tests
+global.ENV = {
+  VITE_API_URL: "http://localhost:4000",
+};
+
+// Make the mock ENV available on window too
+window.ENV = global.ENV;
+
+// We can't use import.meta.env directly in Jest tests
+// Instead, use global.ENV for the same purpose
 
 // Additional setup for Jest
 jest.setTimeout(10000); // 10 second timeout
@@ -17,3 +28,19 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: jest.fn(),
   })),
 });
+
+// Enable mock fetch if needed
+if (typeof global.fetch !== "function") {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({}),
+    })
+  );
+}
+
+// Mock URL.createObjectURL
+global.URL.createObjectURL = jest.fn();
+
+// Load component mocks
+require("./src/test/mockSetup");

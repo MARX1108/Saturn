@@ -3,26 +3,21 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "../../context/AuthContext";
 import { mockAuthContextValue } from "../../test/mocks/authContext";
 
-// Mock the environment variables that would be provided by Vite
-window.ENV = window.ENV || {};
-window.ENV.VITE_API_URL = "http://localhost:4000";
-
-// Mock the Profile component to avoid the import.meta.env issue
-jest.mock("../../pages/Profile", () => {
-  const originalModule = jest.requireActual("../../pages/Profile");
-  const Profile = (props) => {
-    // If Profile is a default export, access it correctly
-    const OriginalProfile = originalModule.default || originalModule;
-    return <OriginalProfile {...props} />;
-  };
-  return Profile;
-});
-
-// After mocking the component, now we can import it
+// The Profile component should already be mocked via mockSetup.js
 import Profile from "../../pages/Profile";
 
+// Mock useParams
+jest.mock("react-router-dom", () => {
+  const original = jest.requireActual("react-router-dom");
+  return {
+    ...original,
+    useParams: () => ({ username: "testuser" }),
+    useNavigate: () => jest.fn(),
+  };
+});
+
 // Mock fetch API for profile data
-global.fetch = jest.fn((url) => {
+global.fetch = jest.fn().mockImplementation((url) => {
   if (url.includes("/actors/testuser")) {
     return Promise.resolve({
       ok: true,
@@ -43,23 +38,13 @@ global.fetch = jest.fn((url) => {
     });
   }
   return Promise.reject(new Error("Not found"));
-}) as jest.Mock;
-
-// Mock useParams
-jest.mock("react-router-dom", async () => {
-  const actual = await jest.requireActual("react-router-dom");
-  return {
-    ...actual,
-    useParams: () => ({ username: "testuser" }),
-    useNavigate: () => jest.fn(),
-  };
 });
 
 // Fix MockFileReader class
 class MockFileReader {
-  onloadend: () => void = () => {};
-  readAsDataURL: jest.Mock = jest.fn();
-  result: string = ""; // Initialize the property
+  onloadend = () => {};
+  readAsDataURL = jest.fn();
+  result = "";
 
   constructor() {
     this.readAsDataURL = jest.fn(() => {

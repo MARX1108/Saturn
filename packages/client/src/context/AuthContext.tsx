@@ -22,12 +22,28 @@ type AuthContextType = {
   logout: () => void;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create the initial state
+const initialState: AuthContextType = {
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  loading: true,
+  error: null,
+  login: async () => {},
+  register: async () => {},
+  logout: () => {},
+};
+
+// Export the AuthContext
+export const AuthContext = createContext<AuthContextType>(initialState);
+
+// Export useAuth directly so it can be mocked in tests
+export const useAuth = () => useContext(AuthContext);
 
 const API_URL =
-  typeof window !== "undefined"
-    ? window.ENV?.VITE_API_URL
-    : process.env.VITE_API_URL || "http://localhost:4000/api";
+  typeof window !== "undefined" && window.ENV
+    ? window.ENV.VITE_API_URL
+    : "http://localhost:4000/api";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -175,13 +191,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       {children}
     </AuthContext.Provider>
   );
-};
-
-// Custom hook to use the auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 };

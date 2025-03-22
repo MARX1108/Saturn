@@ -1,35 +1,32 @@
-// Using Jest functions directly
+// Mock auth context for testing
 
-// Mock auth context values for testing
 export const mockAuthContextValue = {
   user: {
-    id: "test-123",
-    preferredUsername: "testuser",
+    id: "test-user-id",
+    username: "testuser",
+    email: "test@example.com",
     name: "Test User",
-    summary: "Test bio",
-    icon: {
-      url: "https://example.com/avatar.jpg",
-      mediaType: "image/jpeg",
-    },
   },
-  token: "fake-test-token",
   isAuthenticated: true,
   loading: false,
   error: null,
   login: jest.fn(),
   register: jest.fn(),
   logout: jest.fn(),
+  verifyToken: jest.fn(),
+  clearError: jest.fn(),
 };
 
 export const mockUnauthenticatedContextValue = {
   user: null,
-  token: null,
   isAuthenticated: false,
   loading: false,
   error: null,
   login: jest.fn(),
   register: jest.fn(),
   logout: jest.fn(),
+  verifyToken: jest.fn(),
+  clearError: jest.fn(),
 };
 
 export const mockAuthContextWithLoading = {
