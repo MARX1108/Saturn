@@ -1,15 +1,19 @@
 // Remove vitest import
 // Using Jest functions directly
 
+// Mock auth context values for testing
 export const mockAuthContextValue = {
   user: {
-    id: "user-123",
+    id: "test-123",
     preferredUsername: "testuser",
     name: "Test User",
     summary: "Test bio",
-    icon: { url: "https://example.com/avatar.jpg", mediaType: "image/jpeg" },
+    icon: {
+      url: "https://example.com/avatar.jpg",
+      mediaType: "image/jpeg",
+    },
   },
-  token: "fake-token",
+  token: "fake-test-token",
   isAuthenticated: true,
   loading: false,
   error: null,

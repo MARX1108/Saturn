@@ -33,14 +33,10 @@ describe("Navigation Component", () => {
   });
 
   it("renders login and signup links when not authenticated", () => {
-    // Mock unauthenticated state
-    jest.mock("../../context/AuthContext", async () => {
-      const actual = await vi.importActual("../../context/AuthContext");
-      return {
-        ...actual,
-        useAuth: () => mockUnauthenticatedContextValue,
-      };
-    });
+    // Need to override the mock for this specific test
+    jest
+      .spyOn(require("../../context/AuthContext"), "useAuth")
+      .mockReturnValue(mockUnauthenticatedContextValue);
 
     render(
       <BrowserRouter>
@@ -56,15 +52,6 @@ describe("Navigation Component", () => {
   });
 
   it("renders user navigation when authenticated", () => {
-    // Mock authenticated state
-    jest.mock("../../context/AuthContext", async () => {
-      const actual = await vi.importActual("../../context/AuthContext");
-      return {
-        ...actual,
-        useAuth: () => mockAuthContextValue,
-      };
-    });
-
     render(
       <BrowserRouter>
         <AuthProvider>
@@ -75,20 +62,11 @@ describe("Navigation Component", () => {
 
     expect(screen.queryByText("Log In")).not.toBeInTheDocument();
     expect(screen.queryByText("Sign Up")).not.toBeInTheDocument();
-    expect(screen.getByText("Logout")).toBeInTheDocument();
+    expect(screen.getByText("Log Out")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Search")).toBeInTheDocument();
   });
 
   it("handles search submission", () => {
-    // Mock authenticated state
-    jest.mock("../../context/AuthContext", async () => {
-      const actual = await vi.importActual("../../context/AuthContext");
-      return {
-        ...actual,
-        useAuth: () => mockAuthContextValue,
-      };
-    });
-
     render(
       <BrowserRouter>
         <AuthProvider>
@@ -112,18 +90,13 @@ describe("Navigation Component", () => {
   });
 
   it("handles logout", () => {
-    // Mock authenticated state with logout function
     const mockLogout = jest.fn();
-    jest.mock("../../context/AuthContext", async () => {
-      const actual = await vi.importActual("../../context/AuthContext");
-      return {
-        ...actual,
-        useAuth: () => ({
-          ...mockAuthContextValue,
-          logout: mockLogout,
-        }),
-      };
-    });
+    jest
+      .spyOn(require("../../context/AuthContext"), "useAuth")
+      .mockReturnValue({
+        ...mockAuthContextValue,
+        logout: mockLogout,
+      });
 
     render(
       <BrowserRouter>
@@ -134,7 +107,7 @@ describe("Navigation Component", () => {
     );
 
     // Click logout
-    fireEvent.click(screen.getByText("Logout"));
+    fireEvent.click(screen.getByText("Log Out"));
 
     // Check logout called and navigation to login
     expect(mockLogout).toHaveBeenCalled();
@@ -156,6 +129,14 @@ describe("Navigation Component", () => {
   });
 
   it("should call logout when Log Out is clicked", () => {
+    const mockLogout = jest.fn();
+    jest
+      .spyOn(require("../../context/AuthContext"), "useAuth")
+      .mockReturnValue({
+        ...mockAuthContextValue,
+        logout: mockLogout,
+      });
+
     render(
       <BrowserRouter>
         <AuthProvider>
@@ -165,6 +146,6 @@ describe("Navigation Component", () => {
     );
 
     fireEvent.click(screen.getByText("Log Out"));
-    expect(mockAuthContextValue.logout).toHaveBeenCalled();
+    expect(mockLogout).toHaveBeenCalled();
   });
 });

@@ -6,7 +6,7 @@ import { AuthProvider } from "../context/AuthContext";
 
 // Mock the useAuth hook
 jest.mock("../context/AuthContext", async () => {
-  const actual = await vi.importActual("../context/AuthContext");
+  const actual = await jest.requireActual("../context/AuthContext");
   return {
     ...actual,
     useAuth: () => ({

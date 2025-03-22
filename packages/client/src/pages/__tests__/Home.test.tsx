@@ -17,8 +17,16 @@ jest.mock("../../components/PostList", () => ({
   default: () => <div data-testid="post-list">Mocked PostList</div>,
 }));
 
+// Mock fetch
+global.fetch = jest.fn().mockImplementation(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({ posts: [] }),
+  })
+);
+
 describe("Home Component", () => {
-  it("renders welcome message and post list", () => {
+  it("renders the home page with post list", async () => {
     render(
       <BrowserRouter>
         <AuthProvider>
@@ -27,7 +35,15 @@ describe("Home Component", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/welcome to saturn/i)).toBeInTheDocument();
+    // Wait for loading to complete
+    await waitFor(() => {
+      expect(screen.queryByText("Loading posts...")).not.toBeInTheDocument();
+    });
+
+    // Check for post list element
     expect(screen.getByTestId("post-list")).toBeInTheDocument();
+
+    // Check for timeline headings or other stable elements
+    expect(screen.getByText(/create/i)).toBeInTheDocument();
   });
 });

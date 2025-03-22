@@ -7,9 +7,10 @@ jest.mock("../../services/aiClient", () => ({
   default: {
     loadModel: jest.fn().mockResolvedValue(true),
     generateResponse: jest.fn().mockResolvedValue("Generated response"),
-    analyzeContent: vi
-      .fn()
-      .mockResolvedValue({ sentiment: "positive", topics: ["test"] }),
+    analyzeContent: jest.fn().mockResolvedValue({
+      sentiment: "positive",
+      topics: ["test"],
+    }),
     analyzeSentiment: jest.fn().mockResolvedValue("positive"),
   },
 }));
@@ -38,7 +39,7 @@ describe("AITest Component", () => {
     expect(getByText(/loading/i)).toBeInTheDocument();
 
     // After loading finishes, status should change to loaded
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(getByText("Model Status:")).toBeInTheDocument();
       expect(getByText(/loaded/i)).toBeInTheDocument();
     });
@@ -56,7 +57,7 @@ describe("AITest Component", () => {
     fireEvent.click(submitButton);
 
     // Expect to see the generated response after API call completes
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(getByText("Generated response")).toBeInTheDocument();
     });
   });
@@ -73,7 +74,7 @@ describe("AITest Component", () => {
     fireEvent.click(analyzeButton);
 
     // Expect to see the analysis after API call completes
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(getByText(/sentiment: positive/i)).toBeInTheDocument();
     });
   });
@@ -89,7 +90,7 @@ describe("AITest Component", () => {
 
     // Click the analyze button
     const button = getByText("Analyze");
-    button.click();
+    fireEvent.click(button);
 
     // Advance timers and wait for update
     jest.runAllTimers();
