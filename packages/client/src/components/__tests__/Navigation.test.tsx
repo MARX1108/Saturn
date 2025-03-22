@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Navigation from "../../components/Navigation";
-import { AuthProvider } from "../../context/AuthContext";
 import {
   mockAuthContextValue,
   mockUnauthenticatedContextValue,
@@ -9,8 +8,8 @@ import {
 
 // Mock useNavigate
 const mockNavigate = jest.fn();
-jest.mock("react-router-dom", async () => {
-  const actual = await jest.requireActual("react-router-dom");
+jest.mock("react-router-dom", () => {
+  const actual = jest.requireActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -18,44 +17,47 @@ jest.mock("react-router-dom", async () => {
 });
 
 // Mock the useAuth hook
-jest.mock("../../context/AuthContext", async () => {
-  const actual = await jest.requireActual("../../context/AuthContext");
+jest.mock("../../context/AuthContext", () => {
+  const ActualAuthContext = jest.requireActual("../../context/AuthContext");
+
   return {
-    ...actual,
-    useAuth: () => mockAuthContextValue,
+    ...ActualAuthContext,
+    useAuth: jest.fn().mockReturnValue(mockAuthContextValue),
+    // Provide a simplified AuthProvider that just renders children
+    AuthProvider: ({ children }) => children,
   };
 });
 
 describe("Navigation Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset the default mock
+    require("../../context/AuthContext").useAuth.mockReturnValue(
+      mockAuthContextValue
+    );
   });
 
   it("renders login and signup links when not authenticated", () => {
-    // Need to override the mock for this specific test
-    jest
-      .spyOn(require("../../context/AuthContext"), "useAuth")
-      .mockReturnValue(mockUnauthenticatedContextValue);
+    // Override the mock for this specific test
+    require("../../context/AuthContext").useAuth.mockReturnValue(
+      mockUnauthenticatedContextValue
+    );
 
     render(
       <BrowserRouter>
-        <AuthProvider>
-          <Navigation />
-        </AuthProvider>
+        <Navigation />
       </BrowserRouter>
     );
 
     expect(screen.getByText("Log In")).toBeInTheDocument();
     expect(screen.getByText("Sign Up")).toBeInTheDocument();
-    expect(screen.queryByText("Logout")).not.toBeInTheDocument();
+    expect(screen.queryByText("Log Out")).not.toBeInTheDocument();
   });
 
   it("renders user navigation when authenticated", () => {
     render(
       <BrowserRouter>
-        <AuthProvider>
-          <Navigation />
-        </AuthProvider>
+        <Navigation />
       </BrowserRouter>
     );
 
@@ -68,9 +70,7 @@ describe("Navigation Component", () => {
   it("handles search submission", () => {
     render(
       <BrowserRouter>
-        <AuthProvider>
-          <Navigation />
-        </AuthProvider>
+        <Navigation />
       </BrowserRouter>
     );
 
@@ -90,18 +90,14 @@ describe("Navigation Component", () => {
 
   it("handles logout", () => {
     const mockLogout = jest.fn();
-    jest
-      .spyOn(require("../../context/AuthContext"), "useAuth")
-      .mockReturnValue({
-        ...mockAuthContextValue,
-        logout: mockLogout,
-      });
+    require("../../context/AuthContext").useAuth.mockReturnValue({
+      ...mockAuthContextValue,
+      logout: mockLogout,
+    });
 
     render(
       <BrowserRouter>
-        <AuthProvider>
-          <Navigation />
-        </AuthProvider>
+        <Navigation />
       </BrowserRouter>
     );
 
@@ -116,9 +112,7 @@ describe("Navigation Component", () => {
   it("renders navigation links when user is logged in", () => {
     render(
       <BrowserRouter>
-        <AuthProvider>
-          <Navigation />
-        </AuthProvider>
+        <Navigation />
       </BrowserRouter>
     );
 
@@ -129,18 +123,14 @@ describe("Navigation Component", () => {
 
   it("should call logout when Log Out is clicked", () => {
     const mockLogout = jest.fn();
-    jest
-      .spyOn(require("../../context/AuthContext"), "useAuth")
-      .mockReturnValue({
-        ...mockAuthContextValue,
-        logout: mockLogout,
-      });
+    require("../../context/AuthContext").useAuth.mockReturnValue({
+      ...mockAuthContextValue,
+      logout: mockLogout,
+    });
 
     render(
       <BrowserRouter>
-        <AuthProvider>
-          <Navigation />
-        </AuthProvider>
+        <Navigation />
       </BrowserRouter>
     );
 

@@ -8,9 +8,6 @@ global.ENV = {
 // Make the mock ENV available on window too
 window.ENV = global.ENV;
 
-// We can't use import.meta.env directly in Jest tests
-// Instead, use global.ENV for the same purpose
-
 // Additional setup for Jest
 jest.setTimeout(10000); // 10 second timeout
 
@@ -42,5 +39,11 @@ if (typeof global.fetch !== "function") {
 // Mock URL.createObjectURL
 global.URL.createObjectURL = jest.fn();
 
-// Load component mocks
-require("./src/test/mockSetup");
+// Load component mocks - do this first to ensure all mocks are in place
+try {
+  // Require the mock setup files
+  require("./src/test/mockSetup");
+  require("./src/test/mocks/appMocks");
+} catch (error) {
+  console.error("Error loading mock files:", error);
+}
