@@ -50,6 +50,7 @@
   border: 1px solid #dbdbdb;
   border-radius: 3px;
   background-color: #fafafa;
+  color: #262626; /* Add this line to ensure text is visible */
 }
 
 .form-group textarea {

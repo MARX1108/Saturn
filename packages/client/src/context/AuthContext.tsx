@@ -40,10 +40,15 @@ export const AuthContext = createContext<AuthContextType>(initialState);
 // Export useAuth directly so it can be mocked in tests
 export const useAuth = () => useContext(AuthContext);
 
+// Add more verbose logging to debug API URL issues
 const API_URL =
   typeof window !== "undefined" && window.ENV
     ? window.ENV.VITE_API_URL
-    : "http://localhost:4000/api";
+    : import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
+console.log("API URL from environment:", import.meta.env.VITE_API_URL);
+console.log("API URL from window.ENV:", window?.ENV?.VITE_API_URL);
+console.log("Final API URL used:", API_URL);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -137,16 +142,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
+      // Make sure API_URL is correctly defined and accessible
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+      console.log("Registering user with API:", `${apiUrl}/api/auth/register`);
+
+      const response = await fetch(`${apiUrl}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(userData),
+        // Add these options to help with potential CORS or network issues
+        credentials: "include",
+        mode: "cors",
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response
+          .json()
+          .catch(() => ({ error: `Status: ${response.status}` }));
         throw new Error(data.error || "Failed to register");
       }
 
@@ -161,7 +176,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsAuthenticated(true);
     } catch (err) {
       console.error("Registration error:", err);
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Registration failed. Please check if the server is running."
+      );
     } finally {
       setLoading(false);
     }
