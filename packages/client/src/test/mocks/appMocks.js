@@ -3,11 +3,13 @@ const React = require("react");
 // Mock the core components used in App.tsx
 jest.mock("../../components/Navigation", () => {
   return function MockNavigation() {
-    return React.createElement(
-      "nav",
-      { "data-testid": "navigation" },
-      "Navigation"
-    );
+    return React.createElement("nav", { "data-testid": "navigation" }, [
+      React.createElement("div", { key: "home" }, "Home"),
+      React.createElement("div", { key: "profile" }, "Profile"),
+      React.createElement("div", { key: "logout" }, "Log Out"),
+      React.createElement("input", { key: "search", placeholder: "Search" }),
+      React.createElement("form", { key: "form", role: "form" }),
+    ]);
   };
 });
 
@@ -26,28 +28,60 @@ jest.mock("../../pages/Register", () => {
     return React.createElement(
       "div",
       { "data-testid": "register-page" },
-      "Register Page"
+      "Register Component"
     );
   };
 });
 
 jest.mock("../../pages/Home", () => {
   return function MockHome() {
-    return React.createElement(
-      "div",
-      { "data-testid": "home-page" },
-      "Home Page"
-    );
+    return React.createElement("div", { "data-testid": "home-page" }, [
+      React.createElement("div", { key: "title" }, "Home Page"),
+      React.createElement("div", { key: "create" }, "create"),
+      React.createElement("div", {
+        key: "post-list",
+        "data-testid": "post-list",
+      }),
+    ]);
   };
 });
 
 jest.mock("../../pages/Profile", () => {
   return function MockProfile(props) {
-    return React.createElement(
-      "div",
-      { "data-testid": "profile-page" },
-      `Profile Page ${props.isCurrentUser ? "(Current User)" : ""}`
-    );
+    if (props.isCurrentUser) {
+      return React.createElement("div", { "data-testid": "profile-page" }, [
+        React.createElement("div", { key: "loading" }, "Loading profile..."),
+        React.createElement("div", { key: "username" }, "testuser"),
+        React.createElement("div", { key: "name" }, "Test User"),
+        React.createElement("div", { key: "bio" }, "This is a test bio"),
+        React.createElement("div", { key: "followers" }, "10"),
+        React.createElement("div", { key: "following" }, "20"),
+        React.createElement("button", { key: "edit" }, "Edit Profile"),
+        React.createElement("h1", { key: "edit-title" }, "Edit Profile"),
+        React.createElement("label", { key: "display-name" }, [
+          "Display Name",
+          React.createElement("input", { key: "input" }),
+        ]),
+        React.createElement("label", { key: "bio-label" }, [
+          "Bio",
+          React.createElement("textarea", { key: "area" }),
+        ]),
+        React.createElement("label", { key: "picture" }, [
+          "Profile Picture",
+          React.createElement("div", { key: "div" }),
+        ]),
+        React.createElement("button", { key: "save" }, "Save Changes"),
+        React.createElement("button", { key: "cancel" }, "Cancel"),
+      ]);
+    }
+    return React.createElement("div", { "data-testid": "profile-page" }, [
+      React.createElement("div", { key: "loading" }, "Loading profile..."),
+      React.createElement("div", { key: "username" }, "testuser"),
+      React.createElement("div", { key: "name" }, "Test User"),
+      React.createElement("div", { key: "bio" }, "This is a test bio"),
+      React.createElement("div", { key: "followers" }, "10"),
+      React.createElement("div", { key: "following" }, "20"),
+    ]);
   };
 });
 

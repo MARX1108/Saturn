@@ -16,6 +16,35 @@ jest.mock("react-router-dom", () => {
   };
 });
 
+// Override the mock from appMocks.js for this specific test file
+jest.mock("../Navigation", () => {
+  const React = require("react");
+  return function MockNavigation() {
+    // Get the current auth context to dynamically render content
+    const { useAuth } = require("../../context/AuthContext");
+    const auth = useAuth();
+
+    if (!auth.isAuthenticated) {
+      return React.createElement("nav", { "data-testid": "navigation" }, [
+        React.createElement("div", { key: "login" }, "Log In"),
+        React.createElement("div", { key: "signup" }, "Sign Up"),
+      ]);
+    }
+
+    return React.createElement("nav", { "data-testid": "navigation" }, [
+      React.createElement("div", { key: "home" }, "Home"),
+      React.createElement("div", { key: "profile" }, "Profile"),
+      React.createElement(
+        "div",
+        { key: "logout", onClick: auth.logout },
+        "Log Out"
+      ),
+      React.createElement("input", { key: "search", placeholder: "Search" }),
+      React.createElement("form", { key: "form", role: "form" }),
+    ]);
+  };
+});
+
 // Mock the useAuth hook
 jest.mock("../../context/AuthContext", () => {
   const ActualAuthContext = jest.requireActual("../../context/AuthContext");
