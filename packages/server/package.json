@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn src/index.ts",
+    "dev": "cross-env PORT=4000 ts-node-dev --respawn src/index.ts",
+    "dev:alt": "cross-env PORT=4001 ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest --config jest.config.js",

@@ -3,14 +3,10 @@ import { MongoClient, Db } from "mongodb";
 import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
+import { Server } from "http";
 
 // Load environment variables
 dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 4000;
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://localhost:27017/fyp-saturn";
 
 // Import plugin system
 import { registerPlugin, initPlugins } from "./plugins";
@@ -169,40 +165,105 @@ function configureRoutes(app: Application, db: Db, domain: string): void {
   });
 }
 
+// Initialize Express server with middleware
+function initializeServer(db: Db): Application {
+  const app = express();
+
+  // Store db connection in app locals for use in routes
+  app.locals.db = db;
+
+  // Middleware
+  app.use(express.json());
+  app.use(cors()); // Enable CORS for all routes
+  app.use(express.static(path.join(process.cwd(), "public")));
+
+  // Register plugins
+  registerPlugin(helloPlugin);
+  initPlugins(app);
+
+  return app;
+}
+
+// Handle starting the server with retry logic for port conflicts
 async function startServer(): Promise<void> {
   try {
     console.log("Connecting to MongoDB...");
+
     // Connect to MongoDB
+    const MONGO_URI =
+      process.env.MONGO_URI || "mongodb://localhost:27017/fyp-saturn";
     const client = new MongoClient(MONGO_URI);
     await client.connect();
     console.log("✅ Connected to MongoDB");
     const db = client.db();
 
-    // Store db connection in app locals for use in routes
-    app.locals.db = db;
-
-    // Middleware
-    app.use(express.json());
-    app.use(cors()); // Enable CORS for all routes
-
-    // Serve static files from public directory
-    app.use(express.static(path.join(process.cwd(), "public")));
-
+    // Initialize the server
     console.log("Initializing server...");
+    const app = initializeServer(db);
 
-    // Register plugins
-    registerPlugin(helloPlugin);
-    initPlugins(app);
-
-    // Register routes with proper parameters
+    // Set up domain and routes
     const domain = process.env.DOMAIN || "localhost:4000";
     configureRoutes(app, db, domain);
 
-    // Start the server
-    app.listen(PORT, () => {
-      console.log(`🚀 FYP Saturn server running at http://localhost:${PORT}`);
-      console.log(`API is available at http://localhost:${PORT}/api`);
-    });
+    // Get port from environment variable or use default
+    const defaultPort = process.env.PORT
+      ? parseInt(process.env.PORT, 10)
+      : 4000;
+    const alternativePorts = [4001, 4002, 4003];
+    let currentPort = defaultPort;
+    let server: Server | null = null;
+
+    // Function to try starting the server on a specific port
+    const tryPort = (port: number): Promise<Server> => {
+      return new Promise((resolve, reject) => {
+        const serverInstance = app
+          .listen(port, () => {
+            console.log(
+              `🚀 FYP Saturn server running at http://localhost:${port}`
+            );
+            console.log(`API is available at http://localhost:${port}/api`);
+            resolve(serverInstance);
+          })
+          .on("error", (err: any) => {
+            if (err.code === "EADDRINUSE") {
+              console.log(`Port ${port} is in use, trying another one...`);
+              reject(err);
+            } else {
+              reject(err);
+            }
+          });
+      });
+    };
+
+    // Try default port first
+    try {
+      server = await tryPort(currentPort);
+    } catch (error: any) {
+      // If default port fails, try alternatives
+      if (error.code === "EADDRINUSE") {
+        let portFound = false;
+
+        for (const port of alternativePorts) {
+          try {
+            currentPort = port;
+            server = await tryPort(port);
+            portFound = true;
+            break; // Exit the loop if successful
+          } catch (portError: any) {
+            // Continue to next port if this one is in use
+            if (portError.code !== "EADDRINUSE") {
+              throw portError; // Rethrow if it's not a port-in-use error
+            }
+          }
+        }
+
+        if (!portFound) {
+          throw new Error(`Could not start server. All ports are in use.`);
+        }
+      } else {
+        throw error; // Rethrow if it's not a port-in-use error
+      }
+    }
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
