@@ -7,9 +7,12 @@
     "dev:alt": "cross-env PORT=4001 ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "jest --config jest.config.js",
+    "test": "jest",
     "test:watch": "jest --watch --config jest.config.js",
-    "test:coverage": "jest --coverage --config jest.config.js",
+    "test:coverage": "jest --coverage --collectCoverageFrom='src/**/*.{ts,tsx}' --collectCoverageFrom='!src/**/*.d.ts'",
+    "test:auth": "jest auth.test.ts",
+    "test:actors": "jest actors.test.ts",
+    "test:posts": "jest posts.test.ts",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
