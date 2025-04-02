@@ -3,6 +3,7 @@ import cors from "cors";
 import { MongoClient } from "mongodb";
 import actorsRouter from "./routes/actors";
 import webfingerRouter from "./routes/webfinger";
+import postsRouter from "./routes/posts";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -33,6 +34,7 @@ async function startServer() {
     // Register routes - fix: Pass app as the first argument
     app.use("/", actorsRouter);
     app.use("/", webfingerRouter);
+    app.use("/api", postsRouter);
 
     // Error handling middleware should be last
     app.use(errorHandler);

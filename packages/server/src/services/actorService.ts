@@ -6,11 +6,13 @@ export class ActorService {
   private actorsCollection: Collection;
   private keysCollection: Collection;
   private domain: string;
+  private db: Db;
 
   constructor(db: Db, domain: string) {
     this.actorsCollection = db.collection("actors");
     this.keysCollection = db.collection("actorKeys");
     this.domain = domain;
+    this.db = db;
 
     // Create indexes
     this.actorsCollection.createIndex(
@@ -169,6 +171,33 @@ export class ActorService {
   }
 
   /**
+   * Get actor by ID
+   * @param id Actor ID to lookup
+   * @returns Actor data or null if not found
+   */
+  async getActorById(id: string): Promise<any> {
+    try {
+      let objectId: ObjectId;
+      try {
+        objectId = new ObjectId(id);
+      } catch (error) {
+        return null; // Invalid ObjectId format
+      }
+
+      const actor = await this.actorsCollection.findOne({
+        $or: [{ _id: objectId }, { id: id }],
+      });
+
+      if (!actor) return null;
+
+      return actor;
+    } catch (error) {
+      console.error("Error getting actor by ID:", error);
+      return null;
+    }
+  }
+
+  /**
    * Update actor information
    * @param username Username of actor to update
    * @param updates Fields to update
@@ -230,5 +259,9 @@ export class ActorService {
     await this.keysCollection.deleteOne({ actorId: actor.id });
 
     return true;
+  }
+
+  getDb(): Db {
+    return this.db;
   }
 }
