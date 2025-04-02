@@ -35,7 +35,7 @@ const upload = multer({
 });
 
 // Create new actor
-router.post("/actors", (req, res) => {
+router.post("/", (req, res) => {
   // Use multer middleware as a function to handle the file upload
   upload.single("avatarFile")(req as any, res as any, async (err) => {
     if (err) {
@@ -109,7 +109,7 @@ router.post("/actors", (req, res) => {
 });
 
 // Get actor by username
-router.get("/actors/:username", async (req, res) => {
+router.get("/:username", async (req, res) => {
   try {
     const db = req.app.get("db") as Db;
     const domain = req.app.get("domain") as string;
@@ -130,7 +130,7 @@ router.get("/actors/:username", async (req, res) => {
 });
 
 // Update actor
-router.put("/actors/:username", (req, res) => {
+router.put("/:username", (req, res) => {
   upload.single("avatarFile")(req as any, res as any, async (err) => {
     if (err) {
       return res.status(400).json({ error: err.message });
@@ -196,7 +196,7 @@ router.put("/actors/:username", (req, res) => {
 });
 
 // Delete actor (optional)
-router.delete("/actors/:username", async (req, res) => {
+router.delete("/:username", async (req, res) => {
   try {
     const db = req.app.get("db") as Db;
     const domain = req.app.get("domain") as string;
@@ -252,4 +252,50 @@ router.get("/users/:username", async (req, res) => {
   }
 });
 
-export default router;
+// Search actors
+router.get("/search/actors", async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || typeof q !== "string") {
+      return res.status(200).json([]);
+    }
+
+    const db = req.app.get("db") as Db;
+    const actors = await db
+      .collection("actors")
+      .find({
+        $or: [
+          { preferredUsername: { $regex: q, $options: "i" } },
+          { name: { $regex: q, $options: "i" } },
+        ],
+      })
+      .project({ password: 0 })
+      .limit(20)
+      .toArray();
+
+    // Format response to match ActivityPub format
+    const formattedActors = actors.map((actor) => ({
+      ...actor,
+      preferredUsername: actor.preferredUsername,
+      name: actor.name,
+      summary: actor.summary,
+    }));
+
+    res.status(200).json(formattedActors);
+  } catch (error) {
+    console.error("Error searching actors:", error);
+    return res.status(500).json({ error: "Failed to search actors" });
+  }
+});
+
+// Export the router with a configuration function to match test expectations
+export default function configureActorRoutes(db: Db, domain: string) {
+  // Add middleware to inject db and domain into app.locals
+  router.use((req, res, next) => {
+    req.app.set("db", db);
+    req.app.set("domain", domain);
+    next();
+  });
+  return router;
+}

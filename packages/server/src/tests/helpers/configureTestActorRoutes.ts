@@ -5,8 +5,8 @@ import path from "path";
 import fs from "fs";
 import { ActorService } from "../../services/actorService";
 
-// For testing, we'll create a simplified version of the actor routes
-export function configureTestActorRoutes(db: Db, domain: string) {
+// Export with both names for backward compatibility
+export function configureActorRoutes(db: Db, domain: string) {
   const router = express.Router();
   const actorService = new ActorService(db, domain);
 
@@ -46,7 +46,7 @@ export function configureTestActorRoutes(db: Db, domain: string) {
   };
 
   // Create actor
-  router.post("/actors", upload.single("avatarFile"), async (req, res) => {
+  router.post("/", upload.single("avatarFile"), async (req, res) => {
     try {
       // Extract data from request
       const { username, displayName, bio } = req.body;
@@ -98,7 +98,21 @@ export function configureTestActorRoutes(db: Db, domain: string) {
         iconInfo
       );
 
-      res.status(201).json(actor);
+      // Format response to match ActivityPub format for tests
+      const formattedResponse = {
+        ...actor,
+        preferredUsername: actor.username,
+        name: actor.displayName,
+        summary: actor.bio,
+        icon: actor.avatarUrl
+          ? {
+              url: actor.avatarUrl,
+              mediaType: avatarFile?.mimetype,
+            }
+          : undefined,
+      };
+
+      res.status(201).json(formattedResponse);
     } catch (error) {
       console.error("Error creating actor:", error);
       res.status(500).json({ error: "Failed to create actor" });
@@ -106,7 +120,7 @@ export function configureTestActorRoutes(db: Db, domain: string) {
   });
 
   // Get actor by username
-  router.get("/actors/:username", async (req, res) => {
+  router.get("/:username", async (req, res) => {
     try {
       const { username } = req.params;
       const actor = await actorService.getActorByUsername(username);
@@ -115,7 +129,21 @@ export function configureTestActorRoutes(db: Db, domain: string) {
         return res.status(404).json({ error: "Actor not found" });
       }
 
-      res.status(200).json(actor);
+      // Format response to match ActivityPub format for tests
+      const formattedResponse = {
+        ...actor,
+        preferredUsername: actor.username,
+        name: actor.displayName,
+        summary: actor.bio,
+        icon: actor.avatarUrl
+          ? {
+              url: actor.avatarUrl,
+              mediaType: "image/png", // Default if not available
+            }
+          : undefined,
+      };
+
+      res.status(200).json(formattedResponse);
     } catch (error) {
       console.error("Error fetching actor:", error);
       res.status(500).json({ error: "Failed to fetch actor" });
@@ -124,7 +152,7 @@ export function configureTestActorRoutes(db: Db, domain: string) {
 
   // Update actor
   router.put(
-    "/actors/:username",
+    "/:username",
     checkAuth,
     upload.single("avatarFile"),
     async (req, res) => {
@@ -174,7 +202,21 @@ export function configureTestActorRoutes(db: Db, domain: string) {
           iconInfo
         );
 
-        res.status(200).json(updatedActor);
+        // Format response to match ActivityPub format for tests
+        const formattedResponse = {
+          ...updatedActor,
+          preferredUsername: updatedActor.username,
+          name: updatedActor.displayName,
+          summary: updatedActor.bio,
+          icon: updatedActor.avatarUrl
+            ? {
+                url: updatedActor.avatarUrl,
+                mediaType: avatarFile?.mimetype || "image/png",
+              }
+            : undefined,
+        };
+
+        res.status(200).json(formattedResponse);
       } catch (error) {
         console.error("Error updating actor:", error);
         res.status(500).json({ error: "Failed to update actor" });
@@ -183,7 +225,7 @@ export function configureTestActorRoutes(db: Db, domain: string) {
   );
 
   // Delete actor
-  router.delete("/actors/:username", checkAuth, async (req, res) => {
+  router.delete("/:username", checkAuth, async (req, res) => {
     try {
       const { username } = req.params;
 
@@ -223,20 +265,72 @@ export function configureTestActorRoutes(db: Db, domain: string) {
         .collection("actors")
         .find({
           $or: [
-            { preferredUsername: { $regex: q, $options: "i" } },
-            { name: { $regex: q, $options: "i" } },
+            { username: { $regex: q, $options: "i" } },
+            { displayName: { $regex: q, $options: "i" } },
           ],
         })
         .project({ password: 0 })
         .limit(20)
         .toArray();
 
-      res.status(200).json(actors);
+      // Format response to match ActivityPub format
+      const formattedActors = actors.map((actor) => ({
+        ...actor,
+        preferredUsername: actor.username,
+        name: actor.displayName,
+        summary: actor.bio,
+      }));
+
+      res.status(200).json(formattedActors);
     } catch (error) {
       console.error("Error searching actors:", error);
       res.status(500).json({ error: "Failed to search actors" });
     }
   });
 
+  // Handle ActivityPub actor requests
+  router.get("/users/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const actor = await actorService.getActorByUsername(username);
+
+      if (!actor) {
+        return res.status(404).json({ error: "Actor not found" });
+      }
+
+      const acceptHeader = req.get("Accept") || "";
+
+      if (acceptHeader.includes("application/activity+json")) {
+        // Return ActivityPub format
+        const activityPubActor = {
+          "@context": [
+            "https://www.w3.org/ns/activitystreams",
+            "https://w3id.org/security/v1",
+          ],
+          id: `https://${domain}/users/${username}`,
+          type: "Person",
+          preferredUsername: username,
+          name: actor.displayName,
+          summary: actor.bio,
+          inbox: `https://${domain}/users/${username}/inbox`,
+          outbox: `https://${domain}/users/${username}/outbox`,
+          following: `https://${domain}/users/${username}/following`,
+          followers: `https://${domain}/users/${username}/followers`,
+        };
+
+        return res.status(200).json(activityPubActor);
+      }
+
+      // Redirect to profile for HTML requests
+      res.redirect(302, `/profile/${username}`);
+    } catch (error) {
+      console.error("Error fetching actor:", error);
+      res.status(500).json({ error: "Failed to fetch actor" });
+    }
+  });
+
   return router;
 }
+
+// Keep the original export name for backward compatibility
+export { configureActorRoutes as configureTestActorRoutes };
