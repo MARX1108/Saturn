@@ -2,11 +2,10 @@ import express, { Request, Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { Db } from "mongodb";
-import { PostService } from "../services/postService";
+import { Db, ObjectId } from "mongodb";
 import { ActorService } from "../services/actorService";
 import { authenticateToken } from "../middleware/auth";
-import { Attachment, PostResponse } from "../types/post";
+import { Attachment, PostResponse, Post } from "../types/post";
 
 const router = express.Router();
 
@@ -42,48 +41,33 @@ const upload = multer({
 
 // Helper function to convert post to response format
 async function formatPostResponse(
-  post: any,
+  post: Post,
   actorService: ActorService,
   userId?: string
 ): Promise<PostResponse> {
-  // Get author details
-  const author = await actorService.getActorById(post.actorId.toString());
+  const actor = await actorService.getActorById(post.actorId.toString());
 
-  // Check if user has liked this post
-  let liked = false;
-  let reposted = false;
-
-  if (userId) {
-    const db = actorService.getDb();
-    liked = !!(await db.collection("likes").findOne({
-      postId: post._id,
-      actorId: userId,
-    }));
-
-    reposted = !!(await db.collection("reposts").findOne({
-      postId: post._id,
-      actorId: userId,
-    }));
-  }
-
-  return {
+  const formattedPost: PostResponse = {
     id: post._id.toString(),
     content: post.content,
+    createdAt: post.createdAt,
     author: {
-      username: author?.preferredUsername || "unknown",
-      displayName: author?.name || author?.preferredUsername || "Unknown User",
-      avatarUrl: author?.icon?.url || null,
+      id: post.actorId.toString(),
+      username: actor?.preferredUsername || "unknown",
+      displayName: actor?.name || actor?.preferredUsername || "Unknown User",
+      avatarUrl: actor?.icon?.url || "/default-avatar.png",
     },
-    createdAt: post.createdAt.toISOString(),
-    sensitive: post.sensitive || false,
-    contentWarning: post.contentWarning || "",
+    sensitive: post.sensitive,
+    contentWarning: post.contentWarning,
     attachments: post.attachments || [],
-    likeCount: post.likes || 0,
-    replyCount: post.replies || 0,
-    repostCount: post.reposts || 0,
-    liked,
-    reposted,
+    likes: post.likes || 0,
+    replies: post.replies || 0,
+    reposts: post.reposts || 0,
+    // Add liked property if we have a logged in user
+    liked: false, // TODO: Implement proper like check
   };
+
+  return formattedPost;
 }
 
 // Create a new post
@@ -94,10 +78,8 @@ router.post("/posts", authenticateToken, (req: Request, res: Response) => {
     }
 
     try {
-      const db = req.app.get("db") as Db;
-      const domain = req.app.get("domain") as string;
-      const postService = new PostService(db, domain);
-      const actorService = new ActorService(db, domain);
+      // Get services from the service container
+      const { actorService, postService } = req.services;
 
       // Get user from token
       const userId = req.user.id;
@@ -134,7 +116,7 @@ router.post("/posts", authenticateToken, (req: Request, res: Response) => {
           fs.renameSync(file.path, finalPath);
 
           attachments.push({
-            url: `https://${domain}/media/${fileName}`,
+            url: `https://${req.app.get("domain")}/media/${fileName}`,
             type: file.mimetype.startsWith("image/")
               ? "Image"
               : file.mimetype.startsWith("video/")
@@ -175,10 +157,7 @@ router.post("/posts", authenticateToken, (req: Request, res: Response) => {
 // Get feed (public timeline)
 router.get("/posts", async (req: Request, res: Response) => {
   try {
-    const db = req.app.get("db") as Db;
-    const domain = req.app.get("domain") as string;
-    const postService = new PostService(db, domain);
-    const actorService = new ActorService(db, domain);
+    const { actorService, postService } = req.services;
 
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -206,10 +185,7 @@ router.get("/posts", async (req: Request, res: Response) => {
 // Get single post by ID
 router.get("/posts/:id", async (req: Request, res: Response) => {
   try {
-    const db = req.app.get("db") as Db;
-    const domain = req.app.get("domain") as string;
-    const postService = new PostService(db, domain);
-    const actorService = new ActorService(db, domain);
+    const { actorService, postService } = req.services;
 
     const { id } = req.params;
     const post = await postService.getPostById(id);
@@ -232,12 +208,9 @@ router.get("/posts/:id", async (req: Request, res: Response) => {
 });
 
 // Get posts by username
-router.get("/posts/user/:username", async (req: Request, res: Response) => {
+router.get("/users/:username/posts", async (req: Request, res: Response) => {
   try {
-    const db = req.app.get("db") as Db;
-    const domain = req.app.get("domain") as string;
-    const postService = new PostService(db, domain);
-    const actorService = new ActorService(db, domain);
+    const { actorService, postService } = req.services;
 
     const { username } = req.params;
     const page = parseInt(req.query.page as string) || 1;
@@ -273,10 +246,7 @@ router.put(
   authenticateToken,
   async (req: Request, res: Response) => {
     try {
-      const db = req.app.get("db") as Db;
-      const domain = req.app.get("domain") as string;
-      const postService = new PostService(db, domain);
-      const actorService = new ActorService(db, domain);
+      const { actorService, postService } = req.services;
 
       const { id } = req.params;
       const userId = req.user.id;
@@ -316,9 +286,7 @@ router.delete(
   authenticateToken,
   async (req: Request, res: Response) => {
     try {
-      const db = req.app.get("db") as Db;
-      const domain = req.app.get("domain") as string;
-      const postService = new PostService(db, domain);
+      const { postService } = req.services;
 
       const { id } = req.params;
       const userId = req.user.id;
@@ -345,9 +313,7 @@ router.post(
   authenticateToken,
   async (req: Request, res: Response) => {
     try {
-      const db = req.app.get("db") as Db;
-      const domain = req.app.get("domain") as string;
-      const postService = new PostService(db, domain);
+      const { postService } = req.services;
 
       const { id } = req.params;
       const userId = req.user.id;
@@ -374,9 +340,7 @@ router.post(
   authenticateToken,
   async (req: Request, res: Response) => {
     try {
-      const db = req.app.get("db") as Db;
-      const domain = req.app.get("domain") as string;
-      const postService = new PostService(db, domain);
+      const { postService } = req.services;
 
       const { id } = req.params;
       const userId = req.user.id;

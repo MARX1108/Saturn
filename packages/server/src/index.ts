@@ -5,14 +5,18 @@ import actorsRouter from "./routes/actors";
 import webfingerRouter from "./routes/webfinger";
 import postsRouter from "./routes/posts";
 import { errorHandler } from "./middleware/errorHandler";
+import { createServiceContainer } from "./utils/container";
+import { serviceMiddleware } from "./middleware/serviceMiddleware";
+import { initPlugins } from "./plugins";
+import config from "./config";
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/saturn";
-const DOMAIN = process.env.DOMAIN || "localhost:4000";
+const PORT = config.port || 4000;
+const MONGO_URI = config.mongo.uri;
+const DOMAIN = config.domain;
 
 // Middleware
-app.use(cors());
+app.use(cors(config.cors));
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -25,13 +29,25 @@ async function startServer() {
 
     const db = client.db();
 
-    // Store database connection in app
+    // Create service container with repositories and services
+    const services = createServiceContainer(db, DOMAIN);
+    
+    // Store services in app for middleware access
+    app.set("services", services);
+    
+    // Legacy support - these will be deprecated in future
     app.set("db", db);
     app.set("domain", DOMAIN);
 
     console.log("Initializing server...");
+    
+    // Initialize plugins
+    initPlugins(app);
 
-    // Register routes - fix: Pass app as the first argument
+    // Apply service middleware to all routes
+    app.use(serviceMiddleware);
+
+    // Register routes
     app.use("/", actorsRouter);
     app.use("/", webfingerRouter);
     app.use("/api", postsRouter);
@@ -43,10 +59,18 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
+    
+    return { app, client };
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
   }
 }
 
-startServer();
+// For testing purposes, we export the promise
+export const serverPromise = startServer();
+
+// Only in production or development, not in test
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}

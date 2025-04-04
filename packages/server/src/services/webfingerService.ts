@@ -1,31 +1,48 @@
 import { Db } from "mongodb";
+import { ActorRepository } from "../repositories/actorRepository";
+
+export interface WebFingerResource {
+  subject: string;
+  links: WebFingerLink[];
+}
+
+export interface WebFingerLink {
+  rel: string;
+  type?: string;
+  href?: string;
+  template?: string;
+}
 
 export class WebFingerService {
-  private db: Db;
+  private actorRepository: ActorRepository;
   private domain: string;
 
   constructor(db: Db, domain: string) {
-    this.db = db;
+    this.actorRepository = new ActorRepository(db);
     this.domain = domain;
   }
 
-  async handleWebFingerRequest(resource: string): Promise<any> {
-    // resource format: acct:username@domain
-    if (!resource.startsWith("acct:")) {
+  /**
+   * Resolve a WebFinger resource
+   * @param resource The resource to resolve (acct:username@domain)
+   */
+  async resolveResource(resource: string): Promise<WebFingerResource> {
+    // Parse the resource URI (acct:username@domain)
+    const match = resource.match(/^acct:([^@]+)@(.+)$/);
+
+    if (!match) {
       throw new Error("Invalid resource format");
     }
 
-    const parts = resource.substr(5).split("@");
-    if (parts.length !== 2 || parts[1] !== this.domain) {
-      throw new Error("User not found on this instance");
+    const [, username, resourceDomain] = match;
+
+    // Verify this is for our domain
+    if (resourceDomain !== this.domain) {
+      throw new Error("Resource not found on this server");
     }
 
-    const username = parts[0];
-
-    // Find actor in database
-    const actor = await this.db.collection("actors").findOne({
-      preferredUsername: username,
-    });
+    // Find the actor
+    const actor = await this.actorRepository.findByUsername(username);
 
     if (!actor) {
       throw new Error("User not found");
@@ -44,5 +61,3 @@ export class WebFingerService {
     };
   }
 }
-
-// Configure in routes to enable discovery from other instances
