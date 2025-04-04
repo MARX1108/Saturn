@@ -9,6 +9,7 @@ import { createServiceContainer } from "./utils/container";
 import { serviceMiddleware } from "./middleware/serviceMiddleware";
 import { initPlugins } from "./plugins";
 import config from "./config";
+import authRouter from "./routes/auth"; // Import missing auth router
 
 const app = express();
 const PORT = config.port || 4000;
@@ -21,7 +22,7 @@ app.use(express.json());
 app.use(express.static("public"));
 
 // Connect to MongoDB
-async function startServer() {
+export async function startServer() {
   try {
     const client = new MongoClient(MONGO_URI);
     await client.connect();
@@ -50,27 +51,34 @@ async function startServer() {
     // Register routes
     app.use("/", actorsRouter);
     app.use("/", webfingerRouter);
-    app.use("/api", postsRouter);
+    app.use("/posts", postsRouter); // Fixed route path
+    app.use("/api/auth", authRouter); // Add auth router
 
     // Error handling middleware should be last
     app.use(errorHandler);
 
-    // Start the server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-    });
+    // Start the server only if not in test mode
+    let server;
+    if (process.env.NODE_ENV !== 'test') {
+      server = app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+      });
+    }
     
-    return { app, client };
+    return { app, client, server, db };
   } catch (error) {
     console.error("Failed to start server:", error);
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    }
+    throw error;
   }
 }
+
+// Export the app for testing
+export { app };
 
 // For testing purposes, we export the promise
 export const serverPromise = startServer();
 
-// Only in production or development, not in test
-if (process.env.NODE_ENV !== 'test') {
-  startServer();
-}
+// No duplicate call to startServer() - this is now handled by the serverPromise export
