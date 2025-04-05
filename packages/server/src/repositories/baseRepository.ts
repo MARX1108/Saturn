@@ -1,4 +1,4 @@
-import { Collection, Db, Filter, OptionalId, Document, ObjectId } from "mongodb";
+import { Collection, Db, Filter, OptionalId, Document, ObjectId, OptionalUnlessRequiredId, WithId } from "mongodb";
 
 export interface BaseRepository<T extends Document> {
   findById(id: string): Promise<T | null>;
@@ -18,7 +18,8 @@ export abstract class MongoRepository<T extends Document> implements BaseReposit
 
   async findById(id: string): Promise<T | null> {
     try {
-      return await this.collection.findOne({ _id: new ObjectId(id) } as Filter<T>);
+      const result = await this.collection.findOne({ _id: new ObjectId(id) } as Filter<T>);
+      return result ? ({ ...result, _id: undefined } as unknown as T) : null; // Map `WithId<T>` to `T`
     } catch (error) {
       console.error(`Error finding document by ID: ${error}`);
       return null;
@@ -26,16 +27,18 @@ export abstract class MongoRepository<T extends Document> implements BaseReposit
   }
 
   async findOne(filter: Filter<T>): Promise<T | null> {
-    return this.collection.findOne(filter);
+    const result = await this.collection.findOne(filter);
+    return result ? ({ ...result, _id: undefined } as unknown as T) : null; // Map `WithId<T>` to `T`
   }
 
   async findAll(filter: Filter<T> = {}): Promise<T[]> {
-    return this.collection.find(filter).toArray();
+    const results = await this.collection.find(filter).toArray();
+    return results.map(result => ({ ...result, _id: undefined } as unknown as T)); // Map `WithId<T>` to `T`
   }
 
   async create(data: OptionalId<T>): Promise<T> {
-    const result = await this.collection.insertOne(data as OptionalId<Document>);
-    return { ...data, _id: result.insertedId } as T;
+    const result = await this.collection.insertOne(data as OptionalUnlessRequiredId<T>);
+    return { ...data, _id: result.insertedId } as T; // Ensure `_id` is included in the return type
   }
 
   async update(id: string, data: Partial<T>): Promise<boolean> {

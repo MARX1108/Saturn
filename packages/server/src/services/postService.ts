@@ -1,7 +1,7 @@
 import { Db, ObjectId } from "mongodb";
 import { Post, CreatePostRequest } from "../types/post";
 import { PostRepository } from "../repositories/postRepository";
-import { triggerHook } from "../plugins";
+import { executeHook } from "../plugins";
 
 export class PostService {
   private repository: PostRepository;
@@ -37,7 +37,7 @@ export class PostService {
 
     // Trigger plugin hook for new posts
     try {
-      triggerHook("onNewPost", createdPost);
+      executeHook("onNewPost", createdPost);
     } catch (error) {
       console.error("Error in post creation hook:", error);
     }

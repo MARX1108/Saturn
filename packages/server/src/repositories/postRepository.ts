@@ -3,9 +3,12 @@ import { Post } from "../types/post";
 import { MongoRepository } from "./baseRepository";
 
 export class PostRepository extends MongoRepository<Post> {
+  private db: Db; // Add a `db` property
+
   constructor(db: Db) {
     super(db, "posts");
-    
+    this.db = db; // Store the `Db` instance
+
     // Create indexes
     this.collection.createIndex({ createdAt: -1 });
     this.collection.createIndex({ actorId: 1 });
@@ -66,7 +69,7 @@ export class PostRepository extends MongoRepository<Post> {
   }
 
   async getPostsByUsername(username: string, page = 1, limit = 20, actorCollection = "actors"): Promise<{ posts: Post[], hasMore: boolean }> {
-    const actor = await this.collection.database.collection(actorCollection).findOne({
+    const actor = await this.db.collection(actorCollection).findOne({
       preferredUsername: username
     });
 

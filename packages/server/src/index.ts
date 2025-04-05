@@ -1,15 +1,18 @@
 import express from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
-import actorsRouter from "./routes/actors";
-import webfingerRouter from "./routes/webfinger";
-import postsRouter from "./routes/posts";
 import { errorHandler } from "./middleware/errorHandler";
 import { createServiceContainer } from "./utils/container";
 import { serviceMiddleware } from "./middleware/serviceMiddleware";
 import { initPlugins } from "./plugins";
 import config from "./config";
-import authRouter from "./routes/auth"; // Import missing auth router
+
+// Import route configurations from modules
+import { configureActorRoutes } from "./modules/actors/routes/actorRoutes";
+import { configureWebFingerRoutes } from "./modules/webfinger/routes/webfingerRoutes";
+import { configurePostRoutes } from "./modules/posts/routes/postRoutes";
+import { configureAuthRoutes } from "./modules/auth/routes/authRoutes";
+import { configureActivityPubRoutes } from "./modules/activitypub/routes/activitypubRoutes";
 
 const app = express();
 const PORT = config.port || 4000;
@@ -48,11 +51,22 @@ export async function startServer() {
     // Apply service middleware to all routes
     app.use(serviceMiddleware);
 
-    // Register routes
-    app.use("/", actorsRouter);
-    app.use("/", webfingerRouter);
-    app.use("/posts", postsRouter); // Fixed route path
-    app.use("/api/auth", authRouter); // Add auth router
+    // Register routes using the modular controller-based architecture
+    // Mount each router at an appropriate base path
+    const actorsRouter = configureActorRoutes(db, DOMAIN);
+    app.use("/api/actors", actorsRouter);
+    
+    const webfingerRouter = configureWebFingerRoutes(db, DOMAIN);
+    app.use("/", webfingerRouter); // WebFinger must be at the root for discovery
+    
+    const activityPubRouter = configureActivityPubRoutes(db, DOMAIN);
+    app.use("/", activityPubRouter); // ActivityPub endpoints must be at the root for federation
+    
+    const postsRouter = configurePostRoutes(db, DOMAIN);
+    app.use("/api", postsRouter);
+    
+    const authRouter = configureAuthRoutes(db, DOMAIN);
+    app.use("/api/auth", authRouter);
 
     // Error handling middleware should be last
     app.use(errorHandler);
@@ -80,5 +94,3 @@ export { app };
 
 // For testing purposes, we export the promise
 export const serverPromise = startServer();
-
-// No duplicate call to startServer() - this is now handled by the serverPromise export

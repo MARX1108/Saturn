@@ -7,7 +7,7 @@ import { PostRepository } from '../../repositories/postRepository';
 jest.mock('../../repositories/postRepository');
 // Mock the plugins system
 jest.mock('../../plugins', () => ({
-  triggerHook: jest.fn()
+  executeHook: jest.fn()
 }));
 
 // Create a mock instance of PostRepository

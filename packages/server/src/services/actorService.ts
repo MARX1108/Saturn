@@ -13,7 +13,8 @@ export class ActorService {
   }
 
   async createActor(
-    actorData: CreateActorRequest
+    actorData: CreateActorRequest,
+    iconInfo?: { url: string; mediaType: string }
   ): Promise<Actor> {
     // Generate keypair for ActivityPub federation
     const { publicKey, privateKey } = await this.generateKeyPair();
@@ -21,7 +22,7 @@ export class ActorService {
     // Prepare new actor object
     const actorId = new ObjectId();
     const newActor: Actor = {
-      _id: actorId,
+      _id: actorId.toHexString(), // Convert ObjectId to string
       preferredUsername: actorData.username,
       name: actorData.displayName || actorData.username,
       bio: actorData.bio || "",
@@ -33,7 +34,7 @@ export class ActorService {
       inbox: `https://${this.domain}/users/${actorData.username}/inbox`,
       outbox: `https://${this.domain}/users/${actorData.username}/outbox`,
       followers: `https://${this.domain}/users/${actorData.username}/followers`,
-      following: `https://${this.domain}/users/${actorData.username}/following`,
+      following: [], // Ensure only one definition of following
       
       publicKey: {
         id: `https://${this.domain}/users/${actorData.username}#main-key`,
@@ -46,8 +47,7 @@ export class ActorService {
       password: actorData.password, // Should be hashed before reaching here
       
       // Additional data
-      following: [],
-      icon: actorData.icon
+      icon: iconInfo ? { type: "Image", ...iconInfo } : undefined
     };
 
     // Save to database using repository
@@ -68,6 +68,7 @@ export class ActorService {
       displayName?: string;
       bio?: string;
       icon?: {
+        type: "Image"; // Add type field
         url: string;
         mediaType: string;
       };
@@ -105,6 +106,44 @@ export class ActorService {
     targetActorId: string
   ): Promise<boolean> {
     return this.repository.removeFollowing(actorId, targetActorId);
+  }
+
+  async updateActor(
+    username: string,
+    updates: { displayName?: string; bio?: string },
+    iconInfo?: { url: string; mediaType: string }
+  ): Promise<Actor | null> {
+    const updateData: Partial<Actor> = {
+      ...updates,
+      icon: iconInfo ? { type: "Image", ...iconInfo } : undefined,
+    };
+
+    const result = await this.repository.updateProfileByUsername(username, updateData);
+    if (!result) return null;
+
+    return this.repository.findByUsername(username);
+  }
+
+  async deleteActor(username: string): Promise<boolean> {
+    const result = await this.repository.deleteByUsername(username);
+    return result.deletedCount > 0;
+  }
+
+  async getFullActorByUsername(username: string): Promise<Actor | null> {
+    const actor = await this.repository.findByUsername(username);
+    if (!actor) return null;
+
+    return {
+      ...actor,
+      "@context": [
+        "https://www.w3.org/ns/activitystreams",
+        "https://w3id.org/security/v1",
+      ],
+    };
+  }
+
+  async searchActors(query: string): Promise<Actor[]> {
+    return this.repository.searchByUsername(query);
   }
 
   private async generateKeyPair(): Promise<{
