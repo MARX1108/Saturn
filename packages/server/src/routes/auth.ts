@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { Db } from "mongodb";
-import bcrypt from "bcryptjs";
+import bcryptjs from "bcryptjs"; // Replace bcrypt with bcryptjs
 import { generateToken } from "../middleware/auth";
 
 export default function configureAuthRoutes(db: Db, domain: string) {
@@ -33,8 +33,8 @@ export default function configureAuthRoutes(db: Db, domain: string) {
       }
 
       // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const salt = await bcryptjs.genSalt(10);
+      const hashedPassword = await bcryptjs.hash(password, salt);
 
       // Create actor data
       const actorData = {
@@ -92,7 +92,7 @@ export default function configureAuthRoutes(db: Db, domain: string) {
       }
 
       // Check password
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await bcryptjs.compare(password, user.password);
 
       if (!isMatch) {
         return res.status(401).json({ error: "Invalid credentials" });

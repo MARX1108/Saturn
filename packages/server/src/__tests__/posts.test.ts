@@ -34,6 +34,7 @@ beforeAll(async () => {
     username: "testuser",
     displayName: "Test User",
     bio: "Test bio",
+    password: "securepassword",
   });
   testUserId = actor._id.toString();
 

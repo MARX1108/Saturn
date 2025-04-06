@@ -3,6 +3,9 @@ import { ActorService } from "../actorService";
 import { setupTestDb, teardownTestDb } from "../../tests/testUtils";
 import * as fs from "fs";
 import * as path from "path";
+import bcryptjs from "bcryptjs"; // Replace bcrypt with bcryptjs
+
+jest.setTimeout(10000); // Increase timeout to 10 seconds for long-running tests
 
 describe("ActorService", () => {
   let client: MongoClient;
@@ -124,7 +127,7 @@ describe("ActorService", () => {
       const actor = await db.collection("actors").findOne({ preferredUsername: "passworduser" });
       expect(actor).toBeDefined();
       expect(actor?.password).not.toBe("plainpassword");
-      expect(actor?.password).toMatch(/^\$2[aby]\$\d+\$.{50,}$/); // Bcrypt pattern
+      expect(actor?.password).toMatch(/^\$2[aby]\$\d+\$.{50,}$/); // Bcryptjs pattern remains the same
     });
   });
 

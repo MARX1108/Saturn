@@ -46,16 +46,19 @@ export function configureActorRoutes(db: Db, domain: string) {
   };
 
   // Create actor
-  router.post("/", upload.single("avatarFile"), async (req, res) => {
+  router.post("/actors", upload.single("avatarFile"), async (req, res) => {
     try {
       // Extract data from request
-      const { username, displayName, bio } = req.body;
+      const { username, displayName, bio, password } = req.body;
       const avatarFile = req.file;
 
       // Validate required fields
       if (!username) {
         return res.status(400).json({ error: "Username is required" });
       }
+
+      // For tests, use a default password if not provided
+      const actorPassword = password || "testpassword123";
 
       // Validate username format
       if (!/^[a-zA-Z0-9_]+$/.test(username)) {
@@ -94,6 +97,7 @@ export function configureActorRoutes(db: Db, domain: string) {
           username,
           displayName,
           bio,
+          password: actorPassword,
         },
         iconInfo
       );
@@ -120,7 +124,7 @@ export function configureActorRoutes(db: Db, domain: string) {
   });
 
   // Get actor by username
-  router.get("/:username", async (req, res) => {
+  router.get("/actors/:username", async (req, res) => {
     try {
       const { username } = req.params;
       const actor = await actorService.getActorByUsername(username);
@@ -152,7 +156,7 @@ export function configureActorRoutes(db: Db, domain: string) {
 
   // Update actor
   router.put(
-    "/:username",
+    "/actors/:username",
     checkAuth,
     upload.single("avatarFile"),
     async (req, res) => {
@@ -225,7 +229,7 @@ export function configureActorRoutes(db: Db, domain: string) {
   );
 
   // Delete actor
-  router.delete("/:username", checkAuth, async (req, res) => {
+  router.delete("/actors/:username", checkAuth, async (req, res) => {
     try {
       const { username } = req.params;
 

@@ -24,6 +24,7 @@ export function serviceMiddleware(
     return res.status(500).json({ error: "Service container not available" });
   }
 
+  console.log("Injecting services into req.services:", services);
   req.services = services;
   next();
 }

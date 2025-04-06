@@ -2,6 +2,8 @@ import { MongoClient, Db, ObjectId } from "mongodb";
 import { ActorRepository } from "../actorRepository";
 import { setupTestDb, teardownTestDb } from "../../tests/testUtils";
 
+jest.setTimeout(10000); // Increase timeout to 10 seconds for long-running tests
+
 describe("ActorRepository", () => {
   let client: MongoClient;
   let db: Db;

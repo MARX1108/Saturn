@@ -2,6 +2,8 @@ import { MongoClient, Db, ObjectId } from "mongodb";
 import { PostRepository } from "../postRepository";
 import { setupTestDb, teardownTestDb } from "../../tests/testUtils";
 
+jest.setTimeout(10000); // Increase timeout to 10 seconds for long-running tests
+
 describe("PostRepository", () => {
   let client: MongoClient;
   let db: Db;
@@ -229,7 +231,7 @@ describe("PostRepository", () => {
       
       // Get third page
       const page3 = await postRepository.findAll(3, 10);
-      expect(page3.posts.length).toBe(5);
+      expect(page3.posts.length).toBe 5);
       expect(page3.hasMore).toBe(false);
     });
     

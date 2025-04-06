@@ -6,8 +6,12 @@ import { Db, ObjectId } from "mongodb";
 import { ActorService } from "../services/actorService";
 import { authenticateToken } from "../middleware/auth";
 import { Attachment, PostResponse, Post } from "../types/post";
+import { serviceMiddleware } from "../middleware/serviceMiddleware";
 
 const router = express.Router();
+
+// Apply serviceMiddleware to inject services into req.services
+router.use(serviceMiddleware);
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
@@ -66,6 +70,11 @@ async function formatPostResponse(
     // Add liked property if we have a logged in user
     liked: false, // TODO: Implement proper like check
   };
+
+  // Check if the post is liked by the current user
+  if (userId && post.likedBy?.includes(userId)) {
+    formattedPost.liked = true;
+  }
 
   return formattedPost;
 }
@@ -149,6 +158,7 @@ router.post("/posts", authenticateToken, (req: Request, res: Response) => {
       return res.status(201).json(formattedPost);
     } catch (error) {
       console.error("Error creating post:", error);
+      console.error("Error details:", error);
       return res.status(500).json({ error: "Failed to create post" });
     }
   });
@@ -178,6 +188,7 @@ router.get("/posts", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error getting posts:", error);
+    console.error("Error details:", error);
     return res.status(500).json({ error: "Failed to get posts" });
   }
 });
@@ -203,6 +214,7 @@ router.get("/posts/:id", async (req: Request, res: Response) => {
     return res.json(formattedPost);
   } catch (error) {
     console.error("Error getting post:", error);
+    console.error("Error details:", error);
     return res.status(500).json({ error: "Failed to get post" });
   }
 });
@@ -236,6 +248,7 @@ router.get("/users/:username/posts", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error getting posts by username:", error);
+    console.error("Error details:", error);
     return res.status(500).json({ error: "Failed to get posts" });
   }
 });
@@ -275,6 +288,7 @@ router.put(
       return res.json(formattedPost);
     } catch (error) {
       console.error("Error updating post:", error);
+      console.error("Error details:", error);
       return res.status(500).json({ error: "Failed to update post" });
     }
   }
@@ -302,6 +316,7 @@ router.delete(
       return res.status(204).end();
     } catch (error) {
       console.error("Error deleting post:", error);
+      console.error("Error details:", error);
       return res.status(500).json({ error: "Failed to delete post" });
     }
   }
@@ -329,6 +344,7 @@ router.post(
       return res.status(200).json({ success: true });
     } catch (error) {
       console.error("Error liking post:", error);
+      console.error("Error details:", error);
       return res.status(500).json({ error: "Failed to like post" });
     }
   }
@@ -354,6 +370,7 @@ router.post(
       return res.status(200).json({ success: true });
     } catch (error) {
       console.error("Error unliking post:", error);
+      console.error("Error details:", error);
       return res.status(500).json({ error: "Failed to unlike post" });
     }
   }

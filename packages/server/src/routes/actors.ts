@@ -5,6 +5,7 @@ import fs from "fs";
 import { ActorService } from "../services/actorService";
 import { CreateActorRequest } from "../types/actor";
 import { Db } from "mongodb";
+import { serviceMiddleware } from "../middleware/serviceMiddleware";
 
 const router = express.Router();
 
@@ -34,6 +35,9 @@ const upload = multer({
   },
 });
 
+// Apply serviceMiddleware to inject services into req.services
+router.use(serviceMiddleware);
+
 // Create new actor
 router.post("/", (req, res) => {
   // Use multer middleware as a function to handle the file upload
@@ -43,10 +47,7 @@ router.post("/", (req, res) => {
     }
 
     try {
-      // Get database and domain from app settings
-      const db = req.app.get("db") as Db;
-      const domain = req.app.get("domain") as string;
-      const actorService = new ActorService(db, domain);
+      const actorService = req.services.actorService;
 
       // Extract data from request
       const { username, displayName, bio } = req.body;
@@ -111,9 +112,7 @@ router.post("/", (req, res) => {
 // Get actor by username
 router.get("/:username", async (req, res) => {
   try {
-    const db = req.app.get("db") as Db;
-    const domain = req.app.get("domain") as string;
-    const actorService = new ActorService(db, domain);
+    const actorService = req.services.actorService;
 
     const { username } = req.params;
     const actor = await actorService.getActorByUsername(username);
@@ -137,9 +136,7 @@ router.put("/:username", (req, res) => {
     }
 
     try {
-      const db = req.app.get("db") as Db;
-      const domain = req.app.get("domain") as string;
-      const actorService = new ActorService(db, domain);
+      const actorService = req.services.actorService;
 
       const { username } = req.params;
       const { displayName, bio } = req.body;
@@ -198,9 +195,7 @@ router.put("/:username", (req, res) => {
 // Delete actor (optional)
 router.delete("/:username", async (req, res) => {
   try {
-    const db = req.app.get("db") as Db;
-    const domain = req.app.get("domain") as string;
-    const actorService = new ActorService(db, domain);
+    const actorService = req.services.actorService;
 
     const { username } = req.params;
     const deleted = await actorService.deleteActor(username);
@@ -219,9 +214,7 @@ router.delete("/:username", async (req, res) => {
 // Get ActivityPub actor profile (federated)
 router.get("/users/:username", async (req, res) => {
   try {
-    const db = req.app.get("db") as Db;
-    const domain = req.app.get("domain") as string;
-    const actorService = new ActorService(db, domain);
+    const actorService = req.services.actorService;
 
     const { username } = req.params;
 

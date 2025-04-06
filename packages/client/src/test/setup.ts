@@ -23,3 +23,8 @@ jest.useFakeTimers();
 
 // Mock URL.createObjectURL
 global.URL.createObjectURL = jest.fn();
+
+// Test to verify import.meta.env mock
+if (import.meta.env.VITE_API_URL !== "http://localhost:4000") {
+  throw new Error("import.meta.env mock is not working correctly");
+}

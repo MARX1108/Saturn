@@ -2,6 +2,7 @@ import { Db, ObjectId } from "mongodb";
 import crypto from "crypto";
 import { Actor, CreateActorRequest } from "../types/actor";
 import { ActorRepository } from "../repositories/actorRepository";
+import bcryptjs from "bcryptjs"; // Replace bcrypt with bcryptjs
 
 export class ActorService {
   private repository: ActorRepository;
@@ -16,6 +17,11 @@ export class ActorService {
     actorData: CreateActorRequest,
     iconInfo?: { url: string; mediaType: string }
   ): Promise<Actor> {
+    // Validate required fields
+    if (!actorData.password) {
+      throw new Error("Password is required to create an actor");
+    }
+
     // Generate keypair for ActivityPub federation
     const { publicKey, privateKey } = await this.generateKeyPair();
 
@@ -50,8 +56,17 @@ export class ActorService {
       icon: iconInfo ? { type: "Image", ...iconInfo } : undefined
     };
 
-    // Save to database using repository
-    return this.repository.create(newActor);
+    // Hash the password before saving
+    const hashedPassword = await bcryptjs.hash(actorData.password, 10);
+    newActor.password = hashedPassword; // Replace the plain password with the hashed one
+
+    // Wrap repository call in a try-catch block
+    try {
+      return await this.repository.create(newActor);
+    } catch (error) {
+      console.error("Error creating actor in repository:", error);
+      throw new Error("Failed to create actor");
+    }
   }
   
   async getActorById(id: string): Promise<Actor | null> {

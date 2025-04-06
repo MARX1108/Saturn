@@ -3,7 +3,7 @@ import express from "express";
 import { MongoClient, Db } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import configureAuthRoutes from "../routes/auth";
-import bcrypt from "bcryptjs";
+import bcryptjs from "bcryptjs"; // Replace bcrypt with bcryptjs
 
 describe("Authentication Routes", () => {
   let app: express.Application;
@@ -82,7 +82,7 @@ describe("Authentication Routes", () => {
       // First create a user
       await db.collection("actors").insertOne({
         preferredUsername: "existinguser",
-        password: await bcrypt.hash("password123", 10),
+        password: await bcryptjs.hash("password123", 10),
         name: "Existing User",
       });
 
@@ -145,7 +145,7 @@ describe("Authentication Routes", () => {
   describe("POST /api/auth/login", () => {
     beforeEach(async () => {
       // Create a test user for login tests
-      const hashedPassword = await bcrypt.hash("password123", 10);
+      const hashedPassword = await bcryptjs.hash("password123", 10);
       await db.collection("actors").insertOne({
         preferredUsername: "testuser",
         password: hashedPassword,
@@ -239,7 +239,7 @@ describe("Authentication Routes", () => {
 
     beforeEach(async () => {
       // Create a test user
-      const hashedPassword = await bcrypt.hash("password123", 10);
+      const hashedPassword = await bcryptjs.hash("password123", 10);
       const user = await db.collection("actors").insertOne({
         preferredUsername: "testuser",
         password: hashedPassword,

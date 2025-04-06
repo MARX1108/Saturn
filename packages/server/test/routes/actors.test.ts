@@ -11,8 +11,17 @@ jest.mock("../../src/services/actorService");
 // Create testing express app
 const app = express();
 app.use(express.json());
+
+// Set database and domain in app (instead of app.locals)
+app.set("db", {}); // Mock database connection
+app.set("domain", "test.domain");
+
+// Initialize service middleware structure
 app.use((req, res, next) => {
-  req.app.locals.db = {}; // Mock database connection
+  req.services = {
+    actorService: new ActorService({} as any, "test.domain"),
+    postService: {} as any
+  };
   next();
 });
 app.use("/", actorsRouter);
@@ -43,14 +52,17 @@ describe("Actor Routes", () => {
     jest.resetAllMocks();
   });
 
-  describe("POST /actors", () => {
+  describe("POST /", () => {
     it("should create a new actor", async () => {
       // Mock implementations
       const mockActor = {
         id: "123",
         username: "testuser",
+        preferredUsername: "testuser",
         displayName: "Test User",
+        name: "Test User",
         bio: "Test bio",
+        summary: "Test bio",
       };
 
       // Fix the type issues by using proper typing for the mocks
@@ -62,10 +74,11 @@ describe("Actor Routes", () => {
         .mockResolvedValue(mockActor);
 
       const response = await request(app)
-        .post("/actors")
+        .post("/")
         .field("username", "testuser")
         .field("displayName", "Test User")
-        .field("bio", "Test bio");
+        .field("bio", "Test bio")
+        .field("password", "testpassword123");
 
       expect(response.status).toBe(201);
       expect(response.body).toEqual(mockActor);
@@ -74,6 +87,7 @@ describe("Actor Routes", () => {
           username: "testuser",
           displayName: "Test User",
           bio: "Test bio",
+          password: "testpassword123"
         }),
         undefined
       );
@@ -81,9 +95,10 @@ describe("Actor Routes", () => {
 
     it("should return 400 if username is missing", async () => {
       const response = await request(app)
-        .post("/actors")
+        .post("/")
         .field("displayName", "Test User")
-        .field("bio", "Test bio");
+        .field("bio", "Test bio")
+        .field("password", "testpassword123");
 
       expect(response.status).toBe(400);
     });
@@ -94,10 +109,11 @@ describe("Actor Routes", () => {
         .mockResolvedValue(true);
 
       const response = await request(app)
-        .post("/actors")
+        .post("/")
         .field("username", "existinguser")
         .field("displayName", "Existing User")
-        .field("bio", "Test bio");
+        .field("bio", "Test bio")
+        .field("password", "testpassword123");
 
       expect(response.status).toBe(409);
     });
@@ -106,8 +122,11 @@ describe("Actor Routes", () => {
       const mockActor = {
         id: "123",
         username: "testuser",
+        preferredUsername: "testuser",
         displayName: "Test User",
+        name: "Test User",
         bio: "Test bio",
+        summary: "Test bio",
         icon: {
           url: "https://localhost:4000/avatars/testuser-123456.jpg",
           mediaType: "image/jpeg",
@@ -126,10 +145,11 @@ describe("Actor Routes", () => {
       fs.writeFileSync(testImagePath, "test image content");
 
       const response = await request(app)
-        .post("/actors")
+        .post("/")
         .field("username", "testuser")
         .field("displayName", "Test User")
         .field("bio", "Test bio")
+        .field("password", "testpassword123")
         .attach("avatarFile", testImagePath);
 
       // Clean up test file
@@ -138,7 +158,12 @@ describe("Actor Routes", () => {
       expect(response.status).toBe(201);
       expect(response.body).toEqual(mockActor);
       expect(ActorService.prototype.createActor).toHaveBeenCalledWith(
-        expect.anything(),
+        expect.objectContaining({
+          username: "testuser",
+          displayName: "Test User",
+          bio: "Test bio",
+          password: "testpassword123"
+        }),
         expect.objectContaining({
           mediaType: expect.any(String),
           url: expect.stringContaining("avatars"),
@@ -147,20 +172,23 @@ describe("Actor Routes", () => {
     });
   });
 
-  describe("GET /actors/:username", () => {
+  describe("GET /:username", () => {
     it("should return actor by username", async () => {
       const mockActor = {
         id: "123",
         username: "testuser",
+        preferredUsername: "testuser",
         displayName: "Test User",
+        name: "Test User",
         bio: "Test bio",
+        summary: "Test bio",
       };
 
       jest
         .spyOn(ActorService.prototype, "getActorByUsername")
         .mockResolvedValue(mockActor);
 
-      const response = await request(app).get("/actors/testuser");
+      const response = await request(app).get("/testuser");
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockActor);
@@ -174,19 +202,22 @@ describe("Actor Routes", () => {
         .spyOn(ActorService.prototype, "getActorByUsername")
         .mockResolvedValue(null);
 
-      const response = await request(app).get("/actors/nonexistent");
+      const response = await request(app).get("/nonexistent");
 
       expect(response.status).toBe(404);
     });
   });
 
-  describe("PUT /actors/:username", () => {
+  describe("PUT /:username", () => {
     it("should update an existing actor", async () => {
       const mockUpdatedActor = {
         id: "123",
         username: "testuser",
+        preferredUsername: "testuser",
         displayName: "Updated Name",
+        name: "Updated Name",
         bio: "Updated bio",
+        summary: "Updated bio",
       };
 
       jest
@@ -197,7 +228,7 @@ describe("Actor Routes", () => {
         .mockResolvedValue(mockUpdatedActor);
 
       const response = await request(app)
-        .put("/actors/testuser")
+        .put("/testuser")
         .field("displayName", "Updated Name")
         .field("bio", "Updated bio");
 
@@ -219,7 +250,7 @@ describe("Actor Routes", () => {
         .mockResolvedValue(false);
 
       const response = await request(app)
-        .put("/actors/nonexistent")
+        .put("/nonexistent")
         .field("displayName", "Updated Name")
         .field("bio", "Updated bio");
 
@@ -227,11 +258,11 @@ describe("Actor Routes", () => {
     });
   });
 
-  describe("DELETE /actors/:username", () => {
+  describe("DELETE /:username", () => {
     it("should delete an existing actor", async () => {
       jest.spyOn(ActorService.prototype, "deleteActor").mockResolvedValue(true);
 
-      const response = await request(app).delete("/actors/testuser");
+      const response = await request(app).delete("/testuser");
 
       expect(response.status).toBe(204);
       expect(ActorService.prototype.deleteActor).toHaveBeenCalledWith(
@@ -244,7 +275,7 @@ describe("Actor Routes", () => {
         .spyOn(ActorService.prototype, "deleteActor")
         .mockResolvedValue(false);
 
-      const response = await request(app).delete("/actors/nonexistent");
+      const response = await request(app).delete("/nonexistent");
 
       expect(response.status).toBe(404);
     });

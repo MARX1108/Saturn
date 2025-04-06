@@ -21,8 +21,26 @@ export async function teardownTestDb(
   client: MongoClient,
   db: Db
 ): Promise<void> {
-  await db.dropDatabase();
-  await client.close();
+  if (!db) {
+    console.warn("Database object is undefined. Skipping dropDatabase.");
+    return;
+  }
+
+  try {
+    await db.dropDatabase();
+  } catch (error) {
+    console.error("Error dropping database:", error);
+  }
+
+  if (client) {
+    try {
+      await client.close();
+    } catch (error) {
+      console.error("Error closing MongoDB client:", error);
+    }
+  } else {
+    console.warn("MongoDB client is undefined. Skipping client.close().");
+  }
 }
 
 /**

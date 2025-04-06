@@ -38,6 +38,7 @@ export async function startServer() {
     
     // Store services in app for middleware access
     app.set("services", services);
+    console.log("ServiceContainer initialized:", services);
     
     // Legacy support - these will be deprecated in future
     app.set("db", db);

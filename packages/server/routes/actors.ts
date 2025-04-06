@@ -62,7 +62,7 @@ const initActorService = (
 router.use(initActorService);
 
 // Create new actor
-router.post("/actors", (req, res) => {
+router.post("/", (req, res) => {
   // Use multer middleware as a function to handle the file upload
   upload.single("avatarFile")(req, res, async (err) => {
     if (err) {
@@ -71,12 +71,16 @@ router.post("/actors", (req, res) => {
 
     try {
       // Extract data from request
-      const { username, displayName, bio } = req.body;
+      const { username, displayName, bio, password } = req.body;
       const avatarFile = req.file;
 
       // Validate required fields
       if (!username) {
         return res.status(400).json({ error: "Username is required" });
+      }
+
+      if (!password) {
+        return res.status(400).json({ error: "Password is required" });
       }
 
       // Validate username (alphanumeric and underscore only)
@@ -117,12 +121,27 @@ router.post("/actors", (req, res) => {
         username,
         displayName,
         bio,
+        password, // Include password for actor creation
       };
 
       // Create actor through service
       const actor = await req.actorService!.createActor(actorData, iconInfo);
 
-      return res.status(201).json(actor);
+      // Format response to match test expectations
+      const response = {
+        ...actor,
+        // Add these fields to match test expectations
+        preferredUsername: actor.username,
+        name: actor.displayName,
+        summary: actor.bio,
+      };
+
+      // Format icon if available
+      if (iconInfo) {
+        response.icon = iconInfo;
+      }
+
+      return res.status(201).json(response);
     } catch (error) {
       console.error("Error creating actor:", error);
       return res.status(500).json({ error: "Failed to create actor" });
@@ -131,7 +150,7 @@ router.post("/actors", (req, res) => {
 });
 
 // Get actor by username
-router.get("/actors/:username", async (req, res) => {
+router.get("/:username", async (req, res) => {
   try {
     const { username } = req.params;
 
@@ -141,7 +160,21 @@ router.get("/actors/:username", async (req, res) => {
       return res.status(404).json({ error: "Actor not found" });
     }
 
-    return res.json(actor);
+    // Format response to match test expectations
+    const response = {
+      ...actor,
+      // Add these fields to match test expectations
+      preferredUsername: actor.username,
+      name: actor.displayName,
+      summary: actor.bio,
+    };
+
+    // Format icon if available
+    if (actor.icon) {
+      response.icon = actor.icon;
+    }
+
+    return res.json(response);
   } catch (error) {
     console.error("Error fetching actor:", error);
     return res.status(500).json({ error: "Failed to fetch actor" });
@@ -149,7 +182,7 @@ router.get("/actors/:username", async (req, res) => {
 });
 
 // Update actor
-router.put("/actors/:username", (req, res) => {
+router.put("/:username", (req, res) => {
   upload.single("avatarFile")(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ error: err.message });
@@ -202,7 +235,23 @@ router.put("/actors/:username", (req, res) => {
         return res.status(404).json({ error: "Actor not found" });
       }
 
-      return res.json(updatedActor);
+      // Format response to match test expectations
+      const response = {
+        ...updatedActor,
+        // Add these fields to match test expectations
+        preferredUsername: updatedActor.username,
+        name: updatedActor.displayName,
+        summary: updatedActor.bio,
+      };
+
+      // Format icon if available
+      if (iconInfo) {
+        response.icon = iconInfo;
+      } else if (updatedActor.icon) {
+        response.icon = updatedActor.icon;
+      }
+
+      return res.json(response);
     } catch (error) {
       console.error("Error updating actor:", error);
       return res.status(500).json({ error: "Failed to update actor" });
@@ -211,7 +260,7 @@ router.put("/actors/:username", (req, res) => {
 });
 
 // Delete actor (optional)
-router.delete("/actors/:username", async (req, res) => {
+router.delete("/:username", async (req, res) => {
   try {
     const { username } = req.params;
 
