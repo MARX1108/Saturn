@@ -1,0 +1,34 @@
+import { Db } from "mongodb";
+import { MongoRepository } from "../../shared/repositories/baseRepository";
+
+// Define basic Webfinger resource type
+interface WebfingerResource {
+  id: string;
+  subject: string;
+  aliases?: string[];
+  properties?: Record<string, any>;
+  links?: Array<{
+    rel: string;
+    type?: string;
+    href?: string;
+    titles?: Record<string, string>;
+    properties?: Record<string, any>;
+  }>;
+}
+
+export class WebfingerRepository extends MongoRepository<WebfingerResource> {
+  constructor(db: Db) {
+    super(db, "webfinger");
+    
+    // Create indexes for common webfinger queries
+    this.collection.createIndex({ subject: 1 }, { unique: true });
+  }
+
+  async findBySubject(subject: string): Promise<WebfingerResource | null> {
+    return this.findOne({ subject });
+  }
+
+  async findByAlias(alias: string): Promise<WebfingerResource | null> {
+    return this.findOne({ aliases: alias });
+  }
+}
