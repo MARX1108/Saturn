@@ -1,11 +1,12 @@
+// filepath: /Users/marxw/Desktop/FYP-Saturn/packages/server/src/modules/actors/routes/actors.ts
 import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { ActorService } from "../services/actorService";
-import { CreateActorRequest } from "../types/actor";
+import { CreateActorRequest } from "../../../types/actor";
 import { Db } from "mongodb";
-import { serviceMiddleware } from "../middleware/serviceMiddleware";
+import { serviceMiddleware } from "../../../middleware/serviceMiddleware";
 
 const router = express.Router();
 

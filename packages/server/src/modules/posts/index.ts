@@ -1,6 +1,20 @@
-// Export all components from the posts module
+/**
+ * Posts Module
+ * 
+ * This module handles the creation, retrieval, updating, and deletion of posts.
+ */
+
+// Export controllers
 export * from './controllers/postsController';
-export * from './routes/postRoutes';
+
+// Export routes
+export { default as postsRoutes } from './routes/posts';
+
+// Export models
 export * from './models/post';
+
+// Export services
 export * from './services/postService';
+
+// Export repositories
 export * from './repositories/postRepository';

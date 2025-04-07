@@ -1,7 +1,8 @@
+// filepath: /Users/marxw/Desktop/FYP-Saturn/packages/server/src/modules/auth/routes/auth.ts
 import express, { Request, Response } from "express";
 import { Db } from "mongodb";
 import bcryptjs from "bcryptjs"; // Replace bcrypt with bcryptjs
-import { generateToken } from "../middleware/auth";
+import { generateToken } from "../../../middleware/auth";
 
 export default function configureAuthRoutes(db: Db, domain: string) {
   const router = express.Router();

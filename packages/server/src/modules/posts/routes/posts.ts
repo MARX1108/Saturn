@@ -1,12 +1,13 @@
+// filepath: /Users/marxw/Desktop/FYP-Saturn/packages/server/src/modules/posts/routes/posts.ts
 import express, { Request, Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { Db, ObjectId } from "mongodb";
-import { ActorService } from "../services/actorService";
-import { authenticateToken } from "../middleware/auth";
-import { Attachment, PostResponse, Post } from "../types/post";
-import { serviceMiddleware } from "../middleware/serviceMiddleware";
+import { ActorService } from "../../actors/services/actorService";
+import { authenticateToken } from "../../../middleware/auth";
+import { Attachment, PostResponse, Post } from "../../../types/post";
+import { serviceMiddleware } from "../../../middleware/serviceMiddleware";
 
 const router = express.Router();
 

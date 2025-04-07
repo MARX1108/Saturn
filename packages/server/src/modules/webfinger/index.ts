@@ -1,4 +1,17 @@
-// Export all components from the webfinger module
+/**
+ * WebFinger Module
+ * 
+ * This module handles WebFinger protocol implementation for actor discovery.
+ */
+
+// Export controllers
 export * from './controllers/webfingerController';
-export * from './routes/webfingerRoutes';
-export * from './models/webfinger';
+
+// Export routes
+export { default as webfingerRoutes } from './routes/webfinger';
+
+// Export services if they exist
+// export * from './services/webfingerService';
+
+// Export repositories if they exist
+// export * from './repositories/webfingerRepository';

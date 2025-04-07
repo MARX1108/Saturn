@@ -1,5 +1,6 @@
+// filepath: /Users/marxw/Desktop/FYP-Saturn/packages/server/src/modules/webfinger/routes/webfinger.ts
 import express from "express";
-import { ActorService } from "../services/actorService";
+import { ActorService } from "../../actors/services/actorService";
 import { Db } from "mongodb";
 
 const router = express.Router();
@@ -40,7 +41,7 @@ router.get("/.well-known/webfinger", async (req, res) => {
     if (!actor) {
       return res.status(404).json({ error: "User not found" });
     }
-
+ 
     // Return WebFinger response
     return res.json({
       subject: `acct:${username}@${domain}`,
