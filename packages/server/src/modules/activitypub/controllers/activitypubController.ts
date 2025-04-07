@@ -12,7 +12,7 @@ export class ActivityPubController {
       const actorService = new ActorService(db, domain);
       
       const { username } = req.params;
-      const actor = await actorService.getActorByUsername(username);
+      const actor = await actorService.getFullActorByUsername(username);
 
       if (!actor) {
         return res.status(404).json({ error: "Actor not found" });
@@ -48,7 +48,8 @@ export class ActivityPubController {
       }
 
       // For non-ActivityPub requests, redirect to the profile page
-      return res.redirect(302, `/profile/${username}`);
+      res.redirect(302, `/profile/${username}`);
+      return res;
     } catch (error) {
       console.error("Error fetching actor:", error);
       return res.status(500).json({ error: "Failed to fetch actor" });

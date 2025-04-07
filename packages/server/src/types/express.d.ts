@@ -12,6 +12,7 @@ declare global {
       user: {
         id: string;
       };
+      actorService?: ActorService;
     }
   }
 }

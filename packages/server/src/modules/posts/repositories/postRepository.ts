@@ -76,8 +76,9 @@ export class PostRepository extends MongoRepository<Post> {
       { $set: { ...update, updatedAt: new Date() } },
       { returnDocument: "after" }
     );
-    
-    return result || null;
+
+    // Ensure the result is properly typed as Post
+    return result.value || null;
   }
 
   async deleteById(id: string): Promise<boolean> {

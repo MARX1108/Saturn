@@ -4,6 +4,7 @@ import { MongoClient } from "mongodb";
 import { errorHandler } from "./middleware/errorHandler";
 import { createServiceContainer } from "./utils/container";
 import { serviceMiddleware } from "./middleware/serviceMiddleware";
+import { compatibilityMiddleware } from "./middleware/compatibilityMiddleware";
 import { initPlugins } from "./plugins";
 import config from "./config";
 
@@ -49,8 +50,9 @@ export async function startServer() {
     // Initialize plugins
     initPlugins(app);
 
-    // Apply service middleware to all routes
+    // Apply middlewares for services and backwards compatibility
     app.use(serviceMiddleware);
+    app.use(compatibilityMiddleware);
 
     // Register routes using the modular controller-based architecture
     // Mount each router at an appropriate base path

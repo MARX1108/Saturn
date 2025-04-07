@@ -19,7 +19,7 @@ export abstract class MongoRepository<T extends Document> implements BaseReposit
   async findById(id: string): Promise<T | null> {
     try {
       const result = await this.collection.findOne({ _id: id } as Filter<T>);
-      return result;
+      return result as T | null;
     } catch (error) {
       console.error(`Error finding document by ID: ${error}`);
       return null;
@@ -28,12 +28,12 @@ export abstract class MongoRepository<T extends Document> implements BaseReposit
 
   async findOne(filter: Filter<T>): Promise<T | null> {
     const result = await this.collection.findOne(filter);
-    return result;
+    return result as T | null;
   }
 
   async findAll(filter: Filter<T> = {}): Promise<T[]> {
     const results = await this.collection.find(filter).toArray();
-    return results;
+    return results as T[];
   }
 
   async create(data: OptionalId<T>): Promise<T> {

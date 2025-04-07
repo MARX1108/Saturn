@@ -93,7 +93,16 @@ export class ActorsController {
         iconInfo
       );
 
-      return res.status(201).json(actor);
+      // Format response to match test expectations
+      const response = {
+        ...actor,
+        // Add these fields to match test expectations
+        preferredUsername: actor.preferredUsername,
+        name: actor.name,
+        summary: actor.bio,
+      };
+
+      return res.status(201).json(response);
     } catch (error) {
       console.error("Error creating actor:", error);
       return res.status(500).json({ error: "Failed to create actor" });
@@ -116,7 +125,16 @@ export class ActorsController {
         return res.status(404).json({ error: "Actor not found" });
       }
 
-      return res.status(200).json(actor);
+      // Format response to match test expectations
+      const response = {
+        ...actor,
+        // Add these fields to match test expectations
+        preferredUsername: actor.preferredUsername,
+        name: actor.name,
+        summary: actor.bio,
+      };
+
+      return res.status(200).json(response);
     } catch (error) {
       console.error("Error fetching actor:", error);
       return res.status(500).json({ error: "Failed to fetch actor" });
