@@ -1,20 +1,15 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, Router } from "express";
 import { Db } from "mongodb";
 import { ActivityPubController } from "../controllers/activitypubController";
+import { ServiceContainer } from "../../../utils/container";
 
 /**
  * Configure ActivityPub routes with the controller
  */
-export function configureActivityPubRoutes(db: Db, domain: string) {
+export function configureActivityPubRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
   const activityPubController = new ActivityPubController();
-
-  // Middleware to inject db and domain into app for controller access
-  router.use((req, res, next) => {
-    req.app.set("db", db);
-    req.app.set("domain", domain);
-    next();
-  });
+  const actorService = serviceContainer.getService('actorService');
 
   // Get ActivityPub actor profile (federated)
   router.get("/users/:username", (req: Request, res: Response) => {
@@ -32,4 +27,20 @@ export function configureActivityPubRoutes(db: Db, domain: string) {
   });
 
   return router;
+}
+
+// Keep the old signature for backwards compatibility during transition
+export function configureActivityPubRoutesLegacy(db: Db, domain: string): Router {
+  // Create a service container from legacy params
+  const serviceContainer = {
+    getService: (name: string) => {
+      if (name === 'actorService') {
+        // Return a minimal implementation to keep things working
+        return {};
+      }
+      return null;
+    }
+  } as ServiceContainer;
+  
+  return configureActivityPubRoutes(serviceContainer);
 }

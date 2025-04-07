@@ -1,21 +1,16 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, Router } from "express";
 import { Db } from "mongodb";
 import { AuthController } from "../controllers/authController";
 import { auth } from "../../../middleware/auth";
+import { ServiceContainer } from "../../../utils/container";
 
 /**
  * Configure authentication routes with the controller
  */
-export function configureAuthRoutes(db: Db, domain: string) {
+export function configureAuthRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
   const authController = new AuthController();
-
-  // Middleware to inject db and domain into app for controller access
-  router.use((req, res, next) => {
-    req.app.set("db", db);
-    req.app.set("domain", domain);
-    next();
-  });
+  const authService = serviceContainer.getService('authService');
 
   // Register new user
   router.post("/register", (req: Request, res: Response) => {
@@ -33,4 +28,20 @@ export function configureAuthRoutes(db: Db, domain: string) {
   });
 
   return router;
+}
+
+// Keep the old signature for backwards compatibility during transition
+export function configureAuthRoutesLegacy(db: Db, domain: string): Router {
+  // Create a service container from legacy params
+  const serviceContainer = {
+    getService: (name: string) => {
+      if (name === 'authService') {
+        // Return a minimal implementation to keep things working
+        return {};
+      }
+      return null;
+    }
+  } as ServiceContainer;
+  
+  return configureAuthRoutes(serviceContainer);
 }

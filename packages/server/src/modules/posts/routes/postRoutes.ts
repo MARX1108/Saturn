@@ -1,18 +1,18 @@
-import express, { Request, Response } from "express";
-import { Db } from "mongodb";
+import express, { Request, Response, Router } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { PostsController } from "../controllers/postsController";
 import { authenticateToken } from "../../../middleware/auth";
+import { ServiceContainer } from "../../../utils/container";
 
 /**
  * Configure post routes with the controller
  */
-export function configurePostRoutes(db: Db, domain: string) {
+export function configurePostRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
   const postsController = new PostsController();
-
+  
   // Set up multer for file uploads
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -43,15 +43,8 @@ export function configurePostRoutes(db: Db, domain: string) {
     },
   });
 
-  // Middleware to inject db and domain into app for controller access
-  router.use((req, res, next) => {
-    req.app.set("db", db);
-    req.app.set("domain", domain);
-    next();
-  });
-
   // Create a new post
-  router.post("/posts", authenticateToken, (req: Request, res: Response) => {
+  router.post("/", authenticateToken, (req: Request, res: Response) => {
     upload.array("attachments")(req as any, res as any, async (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
@@ -61,39 +54,50 @@ export function configurePostRoutes(db: Db, domain: string) {
   });
 
   // Get feed (public timeline)
-  router.get("/posts", (req: Request, res: Response) => {
+  router.get("/", (req: Request, res: Response) => {
     return postsController.getFeed(req, res);
   });
 
   // Get single post by ID
-  router.get("/posts/:id", (req: Request, res: Response) => {
+  router.get("/:id", (req: Request, res: Response) => {
     return postsController.getPostById(req, res);
   });
 
-  // Get posts by username - route moved to a more relevant path
-  router.get("/actors/:username/posts", (req: Request, res: Response) => {
-    return postsController.getPostsByUsername(req, res);
-  });
-
   // Update post
-  router.put("/posts/:id", authenticateToken, (req: Request, res: Response) => {
+  router.put("/:id", authenticateToken, (req: Request, res: Response) => {
     return postsController.updatePost(req, res);
   });
 
   // Delete post
-  router.delete("/posts/:id", authenticateToken, (req: Request, res: Response) => {
+  router.delete("/:id", authenticateToken, (req: Request, res: Response) => {
     return postsController.deletePost(req, res);
   });
 
   // Like a post
-  router.post("/posts/:id/like", authenticateToken, (req: Request, res: Response) => {
+  router.post("/:id/like", authenticateToken, (req: Request, res: Response) => {
     return postsController.likePost(req, res);
   });
 
   // Unlike a post
-  router.post("/posts/:id/unlike", authenticateToken, (req: Request, res: Response) => {
+  router.post("/:id/unlike", authenticateToken, (req: Request, res: Response) => {
     return postsController.unlikePost(req, res);
   });
 
   return router;
+}
+
+// Keep the old signature for backwards compatibility during transition
+export function configurePostRoutesLegacy(db: Db, domain: string): Router {
+  // Create a service container from legacy params
+  const serviceContainer = {
+    getService: (name: string) => {
+      if (name === 'postService') {
+        // Return a minimal implementation to keep things working
+        return {};
+      }
+      return null;
+    }
+  } as ServiceContainer;
+  
+  return configurePostRoutes(serviceContainer);
 }

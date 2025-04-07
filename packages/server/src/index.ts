@@ -9,11 +9,11 @@ import { initPlugins } from "./plugins";
 import config from "./config";
 
 // Import route configurations from modules
-import { configureActorRoutes } from "./modules/actors/routes/actorRoutes";
-import { configureWebFingerRoutes } from "./modules/webfinger/routes/webfingerRoutes";
-import { configurePostRoutes } from "./modules/posts/routes/postRoutes";
-import { configureAuthRoutes } from "./modules/auth/routes/authRoutes";
-import { configureActivityPubRoutes } from "./modules/activitypub/routes/activitypubRoutes";
+import { configureActorRoutes, configureActorRoutesLegacy } from "./modules/actors/routes/actorRoutes";
+import { configureWebFingerRoutes, configureWebFingerRoutesLegacy } from "./modules/webfinger/routes/webfingerRoutes";
+import { configurePostRoutes, configurePostRoutesLegacy } from "./modules/posts/routes/postRoutes";
+import { configureAuthRoutes, configureAuthRoutesLegacy } from "./modules/auth/routes/authRoutes";
+import { configureActivityPubRoutes, configureActivityPubRoutesLegacy } from "./modules/activitypub/routes/activitypubRoutes";
 
 const app = express();
 const PORT = config.port || 4000;
@@ -54,21 +54,21 @@ export async function startServer() {
     app.use(serviceMiddleware);
     app.use(compatibilityMiddleware);
 
-    // Register routes using the modular controller-based architecture
+    // Register routes using the standardized configuration pattern
     // Mount each router at an appropriate base path
-    const actorsRouter = configureActorRoutes(db, DOMAIN);
+    const actorsRouter = configureActorRoutes(services);
     app.use("/api/actors", actorsRouter);
     
-    const webfingerRouter = configureWebFingerRoutes(db, DOMAIN);
+    const webfingerRouter = configureWebFingerRoutes(services);
     app.use("/", webfingerRouter); // WebFinger must be at the root for discovery
     
-    const activityPubRouter = configureActivityPubRoutes(db, DOMAIN);
+    const activityPubRouter = configureActivityPubRoutes(services);
     app.use("/", activityPubRouter); // ActivityPub endpoints must be at the root for federation
     
-    const postsRouter = configurePostRoutes(db, DOMAIN);
-    app.use("/api", postsRouter);
+    const postsRouter = configurePostRoutes(services);
+    app.use("/api/posts", postsRouter); // Fixed: Now correctly mounted at /api/posts
     
-    const authRouter = configureAuthRoutes(db, DOMAIN);
+    const authRouter = configureAuthRoutes(services);
     app.use("/api/auth", authRouter);
 
     // Error handling middleware should be last

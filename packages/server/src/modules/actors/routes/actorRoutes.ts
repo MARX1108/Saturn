@@ -1,17 +1,18 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, Router } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { Db } from "mongodb";
 import { ActorsController } from "../controllers/actorsController";
 import { auth } from "../../../middleware/auth";
+import { ServiceContainer } from "../../../utils/container";
 
 /**
  * Configure actor routes with the controller
  */
-export function configureActorRoutes(db: Db, domain: string) {
+export function configureActorRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
   const actorsController = new ActorsController();
+  const actorService = serviceContainer.getService('actorService');
 
   // Set up multer for file uploads
   const storage = multer.diskStorage({
@@ -37,13 +38,6 @@ export function configureActorRoutes(db: Db, domain: string) {
         cb(new Error("Only image files are allowed"));
       }
     },
-  });
-
-  // Middleware to inject db and domain into app for controller access
-  router.use((req, res, next) => {
-    req.app.set("db", db);
-    req.app.set("domain", domain);
-    next();
   });
 
   // Search actors
@@ -82,4 +76,20 @@ export function configureActorRoutes(db: Db, domain: string) {
   });
 
   return router;
+}
+
+// Keep the old signature for backwards compatibility during transition
+export function configureActorRoutesLegacy(db: Db, domain: string): Router {
+  // Create a service container from legacy params
+  const serviceContainer = {
+    getService: (name: string) => {
+      if (name === 'actorService') {
+        // Return a minimal implementation to keep things working
+        return {};
+      }
+      return null;
+    }
+  } as ServiceContainer;
+  
+  return configureActorRoutes(serviceContainer);
 }

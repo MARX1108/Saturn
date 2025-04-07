@@ -1,20 +1,15 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, Router } from "express";
 import { Db } from "mongodb";
 import { WebFingerController } from "../controllers/webfingerController";
+import { ServiceContainer } from "../../../utils/container";
 
 /**
  * Configure WebFinger routes with the controller
  */
-export function configureWebFingerRoutes(db: Db, domain: string) {
+export function configureWebFingerRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
   const webFingerController = new WebFingerController();
-
-  // Middleware to inject db and domain into app for controller access
-  router.use((req, res, next) => {
-    req.app.set("db", db);
-    req.app.set("domain", domain);
-    next();
-  });
+  const actorService = serviceContainer.getService('actorService');
 
   // WebFinger endpoint for actor discovery
   router.get("/.well-known/webfinger", (req: Request, res: Response) => {
@@ -22,4 +17,20 @@ export function configureWebFingerRoutes(db: Db, domain: string) {
   });
 
   return router;
+}
+
+// Keep the old signature for backwards compatibility during transition
+export function configureWebFingerRoutesLegacy(db: Db, domain: string): Router {
+  // Create a service container from legacy params
+  const serviceContainer = {
+    getService: (name: string) => {
+      if (name === 'actorService') {
+        // Return a minimal implementation to keep things working
+        return {};
+      }
+      return null;
+    }
+  } as ServiceContainer;
+  
+  return configureWebFingerRoutes(serviceContainer);
 }
