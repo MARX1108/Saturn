@@ -1,16 +1,16 @@
 import { Request, Response } from "express";
+import { ActorService } from "../../actors/services/actorService";
 
-/**
- * Controller for handling WebFinger protocol requests
- */
 export class WebFingerController {
   /**
-   * Handle WebFinger resource lookup
+   * Get WebFinger resource for actor discovery
    */
   async getResource(req: Request, res: Response): Promise<Response> {
     try {
-      const { actorService } = req.services;
-      const domain = req.app.get("domain") as string;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const actorService = new ActorService(db, domain);
+
       const resource = req.query.resource as string;
 
       if (!resource) {

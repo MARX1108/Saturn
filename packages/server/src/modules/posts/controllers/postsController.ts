@@ -1,20 +1,52 @@
 import { Request, Response } from "express";
-import fs from "fs";
 import path from "path";
-import multer from "multer";
-import { Attachment, Post, PostResponse } from "../../../types/post";
-import { ActorService } from "../../../services/actorService";
+import fs from "fs";
+import { PostService } from "../services/postService";
+import { ActorService } from "../../actors/services/actorService";
+import { Attachment, PostResponse, Post } from "../models/post";
 
-/**
- * Controller for handling post-related operations
- */
 export class PostsController {
+  /**
+   * Helper function to convert post to response format
+   */
+  private async formatPostResponse(
+    post: Post,
+    actorService: ActorService,
+    userId?: string
+  ): Promise<PostResponse> {
+    const actor = await actorService.getActorById(post.actor.id);
+    const likedByUser = userId
+      ? post.likes?.includes(userId) || false
+      : false;
+
+    return {
+      id: post.id,
+      content: post.content,
+      author: {
+        id: post.actor.id,
+        username: post.actor.username,
+        displayName: actor?.name || post.actor.username,
+        avatarUrl: actor?.icon?.url,
+      },
+      attachments: post.attachments,
+      createdAt: post.createdAt.toISOString(),
+      sensitive: post.sensitive,
+      contentWarning: post.contentWarning,
+      likes: post.likes?.length || 0,
+      likedByUser,
+      shares: post.shares || 0,
+    };
+  }
+
   /**
    * Create a new post
    */
   async createPost(req: Request, res: Response): Promise<Response> {
     try {
-      const { actorService, postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
+      const actorService = new ActorService(db, domain);
 
       // Get user from token
       const userId = req.user.id;
@@ -34,7 +66,33 @@ export class PostsController {
       }
 
       // Process attachments
-      const attachments: Attachment[] = await this.processAttachments(files, req.app.get("domain"));
+      const attachments: Attachment[] = [];
+
+      if (files && files.length > 0) {
+        // Move files to public directory
+        const publicDir = path.join(process.cwd(), "public", "media");
+        fs.mkdirSync(publicDir, { recursive: true });
+
+        for (const file of files) {
+          const fileName = `${Date.now()}-${file.originalname.replace(
+            /\s/g,
+            "_"
+          )}`;
+          const finalPath = path.join(publicDir, fileName);
+
+          fs.renameSync(file.path, finalPath);
+
+          attachments.push({
+            url: `https://${domain}/media/${fileName}`,
+            type: file.mimetype.startsWith("image/")
+              ? "Image"
+              : file.mimetype.startsWith("video/")
+              ? "Video"
+              : "Document",
+            mediaType: file.mimetype,
+          });
+        }
+      }
 
       // Create post
       const post = await postService.createPost(
@@ -67,7 +125,10 @@ export class PostsController {
    */
   async getFeed(req: Request, res: Response): Promise<Response> {
     try {
-      const { actorService, postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
+      const actorService = new ActorService(db, domain);
 
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
@@ -79,7 +140,7 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post: Post) => this.formatPostResponse(post, actorService, userId))
+        posts.map((post) => this.formatPostResponse(post, actorService, userId))
       );
 
       return res.json({
@@ -97,7 +158,10 @@ export class PostsController {
    */
   async getPostById(req: Request, res: Response): Promise<Response> {
     try {
-      const { actorService, postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
+      const actorService = new ActorService(db, domain);
 
       const { id } = req.params;
       const post = await postService.getPostById(id);
@@ -110,7 +174,7 @@ export class PostsController {
       const userId = req.user?.id;
 
       // Format post
-      const formattedPost = await this.formatPostResponse(post as Post, actorService, userId);
+      const formattedPost = await this.formatPostResponse(post, actorService, userId);
 
       return res.json(formattedPost);
     } catch (error) {
@@ -124,7 +188,10 @@ export class PostsController {
    */
   async getPostsByUsername(req: Request, res: Response): Promise<Response> {
     try {
-      const { actorService, postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
+      const actorService = new ActorService(db, domain);
 
       const { username } = req.params;
       const page = parseInt(req.query.page as string) || 1;
@@ -141,7 +208,7 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post: Post) => this.formatPostResponse(post, actorService, userId))
+        posts.map((post) => this.formatPostResponse(post, actorService, userId))
       );
 
       return res.json({
@@ -159,7 +226,10 @@ export class PostsController {
    */
   async updatePost(req: Request, res: Response): Promise<Response> {
     try {
-      const { actorService, postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
+      const actorService = new ActorService(db, domain);
 
       const { id } = req.params;
       const userId = req.user.id;
@@ -197,7 +267,9 @@ export class PostsController {
    */
   async deletePost(req: Request, res: Response): Promise<Response> {
     try {
-      const { postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
 
       const { id } = req.params;
       const userId = req.user.id;
@@ -222,7 +294,9 @@ export class PostsController {
    */
   async likePost(req: Request, res: Response): Promise<Response> {
     try {
-      const { postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
 
       const { id } = req.params;
       const userId = req.user.id;
@@ -247,7 +321,9 @@ export class PostsController {
    */
   async unlikePost(req: Request, res: Response): Promise<Response> {
     try {
-      const { postService } = req.services;
+      const db = req.app.get("db");
+      const domain = req.app.get("domain");
+      const postService = new PostService(db, domain);
 
       const { id } = req.params;
       const userId = req.user.id;
@@ -263,76 +339,5 @@ export class PostsController {
       console.error("Error unliking post:", error);
       return res.status(500).json({ error: "Failed to unlike post" });
     }
-  }
-
-  /**
-   * Helper function to process attachments
-   */
-  private async processAttachments(files: Express.Multer.File[] | undefined, domain: string): Promise<Attachment[]> {
-    const attachments: Attachment[] = [];
-
-    if (files && files.length > 0) {
-      // Move files to public directory
-      const publicDir = path.join(process.cwd(), "public", "media");
-      fs.mkdirSync(publicDir, { recursive: true });
-
-      for (const file of files) {
-        const fileName = `${Date.now()}-${file.originalname.replace(
-          /\s/g,
-          "_"
-        )}`;
-        const finalPath = path.join(publicDir, fileName);
-
-        fs.renameSync(file.path, finalPath);
-
-        attachments.push({
-          url: `https://${domain}/media/${fileName}`,
-          type: file.mimetype.startsWith("image/")
-            ? "Image"
-            : file.mimetype.startsWith("video/")
-            ? "Video"
-            : "Document",
-          mediaType: file.mimetype,
-        });
-      }
-    }
-
-    return attachments;
-  }
-
-  /**
-   * Helper function to convert post to response format
-   */
-  private async formatPostResponse(
-    post: Post,
-    actorService: ActorService,
-    userId?: string
-  ): Promise<PostResponse> {
-    const actor = await actorService.getActorById(post.actorId.toString());
-
-    if (!post._id) {
-      throw new Error("Post ID is undefined");
-    }
-
-    const formattedPost: PostResponse = {
-      id: post._id.toString(),
-      content: post.content,
-      createdAt: post.createdAt.toISOString(), // Convert Date to string
-      author: {
-        username: actor?.preferredUsername || "unknown",
-        displayName: actor?.name || actor?.preferredUsername || "Unknown User",
-        avatarUrl: actor?.icon?.url || "/default-avatar.png",
-      }, // Remove unknown property `id`
-      sensitive: post.sensitive,
-      contentWarning: post.contentWarning,
-      attachments: post.attachments || [],
-      likeCount: post.likes || 0, // Corrected to match PostResponse type
-      replyCount: post.replies || 0, // Corrected to match PostResponse type
-      repostCount: post.reposts || 0, // Corrected to match PostResponse type
-      // Add liked property if we have a logged in user
-      liked: false, // TODO: Implement proper like check
-    };
-
-    return formattedPost;
   }
 }

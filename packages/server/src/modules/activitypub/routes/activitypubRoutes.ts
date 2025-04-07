@@ -21,5 +21,15 @@ export function configureActivityPubRoutes(db: Db, domain: string) {
     return activityPubController.getActor(req, res);
   });
 
+  // Actor inbox - where activities from other servers arrive
+  router.post("/users/:username/inbox", express.json(), (req: Request, res: Response) => {
+    return activityPubController.receiveActivity(req, res);
+  });
+
+  // Actor outbox - collection of activities by this user
+  router.get("/users/:username/outbox", (req: Request, res: Response) => {
+    return activityPubController.getOutbox(req, res);
+  });
+
   return router;
 }

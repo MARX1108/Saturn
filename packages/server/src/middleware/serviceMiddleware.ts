@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { ServiceContainer } from "../utils/container";
+import { Request, Response, NextFunction } from 'express';
+import { ServiceContainer } from '../utils/container';
 
 // Extend Express.Request to include our services
 declare global {
@@ -11,20 +11,18 @@ declare global {
 }
 
 /**
- * Middleware that adds the service container to the request object
+ * Middleware to inject services into request object
  */
-export function serviceMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const services = req.app.get("services") as ServiceContainer;
-
+export const serviceMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const services = req.app.get('services') as ServiceContainer;
+  
   if (!services) {
-    return res.status(500).json({ error: "Service container not available" });
+    console.warn('Service container not found in app');
+    return next();
   }
-
-  console.log("Injecting services into req.services:", services);
+  
+  // Attach services to request object
   req.services = services;
+  
   next();
-}
+};

@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { Db } from "mongodb";
 import { ActorsController } from "../controllers/actorsController";
+import { auth } from "../../../middleware/auth";
 
 /**
  * Configure actor routes with the controller
@@ -60,15 +61,13 @@ export function configureActorRoutes(db: Db, domain: string) {
     });
   });
 
-  // Generic routes - these will match any username
-  
   // Get actor by username
   router.get("/:username", (req: Request, res: Response) => {
     return actorsController.getActorByUsername(req, res);
   });
 
-  // Update actor
-  router.put("/:username", (req: Request, res: Response) => {
+  // Update actor - requires authentication
+  router.put("/:username", auth, (req: Request, res: Response) => {
     upload.single("avatarFile")(req as any, res as any, async (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
@@ -77,8 +76,8 @@ export function configureActorRoutes(db: Db, domain: string) {
     });
   });
 
-  // Delete actor
-  router.delete("/:username", (req: Request, res: Response) => {
+  // Delete actor - requires authentication
+  router.delete("/:username", auth, (req: Request, res: Response) => {
     return actorsController.deleteActor(req, res);
   });
 

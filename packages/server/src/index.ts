@@ -85,13 +85,14 @@ export async function startServer() {
     console.error("Failed to start server:", error);
     if (process.env.NODE_ENV !== 'test') {
       process.exit(1);
+    } else {
+      throw error;
     }
-    throw error;
   }
 }
 
-// Export the app for testing
-export { app };
-
 // For testing purposes, we export the promise
 export const serverPromise = startServer();
+
+// Export the app for testing
+export { app };
