@@ -1,10 +1,9 @@
 import express, { Request, Response, Router } from "express";
-import multer from "multer";
 import path from "path";
-import fs from "fs";
 import { ActorsController } from "../controllers/actorsController";
 import { auth } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
+import { UploadService } from "../../media/services/upload.service";
 
 /**
  * Configure actor routes with the controller
@@ -12,32 +11,11 @@ import { ServiceContainer } from "../../../utils/container";
 export function configureActorRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
   const actorsController = new ActorsController();
-  const actorService = serviceContainer.getService('actorService');
+  const { uploadService } = serviceContainer;
 
-  // Set up multer for file uploads
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadDir = path.join(process.cwd(), "uploads");
-      fs.mkdirSync(uploadDir, { recursive: true });
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
-    },
-  });
-
-  const upload = multer({
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-    fileFilter: (req, file, cb) => {
-      // Accept only images
-      if (file.mimetype.startsWith("image/")) {
-        cb(null, true);
-      } else {
-        cb(new Error("Only image files are allowed"));
-      }
-    },
+  // Configure image upload middleware with UploadService
+  const imageUpload = uploadService.configureImageUploadMiddleware({
+    fileSizeLimitMB: 5 // 5MB limit
   });
 
   // Search actors
@@ -47,7 +25,7 @@ export function configureActorRoutes(serviceContainer: ServiceContainer): Router
 
   // Create new actor
   router.post("/", (req: Request, res: Response) => {
-    upload.single("avatarFile")(req as any, res as any, async (err) => {
+    imageUpload.single("avatarFile")(req as any, res as any, async (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
@@ -62,7 +40,7 @@ export function configureActorRoutes(serviceContainer: ServiceContainer): Router
 
   // Update actor - requires authentication
   router.put("/:username", auth, (req: Request, res: Response) => {
-    upload.single("avatarFile")(req as any, res as any, async (err) => {
+    imageUpload.single("avatarFile")(req as any, res as any, async (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
@@ -82,14 +60,10 @@ export function configureActorRoutes(serviceContainer: ServiceContainer): Router
 export function configureActorRoutesLegacy(db: Db, domain: string): Router {
   // Create a service container from legacy params
   const serviceContainer = {
-    getService: (name: string) => {
-      if (name === 'actorService') {
-        // Return a minimal implementation to keep things working
-        return {};
-      }
-      return null;
-    }
-  } as ServiceContainer;
+    actorService: null,
+    postService: null,
+    uploadService: new UploadService()
+  } as unknown as ServiceContainer;
   
   return configureActorRoutes(serviceContainer);
 }

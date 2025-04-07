@@ -1,10 +1,10 @@
 import express, { Request, Response, Router } from "express";
-import multer from "multer";
 import path from "path";
-import fs from "fs";
+import { Db } from "mongodb";
 import { PostsController } from "../controllers/postsController";
 import { authenticateToken } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
+import { UploadService } from "../../media/services/upload.service";
 
 /**
  * Configure post routes with the controller
@@ -12,40 +12,17 @@ import { ServiceContainer } from "../../../utils/container";
 export function configurePostRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
   const postsController = new PostsController();
+  const { uploadService } = serviceContainer;
   
-  // Set up multer for file uploads
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadDir = path.join(process.cwd(), "uploads");
-      fs.mkdirSync(uploadDir, { recursive: true });
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
-    },
-  });
-
-  const upload = multer({
-    storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-    fileFilter: (req, file, cb) => {
-      // Accept images, videos, etc.
-      const allowedTypes = ["image/", "video/", "audio/"];
-      const isAllowed = allowedTypes.some((type) =>
-        file.mimetype.startsWith(type)
-      );
-      if (isAllowed) {
-        cb(null, true);
-      } else {
-        cb(new Error("Only images, videos and audio files are allowed"));
-      }
-    },
+  // Configure media upload middleware with UploadService
+  const mediaUpload = uploadService.configureMediaUploadMiddleware({
+    fileSizeLimitMB: 10, // 10MB limit
+    allowedTypes: ["image/", "video/", "audio/"]
   });
 
   // Create a new post
   router.post("/", authenticateToken, (req: Request, res: Response) => {
-    upload.array("attachments")(req as any, res as any, async (err) => {
+    mediaUpload.array("attachments")(req as any, res as any, async (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
@@ -90,14 +67,10 @@ export function configurePostRoutes(serviceContainer: ServiceContainer): Router 
 export function configurePostRoutesLegacy(db: Db, domain: string): Router {
   // Create a service container from legacy params
   const serviceContainer = {
-    getService: (name: string) => {
-      if (name === 'postService') {
-        // Return a minimal implementation to keep things working
-        return {};
-      }
-      return null;
-    }
-  } as ServiceContainer;
+    actorService: null,
+    postService: null,
+    uploadService: new UploadService()
+  } as unknown as ServiceContainer;
   
   return configurePostRoutes(serviceContainer);
 }
