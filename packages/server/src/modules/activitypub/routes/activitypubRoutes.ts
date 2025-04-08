@@ -8,8 +8,15 @@ import { ServiceContainer } from "../../../utils/container";
  */
 export function configureActivityPubRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
-  const activityPubController = new ActivityPubController();
-  const actorService = serviceContainer.getService('actorService');
+  const { actorService, activityPubService } = serviceContainer;
+  const domain = process.env.DOMAIN || "localhost:4000";
+  
+  // Create controller with injected dependencies
+  const activityPubController = new ActivityPubController(
+    actorService,
+    activityPubService,
+    domain
+  );
 
   // Get ActivityPub actor profile (federated)
   router.get("/users/:username", (req: Request, res: Response) => {
@@ -31,16 +38,14 @@ export function configureActivityPubRoutes(serviceContainer: ServiceContainer): 
 
 // Keep the old signature for backwards compatibility during transition
 export function configureActivityPubRoutesLegacy(db: Db, domain: string): Router {
-  // Create a service container from legacy params
+  // Create a minimal service container from legacy params
   const serviceContainer = {
+    actorService: null,
+    activityPubService: null,
     getService: (name: string) => {
-      if (name === 'actorService') {
-        // Return a minimal implementation to keep things working
-        return {};
-      }
       return null;
     }
-  } as ServiceContainer;
+  } as unknown as ServiceContainer;
   
   return configureActivityPubRoutes(serviceContainer);
 }

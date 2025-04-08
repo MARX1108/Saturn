@@ -4,17 +4,34 @@ import fs from "fs";
 import { PostService } from "../services/postService";
 import { ActorService } from "../../actors/services/actorService";
 import { Attachment, PostResponse, Post } from "../models/post";
+import { UploadService } from "../../media/services/upload.service";
 
 export class PostsController {
+  private postService: PostService;
+  private actorService: ActorService;
+  private uploadService: UploadService;
+  private domain: string;
+
+  constructor(
+    postService: PostService,
+    actorService: ActorService,
+    uploadService: UploadService,
+    domain: string
+  ) {
+    this.postService = postService;
+    this.actorService = actorService;
+    this.uploadService = uploadService;
+    this.domain = domain;
+  }
+
   /**
    * Helper function to convert post to response format
    */
   private async formatPostResponse(
     post: Post,
-    actorService: ActorService,
     userId?: string
   ): Promise<PostResponse> {
-    const actor = await actorService.getActorById(post.actor.id);
+    const actor = await this.actorService.getActorById(post.actor.id);
     const likedByUser = userId
       ? post.likes?.includes(userId) || false
       : false;
@@ -43,14 +60,9 @@ export class PostsController {
    */
   async createPost(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-      const actorService = new ActorService(db, domain);
-
       // Get user from token
       const userId = req.user.id;
-      const actor = await actorService.getActorById(userId);
+      const actor = await this.actorService.getActorById(userId);
 
       if (!actor) {
         return res.status(404).json({ error: "User not found" });
@@ -83,7 +95,7 @@ export class PostsController {
           fs.renameSync(file.path, finalPath);
 
           attachments.push({
-            url: `https://${domain}/media/${fileName}`,
+            url: `https://${this.domain}/media/${fileName}`,
             type: file.mimetype.startsWith("image/")
               ? "Image"
               : file.mimetype.startsWith("video/")
@@ -95,7 +107,7 @@ export class PostsController {
       }
 
       // Create post
-      const post = await postService.createPost(
+      const post = await this.postService.createPost(
         {
           content: content || "",
           username: actor.preferredUsername,
@@ -109,7 +121,6 @@ export class PostsController {
       // Format response
       const formattedPost = await this.formatPostResponse(
         post,
-        actorService,
         userId
       );
 
@@ -125,22 +136,17 @@ export class PostsController {
    */
   async getFeed(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-      const actorService = new ActorService(db, domain);
-
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const { posts, hasMore } = await postService.getFeed(page, limit);
+      const { posts, hasMore } = await this.postService.getFeed(page, limit);
 
       // Get user ID from token if authenticated
       const userId = req.user?.id;
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post) => this.formatPostResponse(post, actorService, userId))
+        posts.map((post) => this.formatPostResponse(post, userId))
       );
 
       return res.json({
@@ -158,13 +164,8 @@ export class PostsController {
    */
   async getPostById(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-      const actorService = new ActorService(db, domain);
-
       const { id } = req.params;
-      const post = await postService.getPostById(id);
+      const post = await this.postService.getPostById(id);
 
       if (!post) {
         return res.status(404).json({ error: "Post not found" });
@@ -174,7 +175,7 @@ export class PostsController {
       const userId = req.user?.id;
 
       // Format post
-      const formattedPost = await this.formatPostResponse(post, actorService, userId);
+      const formattedPost = await this.formatPostResponse(post, userId);
 
       return res.json(formattedPost);
     } catch (error) {
@@ -188,16 +189,11 @@ export class PostsController {
    */
   async getPostsByUsername(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-      const actorService = new ActorService(db, domain);
-
       const { username } = req.params;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const { posts, hasMore } = await postService.getPostsByUsername(
+      const { posts, hasMore } = await this.postService.getPostsByUsername(
         username,
         page,
         limit
@@ -208,7 +204,7 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post) => this.formatPostResponse(post, actorService, userId))
+        posts.map((post) => this.formatPostResponse(post, userId))
       );
 
       return res.json({
@@ -226,16 +222,11 @@ export class PostsController {
    */
   async updatePost(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-      const actorService = new ActorService(db, domain);
-
       const { id } = req.params;
       const userId = req.user.id;
       const { content, sensitive, contentWarning } = req.body;
 
-      const post = await postService.updatePost(id, userId, {
+      const post = await this.postService.updatePost(id, userId, {
         content,
         username: "", // Not used for update
         sensitive: sensitive === "true",
@@ -251,7 +242,6 @@ export class PostsController {
       // Format post
       const formattedPost = await this.formatPostResponse(
         post,
-        actorService,
         userId
       );
 
@@ -267,14 +257,10 @@ export class PostsController {
    */
   async deletePost(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-
       const { id } = req.params;
       const userId = req.user.id;
 
-      const deleted = await postService.deletePost(id, userId);
+      const deleted = await this.postService.deletePost(id, userId);
 
       if (!deleted) {
         return res
@@ -294,14 +280,10 @@ export class PostsController {
    */
   async likePost(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-
       const { id } = req.params;
       const userId = req.user.id;
 
-      const liked = await postService.likePost(id, userId);
+      const liked = await this.postService.likePost(id, userId);
 
       if (!liked) {
         return res
@@ -321,14 +303,10 @@ export class PostsController {
    */
   async unlikePost(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const postService = new PostService(db, domain);
-
       const { id } = req.params;
       const userId = req.user.id;
 
-      const unliked = await postService.unlikePost(id, userId);
+      const unliked = await this.postService.unlikePost(id, userId);
 
       if (!unliked) {
         return res.status(400).json({ error: "Post not liked or not found" });

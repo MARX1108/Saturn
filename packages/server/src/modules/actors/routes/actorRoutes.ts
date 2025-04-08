@@ -1,5 +1,6 @@
 import express, { Request, Response, Router } from "express";
 import path from "path";
+import { Db } from "mongodb";
 import { ActorsController } from "../controllers/actorsController";
 import { auth } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
@@ -10,8 +11,15 @@ import { UploadService } from "../../media/services/upload.service";
  */
 export function configureActorRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
-  const actorsController = new ActorsController();
-  const { uploadService } = serviceContainer;
+  const { actorService, uploadService } = serviceContainer;
+  const domain = process.env.DOMAIN || "localhost:4000";
+  
+  // Create controller with injected dependencies
+  const actorsController = new ActorsController(
+    actorService,
+    uploadService, 
+    domain
+  );
 
   // Configure image upload middleware with UploadService
   const imageUpload = uploadService.configureImageUploadMiddleware({
@@ -58,11 +66,14 @@ export function configureActorRoutes(serviceContainer: ServiceContainer): Router
 
 // Keep the old signature for backwards compatibility during transition
 export function configureActorRoutesLegacy(db: Db, domain: string): Router {
-  // Create a service container from legacy params
+  // Create a minimal service container from legacy params
   const serviceContainer = {
     actorService: null,
     postService: null,
-    uploadService: new UploadService()
+    uploadService: new UploadService(),
+    getService: (name: string) => {
+      return null;
+    }
   } as unknown as ServiceContainer;
   
   return configureActorRoutes(serviceContainer);

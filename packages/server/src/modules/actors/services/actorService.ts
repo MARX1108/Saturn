@@ -8,8 +8,8 @@ export class ActorService {
   private repository: ActorRepository;
   private domain: string;
 
-  constructor(db: Db, domain: string) {
-    this.repository = new ActorRepository(db);
+  constructor(repository: ActorRepository, domain: string) {
+    this.repository = repository;
     this.domain = domain;
   }
 

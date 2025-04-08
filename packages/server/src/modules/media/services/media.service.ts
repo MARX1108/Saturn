@@ -1,13 +1,12 @@
 // Media service implementation
-import { Db } from "mongodb";
 import { MediaRepository } from "../repositories/media.repository";
 
 export class MediaService {
   private repository: MediaRepository;
   private uploadPath: string;
 
-  constructor(db: Db, uploadPath: string) {
-    this.repository = new MediaRepository(db);
+  constructor(repository: MediaRepository, uploadPath: string) {
+    this.repository = repository;
     this.uploadPath = uploadPath;
   }
 

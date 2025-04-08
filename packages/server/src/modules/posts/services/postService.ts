@@ -7,8 +7,8 @@ export class PostService {
   private repository: PostRepository;
   private domain: string;
 
-  constructor(db: Db, domain: string) {
-    this.repository = new PostRepository(db);
+  constructor(repository: PostRepository, domain: string) {
+    this.repository = repository;
     this.domain = domain;
   }
 

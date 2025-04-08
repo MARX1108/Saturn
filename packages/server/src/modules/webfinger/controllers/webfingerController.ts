@@ -1,16 +1,27 @@
 import { Request, Response } from "express";
 import { ActorService } from "../../actors/services/actorService";
+import { WebfingerService } from "../services/webfinger.service";
 
 export class WebFingerController {
+  private actorService: ActorService;
+  private webfingerService: WebfingerService;
+  private domain: string;
+
+  constructor(
+    actorService: ActorService,
+    webfingerService: WebfingerService,
+    domain: string
+  ) {
+    this.actorService = actorService;
+    this.webfingerService = webfingerService;
+    this.domain = domain;
+  }
+  
   /**
    * Get WebFinger resource for actor discovery
    */
   async getResource(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-
       const resource = req.query.resource as string;
 
       if (!resource) {
@@ -27,7 +38,7 @@ export class WebFingerController {
       }
 
       const [, username, resourceDomain] = match;
-      const serverDomain = domain;
+      const serverDomain = this.domain;
 
       // Verify this is for our domain
       if (resourceDomain !== serverDomain) {
@@ -35,7 +46,7 @@ export class WebFingerController {
       }
 
       // Look up the actor
-      const actor = await actorService.getActorByUsername(username);
+      const actor = await this.actorService.getActorByUsername(username);
 
       if (!actor) {
         return res.status(404).json({ error: "User not found" });
@@ -43,12 +54,12 @@ export class WebFingerController {
 
       // Return WebFinger response
       return res.json({
-        subject: `acct:${username}@${domain}`,
+        subject: `acct:${username}@${this.domain}`,
         links: [
           {
             rel: "self",
             type: "application/activity+json",
-            href: `https://${domain}/users/${username}`,
+            href: `https://${this.domain}/users/${username}`,
           },
         ],
       });

@@ -6,8 +6,8 @@ export class WebfingerService {
   private repository: WebfingerRepository;
   private domain: string;
 
-  constructor(db: Db, domain: string) {
-    this.repository = new WebfingerRepository(db);
+  constructor(webfingerRepository: WebfingerRepository, domain: string) {
+    this.repository = webfingerRepository;
     this.domain = domain;
   }
 

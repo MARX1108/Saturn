@@ -9,8 +9,11 @@ interface ActivityPubObject {
 }
 
 export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
-  constructor(db: Db) {
+  private domain: string;
+  
+  constructor(db: Db, domain: string) {
     super(db, "activitypub");
+    this.domain = domain;
     
     // Create any needed indexes
     this.collection.createIndex({ id: 1 }, { unique: true });
@@ -29,5 +32,34 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
       .skip(skip)
       .limit(limit)
       .toArray();
+  }
+  
+  /**
+   * Save an ActivityPub activity to the database
+   * @param activity The activity object to save
+   * @param targetUsername The username of the target actor
+   * @returns The saved activity object
+   */
+  async saveActivity(activity: any, targetUsername: string): Promise<ActivityPubObject> {
+    // Add metadata to the activity
+    const activityToSave = {
+      ...activity,
+      targetUsername,
+      processedAt: new Date(),
+    };
+    
+    // Generate an ID if not present
+    if (!activityToSave.id) {
+      activityToSave.id = `https://${this.domain}/activities/${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    }
+    
+    // Insert or update the activity
+    await this.collection.updateOne(
+      { id: activityToSave.id },
+      { $set: activityToSave },
+      { upsert: true }
+    );
+    
+    return activityToSave;
   }
 }

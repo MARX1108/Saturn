@@ -3,24 +3,35 @@ import path from "path";
 import fs from "fs";
 import { ActorService } from "../services/actorService";
 import { CreateActorRequest } from "../models/actor";
+import { UploadService } from "../../media/services/upload.service";
 
 export class ActorsController {
+  private actorService: ActorService;
+  private uploadService: UploadService;
+  private domain: string;
+
+  constructor(
+    actorService: ActorService,
+    uploadService: UploadService,
+    domain: string
+  ) {
+    this.actorService = actorService;
+    this.uploadService = uploadService;
+    this.domain = domain;
+  }
+  
   /**
    * Search actors by query
    */
   async searchActors(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-      
       const { q } = req.query;
 
       if (!q || typeof q !== "string") {
         return res.status(200).json([]);
       }
 
-      const actors = await actorService.searchActors(q);
+      const actors = await this.actorService.searchActors(q);
       
       return res.status(200).json(actors);
     } catch (error) {
@@ -34,10 +45,6 @@ export class ActorsController {
    */
   async createActor(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-      
       // Extract data from request
       const { username, displayName, bio, password } = req.body;
       const avatarFile = req.file;
@@ -59,7 +66,7 @@ export class ActorsController {
       }
 
       // Check if username exists
-      const exists = await actorService.usernameExists(username);
+      const exists = await this.actorService.usernameExists(username);
       if (exists) {
         return res.status(409).json({ error: "Username already exists" });
       }
@@ -77,13 +84,13 @@ export class ActorsController {
         fs.renameSync(avatarFile.path, finalPath);
 
         iconInfo = {
-          url: `https://${domain}/avatars/${fileName}`,
+          url: `https://${this.domain}/avatars/${fileName}`,
           mediaType: avatarFile.mimetype,
         };
       }
 
       // Create actor
-      const actor = await actorService.createActor(
+      const actor = await this.actorService.createActor(
         {
           username,
           displayName,
@@ -114,12 +121,8 @@ export class ActorsController {
    */
   async getActorByUsername(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-      
       const { username } = req.params;
-      const actor = await actorService.getActorByUsername(username);
+      const actor = await this.actorService.getActorByUsername(username);
 
       if (!actor) {
         return res.status(404).json({ error: "Actor not found" });
@@ -146,16 +149,12 @@ export class ActorsController {
    */
   async updateActor(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-      
       const { username } = req.params;
       const { displayName, bio } = req.body;
       const avatarFile = req.file;
 
       // Check if actor exists
-      const exists = await actorService.usernameExists(username);
+      const exists = await this.actorService.usernameExists(username);
       if (!exists) {
         return res.status(404).json({ error: "Actor not found" });
       }
@@ -173,13 +172,13 @@ export class ActorsController {
         fs.renameSync(avatarFile.path, finalPath);
 
         iconInfo = {
-          url: `https://${domain}/avatars/${fileName}`,
+          url: `https://${this.domain}/avatars/${fileName}`,
           mediaType: avatarFile.mimetype,
         };
       }
 
       // Update actor
-      const updatedActor = await actorService.updateActor(
+      const updatedActor = await this.actorService.updateActor(
         username,
         {
           displayName,
@@ -204,14 +203,10 @@ export class ActorsController {
    */
   async deleteActor(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-      
       const { username } = req.params;
 
       // Check if actor exists
-      const actor = await actorService.getActorByUsername(username);
+      const actor = await this.actorService.getActorByUsername(username);
       if (!actor) {
         return res.status(404).json({ error: "Actor not found" });
       }
@@ -224,7 +219,7 @@ export class ActorsController {
       }
 
       // Delete actor
-      await actorService.deleteActor(username);
+      await this.actorService.deleteActor(username);
 
       return res.status(204).send();
     } catch (error) {

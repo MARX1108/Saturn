@@ -1,21 +1,26 @@
 import { Request, Response } from "express";
 import bcryptjs from "bcryptjs";
 import { ActorService } from "../../actors/services/actorService";
+import { AuthService } from "../services/auth.service";
 import { generateToken } from "../../../middleware/auth";
 
 /**
  * Controller for handling authentication operations
  */
 export class AuthController {
+  private actorService: ActorService;
+  private authService: AuthService;
+
+  constructor(actorService: ActorService, authService: AuthService) {
+    this.actorService = actorService;
+    this.authService = authService;
+  }
+
   /**
    * Register a new user
    */
   async register(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-      
       const { username, password, displayName, bio } = req.body;
 
       if (!username || !password) {
@@ -32,13 +37,13 @@ export class AuthController {
       }
 
       // Check if username already exists
-      const exists = await actorService.usernameExists(username);
+      const exists = await this.actorService.usernameExists(username);
       if (exists) {
         return res.status(409).json({ error: "Username already exists" });
       }
 
       // Create actor
-      const actor = await actorService.createActor({
+      const actor = await this.actorService.createActor({
         username,
         displayName,
         bio,
@@ -66,7 +71,6 @@ export class AuthController {
    */
   async login(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
       const { username, password } = req.body;
 
       if (!username || !password) {
@@ -75,30 +79,18 @@ export class AuthController {
           .json({ error: "Username and password are required" });
       }
 
-      // Find user in database
-      const user = await db
-        .collection("actors")
-        .findOne({ preferredUsername: username });
-
+      // Use auth service to authenticate the user
+      const user = await this.authService.authenticateUser(username, password);
+      
       if (!user) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      // Check password
-      const isMatch = await bcryptjs.compare(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({ error: "Invalid credentials" });
-      }
-
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-
       // Generate JWT
-      const token = generateToken(userWithoutPassword);
+      const token = generateToken(user);
 
       return res.json({
-        actor: userWithoutPassword,
+        actor: user,
         token,
       });
     } catch (error) {

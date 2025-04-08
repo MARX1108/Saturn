@@ -6,10 +6,28 @@ export class ActivityPubService {
   private repository: ActivityPubRepository;
   private domain: string;
 
-  constructor(db: Db, domain: string) {
-    this.repository = new ActivityPubRepository(db);
+  constructor(activityPubRepository: ActivityPubRepository, domain: string) {
+    this.repository = activityPubRepository;
     this.domain = domain;
   }
 
-  // Add ActivityPub related methods here
+  /**
+   * Process an incoming ActivityPub activity
+   * @param activity The ActivityPub activity object
+   * @param targetUsername The username of the target actor
+   */
+  async processIncomingActivity(activity: any, targetUsername: string): Promise<void> {
+    // Log the activity for debugging
+    console.log(`Processing activity for ${targetUsername}:`, activity);
+    
+    // Implementation would handle different activity types:
+    // - Follow/Unfollow requests
+    // - Like/Unlike activities
+    // - Create/Update/Delete activities for posts
+    // - Announce (boost/repost) activities
+    // etc.
+    
+    // For now, just save the activity to database
+    await this.repository.saveActivity(activity, targetUsername);
+  }
 }

@@ -1,13 +1,39 @@
 // Auth service implementation
 import { Db } from "mongodb";
+import bcryptjs from "bcryptjs";
 import { AuthRepository } from "../repositories/auth.repository";
 
 export class AuthService {
   private repository: AuthRepository;
 
-  constructor(db: Db) {
-    this.repository = new AuthRepository(db);
+  constructor(authRepository: AuthRepository) {
+    this.repository = authRepository;
   }
 
-  // Add Auth related methods here (login, registration, token validation, etc.)
+  /**
+   * Authenticate a user with username and password
+   * @param username The user's username
+   * @param password The user's password
+   * @returns User object without password if authentication is successful, null otherwise
+   */
+  async authenticateUser(username: string, password: string) {
+    // Find user using repository
+    const user = await this.repository.findByUsername(username);
+
+    if (!user) {
+      return null;
+    }
+
+    // Check password
+    const isMatch = await bcryptjs.compare(password, user.password);
+
+    if (!isMatch) {
+      return null;
+    }
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    
+    return userWithoutPassword;
+  }
 }

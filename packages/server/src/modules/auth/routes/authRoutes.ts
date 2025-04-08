@@ -9,8 +9,10 @@ import { ServiceContainer } from "../../../utils/container";
  */
 export function configureAuthRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
-  const authController = new AuthController();
-  const authService = serviceContainer.getService('authService');
+  const { authService, actorService } = serviceContainer;
+  
+  // Create controller with injected dependencies
+  const authController = new AuthController(actorService, authService);
 
   // Register new user
   router.post("/register", (req: Request, res: Response) => {
@@ -32,16 +34,14 @@ export function configureAuthRoutes(serviceContainer: ServiceContainer): Router 
 
 // Keep the old signature for backwards compatibility during transition
 export function configureAuthRoutesLegacy(db: Db, domain: string): Router {
-  // Create a service container from legacy params
+  // Create a minimal service container from legacy params
   const serviceContainer = {
+    actorService: null,
+    authService: null,
     getService: (name: string) => {
-      if (name === 'authService') {
-        // Return a minimal implementation to keep things working
-        return {};
-      }
       return null;
     }
-  } as ServiceContainer;
+  } as unknown as ServiceContainer;
   
   return configureAuthRoutes(serviceContainer);
 }

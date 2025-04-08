@@ -11,8 +11,16 @@ import { UploadService } from "../../media/services/upload.service";
  */
 export function configurePostRoutes(serviceContainer: ServiceContainer): Router {
   const router = express.Router();
-  const postsController = new PostsController();
-  const { uploadService } = serviceContainer;
+  const { postService, actorService, uploadService } = serviceContainer;
+  const domain = process.env.DOMAIN || "localhost:4000";
+  
+  // Create controller with injected dependencies
+  const postsController = new PostsController(
+    postService,
+    actorService,
+    uploadService,
+    domain
+  );
   
   // Configure media upload middleware with UploadService
   const mediaUpload = uploadService.configureMediaUploadMiddleware({

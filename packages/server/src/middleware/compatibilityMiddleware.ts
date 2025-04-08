@@ -1,15 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { ActorService } from '../modules/actors/services/actorService';
+import { ServiceContainer } from '../utils/container';
 
 /**
  * Middleware to inject services into request object for backward compatibility
+ * This maintains compatibility with older code that expects services directly on the request object
  */
 export const compatibilityMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const db = req.app.get('db');
-  const domain = req.app.get('domain');
+  const services = req.services as ServiceContainer;
   
-  if (db && domain) {
-    req.actorService = new ActorService(db, domain);
+  if (services) {
+    // Add commonly used services directly to the request for backward compatibility
+    req.actorService = services.actorService;
+    
+    // Any other services that might be directly accessed on req can be added here
   }
   
   next();

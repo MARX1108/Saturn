@@ -1,18 +1,29 @@
 import { Request, Response } from "express";
 import { ActorService } from "../../actors/services/actorService";
+import { ActivityPubService } from "../services/activitypub.service";
 
 export class ActivityPubController {
+  private actorService: ActorService;
+  private activityPubService: ActivityPubService;
+  private domain: string;
+
+  constructor(
+    actorService: ActorService,
+    activityPubService: ActivityPubService,
+    domain: string
+  ) {
+    this.actorService = actorService;
+    this.activityPubService = activityPubService;
+    this.domain = domain;
+  }
+  
   /**
    * Get ActivityPub actor profile
    */
   async getActor(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      const actorService = new ActorService(db, domain);
-      
       const { username } = req.params;
-      const actor = await actorService.getFullActorByUsername(username);
+      const actor = await this.actorService.getFullActorByUsername(username);
 
       if (!actor) {
         return res.status(404).json({ error: "Actor not found" });
@@ -27,15 +38,15 @@ export class ActivityPubController {
             "https://www.w3.org/ns/activitystreams",
             "https://w3id.org/security/v1",
           ],
-          id: `https://${domain}/users/${username}`,
+          id: `https://${this.domain}/users/${username}`,
           type: "Person",
           preferredUsername: username,
           name: actor.name,
           summary: actor.bio,
-          inbox: `https://${domain}/users/${username}/inbox`,
-          outbox: `https://${domain}/users/${username}/outbox`,
-          following: `https://${domain}/users/${username}/following`,
-          followers: `https://${domain}/users/${username}/followers`,
+          inbox: `https://${this.domain}/users/${username}/inbox`,
+          outbox: `https://${this.domain}/users/${username}/outbox`,
+          following: `https://${this.domain}/users/${username}/following`,
+          followers: `https://${this.domain}/users/${username}/followers`,
           icon: actor.icon ? {
             type: "Image",
             mediaType: actor.icon.mediaType,
@@ -61,9 +72,9 @@ export class ActivityPubController {
    */
   async receiveActivity(req: Request, res: Response): Promise<Response> {
     try {
-      // Implementation of inbox activity handling would go here
-      // For now, just accept the activity
-      console.log("Received activity:", req.body);
+      // Use ActivityPubService to process the incoming activity
+      await this.activityPubService.processIncomingActivity(req.body, req.params.username);
+      
       return res.status(202).json({ message: "Activity accepted" });
     } catch (error) {
       console.error("Error processing activity:", error);
@@ -76,16 +87,13 @@ export class ActivityPubController {
    */
   async getOutbox(req: Request, res: Response): Promise<Response> {
     try {
-      const db = req.app.get("db");
-      const domain = req.app.get("domain");
-      
       const { username } = req.params;
       
       // For now, return an empty collection
       // In a full implementation, you would fetch posts and convert to activities
       const outbox = {
         "@context": "https://www.w3.org/ns/activitystreams",
-        id: `https://${domain}/users/${username}/outbox`,
+        id: `https://${this.domain}/users/${username}/outbox`,
         type: "OrderedCollection",
         totalItems: 0,
         orderedItems: []
