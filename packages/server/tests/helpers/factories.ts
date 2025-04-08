@@ -1,164 +1,156 @@
+/**
+ * Test factories for creating test data
+ * 
+ * This file contains factory functions to create test entities in the database.
+ * Each factory creates a realistic entity with default values that can be overridden.
+ */
 import { Db, ObjectId } from 'mongodb';
-import bcryptjs from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
-// Import types from your modules
-// Note: Adjust these import paths if needed based on your project structure
-export interface Actor {
-  _id?: string | ObjectId;
-  id: string;
-  type: "Person";
-  preferredUsername: string;
-  name?: string;
-  summary?: string;
-  inbox: string;
-  outbox: string;
-  followers: string;
-  following?: string[];
-  publicKey?: {
-    id: string;
-    owner: string;
-    publicKeyPem: string;
-  };
-  privateKey?: string;
-  icon?: {
-    type: "Image";
-    mediaType: string;
-    url: string;
-  };
-  bio?: string;
-  createdAt?: Date;
+// Types for test data creation
+interface UserCreateOptions {
+  username?: string;
+  email?: string;
   password?: string;
-  "@context"?: string[];
+  displayName?: string;
+  isAdmin?: boolean;
 }
 
-export interface Post {
-  _id?: string | ObjectId;
-  content: string;
-  actorId: string | ObjectId;
-  createdAt: Date;
-  sensitive?: boolean;
-  contentWarning?: string;
-  attachments?: Array<{
-    url: string;
-    type: string;
-    mediaType: string;
-  }>;
-  likes: number;
-  replies: number;
-  reposts: number;
-  type?: string;
-  attributedTo?: string;
-  likedBy?: Array<string | ObjectId>;
-  id?: string;
+interface PostCreateOptions {
+  content?: string;
+  user?: ObjectId | string;
+  visibility?: 'public' | 'private' | 'followers';
+}
+
+interface CommentCreateOptions {
+  content?: string;
+  user?: ObjectId | string;
+  post?: ObjectId | string;
 }
 
 /**
- * Create a test actor document for testing
- * @param db - MongoDB database instance
- * @param actorData - Optional partial Actor data to override defaults
- * @returns The created Actor document
+ * Creates a test user in the database
+ * @param db MongoDB database instance
+ * @param options User creation options
  */
-export async function createTestActor(db: Db, actorData?: Partial<Actor>): Promise<Actor> {
-  // Generate a unique username if not provided
-  const username = actorData?.preferredUsername || `testuser-${Date.now()}`;
-  const domain = 'test.local';
-  
-  // Default actor data
-  const defaultActor: Actor = {
-    id: `https://${domain}/users/${username}`,
-    type: 'Person',
-    preferredUsername: username,
-    name: `Test User ${username}`,
-    summary: 'This is a test user bio',
-    inbox: `https://${domain}/users/${username}/inbox`,
-    outbox: `https://${domain}/users/${username}/outbox`,
-    followers: `https://${domain}/users/${username}/followers`,
-    following: [],
-    createdAt: new Date(),
-    // Hash a default password for testing
-    password: await bcryptjs.hash('testpassword123', 10)
+export async function createTestUser(db: Db, options: UserCreateOptions = {}) {
+  const defaultOptions = {
+    username: `test-user-${Date.now()}`,
+    email: `test-${Date.now()}@example.com`,
+    password: 'Password123!',
+    displayName: 'Test User',
+    isAdmin: false
   };
 
-  // Merge defaults with provided data
-  const actor = { ...defaultActor, ...actorData };
-  
-  // Insert into database
-  const result = await db.collection('actors').insertOne(actor);
-  
-  // Get the full document with _id
-  const createdActor = await db.collection('actors').findOne({ _id: result.insertedId });
-  
-  return createdActor as Actor;
+  const mergedOptions = { ...defaultOptions, ...options };
+  const hashedPassword = await bcrypt.hash(mergedOptions.password, 10);
+
+  const user = {
+    _id: new ObjectId(),
+    username: mergedOptions.username,
+    email: mergedOptions.email,
+    password: hashedPassword,
+    displayName: mergedOptions.displayName,
+    isAdmin: mergedOptions.isAdmin,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  await db.collection('users').insertOne(user);
+  return user;
 }
 
 /**
- * Create a test post document for testing
- * @param db - MongoDB database instance
- * @param postData - Post data with required authorId
- * @returns The created Post document
+ * Creates a test post in the database
+ * @param db MongoDB database instance
+ * @param options Post creation options
  */
-export async function createTestPost(db: Db, postData: Partial<Post> & { authorId: string | ObjectId }): Promise<Post> {
-  const domain = 'test.local';
-  
-  // Ensure authorId is an ObjectId
-  const authorId = typeof postData.authorId === 'string' 
-    ? new ObjectId(postData.authorId) 
-    : postData.authorId;
-
-  // Generate a post ID
-  const postId = new ObjectId();
-  
-  // Default post data
-  const defaultPost: Post = {
-    content: `This is test post content ${Date.now()}`,
-    actorId: authorId,
-    createdAt: new Date(),
-    sensitive: false,
-    contentWarning: '',
-    attachments: [],
-    likes: 0,
-    replies: 0,
-    reposts: 0,
-    type: 'Note',
-    id: `https://${domain}/posts/${postId}`,
-    likedBy: []
-  };
-
-  // Look up author to set attributedTo
-  const author = await db.collection('actors').findOne({ _id: authorId });
-  if (author && author.preferredUsername) {
-    defaultPost.attributedTo = `https://${domain}/users/${author.preferredUsername}`;
+export async function createTestPost(db: Db, options: PostCreateOptions = {}) {
+  // If user ID is not provided, create a test user
+  let userId = options.user;
+  if (!userId) {
+    const user = await createTestUser(db);
+    userId = user._id;
   }
 
-  // Merge defaults with provided data
-  const post = { ...defaultPost, ...postData, actorId: authorId };
+  const defaultOptions = {
+    content: 'This is a test post content',
+    visibility: 'public'
+  };
+
+  const mergedOptions = { ...defaultOptions, ...options, user: userId };
   
-  // Insert into database
-  const result = await db.collection('posts').insertOne(post);
-  
-  // Get the full document with _id
-  const createdPost = await db.collection('posts').findOne({ _id: result.insertedId });
-  
-  return createdPost as Post;
+  const post = {
+    _id: new ObjectId(),
+    content: mergedOptions.content,
+    user: typeof userId === 'string' ? new ObjectId(userId) : userId,
+    visibility: mergedOptions.visibility,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  await db.collection('posts').insertOne(post);
+  return post;
 }
 
 /**
- * Create a like on a post
- * @param db - MongoDB database instance
- * @param userId - ObjectId of the user doing the liking
- * @param postId - ObjectId of the post being liked
+ * Creates a test comment in the database
+ * @param db MongoDB database instance
+ * @param options Comment creation options
  */
-export async function createTestLike(db: Db, userId: string | ObjectId, postId: string | ObjectId): Promise<void> {
-  // Ensure IDs are ObjectIds
-  const userObjId = typeof userId === 'string' ? new ObjectId(userId) : userId;
-  const postObjId = typeof postId === 'string' ? new ObjectId(postId) : postId;
-  
-  // Add the user to the post's likedBy array and increment likes count
-  await db.collection('posts').updateOne(
-    { _id: postObjId },
-    { 
-      $addToSet: { likedBy: userObjId },
-      $inc: { likes: 1 }
-    }
-  );
+export async function createTestComment(db: Db, options: CommentCreateOptions = {}) {
+  // If user ID is not provided, create a test user
+  let userId = options.user;
+  if (!userId) {
+    const user = await createTestUser(db);
+    userId = user._id;
+  }
+
+  // If post ID is not provided, create a test post
+  let postId = options.post;
+  if (!postId) {
+    const post = await createTestPost(db, { user: userId });
+    postId = post._id;
+  }
+
+  const comment = {
+    _id: new ObjectId(),
+    content: options.content || 'This is a test comment',
+    user: typeof userId === 'string' ? new ObjectId(userId) : userId,
+    post: typeof postId === 'string' ? new ObjectId(postId) : postId,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  await db.collection('comments').insertOne(comment);
+  return comment;
+}
+
+/**
+ * Creates a test follow relationship in the database
+ * @param db MongoDB database instance
+ * @param followerId ID of the follower user
+ * @param followedId ID of the followed user
+ */
+export async function createTestFollow(db: Db, followerId?: string | ObjectId, followedId?: string | ObjectId) {
+  // Create users if not provided
+  if (!followerId) {
+    const follower = await createTestUser(db);
+    followerId = follower._id;
+  }
+
+  if (!followedId) {
+    const followed = await createTestUser(db);
+    followedId = followed._id;
+  }
+
+  const follow = {
+    _id: new ObjectId(),
+    follower: typeof followerId === 'string' ? new ObjectId(followerId) : followerId,
+    followed: typeof followedId === 'string' ? new ObjectId(followedId) : followedId,
+    createdAt: new Date()
+  };
+
+  await db.collection('follows').insertOne(follow);
+  return follow;
 }
