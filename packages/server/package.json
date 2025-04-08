@@ -1,6 +1,7 @@
 {
   "name": "@fyp-saturn/server",
   "version": "0.1.0",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "PORT=4000 ts-node-dev --respawn src/index.ts",
