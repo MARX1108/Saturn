@@ -1,5 +1,5 @@
 import express, { Request, Response, Router } from "express";
-import { Db } from "mongodb";
+import { Db as _Db } from "mongodb";
 import { ActivityPubController } from "../controllers/activitypubController";
 import { ServiceContainer } from "../../../utils/container";
 

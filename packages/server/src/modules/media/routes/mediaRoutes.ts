@@ -1,5 +1,5 @@
 import express, { Request, Response, Router } from "express";
-import { Db } from "mongodb";
+import { Db as _Db } from "mongodb";
 import { MediaController } from "../controllers/media.controller";
 import { ServiceContainer } from "../../../utils/container";
 
@@ -10,7 +10,7 @@ export function configureMediaRoutes(
   serviceContainer: ServiceContainer,
 ): Router {
   const router = express.Router();
-  const { mediaService, uploadService } = serviceContainer;
+  const { mediaService, uploadService: _uploadService } = serviceContainer;
 
   // Create controller with injected service
   const mediaController = new MediaController(mediaService);

@@ -100,13 +100,13 @@ export class PostService {
     return this.repository.delete(postId);
   }
 
-  async likePost(postId: string, actorId: string): Promise<boolean> {
+  async likePost(postId: string, _actorId: string): Promise<boolean> {
     // TODO: Implement like tracking to prevent multiple likes
     // For now, just increment the like count
     return this.repository.likePost(postId);
   }
 
-  async unlikePost(postId: string, actorId: string): Promise<boolean> {
+  async unlikePost(postId: string, _actorId: string): Promise<boolean> {
     // TODO: Check if the user has liked the post before decrementing
     return this.repository.unlikePost(postId);
   }

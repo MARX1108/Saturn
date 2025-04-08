@@ -15,7 +15,7 @@ export const serviceMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction,
-) => {
+): void => {
   const services = req.app.get("services") as ServiceContainer;
 
   if (!services) {

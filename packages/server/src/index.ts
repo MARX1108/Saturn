@@ -27,7 +27,12 @@ app.use(express.json());
 app.use(express.static("public"));
 
 // Connect to MongoDB
-export async function startServer() {
+export async function startServer(): Promise<{
+  app: express.Application;
+  client: MongoClient;
+  server?: any;
+  db: any;
+}> {
   try {
     const client = new MongoClient(MONGO_URI);
     await client.connect();

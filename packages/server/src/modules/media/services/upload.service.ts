@@ -8,7 +8,7 @@ export class UploadService {
    * @param uploadDir Optional custom upload directory path
    * @returns Configured multer storage
    */
-  private configureStorage(uploadDir?: string) {
+  private configureStorage(uploadDir?: string): multer.StorageEngine {
     const defaultDir = path.join(process.cwd(), "uploads");
     const destination = uploadDir || defaultDir;
 
@@ -36,7 +36,7 @@ export class UploadService {
   public configureImageUploadMiddleware(options?: {
     fileSizeLimitMB?: number;
     uploadDir?: string;
-  }) {
+  }): multer.Multer {
     const fileSizeLimit = (options?.fileSizeLimitMB || 5) * 1024 * 1024; // Default 5MB
 
     return multer({
@@ -61,7 +61,7 @@ export class UploadService {
     fileSizeLimitMB?: number;
     uploadDir?: string;
     allowedTypes?: string[];
-  }) {
+  }): multer.Multer {
     const fileSizeLimit = (options?.fileSizeLimitMB || 10) * 1024 * 1024; // Default 10MB
     const allowedTypes = options?.allowedTypes || [
       "image/",
@@ -101,7 +101,13 @@ export class UploadService {
     file: Express.Multer.File,
     targetDir: string,
     customFilename?: string,
-  ) {
+  ): Promise<{
+    path: string;
+    filename: string;
+    originalName: string;
+    mimetype: string;
+    size: number;
+  }> {
     // Create target directory if it doesn't exist
     await fs.mkdir(targetDir, { recursive: true });
 

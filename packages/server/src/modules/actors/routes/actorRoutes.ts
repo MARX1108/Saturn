@@ -1,10 +1,10 @@
 import express, { Request, Response, Router } from "express";
-import path from "path";
-import { Db } from "mongodb";
+import _path from "path";
+import { Db as _Db } from "mongodb";
 import { ActorsController } from "../controllers/actorsController";
 import { auth } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
-import { UploadService } from "../../media/services/upload.service";
+import { UploadService as _UploadService } from "../../media/services/upload.service";
 
 /**
  * Configure actor routes with the controller

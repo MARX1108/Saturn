@@ -8,7 +8,7 @@ export async function sendSignedRequest(
   body: any,
   privateKey: string,
   keyId: string,
-) {
+): Promise<Response> {
   const digest = crypto
     .createHash("sha256")
     .update(JSON.stringify(body))
@@ -56,7 +56,7 @@ export async function sendSignedRequest(
 }
 
 // Fetch remote actor profile
-export async function fetchRemoteActor(actorUrl: string) {
+export async function fetchRemoteActor(actorUrl: string): Promise<any> {
   try {
     const response = await fetch(actorUrl, {
       headers: {
@@ -80,7 +80,7 @@ export async function sendFollowRequest(
   fromActor: any,
   toActorUrl: string,
   privateKey: string,
-) {
+): Promise<any> {
   try {
     // First fetch the target actor
     const toActor = await fetchRemoteActor(toActorUrl);
