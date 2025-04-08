@@ -38,7 +38,7 @@ export class MockActorService {
   async updateActor(
     username: string,
     updates: any,
-    iconInfo?: any
+    iconInfo?: any,
   ): Promise<any> {
     const actor = this.actors.get(username);
     if (!actor) {

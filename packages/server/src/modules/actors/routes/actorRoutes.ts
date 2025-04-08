@@ -9,21 +9,23 @@ import { UploadService } from "../../media/services/upload.service";
 /**
  * Configure actor routes with the controller
  */
-export function configureActorRoutes(serviceContainer: ServiceContainer): Router {
+export function configureActorRoutes(
+  serviceContainer: ServiceContainer,
+): Router {
   const router = express.Router();
   const { actorService, uploadService } = serviceContainer;
   const domain = process.env.DOMAIN || "localhost:4000";
-  
+
   // Create controller with injected dependencies
   const actorsController = new ActorsController(
     actorService,
-    uploadService, 
-    domain
+    uploadService,
+    domain,
   );
 
   // Configure image upload middleware with UploadService
   const imageUpload = uploadService.configureImageUploadMiddleware({
-    fileSizeLimitMB: 5 // 5MB limit
+    fileSizeLimitMB: 5, // 5MB limit
   });
 
   // Search actors
@@ -62,19 +64,4 @@ export function configureActorRoutes(serviceContainer: ServiceContainer): Router
   });
 
   return router;
-}
-
-// Keep the old signature for backwards compatibility during transition
-export function configureActorRoutesLegacy(db: Db, domain: string): Router {
-  // Create a minimal service container from legacy params
-  const serviceContainer = {
-    actorService: null,
-    postService: null,
-    uploadService: new UploadService(),
-    getService: (name: string) => {
-      return null;
-    }
-  } as unknown as ServiceContainer;
-  
-  return configureActorRoutes(serviceContainer);
 }

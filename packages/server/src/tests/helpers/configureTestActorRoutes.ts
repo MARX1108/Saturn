@@ -37,7 +37,7 @@ export function configureActorRoutes(db: Db, domain: string) {
   const checkAuth = (
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
@@ -99,7 +99,7 @@ export function configureActorRoutes(db: Db, domain: string) {
           bio,
           password: actorPassword,
         },
-        iconInfo
+        iconInfo,
       );
 
       // Format response to match ActivityPub format for tests
@@ -203,7 +203,7 @@ export function configureActorRoutes(db: Db, domain: string) {
             displayName,
             bio,
           },
-          iconInfo
+          iconInfo,
         );
 
         // Format response to match ActivityPub format for tests
@@ -225,7 +225,7 @@ export function configureActorRoutes(db: Db, domain: string) {
         console.error("Error updating actor:", error);
         res.status(500).json({ error: "Failed to update actor" });
       }
-    }
+    },
   );
 
   // Delete actor

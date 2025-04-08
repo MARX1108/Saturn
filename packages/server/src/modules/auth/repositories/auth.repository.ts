@@ -14,7 +14,7 @@ interface User {
 export class AuthRepository extends MongoRepository<User> {
   constructor(db: Db) {
     super(db, "users");
-    
+
     // Create indexes for common auth queries
     this.collection.createIndex({ username: 1 }, { unique: true });
     this.collection.createIndex({ email: 1 }, { unique: true });

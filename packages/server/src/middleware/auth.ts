@@ -21,7 +21,7 @@ export const generateToken = (user: any): string => {
       username: user.preferredUsername || user.username,
     },
     JWT_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "7d" },
   );
 };
 
@@ -78,7 +78,7 @@ export const authorize = (requiredRole: string) => {
 export const authenticateToken = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];

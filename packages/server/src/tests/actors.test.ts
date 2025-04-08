@@ -87,7 +87,7 @@ describe("Actors Routes", () => {
     // Generate a token for secured endpoints
     testUserToken = jwt.sign(
       { id: user.insertedId.toString(), username: "testuser" },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
     );
   });
 
@@ -142,7 +142,7 @@ describe("Actors Routes", () => {
       // Create a test image
       const imageBuffer = Buffer.from(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-        "base64"
+        "base64",
       );
       const imagePath = path.join(process.cwd(), "test-image.png");
       fs.writeFileSync(imagePath, imageBuffer);
@@ -278,7 +278,7 @@ describe("Actors Routes", () => {
       // Create a test image
       const imageBuffer = Buffer.from(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-        "base64"
+        "base64",
       );
       const imagePath = path.join(process.cwd(), "update-image.png");
       fs.writeFileSync(imagePath, imageBuffer);
@@ -310,7 +310,7 @@ describe("Actors Routes", () => {
       // Create token for this new user
       const anotherUserToken = jwt.sign(
         { id: "wrongid", username: "anotheruser" },
-        process.env.JWT_SECRET
+        process.env.JWT_SECRET,
       );
 
       // Try to update first user's profile with second user's token
@@ -388,7 +388,7 @@ describe("Actors Routes", () => {
       // Create token for this new user
       const anotherUserToken = jwt.sign(
         { id: "wrongid", username: "anotheruser" },
-        process.env.JWT_SECRET
+        process.env.JWT_SECRET,
       );
 
       // Try to delete first user with second user's token
@@ -449,19 +449,19 @@ describe("Actors Routes", () => {
       expect(response.body).toBeInstanceOf(Array);
       expect(response.body.length).toBeGreaterThanOrEqual(3); // testuser, testuser1, testuser2
       expect(
-        response.body.some((u) => u.preferredUsername === "testuser")
+        response.body.some((u) => u.preferredUsername === "testuser"),
       ).toBe(true);
       expect(
-        response.body.some((u) => u.preferredUsername === "testuser1")
+        response.body.some((u) => u.preferredUsername === "testuser1"),
       ).toBe(true);
       expect(
-        response.body.some((u) => u.preferredUsername === "testuser2")
+        response.body.some((u) => u.preferredUsername === "testuser2"),
       ).toBe(true);
     });
 
     it("should return empty array for no matches", async () => {
       const response = await request(app).get(
-        "/api/search/actors?q=nonexistent"
+        "/api/search/actors?q=nonexistent",
       );
 
       expect(response.status).toBe(200);

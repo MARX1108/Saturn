@@ -4,7 +4,7 @@ export interface Actor {
   id: string;
   type: "Person";
   preferredUsername: string;
-  name?: string; 
+  name?: string;
   summary?: string;
   inbox: string;
   outbox: string;

@@ -81,7 +81,7 @@ export class AuthController {
 
       // Use auth service to authenticate the user
       const user = await this.authService.authenticateUser(username, password);
-      
+
       if (!user) {
         return res.status(401).json({ error: "Invalid credentials" });
       }

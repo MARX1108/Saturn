@@ -6,16 +6,18 @@ import { ServiceContainer } from "../../../utils/container";
 /**
  * Configure WebFinger routes with the controller
  */
-export function configureWebFingerRoutes(serviceContainer: ServiceContainer): Router {
+export function configureWebFingerRoutes(
+  serviceContainer: ServiceContainer,
+): Router {
   const router = express.Router();
   const { actorService, webfingerService } = serviceContainer;
   const domain = process.env.DOMAIN || "localhost:4000";
-  
+
   // Create controller with injected dependencies
   const webFingerController = new WebFingerController(
     actorService,
     webfingerService,
-    domain
+    domain,
   );
 
   // WebFinger endpoint for actor discovery
@@ -24,18 +26,4 @@ export function configureWebFingerRoutes(serviceContainer: ServiceContainer): Ro
   });
 
   return router;
-}
-
-// Keep the old signature for backwards compatibility during transition
-export function configureWebFingerRoutesLegacy(db: Db, domain: string): Router {
-  // Create a minimal service container from legacy params
-  const serviceContainer = {
-    actorService: null,
-    webfingerService: null,
-    getService: (name: string) => {
-      return null;
-    }
-  } as unknown as ServiceContainer;
-  
-  return configureWebFingerRoutes(serviceContainer);
 }

@@ -39,7 +39,7 @@ export function configureMulter(options: UploadOptions) {
     limits: { fileSize: maxFileSize },
     fileFilter: (req, file, cb) => {
       const isAllowed = fileTypes.some((type) =>
-        file.mimetype.startsWith(type)
+        file.mimetype.startsWith(type),
       );
       if (isAllowed) {
         cb(null, true);
@@ -53,7 +53,7 @@ export function configureMulter(options: UploadOptions) {
 export function moveUploadedFile(
   sourcePath: string,
   destDir: string,
-  fileName: string
+  fileName: string,
 ): string {
   fs.mkdirSync(destDir, { recursive: true });
   const destPath = path.join(destDir, fileName);

@@ -10,13 +10,13 @@ export class ActivityPubController {
   constructor(
     actorService: ActorService,
     activityPubService: ActivityPubService,
-    domain: string
+    domain: string,
   ) {
     this.actorService = actorService;
     this.activityPubService = activityPubService;
     this.domain = domain;
   }
-  
+
   /**
    * Get ActivityPub actor profile
    */
@@ -47,12 +47,14 @@ export class ActivityPubController {
           outbox: `https://${this.domain}/users/${username}/outbox`,
           following: `https://${this.domain}/users/${username}/following`,
           followers: `https://${this.domain}/users/${username}/followers`,
-          icon: actor.icon ? {
-            type: "Image",
-            mediaType: actor.icon.mediaType,
-            url: actor.icon.url
-          } : undefined,
-          publicKey: actor.publicKey
+          icon: actor.icon
+            ? {
+                type: "Image",
+                mediaType: actor.icon.mediaType,
+                url: actor.icon.url,
+              }
+            : undefined,
+          publicKey: actor.publicKey,
         };
 
         return res.json(activityPubActor);
@@ -73,8 +75,11 @@ export class ActivityPubController {
   async receiveActivity(req: Request, res: Response): Promise<Response> {
     try {
       // Use ActivityPubService to process the incoming activity
-      await this.activityPubService.processIncomingActivity(req.body, req.params.username);
-      
+      await this.activityPubService.processIncomingActivity(
+        req.body,
+        req.params.username,
+      );
+
       return res.status(202).json({ message: "Activity accepted" });
     } catch (error) {
       console.error("Error processing activity:", error);
@@ -88,7 +93,7 @@ export class ActivityPubController {
   async getOutbox(req: Request, res: Response): Promise<Response> {
     try {
       const { username } = req.params;
-      
+
       // For now, return an empty collection
       // In a full implementation, you would fetch posts and convert to activities
       const outbox = {
@@ -96,7 +101,7 @@ export class ActivityPubController {
         id: `https://${this.domain}/users/${username}/outbox`,
         type: "OrderedCollection",
         totalItems: 0,
-        orderedItems: []
+        orderedItems: [],
       };
 
       return res.json(outbox);

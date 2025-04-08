@@ -248,9 +248,15 @@ describe("ActorRepository", () => {
       // Assert
       expect(result).toBeInstanceOf(Array);
       expect(result.length).toBe(3);
-      expect(result.some(actor => actor.preferredUsername === "user1")).toBe(true);
-      expect(result.some(actor => actor.preferredUsername === "user2")).toBe(true);
-      expect(result.some(actor => actor.preferredUsername === "user3")).toBe(true);
+      expect(result.some((actor) => actor.preferredUsername === "user1")).toBe(
+        true,
+      );
+      expect(result.some((actor) => actor.preferredUsername === "user2")).toBe(
+        true,
+      );
+      expect(result.some((actor) => actor.preferredUsername === "user3")).toBe(
+        true,
+      );
     });
 
     it("should return an empty array when no actors exist", async () => {
@@ -288,7 +294,9 @@ describe("ActorRepository", () => {
 
     it("should return null when email not found", async () => {
       // Act
-      const result = await actorRepository.findByEmail("nonexistent@example.com");
+      const result = await actorRepository.findByEmail(
+        "nonexistent@example.com",
+      );
 
       // Assert
       expect(result).toBeNull();
@@ -298,7 +306,9 @@ describe("ActorRepository", () => {
   describe("usernameExists", () => {
     it("should return true if username exists", async () => {
       // Arrange
-      await db.collection("actors").insertOne({ preferredUsername: "testuser" });
+      await db
+        .collection("actors")
+        .insertOne({ preferredUsername: "testuser" });
 
       // Act
       const result = await actorRepository.usernameExists("testuser");
@@ -337,7 +347,9 @@ describe("ActorRepository", () => {
       expect(updateResult).toBe(true);
 
       // Verify the update
-      const updatedActor = await db.collection("actors").findOne({ _id: new ObjectId(actorId) });
+      const updatedActor = await db
+        .collection("actors")
+        .findOne({ _id: new ObjectId(actorId) });
       expect(updatedActor).toBeDefined();
       expect(updatedActor?.name).toBe("Updated Name");
       expect(updatedActor?.summary).toBe("Updated bio");
@@ -347,7 +359,7 @@ describe("ActorRepository", () => {
       // Act
       const result = await actorRepository.updateProfile(
         new ObjectId().toString(),
-        { displayName: "Updated Name" }
+        { displayName: "Updated Name" },
       );
 
       // Assert
@@ -380,34 +392,49 @@ describe("ActorRepository", () => {
 
       // Assert
       expect(followers).toHaveLength(2);
-      expect(followers.map(f => f.preferredUsername).sort()).toEqual([
-        "follower1",
-        "follower2",
-      ].sort());
+      expect(followers.map((f) => f.preferredUsername).sort()).toEqual(
+        ["follower1", "follower2"].sort(),
+      );
     });
 
     it("should handle pagination correctly", async () => {
       // Arrange
       const actorId = new ObjectId();
-      
+
       // Create 25 followers
-      const followers = Array(25).fill(0).map((_, i) => ({
-        preferredUsername: `follower${i}`,
-        following: [actorId]
-      }));
-      
-      await db.collection("actors").insertOne({ _id: actorId, preferredUsername: "targetuser" });
+      const followers = Array(25)
+        .fill(0)
+        .map((_, i) => ({
+          preferredUsername: `follower${i}`,
+          following: [actorId],
+        }));
+
+      await db
+        .collection("actors")
+        .insertOne({ _id: actorId, preferredUsername: "targetuser" });
       await db.collection("actors").insertMany(followers);
-      
+
       // Act - Get first page (10 items)
-      const firstPage = await actorRepository.findFollowers(actorId.toString(), 1, 10);
-      
+      const firstPage = await actorRepository.findFollowers(
+        actorId.toString(),
+        1,
+        10,
+      );
+
       // Act - Get second page (10 items)
-      const secondPage = await actorRepository.findFollowers(actorId.toString(), 2, 10);
-      
+      const secondPage = await actorRepository.findFollowers(
+        actorId.toString(),
+        2,
+        10,
+      );
+
       // Act - Get third page (5 items)
-      const thirdPage = await actorRepository.findFollowers(actorId.toString(), 3, 10);
-      
+      const thirdPage = await actorRepository.findFollowers(
+        actorId.toString(),
+        3,
+        10,
+      );
+
       // Assert
       expect(firstPage).toHaveLength(10);
       expect(secondPage).toHaveLength(10);
@@ -421,41 +448,40 @@ describe("ActorRepository", () => {
       const actorId = new ObjectId();
       const followedUser1 = new ObjectId();
       const followedUser2 = new ObjectId();
-      
+
       await db.collection("actors").insertMany([
-        { 
-          _id: actorId, 
+        {
+          _id: actorId,
           preferredUsername: "testuser",
-          following: [followedUser1, followedUser2]
+          following: [followedUser1, followedUser2],
         },
         { _id: followedUser1, preferredUsername: "followed1" },
         { _id: followedUser2, preferredUsername: "followed2" },
-        { _id: new ObjectId(), preferredUsername: "notfollowed" }
+        { _id: new ObjectId(), preferredUsername: "notfollowed" },
       ]);
-      
+
       // Act
       const following = await actorRepository.findFollowing(actorId.toString());
-      
+
       // Assert
       expect(following).toHaveLength(2);
-      expect(following.map(f => f.preferredUsername).sort()).toEqual([
-        "followed1", 
-        "followed2"
-      ].sort());
+      expect(following.map((f) => f.preferredUsername).sort()).toEqual(
+        ["followed1", "followed2"].sort(),
+      );
     });
-    
+
     it("should return empty array if actor isn't following anyone", async () => {
       // Arrange
       const actorId = new ObjectId();
       await db.collection("actors").insertOne({
         _id: actorId,
         preferredUsername: "lonelyuser",
-        following: []
+        following: [],
       });
-      
+
       // Act
       const following = await actorRepository.findFollowing(actorId.toString());
-      
+
       // Assert
       expect(following).toHaveLength(0);
     });
@@ -466,47 +492,47 @@ describe("ActorRepository", () => {
       // Arrange
       const actorId = new ObjectId();
       const targetId = new ObjectId();
-      
+
       await db.collection("actors").insertMany([
         { _id: actorId, preferredUsername: "follower", following: [] },
-        { _id: targetId, preferredUsername: "target" }
+        { _id: targetId, preferredUsername: "target" },
       ]);
-      
+
       // Act
       const result = await actorRepository.addFollowing(
-        actorId.toString(), 
-        targetId.toString()
+        actorId.toString(),
+        targetId.toString(),
       );
-      
+
       // Assert
       expect(result).toBe(true);
-      
+
       // Verify
       const actor = await db.collection("actors").findOne({ _id: actorId });
       expect(actor?.following).toHaveLength(1);
       expect(actor?.following[0].toString()).toBe(targetId.toString());
     });
-    
+
     it("should remove a user from following list", async () => {
       // Arrange
       const actorId = new ObjectId();
       const targetId = new ObjectId();
-      
+
       await db.collection("actors").insertOne({
         _id: actorId,
         preferredUsername: "follower",
-        following: [targetId]
+        following: [targetId],
       });
-      
+
       // Act
       const result = await actorRepository.removeFollowing(
         actorId.toString(),
-        targetId.toString()
+        targetId.toString(),
       );
-      
+
       // Assert
       expect(result).toBe(true);
-      
+
       // Verify
       const actor = await db.collection("actors").findOne({ _id: actorId });
       expect(actor?.following).toHaveLength(0);

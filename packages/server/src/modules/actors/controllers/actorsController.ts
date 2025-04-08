@@ -13,13 +13,13 @@ export class ActorsController {
   constructor(
     actorService: ActorService,
     uploadService: UploadService,
-    domain: string
+    domain: string,
   ) {
     this.actorService = actorService;
     this.uploadService = uploadService;
     this.domain = domain;
   }
-  
+
   /**
    * Search actors by query
    */
@@ -32,7 +32,7 @@ export class ActorsController {
       }
 
       const actors = await this.actorService.searchActors(q);
-      
+
       return res.status(200).json(actors);
     } catch (error) {
       console.error("Error searching actors:", error);
@@ -97,7 +97,7 @@ export class ActorsController {
           bio,
           password,
         },
-        iconInfo
+        iconInfo,
       );
 
       // Format response to match test expectations
@@ -184,7 +184,7 @@ export class ActorsController {
           displayName,
           bio,
         },
-        iconInfo
+        iconInfo,
       );
 
       if (!updatedActor) {

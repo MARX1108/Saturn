@@ -15,7 +15,7 @@ export class ActorService {
 
   async createActor(
     actorData: CreateActorRequest,
-    iconInfo?: { url: string; mediaType: string }
+    iconInfo?: { url: string; mediaType: string },
   ): Promise<Actor> {
     // Validate required fields
     if (!actorData.password) {
@@ -33,7 +33,7 @@ export class ActorService {
       name: actorData.displayName || actorData.username,
       bio: actorData.bio || "",
       createdAt: new Date(),
-      
+
       // ActivityPub fields
       type: "Person",
       id: `https://${this.domain}/users/${actorData.username}`,
@@ -41,19 +41,19 @@ export class ActorService {
       outbox: `https://${this.domain}/users/${actorData.username}/outbox`,
       followers: `https://${this.domain}/users/${actorData.username}/followers`,
       following: [], // Ensure only one definition of following
-      
+
       publicKey: {
         id: `https://${this.domain}/users/${actorData.username}#main-key`,
         owner: `https://${this.domain}/users/${actorData.username}`,
-        publicKeyPem: publicKey
+        publicKeyPem: publicKey,
       },
       privateKey: privateKey,
-      
+
       // Security data
       password: actorData.password, // Should be hashed before reaching here
-      
+
       // Additional data
-      icon: iconInfo ? { type: "Image", ...iconInfo } : undefined
+      icon: iconInfo ? { type: "Image", ...iconInfo } : undefined,
     };
 
     // Hash the password before saving
@@ -68,7 +68,7 @@ export class ActorService {
       throw new Error("Failed to create actor");
     }
   }
-  
+
   async getActorById(id: string): Promise<Actor | null> {
     return this.repository.findById(id);
   }
@@ -87,7 +87,7 @@ export class ActorService {
         url: string;
         mediaType: string;
       };
-    }
+    },
   ): Promise<boolean> {
     return this.repository.updateProfile(id, updates);
   }
@@ -96,19 +96,11 @@ export class ActorService {
     return this.repository.usernameExists(username);
   }
 
-  async getFollowers(
-    actorId: string,
-    page = 1,
-    limit = 20
-  ): Promise<Actor[]> {
+  async getFollowers(actorId: string, page = 1, limit = 20): Promise<Actor[]> {
     return this.repository.findFollowers(actorId, page, limit);
   }
 
-  async getFollowing(
-    actorId: string,
-    page = 1,
-    limit = 20
-  ): Promise<Actor[]> {
+  async getFollowing(actorId: string, page = 1, limit = 20): Promise<Actor[]> {
     return this.repository.findFollowing(actorId, page, limit);
   }
 
@@ -118,7 +110,7 @@ export class ActorService {
 
   async unfollowActor(
     actorId: string,
-    targetActorId: string
+    targetActorId: string,
   ): Promise<boolean> {
     return this.repository.removeFollowing(actorId, targetActorId);
   }
@@ -126,14 +118,17 @@ export class ActorService {
   async updateActor(
     username: string,
     updates: { displayName?: string; bio?: string },
-    iconInfo?: { url: string; mediaType: string }
+    iconInfo?: { url: string; mediaType: string },
   ): Promise<Actor | null> {
     const updateData: Partial<Actor> = {
       ...updates,
       icon: iconInfo ? { type: "Image", ...iconInfo } : undefined,
     };
 
-    const result = await this.repository.updateProfileByUsername(username, updateData);
+    const result = await this.repository.updateProfileByUsername(
+      username,
+      updateData,
+    );
     if (!result) return null;
 
     return this.repository.findByUsername(username);
@@ -185,7 +180,7 @@ export class ActorService {
             return;
           }
           resolve({ publicKey, privateKey });
-        }
+        },
       );
     });
   }

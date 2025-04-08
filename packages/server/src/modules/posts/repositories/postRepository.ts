@@ -5,13 +5,17 @@ import { Post } from "../models/post";
 export class PostRepository extends MongoRepository<Post> {
   constructor(db: Db) {
     super(db, "posts");
-    
+
     // Create indexes for common queries
     this.collection.createIndex({ "actor.id": 1, createdAt: -1 });
     this.collection.createIndex({ createdAt: -1 });
   }
 
-  async findByUsername(username: string, page = 1, limit = 20): Promise<Post[]> {
+  async findByUsername(
+    username: string,
+    page = 1,
+    limit = 20,
+  ): Promise<Post[]> {
     const skip = (page - 1) * limit;
     return this.collection
       .find({
@@ -46,7 +50,7 @@ export class PostRepository extends MongoRepository<Post> {
   async likePost(postId: string, actorId: string): Promise<boolean> {
     const result = await this.collection.updateOne(
       { id: postId },
-      { $addToSet: { likes: actorId } }
+      { $addToSet: { likes: actorId } },
     );
     return result.modifiedCount > 0;
   }
@@ -54,7 +58,7 @@ export class PostRepository extends MongoRepository<Post> {
   async unlikePost(postId: string, actorId: string): Promise<boolean> {
     const result = await this.collection.updateOne(
       { id: postId },
-      { $pull: { likes: actorId } }
+      { $pull: { likes: actorId } },
     );
     return result.modifiedCount > 0;
   }
@@ -74,7 +78,7 @@ export class PostRepository extends MongoRepository<Post> {
     const result = await this.collection.findOneAndUpdate(
       { id },
       { $set: { ...update, updatedAt: new Date() } },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
 
     // Ensure the result is properly typed as Post

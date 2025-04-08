@@ -7,7 +7,7 @@ export async function sendSignedRequest(
   url: string,
   body: any,
   privateKey: string,
-  keyId: string
+  keyId: string,
 ) {
   const digest = crypto
     .createHash("sha256")
@@ -79,7 +79,7 @@ export async function fetchRemoteActor(actorUrl: string) {
 export async function sendFollowRequest(
   fromActor: any,
   toActorUrl: string,
-  privateKey: string
+  privateKey: string,
 ) {
   try {
     // First fetch the target actor
@@ -100,7 +100,7 @@ export async function sendFollowRequest(
       toActor.inbox,
       followActivity,
       privateKey,
-      `${fromActor.id}#main-key`
+      `${fromActor.id}#main-key`,
     );
 
     if (!response.ok) {

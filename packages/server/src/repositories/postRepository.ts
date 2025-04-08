@@ -14,7 +14,11 @@ export class PostRepository extends MongoRepository<Post> {
     this.collection.createIndex({ actorId: 1 });
   }
 
-  async getPostsByUserId(userId: string, page = 1, limit = 20): Promise<{ posts: Post[], hasMore: boolean }> {
+  async getPostsByUserId(
+    userId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{ posts: Post[]; hasMore: boolean }> {
     try {
       if (!ObjectId.isValid(userId)) {
         throw new Error("Invalid userId");
@@ -40,7 +44,10 @@ export class PostRepository extends MongoRepository<Post> {
     }
   }
 
-  async getFeed(page = 1, limit = 20): Promise<{ posts: Post[], hasMore: boolean }> {
+  async getFeed(
+    page = 1,
+    limit = 20,
+  ): Promise<{ posts: Post[]; hasMore: boolean }> {
     try {
       const skip = (page - 1) * limit;
       const posts = await this.collection
@@ -70,7 +77,7 @@ export class PostRepository extends MongoRepository<Post> {
 
       const result = await this.collection.updateOne(
         { _id: new ObjectId(postId) },
-        { $inc: { likes: 1 } }
+        { $inc: { likes: 1 } },
       );
       return result.modifiedCount > 0;
     } catch (error) {
@@ -87,7 +94,7 @@ export class PostRepository extends MongoRepository<Post> {
 
       const result = await this.collection.updateOne(
         { _id: new ObjectId(postId) },
-        { $inc: { likes: -1 } }
+        { $inc: { likes: -1 } },
       );
       return result.modifiedCount > 0;
     } catch (error) {
@@ -96,9 +103,14 @@ export class PostRepository extends MongoRepository<Post> {
     }
   }
 
-  async getPostsByUsername(username: string, page = 1, limit = 20, actorCollection = "actors"): Promise<{ posts: Post[], hasMore: boolean }> {
+  async getPostsByUsername(
+    username: string,
+    page = 1,
+    limit = 20,
+    actorCollection = "actors",
+  ): Promise<{ posts: Post[]; hasMore: boolean }> {
     const actor = await this.db.collection(actorCollection).findOne({
-      preferredUsername: username
+      preferredUsername: username,
     });
 
     if (!actor) {

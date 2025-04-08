@@ -7,10 +7,12 @@ import { ServiceContainer } from "../../../utils/container";
 /**
  * Configure authentication routes with the controller
  */
-export function configureAuthRoutes(serviceContainer: ServiceContainer): Router {
+export function configureAuthRoutes(
+  serviceContainer: ServiceContainer,
+): Router {
   const router = express.Router();
   const { authService, actorService } = serviceContainer;
-  
+
   // Create controller with injected dependencies
   const authController = new AuthController(actorService, authService);
 
@@ -30,18 +32,4 @@ export function configureAuthRoutes(serviceContainer: ServiceContainer): Router 
   });
 
   return router;
-}
-
-// Keep the old signature for backwards compatibility during transition
-export function configureAuthRoutesLegacy(db: Db, domain: string): Router {
-  // Create a minimal service container from legacy params
-  const serviceContainer = {
-    actorService: null,
-    authService: null,
-    getService: (name: string) => {
-      return null;
-    }
-  } as unknown as ServiceContainer;
-  
-  return configureAuthRoutes(serviceContainer);
 }

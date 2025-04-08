@@ -14,7 +14,7 @@ export class PostService {
 
   async createPost(
     postData: CreatePostRequest,
-    actorId: string
+    actorId: string,
   ): Promise<Post> {
     // Create a new post
     const post = {
@@ -52,14 +52,14 @@ export class PostService {
   async getPostsByUsername(
     username: string,
     page = 1,
-    limit = 20
+    limit = 20,
   ): Promise<{ posts: Post[]; hasMore: boolean }> {
     return this.repository.getPostsByUsername(username, page, limit);
   }
 
   async getFeed(
     page = 1,
-    limit = 20
+    limit = 20,
   ): Promise<{ posts: Post[]; hasMore: boolean }> {
     return this.repository.getFeed(page, limit);
   }
@@ -67,7 +67,7 @@ export class PostService {
   async updatePost(
     postId: string,
     actorId: string,
-    updates: Partial<CreatePostRequest>
+    updates: Partial<CreatePostRequest>,
   ): Promise<Post | null> {
     // Verify ownership
     const isOwner = await this.repository.isOwner(postId, actorId);

@@ -1,17 +1,17 @@
 /**
  * Auth Module
- * 
+ *
  * This module handles user authentication, registration, and authorization.
  */
 
 // Export controllers
-export * from './controllers/authController';
+export * from "./controllers/authController";
 
 // Export routes configuration
-export { default as configureAuthRoutes } from './routes/auth';
+export { default as configureAuthRoutes } from "./routes/auth";
 
 // Export models
-export * from './models/auth';
+export * from "./models/auth";
 
 // Export services when they exist
 // export * from './services/authService';

@@ -12,7 +12,7 @@ export interface Post {
   sensitive: boolean;
   contentWarning?: string;
   likes?: string[]; // Array of actor IDs who liked this post
-  shares?: number;  // Count of shares/boosts
+  shares?: number; // Count of shares/boosts
 }
 
 export interface Attachment {
@@ -34,7 +34,7 @@ export interface CreatePostRequest {
 
 export interface UpdatePostRequest {
   content?: string;
-  username?: string; 
+  username?: string;
   sensitive?: boolean;
   contentWarning?: string;
 }

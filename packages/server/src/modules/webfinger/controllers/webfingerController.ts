@@ -10,13 +10,13 @@ export class WebFingerController {
   constructor(
     actorService: ActorService,
     webfingerService: WebfingerService,
-    domain: string
+    domain: string,
   ) {
     this.actorService = actorService;
     this.webfingerService = webfingerService;
     this.domain = domain;
   }
-  
+
   /**
    * Get WebFinger resource for actor discovery
    */

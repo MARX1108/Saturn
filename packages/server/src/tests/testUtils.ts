@@ -19,7 +19,7 @@ export async function setupTestDb(): Promise<{ client: MongoClient; db: Db }> {
  */
 export async function teardownTestDb(
   client: MongoClient,
-  db: Db
+  db: Db,
 ): Promise<void> {
   if (!db) {
     console.warn("Database object is undefined. Skipping dropDatabase.");
@@ -52,10 +52,10 @@ export function setupTestServices(app: Express, db: Db): ServiceContainer {
   app.set("services", services);
   app.set("db", db);
   app.set("domain", testDomain);
-  
+
   // Make sure middleware is applied
   app.use(serviceMiddleware);
-  
+
   return services;
 }
 

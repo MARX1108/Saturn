@@ -11,7 +11,7 @@ export class UploadService {
   private configureStorage(uploadDir?: string) {
     const defaultDir = path.join(process.cwd(), "uploads");
     const destination = uploadDir || defaultDir;
-    
+
     return multer.diskStorage({
       destination: async (req, file, cb) => {
         try {
@@ -38,7 +38,7 @@ export class UploadService {
     uploadDir?: string;
   }) {
     const fileSizeLimit = (options?.fileSizeLimitMB || 5) * 1024 * 1024; // Default 5MB
-    
+
     return multer({
       storage: this.configureStorage(options?.uploadDir),
       limits: { fileSize: fileSizeLimit },
@@ -63,20 +63,28 @@ export class UploadService {
     allowedTypes?: string[];
   }) {
     const fileSizeLimit = (options?.fileSizeLimitMB || 10) * 1024 * 1024; // Default 10MB
-    const allowedTypes = options?.allowedTypes || ["image/", "video/", "audio/"];
-    
+    const allowedTypes = options?.allowedTypes || [
+      "image/",
+      "video/",
+      "audio/",
+    ];
+
     return multer({
       storage: this.configureStorage(options?.uploadDir),
       limits: { fileSize: fileSizeLimit },
       fileFilter: (req, file, cb) => {
-        const isAllowed = allowedTypes.some((type) => 
-          file.mimetype.startsWith(type)
+        const isAllowed = allowedTypes.some((type) =>
+          file.mimetype.startsWith(type),
         );
-        
+
         if (isAllowed) {
           cb(null, true); // Accept file
         } else {
-          cb(new Error(`Invalid file type: Only ${allowedTypes.join(", ").replace(/\//g, "")} files are allowed.`)); // Reject file
+          cb(
+            new Error(
+              `Invalid file type: Only ${allowedTypes.join(", ").replace(/\//g, "")} files are allowed.`,
+            ),
+          ); // Reject file
         }
       },
     });
@@ -92,26 +100,27 @@ export class UploadService {
   public async moveUploadedFile(
     file: Express.Multer.File,
     targetDir: string,
-    customFilename?: string
+    customFilename?: string,
   ) {
     // Create target directory if it doesn't exist
     await fs.mkdir(targetDir, { recursive: true });
-    
+
     // Generate filename if not provided
-    const fileName = customFilename || 
+    const fileName =
+      customFilename ||
       `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
-    
+
     const finalPath = path.join(targetDir, fileName);
-    
+
     // Move file using async fs.rename
     await fs.rename(file.path, finalPath);
-    
+
     return {
       path: finalPath,
       filename: fileName,
       originalName: file.originalname,
       mimetype: file.mimetype,
-      size: file.size
+      size: file.size,
     };
   }
 }

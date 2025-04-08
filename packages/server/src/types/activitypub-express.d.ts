@@ -1,6 +1,6 @@
-declare module 'activitypub-express' {
-  import { Express } from 'express';
-  
+declare module "activitypub-express" {
+  import { Express } from "express";
+
   interface ApexOptions {
     name?: string;
     domain: string;
@@ -44,6 +44,6 @@ declare module 'activitypub-express' {
   }
 
   function apex(options: ApexOptions): ApexInstance & Express;
-  
+
   export = apex;
 }

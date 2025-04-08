@@ -1,4 +1,13 @@
-import { Collection, Db, Filter, OptionalId, Document, ObjectId, OptionalUnlessRequiredId, WithId } from "mongodb";
+import {
+  Collection,
+  Db,
+  Filter,
+  OptionalId,
+  Document,
+  ObjectId,
+  OptionalUnlessRequiredId,
+  WithId,
+} from "mongodb";
 
 export interface BaseRepository<T extends Document> {
   findById(id: string): Promise<T | null>;
@@ -9,7 +18,9 @@ export interface BaseRepository<T extends Document> {
   delete(id: string): Promise<boolean>;
 }
 
-export abstract class MongoRepository<T extends Document> implements BaseRepository<T> {
+export abstract class MongoRepository<T extends Document>
+  implements BaseRepository<T>
+{
   protected collection: Collection<T>;
 
   constructor(db: Db, collectionName: string) {
@@ -37,22 +48,21 @@ export abstract class MongoRepository<T extends Document> implements BaseReposit
   }
 
   async create(data: OptionalId<T>): Promise<T> {
-    const result = await this.collection.insertOne(data as OptionalUnlessRequiredId<T>);
+    const result = await this.collection.insertOne(
+      data as OptionalUnlessRequiredId<T>,
+    );
     return { ...data, _id: result.insertedId.toString() } as T;
   }
 
   async update(id: string, data: Partial<T>): Promise<boolean> {
-    const result = await this.collection.updateOne(
-      { _id: id } as Filter<T>,
-      { $set: data }
-    );
+    const result = await this.collection.updateOne({ _id: id } as Filter<T>, {
+      $set: data,
+    });
     return result.modifiedCount > 0;
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.collection.deleteOne(
-      { _id: id } as Filter<T>
-    );
+    const result = await this.collection.deleteOne({ _id: id } as Filter<T>);
     return result.deletedCount > 0;
   }
 }

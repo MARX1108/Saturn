@@ -231,7 +231,7 @@ describe("PostRepository", () => {
       
       // Get third page
       const page3 = await postRepository.findAll(3, 10);
-      expect(page3.posts.length).toBe 5);
+      expect(page3.posts.length).toBe(5);
       expect(page3.hasMore).toBe(false);
     });
     

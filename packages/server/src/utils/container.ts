@@ -14,23 +14,23 @@ import { ActivityPubService } from "../modules/activitypub/services/activitypub.
 /**
  * Available services that can be resolved from the container
  */
-export type ServiceType = 
-  | 'actorService'
-  | 'postService'
-  | 'uploadService'
-  | 'mediaService'
-  | 'authService'
-  | 'webfingerService'
-  | 'activityPubService';
+export type ServiceType =
+  | "actorService"
+  | "postService"
+  | "uploadService"
+  | "mediaService"
+  | "authService"
+  | "webfingerService"
+  | "activityPubService";
 
 /**
  * Available repositories that can be resolved from the container
  */
-export type RepositoryType = 
-  | 'actorRepository'
-  | 'postRepository'
-  | 'mediaRepository'
-  | 'authRepository';
+export type RepositoryType =
+  | "actorRepository"
+  | "postRepository"
+  | "mediaRepository"
+  | "authRepository";
 
 /**
  * Service container for managing dependencies
@@ -54,7 +54,10 @@ export interface ServiceContainer {
  * Uses proper dependency injection pattern where services receive their dependencies
  * rather than creating them internally
  */
-export function createServiceContainer(db: Db, domain: string): ServiceContainer {
+export function createServiceContainer(
+  db: Db,
+  domain: string,
+): ServiceContainer {
   // First initialize all repositories
   const actorRepository = new ActorRepository(db);
   const postRepository = new PostRepository(db);
@@ -62,15 +65,21 @@ export function createServiceContainer(db: Db, domain: string): ServiceContainer
   const authRepository = new AuthRepository(db);
   const webfingerRepository = new WebfingerRepository(db);
   const activityPubRepository = new ActivityPubRepository(db, domain);
-  
+
   // Then initialize services with their dependencies
   const actorService = new ActorService(actorRepository, domain);
   const postService = new PostService(postRepository, domain);
   const uploadService = new UploadService();
-  const mediaService = new MediaService(mediaRepository, process.env.UPLOAD_PATH || "./uploads");
+  const mediaService = new MediaService(
+    mediaRepository,
+    process.env.UPLOAD_PATH || "./uploads",
+  );
   const authService = new AuthService(authRepository);
   const webfingerService = new WebfingerService(webfingerRepository, domain);
-  const activityPubService = new ActivityPubService(activityPubRepository, domain);
+  const activityPubService = new ActivityPubService(
+    activityPubRepository,
+    domain,
+  );
 
   // Create the container with all services
   const container: ServiceContainer = {
@@ -89,7 +98,7 @@ export function createServiceContainer(db: Db, domain: string): ServiceContainer
         return (this as any)[name] as T;
       }
       return null;
-    }
+    },
   };
 
   return container;

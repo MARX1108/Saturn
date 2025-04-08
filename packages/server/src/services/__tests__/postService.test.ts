@@ -1,46 +1,49 @@
-import { ObjectId } from 'mongodb';
-import { PostService } from '../postService';
-import { Post } from '../../types/post';
-import { PostRepository } from '../../repositories/postRepository';
+import { ObjectId } from "mongodb";
+import { PostService } from "../postService";
+import { Post } from "../../types/post";
+import { PostRepository } from "../../repositories/postRepository";
 
 // Mock the postRepository
-jest.mock('../../repositories/postRepository');
+jest.mock("../../repositories/postRepository");
 // Mock the plugins system
-jest.mock('../../plugins', () => ({
-  executeHook: jest.fn()
+jest.mock("../../plugins", () => ({
+  executeHook: jest.fn(),
 }));
 
 // Create a mock instance of PostRepository
-const MockPostRepository = PostRepository as jest.MockedClass<typeof PostRepository>;
+const MockPostRepository = PostRepository as jest.MockedClass<
+  typeof PostRepository
+>;
 
-describe('PostService', () => {
+describe("PostService", () => {
   let postService: PostService;
   let mockRepository: jest.Mocked<PostRepository>;
-  const mockDomain = 'example.com';
+  const mockDomain = "example.com";
 
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Create a mock DB (it won't be used because we're mocking the repository)
     const mockDb: any = {};
-    
+
     // Create an instance of the service with our mocked repository
     postService = new PostService(mockDb, mockDomain);
-    
+
     // Get the mocked repository instance from the constructor
-    mockRepository = MockPostRepository.mock.instances[0] as jest.Mocked<PostRepository>;
+    mockRepository = MockPostRepository.mock
+      .instances[0] as jest.Mocked<PostRepository>;
   });
 
-  it('should create a post', async () => {
+  it("should create a post", async () => {
     // Arrange
     const actorId = new ObjectId().toString();
     const postData = {
-      content: 'Test post content',
-      username: 'testuser',
+      content: "Test post content",
+      username: "testuser",
       sensitive: false,
-      contentWarning: '',
-      attachments: []
+      contentWarning: "",
+      attachments: [],
     };
 
     const expectedPost: Post = {
@@ -49,12 +52,12 @@ describe('PostService', () => {
       actorId: new ObjectId(actorId),
       createdAt: expect.any(Date),
       sensitive: false,
-      contentWarning: '',
+      contentWarning: "",
       attachments: [],
       likes: 0,
       replies: 0,
       reposts: 0,
-      type: 'Note',
+      type: "Note",
       id: expect.stringContaining(`https://${mockDomain}/posts/`),
       attributedTo: `https://${mockDomain}/users/${postData.username}`,
     };
@@ -71,26 +74,26 @@ describe('PostService', () => {
         content: postData.content,
         actorId: expect.any(ObjectId),
         createdAt: expect.any(Date),
-      })
+      }),
     );
     expect(result).toEqual(expectedPost);
   });
 
-  it('should get a post by ID', async () => {
+  it("should get a post by ID", async () => {
     // Arrange
     const postId = new ObjectId().toString();
     const expectedPost: Post = {
       _id: new ObjectId(postId),
-      content: 'Test post',
+      content: "Test post",
       actorId: new ObjectId(),
       createdAt: new Date(),
       sensitive: false,
-      contentWarning: '',
+      contentWarning: "",
       attachments: [],
       likes: 0,
       replies: 0,
       reposts: 0,
-      type: 'Note',
+      type: "Note",
       id: `https://${mockDomain}/posts/${postId}`,
       attributedTo: `https://${mockDomain}/users/testuser`,
     };
@@ -106,28 +109,28 @@ describe('PostService', () => {
     expect(result).toEqual(expectedPost);
   });
 
-  it('should update a post if user is the owner', async () => {
+  it("should update a post if user is the owner", async () => {
     // Arrange
     const postId = new ObjectId().toString();
     const actorId = new ObjectId().toString();
     const updates = {
-      content: 'Updated content',
+      content: "Updated content",
       sensitive: true,
-      contentWarning: 'Warning',
+      contentWarning: "Warning",
     };
 
     const existingPost: Post = {
       _id: new ObjectId(postId),
-      content: 'Original content',
+      content: "Original content",
       actorId: new ObjectId(actorId),
       createdAt: new Date(),
       sensitive: false,
-      contentWarning: '',
+      contentWarning: "",
       attachments: [],
       likes: 0,
       replies: 0,
       reposts: 0,
-      type: 'Note',
+      type: "Note",
       id: `https://${mockDomain}/posts/${postId}`,
       attributedTo: `https://${mockDomain}/users/testuser`,
     };
@@ -155,25 +158,23 @@ describe('PostService', () => {
         content: updates.content,
         sensitive: updates.sensitive,
         contentWarning: updates.contentWarning,
-      })
+      }),
     );
     expect(result).toEqual(updatedPost);
   });
 
-  it('should not update a post if user is not the owner', async () => {
+  it("should not update a post if user is not the owner", async () => {
     // Arrange
     const postId = new ObjectId().toString();
     const actorId = new ObjectId().toString();
-    
+
     // Mock isOwner to return false (user is not the owner)
     mockRepository.isOwner.mockResolvedValue(false);
 
     // Act
-    const result = await postService.updatePost(
-      postId, 
-      actorId, 
-      { content: 'Unauthorized update' }
-    );
+    const result = await postService.updatePost(postId, actorId, {
+      content: "Unauthorized update",
+    });
 
     // Assert
     expect(mockRepository.isOwner).toHaveBeenCalledWith(postId, actorId);
@@ -181,11 +182,11 @@ describe('PostService', () => {
     expect(result).toBeNull();
   });
 
-  it('should delete a post if user is the owner', async () => {
+  it("should delete a post if user is the owner", async () => {
     // Arrange
     const postId = new ObjectId().toString();
     const actorId = new ObjectId().toString();
-    
+
     // Mock repository methods
     mockRepository.isOwner.mockResolvedValue(true);
     mockRepository.delete.mockResolvedValue(true);
@@ -199,11 +200,11 @@ describe('PostService', () => {
     expect(result).toBe(true);
   });
 
-  it('should not delete a post if user is not the owner', async () => {
+  it("should not delete a post if user is not the owner", async () => {
     // Arrange
     const postId = new ObjectId().toString();
     const actorId = new ObjectId().toString();
-    
+
     // Mock isOwner to return false (user is not the owner)
     mockRepository.isOwner.mockResolvedValue(false);
 
@@ -216,11 +217,11 @@ describe('PostService', () => {
     expect(result).toBe(false);
   });
 
-  it('should like a post', async () => {
+  it("should like a post", async () => {
     // Arrange
     const postId = new ObjectId().toString();
     const actorId = new ObjectId().toString();
-    
+
     // Mock repository methods
     mockRepository.likePost.mockResolvedValue(true);
 
@@ -257,7 +258,7 @@ describe("PostService", () => {
     // Create test directories if needed
     const uploadsDir = path.join(process.cwd(), "uploads");
     const publicMediaDir = path.join(process.cwd(), "public", "media");
-    
+
     fs.mkdirSync(uploadsDir, { recursive: true });
     fs.mkdirSync(publicMediaDir, { recursive: true });
   });
@@ -284,7 +285,7 @@ describe("PostService", () => {
       outbox: `https://${testDomain}/users/testuser/outbox`,
       following: [],
     };
-    
+
     const result = await actorRepo.create(actor);
     testUserId = result._id.toString();
   });
@@ -292,26 +293,29 @@ describe("PostService", () => {
   describe("createPost", () => {
     it("should create a basic post", async () => {
       // Act
-      const post = await postService.createPost({
-        content: "This is a test post",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "This is a test post",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Assert
       expect(post).toBeDefined();
       expect(post._id).toBeDefined();
       expect(post.content).toBe("This is a test post");
       expect(post.actorId.toString()).toBe(testUserId);
-      
+
       // Check default values
       expect(post.likes).toBe(0);
       expect(post.replies).toBe(0);
       expect(post.reposts).toBe(0);
       expect(post.sensitive).toBe(false);
       expect(post.attachments).toEqual([]);
-      
+
       // Check ActivityPub fields
       expect(post.type).toBe("Note");
       expect(post.id).toContain(`https://${testDomain}/posts/`);
@@ -320,12 +324,15 @@ describe("PostService", () => {
 
     it("should create a post with sensitive content", async () => {
       // Act
-      const post = await postService.createPost({
-        content: "This is sensitive content",
-        sensitive: true,
-        contentWarning: "Sensitive topic",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "This is sensitive content",
+          sensitive: true,
+          contentWarning: "Sensitive topic",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Assert
       expect(post.sensitive).toBe(true);
@@ -334,19 +341,22 @@ describe("PostService", () => {
 
     it("should create a post with attachments", async () => {
       // Act
-      const post = await postService.createPost({
-        content: "Post with attachments",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [
-          {
-            url: "/media/test-image.jpg",
-            mediaType: "image/jpeg",
-            width: 800,
-            height: 600,
-          }
-        ],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Post with attachments",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [
+            {
+              url: "/media/test-image.jpg",
+              mediaType: "image/jpeg",
+              width: 800,
+              height: 600,
+            },
+          ],
+        },
+        testUserId,
+      );
 
       // Assert
       expect(post.attachments).toHaveLength(1);
@@ -356,12 +366,15 @@ describe("PostService", () => {
 
     it("should extract hashtags from content", async () => {
       // Act
-      const post = await postService.createPost({
-        content: "This post has #hashtags and #multiple tags",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "This post has #hashtags and #multiple tags",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Assert
       expect(post.tags).toBeDefined();
@@ -374,15 +387,20 @@ describe("PostService", () => {
   describe("getPostById", () => {
     it("should retrieve a post by ID", async () => {
       // Arrange
-      const createdPost = await postService.createPost({
-        content: "Post to retrieve",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const createdPost = await postService.createPost(
+        {
+          content: "Post to retrieve",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act
-      const retrievedPost = await postService.getPostById(createdPost._id.toString());
+      const retrievedPost = await postService.getPostById(
+        createdPost._id.toString(),
+      );
 
       // Assert
       expect(retrievedPost).toBeDefined();
@@ -392,15 +410,21 @@ describe("PostService", () => {
 
     it("should include author information when retrieving a post", async () => {
       // Arrange
-      const createdPost = await postService.createPost({
-        content: "Post with author",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const createdPost = await postService.createPost(
+        {
+          content: "Post with author",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act
-      const retrievedPost = await postService.getPostById(createdPost._id.toString(), { includeAuthor: true });
+      const retrievedPost = await postService.getPostById(
+        createdPost._id.toString(),
+        { includeAuthor: true },
+      );
 
       // Assert
       expect(retrievedPost).toBeDefined();
@@ -422,18 +446,24 @@ describe("PostService", () => {
     it("should get all posts for the feed", async () => {
       // Arrange - Create some posts
       await Promise.all([
-        postService.createPost({
-          content: "First post",
-          sensitive: false,
-          contentWarning: "",
-          attachments: [],
-        }, testUserId),
-        postService.createPost({
-          content: "Second post",
-          sensitive: false,
-          contentWarning: "",
-          attachments: [],
-        }, testUserId),
+        postService.createPost(
+          {
+            content: "First post",
+            sensitive: false,
+            contentWarning: "",
+            attachments: [],
+          },
+          testUserId,
+        ),
+        postService.createPost(
+          {
+            content: "Second post",
+            sensitive: false,
+            contentWarning: "",
+            attachments: [],
+          },
+          testUserId,
+        ),
       ]);
 
       // Act
@@ -442,7 +472,7 @@ describe("PostService", () => {
       // Assert
       expect(feed.posts).toHaveLength(2);
       expect(feed.hasMore).toBe(false);
-      
+
       // Check most recent is first
       expect(feed.posts[0].content).toBe("Second post");
       expect(feed.posts[1].content).toBe("First post");
@@ -450,12 +480,15 @@ describe("PostService", () => {
 
     it("should include author information in feed", async () => {
       // Arrange
-      await postService.createPost({
-        content: "Post with author info",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      await postService.createPost(
+        {
+          content: "Post with author info",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act
       const feed = await postService.getFeed();
@@ -468,15 +501,18 @@ describe("PostService", () => {
     it("should handle pagination in feed", async () => {
       // Arrange - Create 25 posts
       for (let i = 0; i < 25; i++) {
-        await postService.createPost({
-          content: `Post ${i}`,
-          sensitive: false,
-          contentWarning: "",
-          attachments: [],
-        }, testUserId);
-        
+        await postService.createPost(
+          {
+            content: `Post ${i}`,
+            sensitive: false,
+            contentWarning: "",
+            attachments: [],
+          },
+          testUserId,
+        );
+
         // Add slight delay to ensure proper ordering
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
 
       // Act - Get pages
@@ -488,11 +524,11 @@ describe("PostService", () => {
       expect(page1.posts).toHaveLength(10);
       expect(page2.posts).toHaveLength(10);
       expect(page3.posts).toHaveLength(5);
-      
+
       expect(page1.hasMore).toBe(true);
       expect(page2.hasMore).toBe(true);
       expect(page3.hasMore).toBe(false);
-      
+
       // Check ordering - most recent posts first
       expect(page1.posts[0].content).toBe("Post 24");
       expect(page1.posts[9].content).toBe("Post 15");
@@ -504,18 +540,24 @@ describe("PostService", () => {
     it("should get posts by username", async () => {
       // Arrange - Create posts for test user
       await Promise.all([
-        postService.createPost({
-          content: "User's first post",
-          sensitive: false,
-          contentWarning: "",
-          attachments: [],
-        }, testUserId),
-        postService.createPost({
-          content: "User's second post",
-          sensitive: false,
-          contentWarning: "",
-          attachments: [],
-        }, testUserId),
+        postService.createPost(
+          {
+            content: "User's first post",
+            sensitive: false,
+            contentWarning: "",
+            attachments: [],
+          },
+          testUserId,
+        ),
+        postService.createPost(
+          {
+            content: "User's second post",
+            sensitive: false,
+            contentWarning: "",
+            attachments: [],
+          },
+          testUserId,
+        ),
       ]);
 
       // Act
@@ -540,12 +582,15 @@ describe("PostService", () => {
   describe("updatePost", () => {
     it("should update a post if user is owner", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Original content",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Original content",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act
       const updatedPost = await postService.updatePost(
@@ -555,7 +600,7 @@ describe("PostService", () => {
           content: "Updated content",
           sensitive: true,
           contentWarning: "Updated warning",
-        }
+        },
       );
 
       // Assert
@@ -567,12 +612,15 @@ describe("PostService", () => {
 
     it("should extract new hashtags after update", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Original content with #oldtag",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Original content with #oldtag",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act
       const updatedPost = await postService.updatePost(
@@ -582,7 +630,7 @@ describe("PostService", () => {
           content: "Updated content with #newtag",
           sensitive: false,
           contentWarning: "",
-        }
+        },
       );
 
       // Assert
@@ -595,7 +643,7 @@ describe("PostService", () => {
       const result = await postService.updatePost(
         new ObjectId().toString(),
         testUserId,
-        { content: "Updated content" }
+        { content: "Updated content" },
       );
 
       // Assert
@@ -604,18 +652,21 @@ describe("PostService", () => {
 
     it("should return null if user is not the owner", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Original content",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Original content",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act - Try to update with different user ID
       const result = await postService.updatePost(
         post._id.toString(),
         new ObjectId().toString(),
-        { content: "Updated by wrong user" }
+        { content: "Updated by wrong user" },
       );
 
       // Assert
@@ -626,15 +677,21 @@ describe("PostService", () => {
   describe("deletePost", () => {
     it("should delete a post if user is owner", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Post to delete",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Post to delete",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act
-      const result = await postService.deletePost(post._id.toString(), testUserId);
+      const result = await postService.deletePost(
+        post._id.toString(),
+        testUserId,
+      );
 
       // Assert
       expect(result).toBe(true);
@@ -648,7 +705,7 @@ describe("PostService", () => {
       // Act
       const result = await postService.deletePost(
         new ObjectId().toString(),
-        testUserId
+        testUserId,
       );
 
       // Assert
@@ -657,17 +714,20 @@ describe("PostService", () => {
 
     it("should return false if user is not the owner", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Post that shouldn't be deleted",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Post that shouldn't be deleted",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act - Try to delete with different user ID
       const result = await postService.deletePost(
         post._id.toString(),
-        new ObjectId().toString()
+        new ObjectId().toString(),
       );
 
       // Assert
@@ -682,12 +742,15 @@ describe("PostService", () => {
   describe("likePost", () => {
     it("should like a post", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Post to like",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Post to like",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Create another user to like the post
       const otherUser = {
@@ -700,29 +763,31 @@ describe("PostService", () => {
       // Act
       const result = await postService.likePost(
         post._id.toString(),
-        otherUser._id.toString()
+        otherUser._id.toString(),
       );
 
       // Assert
       expect(result).toBe(true);
 
       // Verify like was recorded
-      const likedPost = await postService.getPostById(
-        post._id.toString(),
-        { currentUserId: otherUser._id.toString() }
-      );
+      const likedPost = await postService.getPostById(post._id.toString(), {
+        currentUserId: otherUser._id.toString(),
+      });
       expect(likedPost?.likes).toBe(1);
       expect(likedPost?.liked).toBe(true);
     });
 
     it("should not allow liking a post twice", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Post to like twice",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Post to like twice",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       const likerId = new ObjectId().toString();
 
@@ -744,12 +809,15 @@ describe("PostService", () => {
   describe("unlikePost", () => {
     it("should unlike a previously liked post", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Post to unlike",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Post to unlike",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       const likerId = new ObjectId().toString();
 
@@ -763,27 +831,29 @@ describe("PostService", () => {
       expect(result).toBe(true);
 
       // Verify like was removed
-      const unlikedPost = await postService.getPostById(
-        post._id.toString(),
-        { currentUserId: likerId }
-      );
+      const unlikedPost = await postService.getPostById(post._id.toString(), {
+        currentUserId: likerId,
+      });
       expect(unlikedPost?.likes).toBe(0);
       expect(unlikedPost?.liked).toBe(false);
     });
 
     it("should return false if post wasn't previously liked", async () => {
       // Arrange
-      const post = await postService.createPost({
-        content: "Post not liked",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const post = await postService.createPost(
+        {
+          content: "Post not liked",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act - Try to unlike without liking first
       const result = await postService.unlikePost(
         post._id.toString(),
-        new ObjectId().toString()
+        new ObjectId().toString(),
       );
 
       // Assert
@@ -794,12 +864,15 @@ describe("PostService", () => {
   describe("createReply", () => {
     it("should create a reply to a post", async () => {
       // Arrange
-      const parentPost = await postService.createPost({
-        content: "Parent post",
-        sensitive: false,
-        contentWarning: "",
-        attachments: [],
-      }, testUserId);
+      const parentPost = await postService.createPost(
+        {
+          content: "Parent post",
+          sensitive: false,
+          contentWarning: "",
+          attachments: [],
+        },
+        testUserId,
+      );
 
       // Act
       const reply = await postService.createReply(
@@ -810,7 +883,7 @@ describe("PostService", () => {
           contentWarning: "",
           attachments: [],
         },
-        testUserId
+        testUserId,
       );
 
       // Assert
@@ -819,7 +892,9 @@ describe("PostService", () => {
       expect(reply.inReplyTo?.toString()).toBe(parentPost._id.toString());
 
       // Verify reply count was incremented
-      const updatedParent = await postService.getPostById(parentPost._id.toString());
+      const updatedParent = await postService.getPostById(
+        parentPost._id.toString(),
+      );
       expect(updatedParent?.replies).toBe(1);
     });
 
@@ -833,7 +908,7 @@ describe("PostService", () => {
           contentWarning: "",
           attachments: [],
         },
-        testUserId
+        testUserId,
       );
 
       // Assert

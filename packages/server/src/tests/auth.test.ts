@@ -251,7 +251,7 @@ describe("Authentication Routes", () => {
       const jwt = require("jsonwebtoken");
       token = jwt.sign(
         { id: user.insertedId.toString(), username: "testuser" },
-        process.env.JWT_SECRET
+        process.env.JWT_SECRET,
       );
     });
 
@@ -297,7 +297,7 @@ describe("Authentication Routes", () => {
       const expiredToken = jwt.sign(
         { id: "someid", username: "testuser" },
         process.env.JWT_SECRET,
-        { expiresIn: "-1h" }
+        { expiresIn: "-1h" },
       );
 
       const response = await request(app)
@@ -313,7 +313,7 @@ describe("Authentication Routes", () => {
       const jwt = require("jsonwebtoken");
       const validToken = jwt.sign(
         { id: "validid", username: "testuser" },
-        process.env.JWT_SECRET
+        process.env.JWT_SECRET,
       );
 
       // Force an error in the findOne method

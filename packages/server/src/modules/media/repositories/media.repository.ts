@@ -17,7 +17,7 @@ interface Media {
 export class MediaRepository extends MongoRepository<Media> {
   constructor(db: Db) {
     super(db, "media");
-    
+
     // Create indexes for common media queries
     this.collection.createIndex({ id: 1 }, { unique: true });
     this.collection.createIndex({ userId: 1 });

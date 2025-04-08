@@ -26,7 +26,7 @@ export class AIService {
    */
   async analyzeContent(
     content: string,
-    contentId?: string
+    contentId?: string,
   ): Promise<AIAnalysisResult> {
     // In a real implementation, this would call an AI service API
     // For now, we'll use a simple mock implementation
@@ -49,7 +49,7 @@ export class AIService {
             createdAt: new Date(),
           },
         },
-        { upsert: true }
+        { upsert: true },
       );
     }
 
@@ -62,7 +62,7 @@ export class AIService {
    * @returns Previous analysis or null if not found
    */
   async getPreviousAnalysis(
-    contentId: string
+    contentId: string,
   ): Promise<AIAnalysisResult | null> {
     const result = await this.contentCollection.findOne({ contentId });
     if (!result) return null;
@@ -79,12 +79,12 @@ export class AIService {
    */
   async generateRecommendation(
     userPreferences: string[],
-    context?: string
+    context?: string,
   ): Promise<string> {
     // In a real implementation, this would call an AI model API
     // For demo purposes, we'll return a simple mock response
     return `Based on your interest in ${userPreferences.join(
-      ", "
+      ", ",
     )}, we recommend exploring content related to ${userPreferences[0]}.`;
   }
 
@@ -95,10 +95,10 @@ export class AIService {
 
     const lowerText = text.toLowerCase();
     const positiveCount = positiveWords.filter((word) =>
-      lowerText.includes(word)
+      lowerText.includes(word),
     ).length;
     const negativeCount = negativeWords.filter((word) =>
-      lowerText.includes(word)
+      lowerText.includes(word),
     ).length;
 
     if (positiveCount > negativeCount) return "positive";
@@ -132,7 +132,7 @@ export class AIService {
     const lowerText = text.toLowerCase();
 
     const toxicCount = toxicWords.filter((word) =>
-      lowerText.includes(word)
+      lowerText.includes(word),
     ).length;
     return Math.min(toxicCount / 5, 1); // Normalize between 0-1
   }

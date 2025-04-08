@@ -16,7 +16,7 @@ export class PostsController {
     postService: PostService,
     actorService: ActorService,
     uploadService: UploadService,
-    domain: string
+    domain: string,
   ) {
     this.postService = postService;
     this.actorService = actorService;
@@ -29,12 +29,10 @@ export class PostsController {
    */
   private async formatPostResponse(
     post: Post,
-    userId?: string
+    userId?: string,
   ): Promise<PostResponse> {
     const actor = await this.actorService.getActorById(post.actor.id);
-    const likedByUser = userId
-      ? post.likes?.includes(userId) || false
-      : false;
+    const likedByUser = userId ? post.likes?.includes(userId) || false : false;
 
     return {
       id: post.id,
@@ -88,7 +86,7 @@ export class PostsController {
         for (const file of files) {
           const fileName = `${Date.now()}-${file.originalname.replace(
             /\s/g,
-            "_"
+            "_",
           )}`;
           const finalPath = path.join(publicDir, fileName);
 
@@ -99,8 +97,8 @@ export class PostsController {
             type: file.mimetype.startsWith("image/")
               ? "Image"
               : file.mimetype.startsWith("video/")
-              ? "Video"
-              : "Document",
+                ? "Video"
+                : "Document",
             mediaType: file.mimetype,
           });
         }
@@ -115,14 +113,11 @@ export class PostsController {
           contentWarning: contentWarning || "",
           attachments,
         },
-        userId
+        userId,
       );
 
       // Format response
-      const formattedPost = await this.formatPostResponse(
-        post,
-        userId
-      );
+      const formattedPost = await this.formatPostResponse(post, userId);
 
       return res.status(201).json(formattedPost);
     } catch (error) {
@@ -146,7 +141,7 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post) => this.formatPostResponse(post, userId))
+        posts.map((post) => this.formatPostResponse(post, userId)),
       );
 
       return res.json({
@@ -196,7 +191,7 @@ export class PostsController {
       const { posts, hasMore } = await this.postService.getPostsByUsername(
         username,
         page,
-        limit
+        limit,
       );
 
       // Get user ID from token if authenticated
@@ -204,7 +199,7 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post) => this.formatPostResponse(post, userId))
+        posts.map((post) => this.formatPostResponse(post, userId)),
       );
 
       return res.json({
@@ -240,10 +235,7 @@ export class PostsController {
       }
 
       // Format post
-      const formattedPost = await this.formatPostResponse(
-        post,
-        userId
-      );
+      const formattedPost = await this.formatPostResponse(post, userId);
 
       return res.json(formattedPost);
     } catch (error) {

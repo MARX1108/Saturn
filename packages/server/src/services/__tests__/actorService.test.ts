@@ -53,14 +53,18 @@ describe("ActorService", () => {
       expect(result.type).toBe("Person");
       expect(result.inbox).toBe(`https://${testDomain}/users/testuser/inbox`);
       expect(result.outbox).toBe(`https://${testDomain}/users/testuser/outbox`);
-      expect(result.following).toBe(`https://${testDomain}/users/testuser/following`);
-      expect(result.followers).toBe(`https://${testDomain}/users/testuser/followers`);
+      expect(result.following).toBe(
+        `https://${testDomain}/users/testuser/following`,
+      );
+      expect(result.followers).toBe(
+        `https://${testDomain}/users/testuser/followers`,
+      );
     });
 
     it("should create an actor with a profile picture", async () => {
       // Arrange
       const testImagePath = path.join(__dirname, "test-image.jpg");
-      
+
       // Create a test image if it doesn't exist
       if (!fs.existsSync(testImagePath)) {
         const testDir = path.dirname(testImagePath);
@@ -69,7 +73,7 @@ describe("ActorService", () => {
         }
         fs.writeFileSync(testImagePath, "dummy image data");
       }
-      
+
       const actorData = {
         preferredUsername: "imageuser",
         name: "Image User",
@@ -90,7 +94,7 @@ describe("ActorService", () => {
       expect(result.icon).toBeDefined();
       expect(result.icon.url).toBe("/avatars/test-image.jpg");
       expect(result.icon.mediaType).toBe("image/jpeg");
-      
+
       // Clean up test image
       fs.unlinkSync(testImagePath);
     });
@@ -124,7 +128,9 @@ describe("ActorService", () => {
       const result = await actorService.createActor(actorData);
 
       // Assert - Password should be hashed
-      const actor = await db.collection("actors").findOne({ preferredUsername: "passworduser" });
+      const actor = await db
+        .collection("actors")
+        .findOne({ preferredUsername: "passworduser" });
       expect(actor).toBeDefined();
       expect(actor?.password).not.toBe("plainpassword");
       expect(actor?.password).toMatch(/^\$2[aby]\$\d+\$.{50,}$/); // Bcryptjs pattern remains the same
@@ -205,7 +211,7 @@ describe("ActorService", () => {
         {
           displayName: "Updated Name",
           bio: "Updated bio",
-        }
+        },
       );
 
       // Assert
@@ -225,7 +231,7 @@ describe("ActorService", () => {
         password: "securepassword",
         email: "pic@example.com",
       });
-      
+
       const testImagePath = path.join(__dirname, "new-image.jpg");
       if (!fs.existsSync(testImagePath)) {
         const testDir = path.dirname(testImagePath);
@@ -242,8 +248,8 @@ describe("ActorService", () => {
           profilePicture: {
             path: testImagePath,
             filename: "new-image.jpg",
-          }
-        }
+          },
+        },
       );
 
       // Assert
@@ -253,7 +259,7 @@ describe("ActorService", () => {
       const updated = await actorService.getActorById(actor._id.toString());
       expect(updated?.icon).toBeDefined();
       expect(updated?.icon.url).toBe("/avatars/new-image.jpg");
-      
+
       // Cleanup
       fs.unlinkSync(testImagePath);
     });
@@ -262,7 +268,7 @@ describe("ActorService", () => {
       // Act
       const result = await actorService.updateProfile(
         new ObjectId().toString(),
-        { displayName: "Won't Update" }
+        { displayName: "Won't Update" },
       );
 
       // Assert
@@ -281,7 +287,10 @@ describe("ActorService", () => {
       });
 
       // Act
-      const result = await actorService.authenticateActor("authuser", "correctpassword");
+      const result = await actorService.authenticateActor(
+        "authuser",
+        "correctpassword",
+      );
 
       // Assert
       expect(result).toBeDefined();
@@ -299,7 +308,10 @@ describe("ActorService", () => {
       });
 
       // Act
-      const result = await actorService.authenticateActor("authuser", "wrongpassword");
+      const result = await actorService.authenticateActor(
+        "authuser",
+        "wrongpassword",
+      );
 
       // Assert
       expect(result).toBeNull();
@@ -307,7 +319,10 @@ describe("ActorService", () => {
 
     it("should fail with non-existent username", async () => {
       // Act
-      const result = await actorService.authenticateActor("nonexistent", "anypassword");
+      const result = await actorService.authenticateActor(
+        "nonexistent",
+        "anypassword",
+      );
 
       // Assert
       expect(result).toBeNull();
@@ -344,7 +359,7 @@ describe("ActorService", () => {
       // Assert
       expect(results).toBeInstanceOf(Array);
       expect(results.length).toBe(3);
-      expect(results.every(actor => actor.password === undefined)).toBe(true);
+      expect(results.every((actor) => actor.password === undefined)).toBe(true);
     });
   });
 
@@ -361,14 +376,14 @@ describe("ActorService", () => {
         password: "password",
         email: "follower@example.com",
       });
-      
+
       const target = await actorService.createActor({
         preferredUsername: "followed",
         name: "Followed User",
         password: "password",
         email: "followed@example.com",
       });
-      
+
       userId = user._id.toString();
       targetId = target._id.toString();
     });
@@ -381,9 +396,13 @@ describe("ActorService", () => {
       expect(result).toBe(true);
 
       // Verify following relationship
-      const user = await db.collection("actors").findOne({ _id: new ObjectId(userId) });
+      const user = await db
+        .collection("actors")
+        .findOne({ _id: new ObjectId(userId) });
       expect(user?.following).toBeDefined();
-      expect(user?.following.map((id: ObjectId) => id.toString())).toContain(targetId);
+      expect(user?.following.map((id: ObjectId) => id.toString())).toContain(
+        targetId,
+      );
     });
 
     it("should allow a user to unfollow another user", async () => {
@@ -397,8 +416,11 @@ describe("ActorService", () => {
       expect(result).toBe(true);
 
       // Verify following relationship removed
-      const user = await db.collection("actors").findOne({ _id: new ObjectId(userId) });
-      const followingIds = user?.following?.map((id: ObjectId) => id.toString()) || [];
+      const user = await db
+        .collection("actors")
+        .findOne({ _id: new ObjectId(userId) });
+      const followingIds =
+        user?.following?.map((id: ObjectId) => id.toString()) || [];
       expect(followingIds).not.toContain(targetId);
     });
 
@@ -413,9 +435,13 @@ describe("ActorService", () => {
       expect(result).toBe(true); // Operation should succeed
 
       // Verify only one entry exists in following array
-      const user = await db.collection("actors").findOne({ _id: new ObjectId(userId) });
+      const user = await db
+        .collection("actors")
+        .findOne({ _id: new ObjectId(userId) });
       const following = user?.following || [];
-      expect(following.filter((id: ObjectId) => id.toString() === targetId).length).toBe(1);
+      expect(
+        following.filter((id: ObjectId) => id.toString() === targetId).length,
+      ).toBe(1);
     });
 
     it("should do nothing if trying to unfollow a user that's not being followed", async () => {
@@ -431,7 +457,7 @@ describe("ActorService", () => {
     let userId: string;
     let follower1Id: string;
     let follower2Id: string;
-    
+
     beforeEach(async () => {
       // Create users
       const user = await actorService.createActor({
@@ -440,51 +466,51 @@ describe("ActorService", () => {
         password: "password",
         email: "main@example.com",
       });
-      
+
       const follower1 = await actorService.createActor({
         preferredUsername: "follower1",
         name: "Follower One",
         password: "password",
         email: "follower1@example.com",
       });
-      
+
       const follower2 = await actorService.createActor({
         preferredUsername: "follower2",
         name: "Follower Two",
         password: "password",
         email: "follower2@example.com",
       });
-      
+
       userId = user._id.toString();
       follower1Id = follower1._id.toString();
       follower2Id = follower2._id.toString();
-      
+
       // Set up follower relationships
       await actorService.follow(follower1Id, userId);
       await actorService.follow(follower2Id, userId);
       await actorService.follow(userId, follower1Id);
     });
-    
+
     it("should get followers of a user", async () => {
       // Act
       const followers = await actorService.getFollowers(userId);
-      
+
       // Assert
       expect(followers).toHaveLength(2);
-      const followerUsernames = followers.map(f => f.preferredUsername);
+      const followerUsernames = followers.map((f) => f.preferredUsername);
       expect(followerUsernames).toContain("follower1");
       expect(followerUsernames).toContain("follower2");
     });
-    
+
     it("should get users that a user is following", async () => {
       // Act
       const following = await actorService.getFollowing(userId);
-      
+
       // Assert
       expect(following).toHaveLength(1);
       expect(following[0].preferredUsername).toBe("follower1");
     });
-    
+
     it("should return empty array for user with no followers", async () => {
       // Create a user with no followers
       const lonelyUser = await actorService.createActor({
@@ -493,10 +519,12 @@ describe("ActorService", () => {
         password: "password",
         email: "lonely@example.com",
       });
-      
+
       // Act
-      const followers = await actorService.getFollowers(lonelyUser._id.toString());
-      
+      const followers = await actorService.getFollowers(
+        lonelyUser._id.toString(),
+      );
+
       // Assert
       expect(followers).toHaveLength(0);
     });

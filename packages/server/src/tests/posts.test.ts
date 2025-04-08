@@ -84,7 +84,7 @@ describe("Posts Routes", () => {
     // Generate a token for the test user
     testUserToken = jwt.sign(
       { id: testUserId, username: "testuser" },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
     );
 
     // Create a test post
@@ -147,7 +147,7 @@ describe("Posts Routes", () => {
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty(
         "content",
-        "This is sensitive content"
+        "This is sensitive content",
       );
       expect(response.body).toHaveProperty("sensitive", true);
       expect(response.body).toHaveProperty("contentWarning", "Sensitive topic");
@@ -157,7 +157,7 @@ describe("Posts Routes", () => {
       // Create a test image
       const imageBuffer = Buffer.from(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-        "base64"
+        "base64",
       );
       const imagePath = path.join(process.cwd(), "test-post-image.png");
       fs.writeFileSync(imagePath, imageBuffer);
@@ -178,7 +178,7 @@ describe("Posts Routes", () => {
       expect(response.body.attachments[0]).toHaveProperty("url");
       expect(response.body.attachments[0]).toHaveProperty(
         "mediaType",
-        "image/png"
+        "image/png",
       );
     });
 
@@ -293,10 +293,10 @@ describe("Posts Routes", () => {
 
       expect(response.status).toBe(200);
       expect(
-        response.body.posts.some((p) => p.content.includes("#testing"))
+        response.body.posts.some((p) => p.content.includes("#testing")),
       ).toBe(true);
       expect(
-        response.body.posts.every((p) => !p.content.includes("#development"))
+        response.body.posts.every((p) => !p.content.includes("#development")),
       ).toBe(true);
     });
 
@@ -347,7 +347,7 @@ describe("Posts Routes", () => {
       });
 
       const response = await request(app).get(
-        `/posts/${testPostId}?includeReplies=true`
+        `/posts/${testPostId}?includeReplies=true`,
       );
 
       expect(response.status).toBe(200);
@@ -414,7 +414,7 @@ describe("Posts Routes", () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty(
         "content",
-        "This is an updated post"
+        "This is an updated post",
       );
     });
 
@@ -681,7 +681,7 @@ describe("Posts Routes", () => {
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty(
         "content",
-        "This is a reply to the original post"
+        "This is a reply to the original post",
       );
       expect(response.body).toHaveProperty("inReplyTo", testPostId);
 
@@ -743,7 +743,9 @@ describe("Posts Routes", () => {
       // Last post should be the least popular (or our original test post)
       const leastPopular = response.body.posts[response.body.posts.length - 1];
       expect(
-        ["Unpopular post", "This is a test post"].includes(leastPopular.content)
+        ["Unpopular post", "This is a test post"].includes(
+          leastPopular.content,
+        ),
       ).toBe(true);
     });
   });

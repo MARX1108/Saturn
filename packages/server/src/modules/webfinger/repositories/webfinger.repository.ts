@@ -19,7 +19,7 @@ interface WebfingerResource {
 export class WebfingerRepository extends MongoRepository<WebfingerResource> {
   constructor(db: Db) {
     super(db, "webfinger");
-    
+
     // Create indexes for common webfinger queries
     this.collection.createIndex({ subject: 1 }, { unique: true });
   }
