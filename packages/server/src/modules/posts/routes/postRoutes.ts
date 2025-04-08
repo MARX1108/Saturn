@@ -1,10 +1,11 @@
 import express, { Request, Response, Router } from "express";
-import path from "path";
-import { Db } from "mongodb";
+import _path from "path";
+import { Db as _Db } from "mongodb";
+import multer from "multer";
 import { PostsController } from "../controllers/postsController";
 import { authenticateToken } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
-import { UploadService } from "../../media/services/upload.service";
+import { UploadService as _UploadService } from "../../media/services/upload.service";
 
 /**
  * Configure post routes with the controller
@@ -32,7 +33,7 @@ export function configurePostRoutes(
 
   // Create a new post
   router.post("/", authenticateToken, (req: Request, res: Response) => {
-    mediaUpload.array("attachments")(req as any, res as any, async (err) => {
+    mediaUpload.array("attachments")(req as express.Request, res as express.Response, async (err: multer.MulterError | Error | undefined) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }

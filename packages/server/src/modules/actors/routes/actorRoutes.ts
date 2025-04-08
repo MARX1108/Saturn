@@ -1,6 +1,7 @@
 import express, { Request, Response, Router } from "express";
 import _path from "path";
 import { Db as _Db } from "mongodb";
+import multer from "multer";
 import { ActorsController } from "../controllers/actorsController";
 import { auth } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
@@ -35,7 +36,7 @@ export function configureActorRoutes(
 
   // Create new actor
   router.post("/", (req: Request, res: Response) => {
-    imageUpload.single("avatarFile")(req as any, res as any, async (err) => {
+    imageUpload.single("avatarFile")(req as express.Request, res as express.Response, async (err: multer.MulterError | Error | undefined) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
@@ -50,7 +51,7 @@ export function configureActorRoutes(
 
   // Update actor - requires authentication
   router.put("/:username", auth, (req: Request, res: Response) => {
-    imageUpload.single("avatarFile")(req as any, res as any, async (err) => {
+    imageUpload.single("avatarFile")(req as express.Request, res as express.Response, async (err: multer.MulterError | Error | undefined) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }

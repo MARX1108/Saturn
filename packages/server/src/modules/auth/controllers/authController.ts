@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import bcryptjs from "bcryptjs";
+import _bcryptjs from "bcryptjs";
 import { ActorService } from "../../actors/services/actorService";
 import { AuthService } from "../services/auth.service";
 import { generateToken } from "../../../middleware/auth";

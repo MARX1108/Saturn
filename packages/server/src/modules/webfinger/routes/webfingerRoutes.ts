@@ -1,5 +1,5 @@
 import express, { Request, Response, Router } from "express";
-import { Db } from "mongodb";
+import { Db as _Db } from "mongodb";
 import { WebFingerController } from "../controllers/webfingerController";
 import { ServiceContainer } from "../../../utils/container";
 

@@ -4,9 +4,9 @@ import {
   Filter,
   OptionalId,
   Document,
-  ObjectId,
+  ObjectId as _ObjectId,
   OptionalUnlessRequiredId,
-  WithId,
+  WithId as _WithId,
 } from "mongodb";
 
 export interface BaseRepository<T extends Document> {

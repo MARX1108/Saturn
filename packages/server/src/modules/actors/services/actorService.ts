@@ -1,4 +1,4 @@
-import { Db, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import crypto from "crypto";
 import bcryptjs from "bcryptjs";
 import { Actor, CreateActorRequest } from "../models/actor";

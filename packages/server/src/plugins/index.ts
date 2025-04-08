@@ -18,7 +18,7 @@ const hooks: {
   [hookName: string]: Array<(data: HookData) => void | Promise<void>>;
 } = {};
 
-export function registerPlugin(plugin: ServerPlugin) {
+export function registerPlugin(plugin: ServerPlugin): void {
   console.log(`Registering plugin: ${plugin.name} v${plugin.version}`);
   plugins.push(plugin);
 
@@ -33,7 +33,7 @@ export function registerPlugin(plugin: ServerPlugin) {
   }
 }
 
-export function initPlugins(app: Application) {
+export function initPlugins(app: Application): void {
   for (const plugin of plugins) {
     if (plugin.init) {
       plugin.init(app);
@@ -41,7 +41,7 @@ export function initPlugins(app: Application) {
   }
 }
 
-export async function executeHook(hookName: string, data: HookData = {}) {
+export async function executeHook(hookName: string, data: HookData = {}): Promise<void> {
   const hookHandlers = hooks[hookName] || [];
   for (const handler of hookHandlers) {
     await Promise.resolve(handler(data));

@@ -1,4 +1,4 @@
-import { Db, ObjectId } from "mongodb";
+import { Db } from "mongodb";
 import { MongoRepository } from "../../shared/repositories/baseRepository";
 import { Post } from "../models/post";
 

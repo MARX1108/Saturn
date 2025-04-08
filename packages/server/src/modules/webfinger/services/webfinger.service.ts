@@ -1,5 +1,5 @@
 // Webfinger service implementation
-import { Db } from "mongodb";
+import { Db as _Db } from "mongodb";
 import { WebfingerRepository } from "../repositories/webfinger.repository";
 
 export class WebfingerService {

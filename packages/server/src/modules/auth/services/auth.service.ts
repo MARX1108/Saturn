@@ -1,5 +1,5 @@
 // Auth service implementation
-import { Db } from "mongodb";
+import { Db as _Db } from "mongodb";
 import bcryptjs from "bcryptjs";
 import { AuthRepository } from "../repositories/auth.repository";
 
@@ -16,7 +16,7 @@ export class AuthService {
    * @param password The user's password
    * @returns User object without password if authentication is successful, null otherwise
    */
-  async authenticateUser(username: string, password: string) {
+  async authenticateUser(username: string, password: string): Promise<Record<string, any> | null> {
     // Find user using repository
     const user = await this.repository.findByUsername(username);
 

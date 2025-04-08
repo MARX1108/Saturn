@@ -1,4 +1,4 @@
-import { Db } from "mongodb";
+import { Db as _Db } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 import { Post, CreatePostRequest, UpdatePostRequest } from "../models/post";
 import { PostRepository } from "../repositories/postRepository";
