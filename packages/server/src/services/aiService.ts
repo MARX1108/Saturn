@@ -67,7 +67,7 @@ export class AIService {
     const result = await this.contentCollection.findOne({ contentId });
     if (!result) return null;
 
-    const { _id, content, createdAt, ...analysisData } = result;
+    const { _id, content: _content, createdAt: _createdAt, ...analysisData } = result;
     return analysisData as AIAnalysisResult;
   }
 
@@ -79,7 +79,7 @@ export class AIService {
    */
   async generateRecommendation(
     userPreferences: string[],
-    context?: string,
+    _context?: string,
   ): Promise<string> {
     // In a real implementation, this would call an AI model API
     // For demo purposes, we'll return a simple mock response
@@ -140,5 +140,5 @@ export class AIService {
 
 // Add a default export - export an instance creator function
 export default {
-  createService: (db: Db) => new AIService(db),
+  createService: (db: Db): AIService => new AIService(db),
 };

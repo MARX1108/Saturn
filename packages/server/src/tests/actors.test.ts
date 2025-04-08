@@ -54,7 +54,7 @@ describe("Actors Routes", () => {
         try {
           const decoded = jwt.verify(token, process.env.JWT_SECRET);
           req.user = decoded;
-        } catch (error) {
+        } catch (_error) {
           // Just continue without setting user
         }
       }

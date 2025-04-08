@@ -6,7 +6,7 @@ import fs from "fs";
 import { ActorService } from "../../services/actorService";
 
 // Export with both names for backward compatibility
-export function configureActorRoutes(db: Db, domain: string) {
+export function configureActorRoutes(db: Db, domain: string): express.Router {
   const router = express.Router();
   const actorService = new ActorService(db, domain);
 

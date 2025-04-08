@@ -1,18 +1,25 @@
 import { Db } from "mongodb";
 import { MongoRepository } from "../../shared/repositories/baseRepository";
 
+// Define property value types for Webfinger
+type WebfingerPropertyValue = string | number | boolean | null | WebfingerPropertyObject;
+
+interface WebfingerPropertyObject {
+  [key: string]: WebfingerPropertyValue | WebfingerPropertyValue[];
+}
+
 // Define basic Webfinger resource type
 interface WebfingerResource {
   id: string;
   subject: string;
   aliases?: string[];
-  properties?: Record<string, any>;
+  properties?: Record<string, WebfingerPropertyValue>;
   links?: Array<{
     rel: string;
     type?: string;
     href?: string;
     titles?: Record<string, string>;
-    properties?: Record<string, any>;
+    properties?: Record<string, WebfingerPropertyValue>;
   }>;
 }
 

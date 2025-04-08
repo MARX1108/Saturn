@@ -1,6 +1,7 @@
 // ActivityPub service implementation
-import { Db } from "mongodb";
+import { Db as _Db } from "mongodb";
 import { ActivityPubRepository } from "../repositories/activitypub.repository";
+import { ActivityPubActivity } from "../models/activitypub";
 
 export class ActivityPubService {
   private repository: ActivityPubRepository;
@@ -17,7 +18,7 @@ export class ActivityPubService {
    * @param targetUsername The username of the target actor
    */
   async processIncomingActivity(
-    activity: any,
+    activity: ActivityPubActivity,
     targetUsername: string,
   ): Promise<void> {
     // Log the activity for debugging

@@ -4,8 +4,8 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "PORT=4000 ts-node-dev --respawn src/index.ts",
-    "dev:alt": "PORT=4001 ts-node-dev --respawn src/index.ts",
+    "dev": "PORT=4000 ts-node-dev --esm --respawn src/index.ts",
+    "dev:alt": "PORT=4001 ts-node-dev --esm --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest",

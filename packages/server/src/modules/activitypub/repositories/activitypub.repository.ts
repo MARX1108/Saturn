@@ -45,7 +45,7 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
    * @returns The saved activity object
    */
   async saveActivity(
-    activity: any,
+    activity: Partial<ActivityPubObject>,
     targetUsername: string,
   ): Promise<ActivityPubObject> {
     // Add metadata to the activity

@@ -2,17 +2,33 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { Db } from "mongodb";
 
+// Define user type for better type safety
+export interface TokenUser {
+  id: string;
+  username: string;
+  [key: string]: any; // Allow for additional properties
+}
+
+// Define database user type
+export interface DbUser {
+  _id?: string;
+  id?: string;
+  preferredUsername?: string;
+  username?: string;
+  [key: string]: any; // Allow for additional properties
+}
+
 // Extend Express Request type to include user information
 declare module "express" {
   interface Request {
-    user?: any;
+    user?: DbUser;
     db?: Db;
   }
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
-export const generateToken = (user: any): string => {
+export const generateToken = (user: DbUser): string => {
   return jwt.sign(
     {
       id: user._id || user.id,

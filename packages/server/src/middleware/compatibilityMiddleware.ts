@@ -9,7 +9,7 @@ export const compatibilityMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction,
-) => {
+): void => {
   const services = req.services as ServiceContainer;
 
   if (services) {

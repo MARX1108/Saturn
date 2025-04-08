@@ -38,7 +38,7 @@ expect.extend({
 });
 
 // Setup before all tests
-beforeAll(async () => {
+beforeAll(async (): Promise<void> => {
   // Create MongoDB Memory Server
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
@@ -65,7 +65,7 @@ beforeEach(async () => {
 });
 
 // Cleanup after all tests
-afterAll(async () => {
+afterAll(async (): Promise<void> => {
   if (mongoClient) {
     await disconnectDB(mongoClient);
   }

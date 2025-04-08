@@ -9,7 +9,7 @@ export interface UploadOptions {
   fileNamePrefix?: string;
 }
 
-export function configureMulter(options: UploadOptions) {
+export function configureMulter(options: UploadOptions): multer.Multer {
   const {
     destination,
     fileTypes = ["image/"],
