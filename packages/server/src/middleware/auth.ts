@@ -3,12 +3,10 @@ import jwt from "jsonwebtoken";
 import { Db } from "mongodb";
 
 // Extend Express Request type to include user information
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-      db?: Db;
-    }
+declare module "express" {
+  interface Request {
+    user?: any;
+    db?: Db;
   }
 }
 

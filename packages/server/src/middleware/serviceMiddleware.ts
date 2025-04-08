@@ -2,11 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { ServiceContainer } from "../utils/container";
 
 // Extend Express.Request to include our services
-declare global {
-  namespace Express {
-    interface Request {
-      services: ServiceContainer;
-    }
+declare module "express" {
+  interface Request {
+    services: ServiceContainer;
   }
 }
 

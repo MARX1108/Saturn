@@ -4,6 +4,7 @@ import { MongoClient, Db } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import configureAuthRoutes from "../routes/auth";
 import bcryptjs from "bcryptjs"; // Replace bcrypt with bcryptjs
+import jwt from "jsonwebtoken";
 
 describe("Authentication Routes", () => {
   let app: express.Application;
@@ -248,7 +249,6 @@ describe("Authentication Routes", () => {
       });
 
       // Generate a token
-      const jwt = require("jsonwebtoken");
       token = jwt.sign(
         { id: user.insertedId.toString(), username: "testuser" },
         process.env.JWT_SECRET,
@@ -292,7 +292,6 @@ describe("Authentication Routes", () => {
     });
 
     it("should handle expired tokens", async () => {
-      const jwt = require("jsonwebtoken");
       // Create an expired token (issued 2 hours ago, expires in 1 hour)
       const expiredToken = jwt.sign(
         { id: "someid", username: "testuser" },
@@ -310,7 +309,6 @@ describe("Authentication Routes", () => {
 
     it("should handle server errors during profile fetch", async () => {
       // Create a valid token
-      const jwt = require("jsonwebtoken");
       const validToken = jwt.sign(
         { id: "validid", username: "testuser" },
         process.env.JWT_SECRET,
