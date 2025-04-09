@@ -1,4 +1,4 @@
-import express, { Request, Response, Router } from "express";
+import express, { Request, Response, Router, NextFunction, RequestHandler } from "express";
 import _path from "path";
 import { Db as _Db } from "mongodb";
 import multer from "multer";
@@ -30,38 +30,40 @@ export function configureActorRoutes(
   });
 
   // Search actors
-  router.get("/search", (req: Request, res: Response) => {
-    return actorsController.searchActors(req, res);
+  router.get("/search", (req, res) => {
+    actorsController.searchActors(req, res);
   });
 
   // Create new actor
-  router.post("/", (req: Request, res: Response) => {
-    imageUpload.single("avatarFile")(req as express.Request, res as express.Response, async (err: multer.MulterError | Error | undefined) => {
+  router.post("/", (req, res, next) => {
+    const upload = imageUpload.single("avatarFile");
+    upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      return actorsController.createActor(req, res);
+      actorsController.createActor(req, res);
     });
   });
 
   // Get actor by username
-  router.get("/:username", (req: Request, res: Response) => {
-    return actorsController.getActorByUsername(req, res);
+  router.get("/:username", (req, res) => {
+    actorsController.getActorByUsername(req, res);
   });
 
   // Update actor - requires authentication
-  router.put("/:username", auth, (req: Request, res: Response) => {
-    imageUpload.single("avatarFile")(req as express.Request, res as express.Response, async (err: multer.MulterError | Error | undefined) => {
+  router.put("/:username", auth, (req, res, next) => {
+    const upload = imageUpload.single("avatarFile");
+    upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      return actorsController.updateActor(req, res);
+      actorsController.updateActor(req, res);
     });
   });
 
   // Delete actor - requires authentication
-  router.delete("/:username", auth, (req: Request, res: Response) => {
-    return actorsController.deleteActor(req, res);
+  router.delete("/:username", auth, (req, res) => {
+    actorsController.deleteActor(req, res);
   });
 
   return router;

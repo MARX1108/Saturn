@@ -1,19 +1,5 @@
-// Type extensions for Express Request object
-import { Request } from "express";
-import { ActorService } from "../../actors/services/actorService";
-import { PostService } from "../../posts/services/postService";
-import { ServiceContainer } from "../../../utils/container";
+// This file is deprecated - all Express type extensions have been moved to /src/types/express.d.ts
+// Please use the central type definitions instead of this file
 
-declare global {
-  namespace Express {
-    interface Request {
-      services: ServiceContainer;
-      // For backward compatibility with old code
-      actorService?: ActorService;
-      user?: {
-        id: string;
-        [key: string]: any;
-      };
-    }
-  }
-}
+// Keeping this file with a reference to avoid breaking imports, but it should not contain any actual definitions
+/// <reference path="../../../types/express.d.ts" />

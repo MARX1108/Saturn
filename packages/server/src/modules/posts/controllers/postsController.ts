@@ -32,7 +32,9 @@ export class PostsController {
     userId?: string,
   ): Promise<PostResponse> {
     const actor = await this.actorService.getActorById(post.actor.id);
-    const likedByUser = userId ? post.likes?.includes(userId) || false : false;
+    // Cast userId to string or undefined to avoid null
+    const safeUserId = userId || undefined;
+    const likedByUser = safeUserId ? post.likes?.includes(safeUserId) || false : false;
 
     return {
       id: post.id,
@@ -59,7 +61,10 @@ export class PostsController {
   async createPost(req: Request, res: Response): Promise<Response> {
     try {
       // Get user from token
-      const userId = req.user.id;
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      const userId = req.user.id || "";
       const actor = await this.actorService.getActorById(userId);
 
       if (!actor) {
@@ -108,7 +113,7 @@ export class PostsController {
       const post = await this.postService.createPost(
         {
           content: content || "",
-          username: actor.preferredUsername,
+          username: actor.preferredUsername || "",
           sensitive: sensitive === "true",
           contentWarning: contentWarning || "",
           attachments,
@@ -141,7 +146,7 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post) => this.formatPostResponse(post, userId)),
+        posts.map((post) => this.formatPostResponse(post, userId || undefined)),
       );
 
       return res.json({
@@ -170,7 +175,7 @@ export class PostsController {
       const userId = req.user?.id;
 
       // Format post
-      const formattedPost = await this.formatPostResponse(post, userId);
+      const formattedPost = await this.formatPostResponse(post, userId || undefined);
 
       return res.json(formattedPost);
     } catch (error) {
@@ -199,7 +204,7 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map((post) => this.formatPostResponse(post, userId)),
+        posts.map((post) => this.formatPostResponse(post, userId || undefined)),
       );
 
       return res.json({
@@ -218,7 +223,10 @@ export class PostsController {
   async updatePost(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      const userId = req.user.id || "";
       const { content, sensitive, contentWarning } = req.body;
 
       const post = await this.postService.updatePost(id, userId, {
@@ -250,7 +258,10 @@ export class PostsController {
   async deletePost(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      const userId = req.user.id || "";
 
       const deleted = await this.postService.deletePost(id, userId);
 
@@ -273,7 +284,10 @@ export class PostsController {
   async likePost(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      const userId = req.user.id || "";
 
       const liked = await this.postService.likePost(id, userId);
 
@@ -296,7 +310,10 @@ export class PostsController {
   async unlikePost(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      const userId = req.user.id || "";
 
       const unliked = await this.postService.unlikePost(id, userId);
 

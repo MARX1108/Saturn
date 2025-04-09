@@ -1,17 +1,5 @@
-import { Request } from "express";
-import { ActorService } from "../services/actorService";
-import { PostService } from "../services/postService";
+// This file is deprecated - all Express type extensions have been moved to /src/types/express.d.ts
+// Please use the central type definitions instead of this file
 
-declare global {
-  namespace Express {
-    interface Request {
-      services: {
-        actorService: ActorService;
-        postService: PostService;
-      };
-      user: {
-        id: string;
-      };
-    }
-  }
-}
+// Keeping this file with a reference to avoid breaking imports, but it should not contain any actual definitions
+/// <reference path="../types/express.d.ts" />
