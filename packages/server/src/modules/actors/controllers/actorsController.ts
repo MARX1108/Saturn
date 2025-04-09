@@ -5,6 +5,9 @@ import { ActorService } from "../services/actorService";
 import { CreateActorRequest } from "../models/actor";
 import { UploadService } from "../../media/services/upload.service";
 
+// Reference the Express type declaration file
+/// <reference path="../../../types/express.d.ts" />
+
 export class ActorsController {
   private actorService: ActorService;
   private uploadService: UploadService;
@@ -212,6 +215,7 @@ export class ActorsController {
       }
 
       // Check if user is authorized to delete this actor
+      // Access user property safely from the Request
       if (req.user && req.user.id !== actor._id) {
         return res
           .status(403)

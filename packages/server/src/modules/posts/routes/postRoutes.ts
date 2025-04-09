@@ -32,47 +32,54 @@ export function configurePostRoutes(
   });
 
   // Create a new post
-  router.post("/", authenticateToken, (req, res, next) => {
+  router.post("/", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
     const upload = mediaUpload.array("attachments");
     upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      postsController.createPost(req, res);
+      postsController.createPost(req, res)
+        .catch(error => next(error));
     });
   });
 
   // Get feed (public timeline)
-  router.get("/", (req, res) => {
-    postsController.getFeed(req, res);
+  router.get("/", (req: Request, res: Response, next: NextFunction) => {
+    postsController.getFeed(req, res)
+      .catch(error => next(error));
   });
 
   // Get single post by ID
-  router.get("/:id", (req, res) => {
-    postsController.getPostById(req, res);
+  router.get("/:id", (req: Request, res: Response, next: NextFunction) => {
+    postsController.getPostById(req, res)
+      .catch(error => next(error));
   });
 
   // Update post
-  router.put("/:id", authenticateToken, (req, res) => {
-    postsController.updatePost(req, res);
+  router.put("/:id", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
+    postsController.updatePost(req, res)
+      .catch(error => next(error));
   });
 
   // Delete post
-  router.delete("/:id", authenticateToken, (req, res) => {
-    postsController.deletePost(req, res);
+  router.delete("/:id", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
+    postsController.deletePost(req, res)
+      .catch(error => next(error));
   });
 
   // Like a post
-  router.post("/:id/like", authenticateToken, (req, res) => {
-    postsController.likePost(req, res);
+  router.post("/:id/like", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
+    postsController.likePost(req, res)
+      .catch(error => next(error));
   });
 
   // Unlike a post
   router.post(
     "/:id/unlike",
     authenticateToken,
-    (req, res) => {
-      postsController.unlikePost(req, res);
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.unlikePost(req, res)
+        .catch(error => next(error));
     },
   );
 

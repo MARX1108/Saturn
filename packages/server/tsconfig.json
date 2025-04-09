@@ -9,9 +9,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["node", "vitest/globals"],
+    "types": ["node"],
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*", "src/**/*.d.ts", "routes/**/*", "test/**/*", "vitest.config.ts"],
+  "include": ["src/**/*", "src/**/*.d.ts", "routes/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
 }

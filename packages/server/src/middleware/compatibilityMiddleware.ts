@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { ServiceContainer } from "../utils/container";
-// Explicitly import the centralized type definitions to ensure TypeScript recognizes them
-import "../types/express";
+import { ActorService } from "../modules/actors/services/actorService";
+
+// Reference types declaration file to ensure it's included in compilation
+/// <reference path="../types/express.d.ts" />
 
 /**
  * Middleware to inject services into request object for backward compatibility
@@ -10,13 +12,13 @@ import "../types/express";
 export const compatibilityMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): void => {
-  const services = req.services;
-
-  if (services) {
-    req.actorService = services.actorService;
-  }
-
+  // We no longer need to assign actorService to req
+  // Code using req.actorService should now use req.services.actorService
+  
+  // This middleware can be deprecated and eventually removed
+  // as all code is updated to use the services container directly
+  
   next();
 };
