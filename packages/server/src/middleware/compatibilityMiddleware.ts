@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ServiceContainer } from "../utils/container";
+// Explicitly import the centralized type definitions to ensure TypeScript recognizes them
+import "../types/express";
 
 /**
  * Middleware to inject services into request object for backward compatibility
@@ -10,13 +12,10 @@ export const compatibilityMiddleware = (
   res: Response,
   next: NextFunction,
 ): void => {
-  const services = req.services as ServiceContainer;
+  const services = req.services;
 
   if (services) {
-    // Add commonly used services directly to the request for backward compatibility
     req.actorService = services.actorService;
-
-    // Any other services that might be directly accessed on req can be added here
   }
 
   next();

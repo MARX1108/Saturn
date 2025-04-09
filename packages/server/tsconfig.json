@@ -12,6 +12,6 @@
     "types": ["node", "vitest/globals"],
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*", "routes/**/*", "test/**/*", "vitest.config.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*", "src/**/*.d.ts", "routes/**/*", "test/**/*", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }
