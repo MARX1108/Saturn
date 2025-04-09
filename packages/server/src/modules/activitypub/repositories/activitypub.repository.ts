@@ -55,9 +55,11 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
       processedAt: new Date(),
     };
 
-    // Generate an ID if not present
+    // Ensure `id` is always a string
     if (!activityToSave.id) {
       activityToSave.id = `https://${this.domain}/activities/${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    } else {
+      activityToSave.id = String(activityToSave.id); // Ensure type consistency
     }
 
     // Insert or update the activity
@@ -67,6 +69,7 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
       { upsert: true },
     );
 
-    return activityToSave;
+    // Explicitly cast to ActivityPubObject to satisfy TypeScript
+    return activityToSave as ActivityPubObject;
   }
 }

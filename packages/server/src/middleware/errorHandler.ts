@@ -1,15 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError, ErrorType } from "../utils/errors";
 
+// Update errorHandler to use type guards for better type inference
+
 export function errorHandler(
-  err: Error,
+  err: unknown,
   req: Request,
   res: Response,
   _next: NextFunction,
-): void {
+): Response | void {
   console.error("Error:", err);
 
-  // Handle AppError instances
+  // Type guard to check if err is an instance of AppError
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       status: "error",
@@ -18,8 +20,14 @@ export function errorHandler(
     });
   }
 
-  // Handle Multer errors
-  if (err.name === "MulterError") {
+  // Type guard to check if err is a Multer error
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "name" in err &&
+    err.name === "MulterError" &&
+    "message" in err
+  ) {
     return res.status(400).json({
       status: "error",
       type: ErrorType.VALIDATION,
@@ -34,6 +42,6 @@ export function errorHandler(
     message:
       process.env.NODE_ENV === "production"
         ? "Internal server error"
-        : err.message,
+        : (err instanceof Error ? err.message : "Unknown error"),
   });
 }

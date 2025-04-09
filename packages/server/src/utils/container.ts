@@ -10,6 +10,8 @@ import { AuthService } from "../modules/auth/services/auth.service";
 import { AuthRepository } from "../modules/auth/repositories/auth.repository";
 import { WebfingerService } from "../modules/webfinger/services/webfinger.service";
 import { ActivityPubService } from "../modules/activitypub/services/activitypub.service";
+import { WebfingerRepository } from "../modules/webfinger/repositories/webfinger.repository";
+import { ActivityPubRepository } from "../modules/activitypub/repositories/activitypub.repository";
 
 /**
  * Available services that can be resolved from the container

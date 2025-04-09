@@ -1,4 +1,4 @@
-import express from "express";
+import express, { RequestHandler, ErrorRequestHandler } from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
 import { errorHandler } from "./middleware/errorHandler";
@@ -57,8 +57,8 @@ export async function startServer(): Promise<{
     initPlugins(app);
 
     // Apply middlewares for services and backwards compatibility
-    app.use(serviceMiddleware);
-    app.use(compatibilityMiddleware);
+    app.use(serviceMiddleware as RequestHandler);
+    app.use(compatibilityMiddleware as RequestHandler);
 
     // Register routes using the standardized configuration pattern
     // Mount each router at an appropriate base path
@@ -81,7 +81,7 @@ export async function startServer(): Promise<{
     app.use("/api/media", mediaRouter); // Mount media routes at /api/media
 
     // Error handling middleware should be last
-    app.use(errorHandler);
+    app.use(errorHandler as ErrorRequestHandler);
 
     // Start the server only if not in test mode
     let server;
