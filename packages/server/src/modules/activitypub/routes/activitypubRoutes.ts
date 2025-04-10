@@ -1,5 +1,4 @@
-import express, { Request, Response, Router } from "express";
-import { Db as _Db } from "mongodb";
+import express, { Request, Response, Router, NextFunction, RequestHandler } from "express";
 import { ActivityPubController } from "../controllers/activitypubController";
 import { ServiceContainer } from "../../../utils/container";
 
@@ -20,24 +19,23 @@ export function configureActivityPubRoutes(
     domain,
   );
 
-  // Get ActivityPub actor profile (federated)
-  router.get("/users/:username", (req: Request, res: Response) => {
-    return activityPubController.getActor(req, res);
-  });
+  // Get ActivityPub actor profile (federated) - define as RequestHandler with type assertion
+  const getActorHandler: RequestHandler = (req, res, next) => {
+    activityPubController.getActor(req as any, res).catch(next);
+  };
+  router.get("/users/:username", getActorHandler);
 
-  // Actor inbox - where activities from other servers arrive
-  router.post(
-    "/users/:username/inbox",
-    express.json(),
-    (req: Request, res: Response) => {
-      return activityPubController.receiveActivity(req, res);
-    },
-  );
+  // Actor inbox - where activities from other servers arrive - define as RequestHandler with type assertion
+  const receiveActivityHandler: RequestHandler = (req, res, next) => {
+    activityPubController.receiveActivity(req as any, res).catch(next);
+  };
+  router.post("/users/:username/inbox", express.json(), receiveActivityHandler);
 
-  // Actor outbox - collection of activities by this user
-  router.get("/users/:username/outbox", (req: Request, res: Response) => {
-    return activityPubController.getOutbox(req, res);
-  });
+  // Actor outbox - collection of activities by this user - define as RequestHandler with type assertion
+  const getOutboxHandler: RequestHandler = (req, res, next) => {
+    activityPubController.getOutbox(req as any, res).catch(next);
+  };
+  router.get("/users/:username/outbox", getOutboxHandler);
 
   return router;
 }

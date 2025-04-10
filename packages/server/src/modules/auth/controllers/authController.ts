@@ -3,6 +3,12 @@ import _bcryptjs from "bcryptjs";
 import { ActorService } from "../../actors/services/actorService";
 import { AuthService } from "../services/auth.service";
 import { generateToken } from "../../../middleware/auth";
+import { DbUser } from "../models/user";
+
+// Extend Request type locally for this controller
+interface RequestWithUser extends Request {
+  user?: DbUser;
+}
 
 /**
  * Controller for handling authentication operations
@@ -102,7 +108,7 @@ export class AuthController {
   /**
    * Get current authenticated user
    */
-  async getCurrentUser(req: Request, res: Response): Promise<Response> {
+  async getCurrentUser(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       // This route is protected by auth middleware
       const user = req.user;

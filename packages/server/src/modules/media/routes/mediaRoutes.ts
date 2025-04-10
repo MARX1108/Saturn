@@ -1,5 +1,4 @@
-import express, { Request, Response, Router } from "express";
-import { Db as _Db } from "mongodb";
+import express, { Request, Response, Router, NextFunction, RequestHandler } from "express";
 import { MediaController } from "../controllers/media.controller";
 import { ServiceContainer } from "../../../utils/container";
 
@@ -15,18 +14,21 @@ export function configureMediaRoutes(
   // Create controller with injected service
   const mediaController = new MediaController(mediaService);
 
-  // Define routes
-  router.post("/upload", (req: Request, res: Response) =>
-    mediaController.uploadMedia(req, res),
-  );
+  // Define routes with explicit RequestHandler types and type assertions
+  const uploadMediaHandler: RequestHandler = (req, res, next) => {
+    mediaController.uploadMedia(req as any, res).catch(next);
+  };
+  router.post("/upload", uploadMediaHandler);
 
-  router.get("/:id", (req: Request, res: Response) =>
-    mediaController.getMedia(req, res),
-  );
+  const getMediaHandler: RequestHandler = (req, res, next) => {
+    mediaController.getMedia(req as any, res).catch(next);
+  };
+  router.get("/:id", getMediaHandler);
 
-  router.delete("/:id", (req: Request, res: Response) =>
-    mediaController.deleteMedia(req, res),
-  );
+  const deleteMediaHandler: RequestHandler = (req, res, next) => {
+    mediaController.deleteMedia(req as any, res).catch(next);
+  };
+  router.delete("/:id", deleteMediaHandler);
 
   return router;
 }

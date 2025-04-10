@@ -1,5 +1,4 @@
-import express, { Request, Response, Router } from "express";
-import { Db as _Db } from "mongodb";
+import express, { Request, Response, Router, RequestHandler } from "express";
 import { WebFingerController } from "../controllers/webfingerController";
 import { ServiceContainer } from "../../../utils/container";
 
@@ -20,10 +19,12 @@ export function configureWebFingerRoutes(
     domain,
   );
 
-  // WebFinger endpoint for actor discovery
-  router.get("/.well-known/webfinger", (req: Request, res: Response) => {
-    return webFingerController.getResource(req, res);
-  });
+  // WebFinger endpoint for actor discovery using explicit RequestHandler type and type assertion
+  const getResourceHandler: RequestHandler = (req, res, next) => {
+    webFingerController.getResource(req as any, res).catch(next);
+  };
+  
+  router.get("/.well-known/webfinger", getResourceHandler);
 
   return router;
 }

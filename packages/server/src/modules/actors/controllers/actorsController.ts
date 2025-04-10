@@ -1,12 +1,16 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import path from "path";
 import fs from "fs";
 import { ActorService } from "../services/actorService";
 import { CreateActorRequest } from "../models/actor";
 import { UploadService } from "../../media/services/upload.service";
+import { DbUser } from "../../../modules/auth/models/user";
 
-// Reference the Express type declaration file
-/// <reference path="../../../types/express.d.ts" />
+// Extend the Request type for our controllers
+interface RequestWithUser extends Request {
+  user?: DbUser;
+  file?: any;
+}
 
 export class ActorsController {
   private actorService: ActorService;
@@ -26,7 +30,7 @@ export class ActorsController {
   /**
    * Search actors by query
    */
-  async searchActors(req: Request, res: Response): Promise<Response> {
+  async searchActors(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { q } = req.query;
 
@@ -46,7 +50,7 @@ export class ActorsController {
   /**
    * Create a new actor
    */
-  async createActor(req: Request, res: Response): Promise<Response> {
+  async createActor(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       // Extract data from request
       const { username, displayName, bio, password } = req.body;
@@ -122,7 +126,7 @@ export class ActorsController {
   /**
    * Get actor by username
    */
-  async getActorByUsername(req: Request, res: Response): Promise<Response> {
+  async getActorByUsername(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { username } = req.params;
       const actor = await this.actorService.getActorByUsername(username);
@@ -150,7 +154,7 @@ export class ActorsController {
   /**
    * Update actor
    */
-  async updateActor(req: Request, res: Response): Promise<Response> {
+  async updateActor(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { username } = req.params;
       const { displayName, bio } = req.body;
@@ -204,7 +208,7 @@ export class ActorsController {
   /**
    * Delete actor
    */
-  async deleteActor(req: Request, res: Response): Promise<Response> {
+  async deleteActor(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { username } = req.params;
 
@@ -215,7 +219,6 @@ export class ActorsController {
       }
 
       // Check if user is authorized to delete this actor
-      // Access user property safely from the Request
       if (req.user && req.user.id !== actor._id) {
         return res
           .status(403)

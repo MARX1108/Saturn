@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { ActorService } from "../../actors/services/actorService";
 import { WebfingerService } from "../services/webfinger.service";
+import { ServiceContainer } from "../../../utils/container";
+
+// Extend Request type locally for this controller
+interface RequestWithServices extends Request {
+  services: ServiceContainer; // Changed to required property to match expected type
+}
 
 export class WebFingerController {
   private actorService: ActorService;
@@ -20,7 +26,7 @@ export class WebFingerController {
   /**
    * Get WebFinger resource for actor discovery
    */
-  async getResource(req: Request, res: Response): Promise<Response> {
+  async getResource(req: RequestWithServices, res: Response): Promise<Response> {
     try {
       const resource = req.query.resource as string;
 

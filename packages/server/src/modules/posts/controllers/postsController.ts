@@ -5,6 +5,13 @@ import { PostService } from "../services/postService";
 import { ActorService } from "../../actors/services/actorService";
 import { Attachment, PostResponse, Post } from "../models/post";
 import { UploadService } from "../../media/services/upload.service";
+import { DbUser } from "../../../modules/auth/models/user";
+
+// Extend Request type locally for this controller
+interface RequestWithUser extends Request {
+  user?: DbUser;
+  files?: Express.Multer.File[];
+}
 
 export class PostsController {
   private postService: PostService;
@@ -58,7 +65,7 @@ export class PostsController {
   /**
    * Create a new post
    */
-  async createPost(req: Request, res: Response): Promise<Response> {
+  async createPost(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       // Get user from token
       if (!req.user) {
@@ -134,7 +141,7 @@ export class PostsController {
   /**
    * Get feed (public timeline)
    */
-  async getFeed(req: Request, res: Response): Promise<Response> {
+  async getFeed(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
@@ -162,7 +169,7 @@ export class PostsController {
   /**
    * Get single post by ID
    */
-  async getPostById(req: Request, res: Response): Promise<Response> {
+  async getPostById(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
       const post = await this.postService.getPostById(id);
@@ -187,7 +194,7 @@ export class PostsController {
   /**
    * Get posts by username
    */
-  async getPostsByUsername(req: Request, res: Response): Promise<Response> {
+  async getPostsByUsername(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { username } = req.params;
       const page = parseInt(req.query.page as string) || 1;
@@ -220,7 +227,7 @@ export class PostsController {
   /**
    * Update post
    */
-  async updatePost(req: Request, res: Response): Promise<Response> {
+  async updatePost(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
       if (!req.user) {
@@ -255,7 +262,7 @@ export class PostsController {
   /**
    * Delete post
    */
-  async deletePost(req: Request, res: Response): Promise<Response> {
+  async deletePost(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
       if (!req.user) {
@@ -281,7 +288,7 @@ export class PostsController {
   /**
    * Like a post
    */
-  async likePost(req: Request, res: Response): Promise<Response> {
+  async likePost(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
       if (!req.user) {
@@ -307,7 +314,7 @@ export class PostsController {
   /**
    * Unlike a post
    */
-  async unlikePost(req: Request, res: Response): Promise<Response> {
+  async unlikePost(req: RequestWithUser, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
       if (!req.user) {

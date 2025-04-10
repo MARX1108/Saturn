@@ -1,5 +1,4 @@
-import express, { Request, Response, Router } from "express";
-import { Db as _Db } from "mongodb";
+import express, { Request, Response, Router, NextFunction, RequestHandler } from "express";
 import { AuthController } from "../controllers/authController";
 import { auth } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
@@ -16,20 +15,23 @@ export function configureAuthRoutes(
   // Create controller with injected dependencies
   const authController = new AuthController(actorService, authService);
 
-  // Register new user
-  router.post("/register", (req: Request, res: Response) => {
-    return authController.register(req, res);
-  });
+  // Register new user - define as RequestHandler and use type assertion
+  const registerHandler: RequestHandler = (req, res, next) => {
+    authController.register(req as any, res).catch(next);
+  };
+  router.post("/register", registerHandler);
 
-  // Login user
-  router.post("/login", (req: Request, res: Response) => {
-    return authController.login(req, res);
-  });
+  // Login user - define as RequestHandler and use type assertion
+  const loginHandler: RequestHandler = (req, res, next) => {
+    authController.login(req as any, res).catch(next);
+  };
+  router.post("/login", loginHandler);
 
-  // Get current user (protected route)
-  router.get("/me", auth, (req: Request, res: Response) => {
-    return authController.getCurrentUser(req, res);
-  });
+  // Get current user (protected route) - define as RequestHandler and use type assertion
+  const getCurrentUserHandler: RequestHandler = (req, res, next) => {
+    authController.getCurrentUser(req as any, res).catch(next);
+  };
+  router.get("/me", auth as any, getCurrentUserHandler);
 
   return router;
 }

@@ -1,13 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { Db } from "mongodb";
-import { DbUser } from "../types/express.d.ts";
+import { DbUser } from "../modules/auth/models/user";
 
 // Define user type for better type safety
 export interface TokenUser {
   id: string;
   username: string;
   [key: string]: any; // Allow for additional properties
+}
+
+// Extend the Request type for auth middleware
+interface RequestWithUser extends Request {
+  user?: DbUser;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -23,7 +28,7 @@ export const generateToken = (user: DbUser): string => {
   );
 };
 
-export const auth = async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
+export const auth = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void | Response> => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -67,14 +72,14 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
 };
 
 export const authorize = (_requiredRole: string) => {
-  return (req: Request, res: Response, next: NextFunction): void | Response => {
+  return (req: RequestWithUser, res: Response, next: NextFunction): void | Response => {
     // Implementation depends on your role system
     next();
   };
 };
 
 export const authenticateToken = (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
   next: NextFunction,
 ): Response | void => {

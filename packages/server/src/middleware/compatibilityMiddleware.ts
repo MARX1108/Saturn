@@ -2,9 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { ServiceContainer } from "../utils/container";
 import { ActorService } from "../modules/actors/services/actorService";
 
-// Reference types declaration file to ensure it's included in compilation
-/// <reference path="../types/express.d.ts" />
-
 /**
  * Middleware to inject services into request object for backward compatibility
  * This maintains compatibility with older code that expects services directly on the request object

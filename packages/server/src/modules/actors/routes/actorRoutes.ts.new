@@ -1,7 +1,12 @@
-import express, { Request, Response, Router, NextFunction } from "express";
+// filepath: /Users/marxw/Desktop/FYP-Saturn/packages/server/src/modules/actors/routes/actorRoutes.ts
+import express, { Request, Response, Router, NextFunction, RequestHandler } from "express";
+import _path from "path";
+import { Db as _Db } from "mongodb";
+import multer from "multer";
 import { ActorsController } from "../controllers/actorsController";
 import { auth } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
+import { UploadService as _UploadService } from "../../media/services/upload.service";
 
 /**
  * Configure actor routes with the controller
@@ -26,41 +31,37 @@ export function configureActorRoutes(
   });
 
   // Search actors
-  router.get("/search", function(req, res, next) {
-    actorsController.searchActors(req as any, res).catch(next);
-  });
+  router.get("/search", actorsController.searchActors.bind(actorsController));
 
   // Create new actor
-  router.post("/", function(req, res, next) {
+  router.post("/", (req: Request, res: Response, next: NextFunction) => {
     const upload = imageUpload.single("avatarFile");
-    upload(req, res, function(err) {
+    upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      actorsController.createActor(req as any, res).catch(error => next(error));
+      actorsController.createActor(req, res)
+        .catch(error => next(error));
     });
   });
 
   // Get actor by username
-  router.get("/:username", function(req, res, next) {
-    actorsController.getActorByUsername(req as any, res).catch(next);
-  });
+  router.get("/:username", actorsController.getActorByUsername.bind(actorsController));
 
-  // Update actor - requires authentication - need to cast auth middleware to any to bypass type error
-  router.put("/:username", auth as any, function(req, res, next) {
+  // Update actor - requires authentication
+  router.put("/:username", auth, (req: Request, res: Response, next: NextFunction) => {
     const upload = imageUpload.single("avatarFile");
-    upload(req, res, function(err) {
+    upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      actorsController.updateActor(req as any, res).catch(error => next(error));
+      actorsController.updateActor(req, res)
+        .catch(error => next(error));
     });
   });
 
   // Delete actor - requires authentication
-  router.delete("/:username", auth as any, function(req, res, next) {
-    actorsController.deleteActor(req as any, res).catch(next);
-  });
+  router.delete("/:username", auth, actorsController.deleteActor.bind(actorsController));
 
   return router;
 }

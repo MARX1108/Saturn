@@ -1,11 +1,7 @@
-import express, { Request, Response, Router, NextFunction } from "express";
-import _path from "path";
-import { Db as _Db } from "mongodb";
-import multer from "multer";
+import express, { Request, Response, Router, NextFunction, RequestHandler } from "express";
 import { PostsController } from "../controllers/postsController";
 import { authenticateToken } from "../../../middleware/auth";
 import { ServiceContainer } from "../../../utils/container";
-import { UploadService as _UploadService } from "../../media/services/upload.service";
 
 /**
  * Configure post routes with the controller
@@ -31,57 +27,60 @@ export function configurePostRoutes(
     allowedTypes: ["image/", "video/", "audio/"],
   });
 
-  // Create a new post
-  router.post("/", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
+  // Create a new post - define as RequestHandler and use type assertion
+  const createPostHandler: RequestHandler = (req, res, next) => {
     const upload = mediaUpload.array("attachments");
     upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      postsController.createPost(req, res)
+      postsController.createPost(req as any, res)
         .catch(error => next(error));
     });
-  });
+  };
+  router.post("/", authenticateToken as any, createPostHandler);
 
-  // Get feed (public timeline)
-  router.get("/", (req: Request, res: Response, next: NextFunction) => {
-    postsController.getFeed(req, res)
+  // Get feed (public timeline) - define as RequestHandler and use type assertion
+  const getFeedHandler: RequestHandler = (req, res, next) => {
+    postsController.getFeed(req as any, res)
       .catch(error => next(error));
-  });
+  };
+  router.get("/", getFeedHandler);
 
-  // Get single post by ID
-  router.get("/:id", (req: Request, res: Response, next: NextFunction) => {
-    postsController.getPostById(req, res)
+  // Get single post by ID - define as RequestHandler and use type assertion
+  const getPostByIdHandler: RequestHandler = (req, res, next) => {
+    postsController.getPostById(req as any, res)
       .catch(error => next(error));
-  });
+  };
+  router.get("/:id", getPostByIdHandler);
 
-  // Update post
-  router.put("/:id", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
-    postsController.updatePost(req, res)
+  // Update post - define as RequestHandler and use type assertion
+  const updatePostHandler: RequestHandler = (req, res, next) => {
+    postsController.updatePost(req as any, res)
       .catch(error => next(error));
-  });
+  };
+  router.put("/:id", authenticateToken as any, updatePostHandler);
 
-  // Delete post
-  router.delete("/:id", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
-    postsController.deletePost(req, res)
+  // Delete post - define as RequestHandler and use type assertion
+  const deletePostHandler: RequestHandler = (req, res, next) => {
+    postsController.deletePost(req as any, res)
       .catch(error => next(error));
-  });
+  };
+  router.delete("/:id", authenticateToken as any, deletePostHandler);
 
-  // Like a post
-  router.post("/:id/like", authenticateToken, (req: Request, res: Response, next: NextFunction) => {
-    postsController.likePost(req, res)
+  // Like a post - define as RequestHandler and use type assertion
+  const likePostHandler: RequestHandler = (req, res, next) => {
+    postsController.likePost(req as any, res)
       .catch(error => next(error));
-  });
+  };
+  router.post("/:id/like", authenticateToken as any, likePostHandler);
 
-  // Unlike a post
-  router.post(
-    "/:id/unlike",
-    authenticateToken,
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.unlikePost(req, res)
-        .catch(error => next(error));
-    },
-  );
+  // Unlike a post - define as RequestHandler and use type assertion
+  const unlikePostHandler: RequestHandler = (req, res, next) => {
+    postsController.unlikePost(req as any, res)
+      .catch(error => next(error));
+  };
+  router.post("/:id/unlike", authenticateToken as any, unlikePostHandler);
 
   return router;
 }
