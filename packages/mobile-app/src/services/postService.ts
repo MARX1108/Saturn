@@ -1,0 +1,103 @@
+import apiService from './apiService';
+import { Post } from '../types/post';
+import appConfig from '../config/appConfig';
+
+/**
+ * Post Service
+ * Handles interactions with post-related API endpoints
+ */
+export const postService = {
+  /**
+   * Fetch feed posts from the workspace
+   * @param page - Optional page number for pagination
+   * @param limit - Optional number of posts per page
+   * @returns Promise with the feed posts
+   */
+  fetchFeedPosts: async (page = 1, limit = 20): Promise<Post[]> => {
+    try {
+      const params = { page, limit };
+      // Using the correct URL from appConfig that matches API documentation
+      const url = appConfig.endpoints.posts.feed;
+
+      const response = await apiService.get<{
+        posts: Post[];
+        hasMore: boolean;
+      }>(url, { params });
+      return response.posts;
+    } catch (error) {
+      console.error('Error fetching feed posts:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch a single post by ID
+   * @param postId - ID of the post to fetch
+   * @returns Promise with the post data
+   */
+  getPostById: async (postId: string): Promise<Post> => {
+    try {
+      // Use the URL from appConfig and replace the :id placeholder
+      const url = appConfig.endpoints.posts.getPost.replace(':id', postId);
+      // Authentication is optional for this endpoint but recommended to get proper likedByUser status
+      return await apiService.get<Post>(url);
+    } catch (error) {
+      console.error(`Error fetching post ${postId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Like a post
+   * @param postId - ID of the post to like
+   * @returns Promise with the updated post
+   */
+  likePost: async (postId: string): Promise<Post> => {
+    try {
+      const url = `/api/posts/${postId}/like`;
+      return await apiService.post<Post>(url);
+    } catch (error) {
+      console.error(`Error liking post ${postId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Unlike a post
+   * @param postId - ID of the post to unlike
+   * @returns Promise with the updated post
+   */
+  unlikePost: async (postId: string): Promise<{ success: boolean }> => {
+    try {
+      const url = `/api/posts/${postId}/unlike`;
+      // Changed from delete to post to match API requirements
+      return await apiService.post<{ success: boolean }>(url);
+    } catch (error) {
+      console.error(`Error unliking post ${postId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Create a new post
+   * @param content - The text content of the post
+   * @returns Promise with the newly created post
+   */
+  createPost: async (content: string): Promise<Post> => {
+    try {
+      const url = appConfig.endpoints.posts.createPost;
+
+      // Create FormData to match API expectations
+      const formData = new FormData();
+      formData.append('content', content);
+
+      // Use multipart/form-data as required by API documentation
+      return await apiService.postForm<Post>(url, formData);
+    } catch (error) {
+      console.error('Error creating post:', error);
+      throw error;
+    }
+  },
+};
+
+export default postService;

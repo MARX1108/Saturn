@@ -10,7 +10,20 @@ export default tseslint.config(
     files: ['**/*.ts'],
     languageOptions: {
       globals: {
-        ...globals.node,
+        // Define explicit Node.js globals instead of spreading globals.node
+        // This avoids the issue with "AudioWorkletGlobalScope " having trailing whitespace
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        require: 'readonly',
+        module: 'writable',
+        console: 'readonly',
+        Buffer: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        global: 'readonly',
       },
       parserOptions: {
         project: true,
