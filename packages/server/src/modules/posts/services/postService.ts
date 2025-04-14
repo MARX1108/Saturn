@@ -1,20 +1,28 @@
-import { Db as _Db } from "mongodb";
-import { v4 as uuidv4 } from "uuid";
-import { Post, CreatePostRequest, UpdatePostRequest } from "../models/post";
-import { PostRepository } from "../repositories/postRepository";
+import { Db as _Db } from 'mongodb';
+import { v4 as uuidv4 } from 'uuid';
+import { Post, CreatePostRequest, UpdatePostRequest } from '../models/post';
+import { PostRepository } from '../repositories/postRepository';
+import { ActorService } from '../../actors/services/actorService';
+import { NotFoundError } from '../../../utils/errors';
 
 export class PostService {
   private repository: PostRepository;
+  private actorService: ActorService;
   private domain: string;
 
-  constructor(repository: PostRepository, domain: string) {
+  constructor(
+    repository: PostRepository,
+    actorService: ActorService,
+    domain: string
+  ) {
     this.repository = repository;
+    this.actorService = actorService;
     this.domain = domain;
   }
 
   async createPost(
     postData: CreatePostRequest,
-    actorId: string,
+    actorId: string
   ): Promise<Post> {
     // Create a new post ID
     const postId = uuidv4();
@@ -45,7 +53,7 @@ export class PostService {
 
   async getFeed(
     page = 1,
-    limit = 20,
+    limit = 20
   ): Promise<{ posts: Post[]; hasMore: boolean }> {
     const posts = await this.repository.findFeed(page, limit);
     const total = await this.repository.countFeed();
@@ -58,22 +66,36 @@ export class PostService {
 
   async getPostsByUsername(
     username: string,
-    page = 1,
-    limit = 20,
-  ): Promise<{ posts: Post[]; hasMore: boolean }> {
-    const posts = await this.repository.findByUsername(username, page, limit);
-    const total = await this.repository.countByUsername(username);
+    paginationOptions: { limit: number; offset: number }
+  ): Promise<{ posts: Post[]; total: number; limit: number; offset: number }> {
+    // Find the actor by username
+    const actor = await this.actorService.getActorByUsername(username);
+
+    if (!actor) {
+      throw new NotFoundError(`Actor with username ${username} not found`);
+    }
+
+    // Get the actor ID
+    const authorId = actor._id;
+
+    // Fetch posts by author ID with pagination
+    const { posts, total } = await this.repository.findPostsByAuthorId(
+      authorId,
+      paginationOptions
+    );
 
     return {
       posts,
-      hasMore: page * limit < total,
+      total,
+      limit: paginationOptions.limit,
+      offset: paginationOptions.offset,
     };
   }
 
   async updatePost(
     id: string,
     actorId: string,
-    updates: UpdatePostRequest,
+    updates: UpdatePostRequest
   ): Promise<Post | null> {
     // First, check if the post exists and belongs to the actor
     const post = await this.repository.findByIdAndActorId(id, actorId);

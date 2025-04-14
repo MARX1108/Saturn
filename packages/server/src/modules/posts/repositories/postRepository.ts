@@ -1,25 +1,25 @@
-import { Db } from "mongodb";
-import { MongoRepository } from "../../shared/repositories/baseRepository";
-import { Post } from "../models/post";
+import { Db } from 'mongodb';
+import { MongoRepository } from '../../shared/repositories/baseRepository';
+import { Post } from '../models/post';
 
 export class PostRepository extends MongoRepository<Post> {
   constructor(db: Db) {
-    super(db, "posts");
+    super(db, 'posts');
 
     // Create indexes for common queries
-    this.collection.createIndex({ "actor.id": 1, createdAt: -1 });
+    this.collection.createIndex({ 'actor.id': 1, createdAt: -1 });
     this.collection.createIndex({ createdAt: -1 });
   }
 
   async findByUsername(
     username: string,
     page = 1,
-    limit = 20,
+    limit = 20
   ): Promise<Post[]> {
     const skip = (page - 1) * limit;
     return this.collection
       .find({
-        "actor.username": username,
+        'actor.username': username,
       })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -29,7 +29,7 @@ export class PostRepository extends MongoRepository<Post> {
 
   async countByUsername(username: string): Promise<number> {
     return this.collection.countDocuments({
-      "actor.username": username,
+      'actor.username': username,
     });
   }
 
@@ -50,7 +50,7 @@ export class PostRepository extends MongoRepository<Post> {
   async likePost(postId: string, actorId: string): Promise<boolean> {
     const result = await this.collection.updateOne(
       { id: postId },
-      { $addToSet: { likes: actorId } },
+      { $addToSet: { likes: actorId } }
     );
     return result.modifiedCount > 0;
   }
@@ -58,7 +58,7 @@ export class PostRepository extends MongoRepository<Post> {
   async unlikePost(postId: string, actorId: string): Promise<boolean> {
     const result = await this.collection.updateOne(
       { id: postId },
-      { $pull: { likes: actorId } },
+      { $pull: { likes: actorId } }
     );
     return result.modifiedCount > 0;
   }
@@ -70,7 +70,7 @@ export class PostRepository extends MongoRepository<Post> {
   async findByIdAndActorId(id: string, actorId: string): Promise<Post | null> {
     return this.findOne({
       id,
-      "actor.id": actorId,
+      'actor.id': actorId,
     });
   }
 
@@ -78,7 +78,7 @@ export class PostRepository extends MongoRepository<Post> {
     const result = await this.collection.findOneAndUpdate(
       { id },
       { $set: { ...update, updatedAt: new Date() } },
-      { returnDocument: "after" },
+      { returnDocument: 'after' }
     );
 
     // Ensure the result is properly typed as Post
@@ -88,5 +88,34 @@ export class PostRepository extends MongoRepository<Post> {
   async deleteById(id: string): Promise<boolean> {
     const result = await this.collection.deleteOne({ id });
     return result.deletedCount > 0;
+  }
+
+  /**
+   * Find posts by author ID with pagination
+   *
+   * NOTE: This query would benefit from an index on { "actor.id": 1, createdAt: -1 }
+   * for efficient querying and sorting
+   */
+  async findPostsByAuthorId(
+    authorId: string,
+    options: { limit: number; offset: number }
+  ): Promise<{ posts: Post[]; total: number }> {
+    const { limit, offset } = options;
+
+    // Query filter
+    const filter = { 'actor.id': authorId };
+
+    // Get posts with pagination and sorting
+    const posts = await this.collection
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .toArray();
+
+    // Get total count for pagination
+    const total = await this.collection.countDocuments(filter);
+
+    return { posts, total };
   }
 }

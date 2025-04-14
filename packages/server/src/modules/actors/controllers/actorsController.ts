@@ -1,10 +1,12 @@
-import { Request, Response, NextFunction } from "express";
-import path from "path";
-import fs from "fs";
-import { ActorService } from "../services/actorService";
-import { CreateActorRequest } from "../models/actor";
-import { UploadService } from "../../media/services/upload.service";
-import { DbUser } from "../../../modules/auth/models/user";
+import { Request, Response, NextFunction } from 'express';
+import path from 'path';
+import fs from 'fs';
+import { ActorService } from '../services/actorService';
+import { CreateActorRequest } from '../models/actor';
+import { UploadService } from '../../media/services/upload.service';
+import { PostService } from '../../posts/services/postService';
+import { DbUser } from '../../../modules/auth/models/user';
+import { BadRequestError } from '../../../utils/errors';
 
 // Extend the Request type for our controllers
 interface RequestWithUser extends Request {
@@ -15,15 +17,18 @@ interface RequestWithUser extends Request {
 export class ActorsController {
   private actorService: ActorService;
   private uploadService: UploadService;
+  private postService: PostService;
   private domain: string;
 
   constructor(
     actorService: ActorService,
     uploadService: UploadService,
-    domain: string,
+    postService: PostService,
+    domain: string
   ) {
     this.actorService = actorService;
     this.uploadService = uploadService;
+    this.postService = postService;
     this.domain = domain;
   }
 
@@ -34,7 +39,7 @@ export class ActorsController {
     try {
       const { q } = req.query;
 
-      if (!q || typeof q !== "string") {
+      if (!q || typeof q !== 'string') {
         return res.status(200).json([]);
       }
 
@@ -42,8 +47,8 @@ export class ActorsController {
 
       return res.status(200).json(actors);
     } catch (error) {
-      console.error("Error searching actors:", error);
-      return res.status(500).json({ error: "Failed to search actors" });
+      console.error('Error searching actors:', error);
+      return res.status(500).json({ error: 'Failed to search actors' });
     }
   }
 
@@ -58,30 +63,30 @@ export class ActorsController {
 
       // Validate required fields
       if (!username) {
-        return res.status(400).json({ error: "Username is required" });
+        return res.status(400).json({ error: 'Username is required' });
       }
 
       if (!password) {
-        return res.status(400).json({ error: "Password is required" });
+        return res.status(400).json({ error: 'Password is required' });
       }
 
       // Validate username format
       if (!/^[a-zA-Z0-9_]+$/.test(username)) {
         return res.status(400).json({
-          error: "Username can only contain letters, numbers, and underscores",
+          error: 'Username can only contain letters, numbers, and underscores',
         });
       }
 
       // Check if username exists
       const exists = await this.actorService.usernameExists(username);
       if (exists) {
-        return res.status(409).json({ error: "Username already exists" });
+        return res.status(409).json({ error: 'Username already exists' });
       }
 
       // Handle avatar if provided
       let iconInfo = undefined;
       if (avatarFile) {
-        const publicDir = path.join(process.cwd(), "public", "avatars");
+        const publicDir = path.join(process.cwd(), 'public', 'avatars');
         fs.mkdirSync(publicDir, { recursive: true });
 
         const fileExt = path.extname(avatarFile.originalname);
@@ -104,7 +109,7 @@ export class ActorsController {
           bio,
           password,
         },
-        iconInfo,
+        iconInfo
       );
 
       // Format response to match test expectations
@@ -118,21 +123,24 @@ export class ActorsController {
 
       return res.status(201).json(response);
     } catch (error) {
-      console.error("Error creating actor:", error);
-      return res.status(500).json({ error: "Failed to create actor" });
+      console.error('Error creating actor:', error);
+      return res.status(500).json({ error: 'Failed to create actor' });
     }
   }
 
   /**
    * Get actor by username
    */
-  async getActorByUsername(req: RequestWithUser, res: Response): Promise<Response> {
+  async getActorByUsername(
+    req: RequestWithUser,
+    res: Response
+  ): Promise<Response> {
     try {
       const { username } = req.params;
       const actor = await this.actorService.getActorByUsername(username);
 
       if (!actor) {
-        return res.status(404).json({ error: "Actor not found" });
+        return res.status(404).json({ error: 'Actor not found' });
       }
 
       // Format response to match test expectations
@@ -146,8 +154,8 @@ export class ActorsController {
 
       return res.status(200).json(response);
     } catch (error) {
-      console.error("Error fetching actor:", error);
-      return res.status(500).json({ error: "Failed to fetch actor" });
+      console.error('Error fetching actor:', error);
+      return res.status(500).json({ error: 'Failed to fetch actor' });
     }
   }
 
@@ -163,13 +171,13 @@ export class ActorsController {
       // Check if actor exists
       const exists = await this.actorService.usernameExists(username);
       if (!exists) {
-        return res.status(404).json({ error: "Actor not found" });
+        return res.status(404).json({ error: 'Actor not found' });
       }
 
       // Handle avatar update if provided
       let iconInfo = undefined;
       if (avatarFile) {
-        const publicDir = path.join(process.cwd(), "public", "avatars");
+        const publicDir = path.join(process.cwd(), 'public', 'avatars');
         fs.mkdirSync(publicDir, { recursive: true });
 
         const fileExt = path.extname(avatarFile.originalname);
@@ -191,17 +199,17 @@ export class ActorsController {
           displayName,
           bio,
         },
-        iconInfo,
+        iconInfo
       );
 
       if (!updatedActor) {
-        return res.status(404).json({ error: "Failed to update actor" });
+        return res.status(404).json({ error: 'Failed to update actor' });
       }
 
       return res.status(200).json(updatedActor);
     } catch (error) {
-      console.error("Error updating actor:", error);
-      return res.status(500).json({ error: "Failed to update actor" });
+      console.error('Error updating actor:', error);
+      return res.status(500).json({ error: 'Failed to update actor' });
     }
   }
 
@@ -215,14 +223,14 @@ export class ActorsController {
       // Check if actor exists
       const actor = await this.actorService.getActorByUsername(username);
       if (!actor) {
-        return res.status(404).json({ error: "Actor not found" });
+        return res.status(404).json({ error: 'Actor not found' });
       }
 
       // Check if user is authorized to delete this actor
       if (req.user && req.user.id !== actor._id) {
         return res
           .status(403)
-          .json({ error: "You are not authorized to delete this actor" });
+          .json({ error: 'You are not authorized to delete this actor' });
       }
 
       // Delete actor
@@ -230,8 +238,42 @@ export class ActorsController {
 
       return res.status(204).send();
     } catch (error) {
-      console.error("Error deleting actor:", error);
-      return res.status(500).json({ error: "Failed to delete actor" });
+      console.error('Error deleting actor:', error);
+      return res.status(500).json({ error: 'Failed to delete actor' });
+    }
+  }
+
+  /**
+   * Get posts authored by a specific actor
+   */
+  async getActorPosts(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void | Response> {
+    try {
+      const { username } = req.params;
+
+      // Parse and validate pagination parameters
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      if (isNaN(limit) || limit < 1 || isNaN(offset) || offset < 0) {
+        throw new BadRequestError('Invalid pagination parameters');
+      }
+
+      // Cap the limit to prevent excessive queries
+      const cappedLimit = Math.min(limit, 50);
+
+      // Get posts by username with pagination
+      const result = await this.postService.getPostsByUsername(username, {
+        limit: cappedLimit,
+        offset,
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      next(error);
     }
   }
 }
