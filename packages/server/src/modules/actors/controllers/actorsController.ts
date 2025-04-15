@@ -6,7 +6,7 @@ import { CreateActorRequest } from '../models/actor';
 import { UploadService } from '../../media/services/upload.service';
 import { PostService } from '../../posts/services/postService';
 import { DbUser } from '../../../modules/auth/models/user';
-import { BadRequestError } from '../../../utils/errors';
+import { AppError, ErrorType } from '../../../utils/errors';
 
 // Extend the Request type for our controllers
 interface RequestWithUser extends Request {

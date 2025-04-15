@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Post, CreatePostRequest, UpdatePostRequest } from '../models/post';
 import { PostRepository } from '../repositories/postRepository';
 import { ActorService } from '../../actors/services/actorService';
-import { NotFoundError } from '../../../utils/errors';
+import { AppError, ErrorType } from '../../../utils/errors';
 
 export class PostService {
   private repository: PostRepository;
@@ -72,11 +72,23 @@ export class PostService {
     const actor = await this.actorService.getActorByUsername(username);
 
     if (!actor) {
-      throw new NotFoundError(`Actor with username ${username} not found`);
+      throw new AppError(
+        `Actor with username ${username} not found`,
+        404,
+        ErrorType.NOT_FOUND
+      );
     }
 
-    // Get the actor ID
+    // Get the actor ID and ensure it's a string
     const authorId = actor._id;
+
+    if (!authorId) {
+      throw new AppError(
+        'Actor ID is unexpectedly undefined',
+        500,
+        ErrorType.SERVER_ERROR
+      );
+    }
 
     // Fetch posts by author ID with pagination
     const { posts, total } = await this.repository.findPostsByAuthorId(

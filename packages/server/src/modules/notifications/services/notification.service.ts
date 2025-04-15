@@ -6,7 +6,7 @@ import {
 } from '../models/notification';
 import { NotificationRepository } from '../repositories/notification.repository';
 import { ActorService } from '../../actors/services/actorService';
-import { BadRequestError } from '../../../utils/errors';
+import { AppError, ErrorType } from '../../../utils/errors';
 
 export class NotificationService {
   private repository: NotificationRepository;
@@ -24,11 +24,19 @@ export class NotificationService {
   async createNotification(data: CreateNotificationDto): Promise<Notification> {
     // Validate required fields
     if (!data.recipientUserId) {
-      throw new BadRequestError('Recipient user ID is required');
+      throw new AppError(
+        'Recipient user ID is required',
+        400,
+        ErrorType.VALIDATION
+      );
     }
 
     if (!data.type || !Object.values(NotificationType).includes(data.type)) {
-      throw new BadRequestError('Valid notification type is required');
+      throw new AppError(
+        'Valid notification type is required',
+        400,
+        ErrorType.VALIDATION
+      );
     }
 
     // Don't create notification if actor is the same as recipient
@@ -145,12 +153,17 @@ export class NotificationService {
               notification.actorUserId
             );
             if (actor) {
-              formatted.actor = {
-                id: actor._id,
-                username: actor.preferredUsername,
-                displayName: actor.name,
-                avatarUrl: actor.icon?.url,
-              };
+              // Make sure actor._id exists before using it
+              if (actor._id) {
+                formatted.actor = {
+                  id: actor._id,
+                  username: actor.preferredUsername,
+                  displayName: actor.name,
+                  avatarUrl: actor.icon?.url,
+                };
+              } else {
+                console.error('Actor found but actor._id is undefined');
+              }
             }
           } catch (error) {
             console.error('Error fetching actor for notification:', error);

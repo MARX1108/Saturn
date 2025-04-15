@@ -4,7 +4,7 @@ import { PostService } from '../../posts/services/postService';
 import { ActorService } from '../../actors/services/actorService';
 import { NotificationService } from '../../notifications/services/notification.service';
 import { NotificationType } from '../../notifications/models/notification';
-import { BadRequestError, NotFoundError } from '../../../utils/errors';
+import { AppError, ErrorType } from '../../../utils/errors';
 
 export class CommentService {
   private repository: CommentRepository;
@@ -37,19 +37,31 @@ export class CommentService {
   ): Promise<FormattedComment> {
     // Validate content
     if (!content || content.trim().length === 0) {
-      throw new BadRequestError('Comment content cannot be empty');
+      throw new AppError(
+        'Comment content cannot be empty',
+        400,
+        ErrorType.VALIDATION
+      );
     }
 
     // Check if post exists
     const post = await this.postService.getPostById(postId);
     if (!post) {
-      throw new NotFoundError(`Post with ID ${postId} not found`);
+      throw new AppError(
+        `Post with ID ${postId} not found`,
+        404,
+        ErrorType.NOT_FOUND
+      );
     }
 
     // Get author information for notification
     const author = await this.actorService.getActorById(authorId);
     if (!author) {
-      throw new NotFoundError(`Actor with ID ${authorId} not found`);
+      throw new AppError(
+        `Actor with ID ${authorId} not found`,
+        404,
+        ErrorType.NOT_FOUND
+      );
     }
 
     // Create the comment
@@ -101,7 +113,11 @@ export class CommentService {
     // Check if post exists (optional)
     const post = await this.postService.getPostById(postId);
     if (!post) {
-      throw new NotFoundError(`Post with ID ${postId} not found`);
+      throw new AppError(
+        `Post with ID ${postId} not found`,
+        404,
+        ErrorType.NOT_FOUND
+      );
     }
 
     // Get comments with pagination
@@ -141,8 +157,10 @@ export class CommentService {
     );
 
     if (result.deletedCount === 0) {
-      throw new NotFoundError(
-        "Comment not found or you don't have permission to delete it"
+      throw new AppError(
+        "Comment not found or you don't have permission to delete it",
+        404,
+        ErrorType.NOT_FOUND
       );
     }
 
@@ -194,14 +212,21 @@ export class CommentService {
         await this.actorService.getActorByUsername(username);
 
       if (mentionedActor && mentionedActor._id !== authorId) {
-        // Send notification to the mentioned user
-        await this.notificationService.createNotification({
-          recipientUserId: mentionedActor._id,
-          actorUserId: authorId,
-          type: NotificationType.MENTION,
-          postId,
-          commentId,
-        });
+        // Ensure mentionedActor._id is defined before using it
+        if (mentionedActor._id) {
+          // Send notification to the mentioned user
+          await this.notificationService.createNotification({
+            recipientUserId: mentionedActor._id,
+            actorUserId: authorId,
+            type: NotificationType.MENTION,
+            postId,
+            commentId,
+          });
+        } else {
+          console.error(
+            `Actor found for username ${username} but _id is undefined`
+          );
+        }
       }
     }
   }

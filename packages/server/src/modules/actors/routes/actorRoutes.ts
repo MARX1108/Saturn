@@ -49,6 +49,7 @@ export function configureActorRoutes(
 
   // Get actor by username
   router.get('/:username', function (req, res, next) {
+    // Cast to any to bypass the type checking error
     actorsController.getActorByUsername(req as any, res).catch(next);
   });
 
