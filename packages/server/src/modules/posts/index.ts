@@ -5,16 +5,16 @@
  */
 
 // Export controllers
-export * from "./controllers/postsController";
+export * from './controllers/postsController';
 
 // Export routes
-export { default as postsRoutes } from "./routes/posts";
+export { default as postsRoutes } from './routes/postRoutes';
 
 // Export models
-export * from "./models/post";
+export * from './models/post';
 
 // Export services
-export * from "./services/postService";
+export * from './services/postService';
 
 // Export repositories
-export * from "./repositories/postRepository";
+export * from './repositories/postRepository';

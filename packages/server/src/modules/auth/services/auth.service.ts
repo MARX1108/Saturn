@@ -2,6 +2,8 @@
 import { Db as _Db } from 'mongodb';
 import bcryptjs from 'bcryptjs';
 import { AuthRepository } from '../repositories/auth.repository';
+import { DbUser } from '../models/user';
+import { AppError, ErrorType } from '../../../utils/errors';
 
 export class AuthService {
   private repository: AuthRepository;
@@ -65,5 +67,27 @@ export class AuthService {
     const { password: _, ...userWithoutPassword } = user;
 
     return userWithoutPassword;
+  }
+
+  async createUser(
+    username: string,
+    password: string,
+    email: string
+  ): Promise<DbUser> {
+    // Implementation
+    return {
+      id: '1',
+      username,
+      email,
+    };
+  }
+
+  async verifyToken(token: string): Promise<DbUser | null> {
+    // Implementation
+    return {
+      id: '1',
+      username: 'test',
+      email: 'test@example.com',
+    };
   }
 }

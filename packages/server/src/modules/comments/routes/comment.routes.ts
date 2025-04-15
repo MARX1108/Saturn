@@ -1,25 +1,29 @@
-import express, { Router, RequestHandler } from 'express';
+import { Router } from 'express';
 import { CommentsController } from '../controllers/comments.controller';
-import { auth } from '../../../middleware/auth';
-import { ServiceContainer } from '../../../utils/container';
+import { authenticate } from '../../../middleware/auth';
+import { AuthService } from '../../auth/services/auth.service';
 
 /**
  * Configure comment routes with the controller
  */
-export function configureCommentRoutes(
-  serviceContainer: ServiceContainer
+export default function configureCommentRoutes(
+  commentsController: CommentsController,
+  authService: AuthService
 ): Router {
-  const router = express.Router();
-  const { commentService } = serviceContainer;
+  const router = Router();
 
-  // Create controller with injected dependencies
-  const commentsController = new CommentsController(commentService);
+  // Public routes
+  router.get('/comments/:postId', (req, res) =>
+    commentsController.getComments(req, res)
+  );
 
-  // Delete a comment by ID (requires authentication)
-  const deleteCommentByIdHandler: RequestHandler = (req, res, next) => {
-    commentsController.deleteCommentById(req as any, res, next);
-  };
-  router.delete('/:commentId', auth as any, deleteCommentByIdHandler);
+  // Protected routes
+  router.post('/comments', authenticate(authService), (req, res) =>
+    commentsController.createComment(req, res)
+  );
+  router.delete('/comments/:id', authenticate(authService), (req, res) =>
+    commentsController.deleteComment(req, res)
+  );
 
   return router;
 }

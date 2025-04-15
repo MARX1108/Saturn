@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { NotificationService } from '../services/notification.service';
-import { BadRequestError } from '../../../utils/errors';
+import { AppError, ErrorType } from '../../../utils/errors';
 
 export class NotificationsController {
   private notificationService: NotificationService;
@@ -18,42 +18,25 @@ export class NotificationsController {
     next: NextFunction
   ): Promise<void | Response> {
     try {
-      // Get user ID from authenticated user
-      if (!req.user || !req.user.id) {
-        throw new BadRequestError('User ID not found in request');
-      }
-      const userId = req.user.id;
-
-      // Parse pagination parameters
-      const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
-      const offset = parseInt(req.query.offset as string) || 0;
-
-      // Validate pagination params
-      if (isNaN(limit) || limit < 1 || isNaN(offset) || offset < 0) {
-        throw new BadRequestError('Invalid pagination parameters');
+      if (!req.user) {
+        throw new AppError(
+          'Authentication required',
+          401,
+          ErrorType.AUTHENTICATION
+        );
       }
 
-      // Parse read filter if provided
-      let readFilter: boolean | undefined = undefined;
-      if (req.query.read !== undefined) {
-        readFilter = req.query.read === 'true';
-      }
-
-      // Get notifications from service
-      const result = await this.notificationService.getNotificationsForUser(
-        userId,
-        { limit, offset },
-        readFilter
+      const notifications = await this.notificationService.getNotifications(
+        req.user.id
       );
-
-      return res.status(200).json(result);
+      return res.json(notifications);
     } catch (error) {
       next(error);
     }
   }
 
   /**
-   * Mark specific notifications as read
+   * Mark notifications as read
    */
   async markRead(
     req: Request,
@@ -61,34 +44,24 @@ export class NotificationsController {
     next: NextFunction
   ): Promise<void | Response> {
     try {
-      // Get user ID from authenticated user
-      if (!req.user || !req.user.id) {
-        throw new BadRequestError('User ID not found in request');
-      }
-      const userId = req.user.id;
-
-      // Get notification IDs from request body
-      const { ids } = req.body;
-
-      // Validate IDs array
-      if (!Array.isArray(ids) || ids.length === 0) {
-        throw new BadRequestError('Valid notification IDs array is required');
+      if (!req.user) {
+        throw new AppError(
+          'Authentication required',
+          401,
+          ErrorType.AUTHENTICATION
+        );
       }
 
-      // Mark notifications as read
-      const success = await this.notificationService.markNotificationsAsRead(
-        ids,
-        userId
-      );
-
-      return res.status(success ? 200 : 204).json({ success });
+      const { id } = req.params;
+      await this.notificationService.markRead(id, req.user.id);
+      return res.status(204).end();
     } catch (error) {
       next(error);
     }
   }
 
   /**
-   * Mark all notifications as read for the authenticated user
+   * Mark all notifications as read
    */
   async markAllRead(
     req: Request,
@@ -96,24 +69,23 @@ export class NotificationsController {
     next: NextFunction
   ): Promise<void | Response> {
     try {
-      // Get user ID from authenticated user
-      if (!req.user || !req.user.id) {
-        throw new BadRequestError('User ID not found in request');
+      if (!req.user) {
+        throw new AppError(
+          'Authentication required',
+          401,
+          ErrorType.AUTHENTICATION
+        );
       }
-      const userId = req.user.id;
 
-      // Mark all notifications as read
-      const success =
-        await this.notificationService.markAllNotificationsAsRead(userId);
-
-      return res.status(success ? 200 : 204).json({ success });
+      await this.notificationService.markAllRead(req.user.id);
+      return res.status(204).end();
     } catch (error) {
       next(error);
     }
   }
 
   /**
-   * Get count of unread notifications for the authenticated user
+   * Get unread notification count
    */
   async getUnreadCount(
     req: Request,
@@ -121,16 +93,16 @@ export class NotificationsController {
     next: NextFunction
   ): Promise<void | Response> {
     try {
-      // Get user ID from authenticated user
-      if (!req.user || !req.user.id) {
-        throw new BadRequestError('User ID not found in request');
+      if (!req.user) {
+        throw new AppError(
+          'Authentication required',
+          401,
+          ErrorType.AUTHENTICATION
+        );
       }
-      const userId = req.user.id;
 
-      // Get unread count
-      const count = await this.notificationService.getUnreadCount(userId);
-
-      return res.status(200).json({ count });
+      const count = await this.notificationService.getUnreadCount(req.user.id);
+      return res.json({ count });
     } catch (error) {
       next(error);
     }

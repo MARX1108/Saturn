@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { Db } from "mongodb";
-import { DbUser } from "../modules/auth/models/user";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { Db } from 'mongodb';
+import { DbUser } from '../modules/auth/models/user';
+import { AuthService } from '../modules/auth/services/auth.service';
 
 // Define user type for better type safety
 export interface TokenUser {
@@ -10,12 +11,7 @@ export interface TokenUser {
   [key: string]: any; // Allow for additional properties
 }
 
-// Extend the Request type for auth middleware
-interface RequestWithUser extends Request {
-  user?: DbUser;
-}
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export const generateToken = (user: DbUser): string => {
   return jwt.sign(
@@ -24,23 +20,27 @@ export const generateToken = (user: DbUser): string => {
       username: user.preferredUsername || user.username,
     },
     JWT_SECRET,
-    { expiresIn: "7d" },
+    { expiresIn: '7d' }
   );
 };
 
-export const auth = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void | Response> => {
+export const auth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void | Response> => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Authorization header required" });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authorization header required' });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ error: "No token provided" });
+      return res.status(401).json({ error: 'No token provided' });
     }
 
     // Verify token
@@ -53,12 +53,12 @@ export const auth = async (req: RequestWithUser, res: Response, next: NextFuncti
     const db = req.app.locals.db;
 
     // Find user in database
-    const user = await db.collection("actors").findOne({
+    const user = await db.collection('actors').findOne({
       $or: [{ _id: decoded.id }, { preferredUsername: decoded.username }],
     });
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid token" });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
     // Add user to request object
@@ -66,39 +66,76 @@ export const auth = async (req: RequestWithUser, res: Response, next: NextFuncti
 
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
-    return res.status(401).json({ error: "Invalid token" });
+    console.error('Auth middleware error:', error);
+    return res.status(401).json({ error: 'Invalid token' });
   }
 };
 
 export const authorize = (_requiredRole: string) => {
-  return (req: RequestWithUser, res: Response, next: NextFunction): void | Response => {
+  return (req: Request, res: Response, next: NextFunction): void | Response => {
     // Implementation depends on your role system
     next();
   };
 };
 
+declare module 'express' {
+  interface Request {
+    user?: DbUser;
+  }
+}
+
 export const authenticateToken = (
-  req: RequestWithUser,
+  req: Request,
   res: Response,
-  next: NextFunction,
-): Response | void => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  next: NextFunction
+) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: "Authentication required" });
+    return res.status(401).json({ message: 'No token provided' });
   }
 
   try {
-    const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
-    const user = jwt.verify(token, jwtSecret) as {
-      id: string;
-      username: string;
-    };
-    req.user = user;
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || 'your-secret-key'
+    ) as DbUser;
+    req.user = decoded;
     next();
-  } catch (_error) {
-    return res.status(403).json({ error: "Invalid or expired token" });
+  } catch (error) {
+    return res.status(403).json({ message: 'Invalid token' });
   }
+};
+
+export const authenticate = (authService: AuthService) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+
+      const user = await authService.verifyToken(token);
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+export const requireAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  next();
 };

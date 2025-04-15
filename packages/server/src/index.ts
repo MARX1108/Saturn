@@ -9,10 +9,10 @@ import { initPlugins } from './plugins';
 import config from './config';
 
 // Import route configurations from modules
-import { configureActorRoutes } from './modules/actors/routes/actorRoutes';
-import { configureWebFingerRoutes } from './modules/webfinger/routes/webfingerRoutes';
-import { configurePostRoutes } from './modules/posts/routes/postRoutes';
-import { configureAuthRoutes } from './modules/auth/routes/authRoutes';
+import configureActorRoutes from './modules/actors/routes/actorRoutes';
+import configureWebFingerRoutes from './modules/webfinger/routes/webfingerRoutes';
+import configurePostRoutes from './modules/posts/routes/postRoutes';
+import configureAuthRoutes from './modules/auth/routes/authRoutes';
 import { configureActivityPubRoutes } from './modules/activitypub/routes/activitypubRoutes';
 import { configureMediaRoutes } from './modules/media/routes/mediaRoutes';
 
@@ -81,7 +81,11 @@ export async function startServer(): Promise<{
     const activityPubRouter = configureActivityPubRoutes(services);
     app.use('/', activityPubRouter); // ActivityPub endpoints must be at the root for federation
 
-    const postsRouter = configurePostRoutes(services);
+    const postsRouter = configurePostRoutes(
+      services.postsController,
+      services.commentsController,
+      services.authService
+    );
     app.use('/api/posts', postsRouter); // Fixed: Now correctly mounted at /api/posts
 
     const authRouter = configureAuthRoutes(services);

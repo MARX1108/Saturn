@@ -1,4 +1,4 @@
-import { Application } from "express";
+import { Application } from 'express';
 
 export interface HookData {
   [key: string]: any;
@@ -11,6 +11,7 @@ export interface ServerPlugin {
   hooks?: {
     [hookName: string]: (data: HookData) => void | Promise<void>;
   };
+  onNewPost?(postData: any): void;
 }
 
 const plugins: ServerPlugin[] = [];
@@ -41,7 +42,10 @@ export function initPlugins(app: Application): void {
   }
 }
 
-export async function executeHook(hookName: string, data: HookData = {}): Promise<void> {
+export async function executeHook(
+  hookName: string,
+  data: HookData = {}
+): Promise<void> {
   const hookHandlers = hooks[hookName] || [];
   for (const handler of hookHandlers) {
     await Promise.resolve(handler(data));

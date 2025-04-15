@@ -1,12 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { CommentService } from '../services/comment.service';
-import { AppError, ErrorType } from '../../../utils/errors';
-import { DbUser } from '../../auth/models/user';
-
-// Extend Request to include user property
-interface RequestWithUser extends Request {
-  user?: DbUser;
-}
+import { Comment } from '../models/comment';
 
 export class CommentsController {
   private commentService: CommentService;
@@ -15,108 +9,34 @@ export class CommentsController {
     this.commentService = commentService;
   }
 
-  /**
-   * Get comments for a specific post
-   */
-  async getPostComments(
-    req: RequestWithUser,
-    res: Response,
-    next: NextFunction
-  ): Promise<void | Response> {
-    try {
-      const { postId } = req.params;
-
-      // Parse pagination parameters
-      const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
-      const offset = parseInt(req.query.offset as string) || 0;
-
-      // Validate pagination params
-      if (isNaN(limit) || limit < 1 || isNaN(offset) || offset < 0) {
-        throw new AppError(
-          'Invalid pagination parameters',
-          400,
-          ErrorType.VALIDATION
-        );
-      }
-
-      // Get comments for the post
-      const result = await this.commentService.getCommentsForPost(postId, {
-        limit,
-        offset,
-      });
-
-      return res.status(200).json(result);
-    } catch (error) {
-      next(error);
+  async createComment(req: Request, res: Response): Promise<Response> {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
+    const { postId, content } = req.body;
+    const comment = await this.commentService.createComment(
+      postId,
+      content,
+      req.user.id
+    );
+    return res.status(201).json(comment);
   }
 
-  /**
-   * Create a new comment on a post
-   */
-  async createPostComment(
-    req: RequestWithUser,
-    res: Response,
-    next: NextFunction
-  ): Promise<void | Response> {
-    try {
-      // Get the post ID from URL params
-      const { postId } = req.params;
-
-      // Get the comment content from request body
-      const { content } = req.body;
-
-      // Get user ID from authenticated user
-      if (!req.user || !req.user.id) {
-        throw new AppError(
-          'User ID not found in request',
-          400,
-          ErrorType.VALIDATION
-        );
-      }
-      const authorId = req.user.id;
-
-      // Create the comment
-      const comment = await this.commentService.createComment(
-        postId,
-        authorId,
-        content
-      );
-
-      return res.status(201).json(comment);
-    } catch (error) {
-      next(error);
-    }
+  async getComments(req: Request, res: Response): Promise<Response> {
+    const { postId } = req.params;
+    const comments = await this.commentService.getComments(postId);
+    return res.json(comments);
   }
 
-  /**
-   * Delete a comment by ID
-   */
-  async deleteCommentById(
-    req: RequestWithUser,
-    res: Response,
-    next: NextFunction
-  ): Promise<void | Response> {
-    try {
-      // Get the comment ID from URL params
-      const { commentId } = req.params;
-
-      // Get user ID from authenticated user
-      if (!req.user || !req.user.id) {
-        throw new AppError(
-          'User ID not found in request',
-          400,
-          ErrorType.VALIDATION
-        );
-      }
-      const userId = req.user.id;
-
-      // Delete the comment
-      await this.commentService.deleteComment(commentId, userId);
-
-      return res.status(204).end();
-    } catch (error) {
-      next(error);
+  async deleteComment(req: Request, res: Response): Promise<Response> {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
+    const { id } = req.params;
+    const deleted = await this.commentService.deleteComment(id, req.user.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+    return res.status(204).end();
   }
 }

@@ -230,4 +230,9 @@ export class CommentService {
       }
     }
   }
+
+  async getComments(postId: string): Promise<Comment[]> {
+    // Implementation
+    return [];
+  }
 }

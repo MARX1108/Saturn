@@ -1,10 +1,4 @@
-import express, {
-  Request,
-  Response,
-  Router,
-  NextFunction,
-  RequestHandler,
-} from 'express';
+import express, { Request, Response, Router, NextFunction } from 'express';
 import { ActorsController } from '../controllers/actorsController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
@@ -13,7 +7,7 @@ import multer from 'multer';
 /**
  * Configure actor routes with the controller
  */
-export function configureActorRoutes(
+export default function configureActorRoutes(
   serviceContainer: ServiceContainer
 ): Router {
   const router = express.Router();
@@ -34,20 +28,19 @@ export function configureActorRoutes(
   });
 
   // Search actors
-  router.get('/search', (async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      await actorsController.searchActors(req, res);
-    } catch (error) {
-      next(error);
+  router.get(
+    '/search',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await actorsController.searchActors(req, res);
+      } catch (error) {
+        next(error);
+      }
     }
-  }) as RequestHandler);
+  );
 
   // Create new actor
-  router.post('/', (async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const upload = imageUpload.single('avatarFile');
     upload(req, res, async err => {
       if (err) {
@@ -59,65 +52,63 @@ export function configureActorRoutes(
         next(error);
       }
     });
-  }) as RequestHandler);
+  });
 
   // Get actor posts - defined before /:username to ensure proper route handling
-  router.get('/:username/posts', (async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      await actorsController.getActorPosts(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  }) as RequestHandler);
-
-  // Get actor by username
-  router.get('/:username', (async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      await actorsController.getActorByUsername(req, res);
-    } catch (error) {
-      next(error);
-    }
-  }) as RequestHandler);
-
-  // Update actor - requires authentication
-  router.put('/:username', auth, (async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const upload = imageUpload.single('avatarFile');
-    upload(req, res, async err => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
+  router.get(
+    '/:username/posts',
+    async (req: Request, res: Response, next: NextFunction) => {
       try {
-        await actorsController.updateActor(req, res);
+        await actorsController.getActorPosts(req, res, next);
       } catch (error) {
         next(error);
       }
-    });
-  }) as RequestHandler);
+    }
+  );
+
+  // Get actor by username
+  router.get(
+    '/:username',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await actorsController.getActorByUsername(req, res);
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  // Update actor - requires authentication
+  router.put(
+    '/:username',
+    auth,
+    async (req: Request, res: Response, next: NextFunction) => {
+      const upload = imageUpload.single('avatarFile');
+      upload(req, res, async err => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        }
+        try {
+          await actorsController.updateActor(req, res);
+        } catch (error) {
+          next(error);
+        }
+      });
+    }
+  );
 
   // Delete actor - requires authentication
-  router.delete('/:username', auth, (async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      await actorsController.deleteActor(req, res);
-    } catch (error) {
-      next(error);
+  router.delete(
+    '/:username',
+    auth,
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await actorsController.deleteActor(req, res);
+      } catch (error) {
+        next(error);
+      }
     }
-  }) as RequestHandler);
+  );
 
   return router;
 }

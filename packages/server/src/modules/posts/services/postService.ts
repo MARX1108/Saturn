@@ -21,30 +21,28 @@ export class PostService {
   }
 
   async createPost(
-    postData: CreatePostRequest,
-    actorId: string
+    authorId: string,
+    content: string,
+    visibility: 'public' | 'private' = 'public'
   ): Promise<Post> {
-    // Create a new post ID
-    const postId = uuidv4();
-
-    // Create post object
-    const newPost: Post = {
-      id: postId,
-      content: postData.content,
-      actor: {
-        id: actorId,
-        username: postData.username,
-      },
-      attachments: postData.attachments || [],
-      createdAt: new Date(),
-      sensitive: postData.sensitive || false,
-      contentWarning: postData.contentWarning,
-      likes: [],
-      shares: 0,
-    };
-
-    // Create post in repository
-    return this.repository.create(newPost);
+    const post = new Post();
+    post.authorId = authorId;
+    post.content = content;
+    post.visibility = visibility;
+    post.published = new Date();
+    post.updated = new Date();
+    post.type = 'Note';
+    post.to =
+      visibility === 'public'
+        ? ['https://www.w3.org/ns/activitystreams#Public']
+        : [];
+    post.cc = [];
+    post.attributedTo = `${process.env.APP_URL}/api/actors/${authorId}`;
+    post.url = `${process.env.APP_URL}/api/posts/${post.id}`;
+    post.replies = [];
+    post.likes = [];
+    post.shares = [];
+    return this.repository.save(post);
   }
 
   async getPostById(id: string): Promise<Post | null> {

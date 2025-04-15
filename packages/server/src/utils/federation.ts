@@ -1,18 +1,18 @@
-import fetch from "node-fetch";
-import crypto from "crypto";
-import { DateTime } from "luxon";
+import fetch from 'node-fetch';
+import crypto from 'crypto';
+import { DateTime } from 'luxon';
 
 // Helper for making signed HTTP requests to other ActivityPub servers
 export async function sendSignedRequest(
   url: string,
   body: any,
   privateKey: string,
-  keyId: string,
+  keyId: string
 ): Promise<Response> {
   const digest = crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(JSON.stringify(body))
-    .digest("base64");
+    .digest('base64');
 
   const date = DateTime.now().toUTC().toRFC2822();
   const target = new URL(url);
@@ -24,13 +24,13 @@ export async function sendSignedRequest(
     `host: ${target.host}`,
     `date: ${date}`,
     `digest: SHA-256=${digest}`,
-  ].join("\n");
+  ].join('\n');
 
   // Sign the string
   const signature = crypto
-    .createSign("sha256")
+    .createSign('sha256')
     .update(signString)
-    .sign(privateKey, "base64");
+    .sign(privateKey, 'base64');
 
   // Create signature header
   const signatureHeader = [
@@ -38,18 +38,18 @@ export async function sendSignedRequest(
     'algorithm="rsa-sha256"',
     `headers="(request-target) host date digest"`,
     `signature="${signature}"`,
-  ].join(",");
+  ].join(',');
 
   // Make request with signature
   return fetch(url, {
-    method: "POST",
+    method: 'POST',
     headers: {
       Host: target.host,
       Date: date,
       Digest: `SHA-256=${digest}`,
       Signature: signatureHeader,
-      "Content-Type": "application/activity+json",
-      Accept: "application/activity+json",
+      'Content-Type': 'application/activity+json',
+      Accept: 'application/activity+json',
     },
     body: JSON.stringify(body),
   });
@@ -60,7 +60,7 @@ export async function fetchRemoteActor(actorUrl: string): Promise<any> {
   try {
     const response = await fetch(actorUrl, {
       headers: {
-        Accept: "application/activity+json",
+        Accept: 'application/activity+json',
       },
     });
 
@@ -70,7 +70,7 @@ export async function fetchRemoteActor(actorUrl: string): Promise<any> {
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching remote actor:", error);
+    console.error('Error fetching remote actor:', error);
     throw error;
   }
 }
@@ -79,7 +79,7 @@ export async function fetchRemoteActor(actorUrl: string): Promise<any> {
 export async function sendFollowRequest(
   fromActor: any,
   toActorUrl: string,
-  privateKey: string,
+  privateKey: string
 ): Promise<any> {
   try {
     // First fetch the target actor
@@ -87,9 +87,9 @@ export async function sendFollowRequest(
 
     // Create follow activity
     const followActivity = {
-      "@context": "https://www.w3.org/ns/activitystreams",
+      '@context': 'https://www.w3.org/ns/activitystreams',
       id: `${fromActor.id}/activities/${crypto.randomUUID()}`,
-      type: "Follow",
+      type: 'Follow',
       actor: fromActor.id,
       object: toActor.id,
       published: new Date().toISOString(),
@@ -100,7 +100,7 @@ export async function sendFollowRequest(
       toActor.inbox,
       followActivity,
       privateKey,
-      `${fromActor.id}#main-key`,
+      `${fromActor.id}#main-key`
     );
 
     if (!response.ok) {
@@ -109,7 +109,36 @@ export async function sendFollowRequest(
 
     return followActivity;
   } catch (error) {
-    console.error("Error sending follow request:", error);
+    console.error('Error sending follow request:', error);
     throw error;
+  }
+}
+
+export async function fetchRemoteObject(url: string): Promise<any> {
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/activity+json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch remote object: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function sendActivity(url: string, activity: any): Promise<void> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/activity+json',
+      Accept: 'application/activity+json',
+    },
+    body: JSON.stringify(activity),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to send activity: ${response.statusText}`);
   }
 }

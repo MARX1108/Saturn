@@ -1,170 +1,53 @@
-import express, {
-  Request,
-  Response,
-  Router,
-  NextFunction,
-  RequestHandler,
-} from 'express';
+import { Router } from 'express';
 import { PostsController } from '../controllers/postsController';
 import { CommentsController } from '../../comments/controllers/comments.controller';
-import { authenticateToken } from '../../../middleware/auth';
-import { ServiceContainer } from '../../../utils/container';
-import { DbUser } from '../../../modules/auth/models/user';
-
-// Extend Request type for our handlers
-interface RequestWithUser extends Request {
-  user?: DbUser;
-  files?: Express.Multer.File[];
-}
-
-type CustomRequestHandler = RequestHandler<
-  any,
-  any,
-  any,
-  any,
-  Record<string, any>
-> &
-  ((req: RequestWithUser, res: Response, next: NextFunction) => Promise<void>);
+import { authenticate } from '../../../middleware/auth';
+import { AuthService } from '../../auth/services/auth.service';
 
 /**
  * Configure post routes with the controller
  */
-export function configurePostRoutes(
-  serviceContainer: ServiceContainer
+export default function configurePostRoutes(
+  postsController: PostsController,
+  commentsController: CommentsController,
+  authService: AuthService
 ): Router {
-  const router = express.Router();
-  const { postService, actorService, uploadService, commentService } =
-    serviceContainer;
-  const domain = process.env.DOMAIN || 'localhost:4000';
+  const router = Router();
 
-  // Create controller with injected dependencies
-  const postsController = new PostsController(
-    postService,
-    actorService,
-    uploadService,
-    domain
+  // Public routes
+  router.get('/posts', (req, res) => postsController.getFeed(req, res));
+  router.get('/posts/:id', (req, res) => postsController.getPostById(req, res));
+  router.get('/users/:username/posts', (req, res) =>
+    postsController.getPostsByUsername(req, res)
   );
 
-  // Create comments controller
-  const commentsController = new CommentsController(commentService);
+  // Protected routes
+  router.post('/posts', authenticate(authService), (req, res) =>
+    postsController.createPost(req, res)
+  );
+  router.put('/posts/:id', authenticate(authService), (req, res) =>
+    postsController.updatePost(req, res)
+  );
+  router.delete('/posts/:id', authenticate(authService), (req, res) =>
+    postsController.deletePost(req, res)
+  );
+  router.post('/posts/:id/like', authenticate(authService), (req, res) =>
+    postsController.likePost(req, res)
+  );
+  router.delete('/posts/:id/like', authenticate(authService), (req, res) =>
+    postsController.unlikePost(req, res)
+  );
 
-  // Configure media upload middleware with UploadService
-  const mediaUpload = uploadService.configureMediaUploadMiddleware({
-    fileSizeLimitMB: 10, // 10MB limit
-    allowedTypes: ['image/', 'video/', 'audio/'],
-  });
-
-  // Create a new post
-  const createPostHandler: CustomRequestHandler = async (req, res, next) => {
-    const upload = mediaUpload.array('attachments');
-    upload(req, res, async err => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-      try {
-        await postsController.createPost(req, res);
-      } catch (error) {
-        next(error);
-      }
-    });
-  };
-  router.post('/', authenticateToken, createPostHandler);
-
-  // Get feed (public timeline)
-  const getFeedHandler: CustomRequestHandler = async (req, res, next) => {
-    try {
-      await postsController.getFeed(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.get('/', getFeedHandler);
-
-  // Get single post by ID
-  const getPostByIdHandler: CustomRequestHandler = async (req, res, next) => {
-    try {
-      await postsController.getPostById(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.get('/:id', getPostByIdHandler);
-
-  // Update post
-  const updatePostHandler: CustomRequestHandler = async (req, res, next) => {
-    try {
-      await postsController.updatePost(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.put('/:id', authenticateToken, updatePostHandler);
-
-  // Delete post
-  const deletePostHandler: CustomRequestHandler = async (req, res, next) => {
-    try {
-      await postsController.deletePost(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.delete('/:id', authenticateToken, deletePostHandler);
-
-  // Like a post
-  const likePostHandler: CustomRequestHandler = async (req, res, next) => {
-    try {
-      await postsController.likePost(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.post('/:id/like', authenticateToken, likePostHandler);
-
-  // Unlike a post
-  const unlikePostHandler: CustomRequestHandler = async (req, res, next) => {
-    try {
-      await postsController.unlikePost(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.post('/:id/unlike', authenticateToken, unlikePostHandler);
-
-  // COMMENT ROUTES
-  // Get comments for a post
-  const getPostCommentsHandler: CustomRequestHandler = async (
-    req,
-    res,
-    next
-  ) => {
-    try {
-      await commentsController.getPostComments(
-        { ...req, params: { postId: req.params.id } },
-        res,
-        next
-      );
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.get('/:id/comments', getPostCommentsHandler);
-
-  // Create a comment on a post
-  const createPostCommentHandler: CustomRequestHandler = async (
-    req,
-    res,
-    next
-  ) => {
-    try {
-      await commentsController.createComment(
-        { ...req, params: { postId: req.params.id } },
-        res
-      );
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.post('/:id/comments', authenticateToken, createPostCommentHandler);
+  // Comment routes
+  router.get('/posts/:id/comments', (req, res) =>
+    commentsController.getComments(req, res)
+  );
+  router.post('/posts/:id/comments', authenticate(authService), (req, res) =>
+    commentsController.createComment(req, res)
+  );
+  router.delete('/comments/:id', authenticate(authService), (req, res) =>
+    commentsController.deleteComment(req, res)
+  );
 
   return router;
 }

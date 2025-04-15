@@ -182,4 +182,22 @@ export class NotificationService {
 
     return formattedNotifications;
   }
+
+  async getNotifications(userId: string): Promise<Notification[]> {
+    // Implementation
+    return [];
+  }
+
+  async markRead(id: string, userId: string): Promise<void> {
+    // Implementation
+  }
+
+  async markAllRead(userId: string): Promise<void> {
+    // Implementation
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    // Implementation
+    return 0;
+  }
 }

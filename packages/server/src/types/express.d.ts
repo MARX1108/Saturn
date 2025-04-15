@@ -1,14 +1,12 @@
 import { ServiceContainer } from '../utils/container';
-import { DbUser } from '../models/user';
+import { DbUser } from '../modules/auth/models/user';
 import { Multer } from 'multer';
 
-declare global {
-  namespace Express {
-    interface Request {
-      services: ServiceContainer;
-      user?: DbUser;
-      file?: Express.Multer.File;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    services: ServiceContainer;
+    user?: DbUser;
+    file?: Express.Multer.File;
   }
 }
 

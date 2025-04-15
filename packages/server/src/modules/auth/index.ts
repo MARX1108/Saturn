@@ -5,13 +5,13 @@
  */
 
 // Export controllers
-export * from "./controllers/authController";
+export * from './controllers/authController';
 
 // Export routes configuration
-export { default as configureAuthRoutes } from "./routes/auth";
+export { default as configureAuthRoutes } from './routes/authRoutes';
 
 // Export models
-export * from "./models/auth";
+export * from './models/auth';
 
 // Export services when they exist
 // export * from './services/authService';

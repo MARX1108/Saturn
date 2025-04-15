@@ -5,10 +5,10 @@
  */
 
 // Export controllers
-export * from "./controllers/webfingerController";
+export * from './controllers/webfingerController';
 
 // Export routes
-export { default as webfingerRoutes } from "./routes/webfinger";
+export { default as webfingerRoutes } from './routes/webfingerRoutes';
 
 // Export services if they exist
 // export * from './services/webfingerService';

@@ -5,19 +5,19 @@
  */
 
 // Export controllers
-export * from "./controllers/actorsController";
+export * from './controllers/actorsController';
 
 // Export routes
-export { default as configureActorRoutes } from "./routes/actors";
+export { default as configureActorRoutes } from './routes/actorRoutes';
 
 // Export models
-export * from "./models/actor";
+export { Actor } from './models/actor';
 
 // Export services
-export * from "./services/actorService";
+export * from './services/actorService';
 
 // Export repositories
-export * from "./repositories/actorRepository";
+export * from './repositories/actorRepository';
 
 // Export types
-export * from "./types/actor";
+export { CreateActorRequest, UpdateActorRequest } from './types/actor';

@@ -2,7 +2,13 @@
 export interface Actor {
   _id?: string;
   id: string;
-  type: "Person";
+  username: string;
+  displayName: string;
+  bio: string;
+  avatarUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  type: 'Person';
   preferredUsername: string;
   name?: string;
   summary?: string;
@@ -17,14 +23,12 @@ export interface Actor {
   };
   privateKey?: string;
   icon?: {
-    type: "Image";
+    type: 'Image';
     mediaType: string;
     url: string;
   };
-  bio?: string;
-  createdAt?: Date;
   password?: string;
-  "@context"?: string[];
+  '@context'?: string[];
 }
 
 export interface CreateActorRequest {
@@ -34,7 +38,7 @@ export interface CreateActorRequest {
   avatarFile?: File;
   password?: string;
   icon?: {
-    type: "Image";
+    type: 'Image';
     mediaType: string;
     url: string;
   };
