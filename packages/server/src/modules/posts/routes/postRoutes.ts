@@ -9,6 +9,22 @@ import { PostsController } from '../controllers/postsController';
 import { CommentsController } from '../../comments/controllers/comments.controller';
 import { authenticateToken } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
+import { DbUser } from '../../../modules/auth/models/user';
+
+// Extend Request type for our handlers
+interface RequestWithUser extends Request {
+  user?: DbUser;
+  files?: Express.Multer.File[];
+}
+
+type CustomRequestHandler = RequestHandler<
+  any,
+  any,
+  any,
+  any,
+  Record<string, any>
+> &
+  ((req: RequestWithUser, res: Response, next: NextFunction) => Promise<void>);
 
 /**
  * Configure post routes with the controller
@@ -39,7 +55,7 @@ export function configurePostRoutes(
   });
 
   // Create a new post
-  const createPostHandler: RequestHandler = async (req, res, next) => {
+  const createPostHandler: CustomRequestHandler = async (req, res, next) => {
     const upload = mediaUpload.array('attachments');
     upload(req, res, async err => {
       if (err) {
@@ -55,7 +71,7 @@ export function configurePostRoutes(
   router.post('/', authenticateToken, createPostHandler);
 
   // Get feed (public timeline)
-  const getFeedHandler: RequestHandler = async (req, res, next) => {
+  const getFeedHandler: CustomRequestHandler = async (req, res, next) => {
     try {
       await postsController.getFeed(req, res);
     } catch (error) {
@@ -65,7 +81,7 @@ export function configurePostRoutes(
   router.get('/', getFeedHandler);
 
   // Get single post by ID
-  const getPostByIdHandler: RequestHandler = async (req, res, next) => {
+  const getPostByIdHandler: CustomRequestHandler = async (req, res, next) => {
     try {
       await postsController.getPostById(req, res);
     } catch (error) {
@@ -75,7 +91,7 @@ export function configurePostRoutes(
   router.get('/:id', getPostByIdHandler);
 
   // Update post
-  const updatePostHandler: RequestHandler = async (req, res, next) => {
+  const updatePostHandler: CustomRequestHandler = async (req, res, next) => {
     try {
       await postsController.updatePost(req, res);
     } catch (error) {
@@ -85,7 +101,7 @@ export function configurePostRoutes(
   router.put('/:id', authenticateToken, updatePostHandler);
 
   // Delete post
-  const deletePostHandler: RequestHandler = async (req, res, next) => {
+  const deletePostHandler: CustomRequestHandler = async (req, res, next) => {
     try {
       await postsController.deletePost(req, res);
     } catch (error) {
@@ -95,7 +111,7 @@ export function configurePostRoutes(
   router.delete('/:id', authenticateToken, deletePostHandler);
 
   // Like a post
-  const likePostHandler: RequestHandler = async (req, res, next) => {
+  const likePostHandler: CustomRequestHandler = async (req, res, next) => {
     try {
       await postsController.likePost(req, res);
     } catch (error) {
@@ -105,7 +121,7 @@ export function configurePostRoutes(
   router.post('/:id/like', authenticateToken, likePostHandler);
 
   // Unlike a post
-  const unlikePostHandler: RequestHandler = async (req, res, next) => {
+  const unlikePostHandler: CustomRequestHandler = async (req, res, next) => {
     try {
       await postsController.unlikePost(req, res);
     } catch (error) {
@@ -116,7 +132,11 @@ export function configurePostRoutes(
 
   // COMMENT ROUTES
   // Get comments for a post
-  const getPostCommentsHandler: RequestHandler = async (req, res, next) => {
+  const getPostCommentsHandler: CustomRequestHandler = async (
+    req,
+    res,
+    next
+  ) => {
     try {
       await commentsController.getPostComments(
         { ...req, params: { postId: req.params.id } },
@@ -130,7 +150,11 @@ export function configurePostRoutes(
   router.get('/:id/comments', getPostCommentsHandler);
 
   // Create a comment on a post
-  const createPostCommentHandler: RequestHandler = async (req, res, next) => {
+  const createPostCommentHandler: CustomRequestHandler = async (
+    req,
+    res,
+    next
+  ) => {
     try {
       await commentsController.createComment(
         { ...req, params: { postId: req.params.id } },
