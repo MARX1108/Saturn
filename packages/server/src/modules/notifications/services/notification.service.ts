@@ -196,8 +196,7 @@ export class NotificationService {
     // Implementation
   }
 
-  async getUnreadCount(userId: string): Promise<number> {
-    // Implementation
-    return 0;
+  async getUnreadCount(recipientUserId: string): Promise<number> {
+    return this.repository.getUnreadCount(recipientUserId);
   }
 }

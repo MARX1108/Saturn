@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { PostsController } from '../controllers/postsController';
 import { CommentsController } from '../../comments/controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
@@ -15,38 +15,67 @@ export default function configurePostRoutes(
   const router = Router();
 
   // Public routes
-  router.get('/posts', (req, res) => postsController.getFeed(req, res));
-  router.get('/posts/:id', (req, res) => postsController.getPostById(req, res));
-  router.get('/users/:username/posts', (req, res) =>
-    postsController.getPostsByUsername(req, res)
+  router.get('/posts', (req: Request, res: Response, next: NextFunction) =>
+    postsController.getFeed(req, res, next)
+  );
+  router.get('/posts/:id', (req: Request, res: Response, next: NextFunction) =>
+    postsController.getPostById(req, res, next)
+  );
+  router.get(
+    '/users/:username/posts',
+    (req: Request, res: Response, next: NextFunction) =>
+      postsController.getPostsByUsername(req, res, next)
   );
 
   // Protected routes
-  router.post('/posts', authenticate(authService), (req, res) =>
-    postsController.createPost(req, res)
+  router.post(
+    '/posts',
+    authenticate(authService),
+    (req: Request, res: Response, next: NextFunction) =>
+      postsController.createPost(req, res, next)
   );
-  router.put('/posts/:id', authenticate(authService), (req, res) =>
-    postsController.updatePost(req, res)
+  router.put(
+    '/posts/:id',
+    authenticate(authService),
+    (req: Request, res: Response, next: NextFunction) =>
+      postsController.updatePost(req, res, next)
   );
-  router.delete('/posts/:id', authenticate(authService), (req, res) =>
-    postsController.deletePost(req, res)
+  router.delete(
+    '/posts/:id',
+    authenticate(authService),
+    (req: Request, res: Response, next: NextFunction) =>
+      postsController.deletePost(req, res, next)
   );
-  router.post('/posts/:id/like', authenticate(authService), (req, res) =>
-    postsController.likePost(req, res)
+  router.post(
+    '/posts/:id/like',
+    authenticate(authService),
+    (req: Request, res: Response, next: NextFunction) =>
+      postsController.likePost(req, res, next)
   );
-  router.delete('/posts/:id/like', authenticate(authService), (req, res) =>
-    postsController.unlikePost(req, res)
+  router.delete(
+    '/posts/:id/like',
+    authenticate(authService),
+    (req: Request, res: Response, next: NextFunction) =>
+      postsController.unlikePost(req, res, next)
   );
 
   // Comment routes
-  router.get('/posts/:id/comments', (req, res) =>
-    commentsController.getComments(req, res)
+  router.get(
+    '/posts/:id/comments',
+    (req: Request, res: Response, next: NextFunction) =>
+      commentsController.getComments(req, res, next)
   );
-  router.post('/posts/:id/comments', authenticate(authService), (req, res) =>
-    commentsController.createComment(req, res)
+  router.post(
+    '/posts/:id/comments',
+    authenticate(authService),
+    (req: Request, res: Response, next: NextFunction) =>
+      commentsController.createComment(req, res, next)
   );
-  router.delete('/comments/:id', authenticate(authService), (req, res) =>
-    commentsController.deleteComment(req, res)
+  router.delete(
+    '/comments/:id',
+    authenticate(authService),
+    (req: Request, res: Response, next: NextFunction) =>
+      commentsController.deleteComment(req, res, next)
   );
 
   return router;

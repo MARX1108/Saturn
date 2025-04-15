@@ -20,29 +20,36 @@ export class PostService {
     this.domain = domain;
   }
 
-  async createPost(
-    authorId: string,
-    content: string,
-    visibility: 'public' | 'private' = 'public'
-  ): Promise<Post> {
-    const post = new Post();
-    post.authorId = authorId;
-    post.content = content;
-    post.visibility = visibility;
-    post.published = new Date();
-    post.updated = new Date();
-    post.type = 'Note';
-    post.to =
-      visibility === 'public'
-        ? ['https://www.w3.org/ns/activitystreams#Public']
-        : [];
-    post.cc = [];
-    post.attributedTo = `${process.env.APP_URL}/api/actors/${authorId}`;
-    post.url = `${process.env.APP_URL}/api/posts/${post.id}`;
-    post.replies = [];
-    post.likes = [];
-    post.shares = [];
-    return this.repository.save(post);
+  async createPost(request: CreatePostRequest): Promise<Post> {
+    const actor = await this.actorService.getActorByUsername(request.username);
+    if (!actor) {
+      throw new AppError('Actor not found', 404, ErrorType.NOT_FOUND);
+    }
+
+    const post: Post = {
+      id: `${process.env.APP_URL}/api/posts/${Date.now()}`,
+      authorId: actor._id,
+      content: request.content,
+      visibility: 'public',
+      published: new Date(),
+      updated: new Date(),
+      type: 'Note',
+      to: ['https://www.w3.org/ns/activitystreams#Public'],
+      cc: [],
+      attributedTo: `${process.env.APP_URL}/api/actors/${actor._id}`,
+      url: `${process.env.APP_URL}/api/posts/${Date.now()}`,
+      replies: [],
+      shares: 0,
+      sensitive: request.sensitive || false,
+      contentWarning: request.contentWarning,
+      actor: {
+        id: actor._id,
+        username: actor.preferredUsername,
+      },
+      attachments: request.attachments || [],
+    };
+
+    return this.repository.create(post);
   }
 
   async getPostById(id: string): Promise<Post | null> {

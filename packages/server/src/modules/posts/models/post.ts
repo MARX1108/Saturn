@@ -2,26 +2,32 @@
 export interface Post {
   _id?: string;
   id: string;
+  authorId: string;
   content: string;
+  visibility: 'public' | 'private';
+  published: Date;
+  updated: Date;
+  type: 'Note';
+  to: string[];
+  cc: string[];
+  attributedTo: string;
+  url: string;
+  replies: string[];
+  likes: string[];
+  shares: number;
+  sensitive?: boolean;
+  contentWarning?: string;
   actor: {
     id: string;
     username: string;
   };
   attachments?: Attachment[];
-  createdAt: Date;
-  sensitive: boolean;
-  contentWarning?: string;
-  likes?: string[]; // Array of actor IDs who liked this post
-  shares?: number; // Count of shares/boosts
 }
 
 export interface Attachment {
-  type: "Image" | "Video" | "Document" | string;
   url: string;
+  type: 'Image' | 'Video' | 'Document';
   mediaType: string;
-  width?: number;
-  height?: number;
-  duration?: number;
 }
 
 export interface CreatePostRequest {
@@ -34,7 +40,6 @@ export interface CreatePostRequest {
 
 export interface UpdatePostRequest {
   content?: string;
-  username?: string;
   sensitive?: boolean;
   contentWarning?: string;
 }
@@ -45,12 +50,12 @@ export interface PostResponse {
   author: {
     id: string;
     username: string;
-    displayName: string;
+    displayName?: string;
     avatarUrl?: string;
   };
   attachments?: Attachment[];
   createdAt: string;
-  sensitive: boolean;
+  sensitive?: boolean;
   contentWarning?: string;
   likes: number;
   likedByUser: boolean;

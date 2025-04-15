@@ -41,7 +41,7 @@ export async function sendSignedRequest(
   ].join(',');
 
   // Make request with signature
-  return fetch(url, {
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       Host: target.host,
@@ -53,6 +53,8 @@ export async function sendSignedRequest(
     },
     body: JSON.stringify(body),
   });
+
+  return response as unknown as Response;
 }
 
 // Fetch remote actor profile
@@ -66,6 +68,11 @@ export async function fetchRemoteActor(actorUrl: string): Promise<any> {
 
     if (!response.ok) {
       throw new Error(`Failed to fetch remote actor: ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/activity+json')) {
+      throw new Error('Invalid content type received');
     }
 
     return await response.json();

@@ -19,28 +19,37 @@ export class ActorService {
     displayName: string,
     avatarUrl: string
   ): Promise<Actor> {
-    const actor = new Actor();
-    actor.username = username;
-    actor.displayName = displayName;
-    actor.avatarUrl = avatarUrl;
-    actor.publicKey = await this.generateKeyPair();
-    actor.privateKey = await this.generateKeyPair();
-    actor.inboxUrl = `${process.env.APP_URL}/api/actors/${username}/inbox`;
-    actor.outboxUrl = `${process.env.APP_URL}/api/actors/${username}/outbox`;
-    actor.followersUrl = `${process.env.APP_URL}/api/actors/${username}/followers`;
-    actor.followingUrl = `${process.env.APP_URL}/api/actors/${username}/following`;
-    actor.preferredUsername = username;
-    actor.name = displayName;
-    actor.summary = '';
-    actor.url = `${process.env.APP_URL}/api/actors/${username}`;
-    actor.type = 'Person';
-    actor.published = new Date();
-    actor.updated = new Date();
-    actor.icon = { type: 'Image', url: avatarUrl };
-    actor.endpoints = {
-      sharedInbox: `${process.env.APP_URL}/api/inbox`,
+    const keyPair = await this.generateKeyPair();
+    const actor: Actor = {
+      id: `${process.env.APP_URL}/api/actors/${username}`,
+      username,
+      displayName,
+      bio: '',
+      avatarUrl,
+      publicKey: {
+        id: `${process.env.APP_URL}/api/actors/${username}#main-key`,
+        owner: `${process.env.APP_URL}/api/actors/${username}`,
+        publicKeyPem: keyPair.publicKey,
+      },
+      privateKey: keyPair.privateKey,
+      inbox: `${process.env.APP_URL}/api/actors/${username}/inbox`,
+      outbox: `${process.env.APP_URL}/api/actors/${username}/outbox`,
+      followers: `${process.env.APP_URL}/api/actors/${username}/followers`,
+      following: [],
+      preferredUsername: username,
+      name: displayName,
+      summary: '',
+      type: 'Person',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      icon: {
+        type: 'Image',
+        mediaType: 'image/jpeg',
+        url: avatarUrl,
+      },
     };
-    return this.repository.save(actor);
+
+    return this.repository.create(actor);
   }
 
   async getActorById(id: string): Promise<Actor | null> {

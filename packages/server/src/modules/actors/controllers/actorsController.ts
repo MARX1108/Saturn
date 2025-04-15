@@ -43,7 +43,11 @@ export class ActorsController {
       return res.status(401).json({ error: 'Authentication required' });
     }
     const actorData = req.body;
-    const actor = await this.actorService.createActor(actorData);
+    const actor = await this.actorService.createActor(
+      actorData.username,
+      actorData.displayName || actorData.username,
+      actorData.avatarUrl || ''
+    );
     return res.status(201).json(actor);
   }
 

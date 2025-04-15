@@ -4,6 +4,8 @@ import bcryptjs from 'bcryptjs';
 import { AuthRepository } from '../repositories/auth.repository';
 import { DbUser } from '../models/user';
 import { AppError, ErrorType } from '../../../utils/errors';
+import { ObjectId } from 'mongodb';
+import jwt from 'jsonwebtoken';
 
 export class AuthService {
   private repository: AuthRepository;
@@ -74,20 +76,48 @@ export class AuthService {
     password: string,
     email: string
   ): Promise<DbUser> {
-    // Implementation
+    const hashedPassword = await bcryptjs.hash(password, 10);
     return {
-      id: '1',
+      _id: new ObjectId().toString(),
+      id: new ObjectId().toString(),
       username,
+      preferredUsername: username,
+      password: hashedPassword,
+      followers: [],
+      following: [],
       email,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
   }
 
   async verifyToken(token: string): Promise<DbUser | null> {
-    // Implementation
-    return {
-      id: '1',
-      username: 'test',
-      email: 'test@example.com',
-    };
+    try {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || 'your-secret-key'
+      ) as {
+        id: string;
+        username: string;
+      };
+
+      const user = await this.repository.findById(decoded.id);
+      if (!user) return null;
+
+      return {
+        _id: user._id,
+        id: user.id,
+        username: user.username,
+        preferredUsername: user.preferredUsername,
+        password: user.password,
+        followers: user.followers,
+        following: user.following,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+    } catch (error) {
+      return null;
+    }
   }
 }
