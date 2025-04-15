@@ -259,7 +259,11 @@ export class ActorsController {
       const offset = parseInt(req.query.offset as string) || 0;
 
       if (isNaN(limit) || limit < 1 || isNaN(offset) || offset < 0) {
-        throw new BadRequestError('Invalid pagination parameters');
+        throw new AppError(
+          'Invalid pagination parameters',
+          400,
+          ErrorType.VALIDATION
+        );
       }
 
       // Cap the limit to prevent excessive queries
