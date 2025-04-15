@@ -1,12 +1,18 @@
-import express, { Request, Response, Router, NextFunction, RequestHandler } from "express";
-import { MediaController } from "../controllers/media.controller";
-import { ServiceContainer } from "../../../utils/container";
+import express, {
+  Request,
+  Response,
+  Router,
+  NextFunction,
+  RequestHandler,
+} from 'express';
+import { MediaController } from '../controllers/media.controller';
+import { ServiceContainer } from '../../../utils/container';
 
 /**
  * Configure media routes with dependency injection
  */
 export function configureMediaRoutes(
-  serviceContainer: ServiceContainer,
+  serviceContainer: ServiceContainer
 ): Router {
   const router = express.Router();
   const { mediaService, uploadService: _uploadService } = serviceContainer;
@@ -14,21 +20,33 @@ export function configureMediaRoutes(
   // Create controller with injected service
   const mediaController = new MediaController(mediaService);
 
-  // Define routes with explicit RequestHandler types and type assertions
-  const uploadMediaHandler: RequestHandler = (req, res, next) => {
-    mediaController.uploadMedia(req as any, res).catch(next);
+  // Define routes with explicit RequestHandler types
+  const uploadMediaHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await mediaController.uploadMedia(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
-  router.post("/upload", uploadMediaHandler);
+  router.post('/upload', uploadMediaHandler);
 
-  const getMediaHandler: RequestHandler = (req, res, next) => {
-    mediaController.getMedia(req as any, res).catch(next);
+  const getMediaHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await mediaController.getMedia(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
-  router.get("/:id", getMediaHandler);
+  router.get('/:id', getMediaHandler);
 
-  const deleteMediaHandler: RequestHandler = (req, res, next) => {
-    mediaController.deleteMedia(req as any, res).catch(next);
+  const deleteMediaHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await mediaController.deleteMedia(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
-  router.delete("/:id", deleteMediaHandler);
+  router.delete('/:id', deleteMediaHandler);
 
   return router;
 }

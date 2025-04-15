@@ -38,78 +38,109 @@ export function configurePostRoutes(
     allowedTypes: ['image/', 'video/', 'audio/'],
   });
 
-  // Create a new post - define as RequestHandler and use type assertion
-  const createPostHandler: RequestHandler = (req, res, next) => {
+  // Create a new post
+  const createPostHandler: RequestHandler = async (req, res, next) => {
     const upload = mediaUpload.array('attachments');
-    upload(req, res, err => {
+    upload(req, res, async err => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      postsController.createPost(req as any, res).catch(error => next(error));
+      try {
+        await postsController.createPost(req, res);
+      } catch (error) {
+        next(error);
+      }
     });
   };
-  router.post('/', authenticateToken as any, createPostHandler);
+  router.post('/', authenticateToken, createPostHandler);
 
-  // Get feed (public timeline) - define as RequestHandler and use type assertion
-  const getFeedHandler: RequestHandler = (req, res, next) => {
-    postsController.getFeed(req as any, res).catch(error => next(error));
+  // Get feed (public timeline)
+  const getFeedHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await postsController.getFeed(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
   router.get('/', getFeedHandler);
 
-  // Get single post by ID - define as RequestHandler and use type assertion
-  const getPostByIdHandler: RequestHandler = (req, res, next) => {
-    postsController.getPostById(req as any, res).catch(error => next(error));
+  // Get single post by ID
+  const getPostByIdHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await postsController.getPostById(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
   router.get('/:id', getPostByIdHandler);
 
-  // Update post - define as RequestHandler and use type assertion
-  const updatePostHandler: RequestHandler = (req, res, next) => {
-    postsController.updatePost(req as any, res).catch(error => next(error));
+  // Update post
+  const updatePostHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await postsController.updatePost(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
-  router.put('/:id', authenticateToken as any, updatePostHandler);
+  router.put('/:id', authenticateToken, updatePostHandler);
 
-  // Delete post - define as RequestHandler and use type assertion
-  const deletePostHandler: RequestHandler = (req, res, next) => {
-    postsController.deletePost(req as any, res).catch(error => next(error));
+  // Delete post
+  const deletePostHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await postsController.deletePost(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
-  router.delete('/:id', authenticateToken as any, deletePostHandler);
+  router.delete('/:id', authenticateToken, deletePostHandler);
 
-  // Like a post - define as RequestHandler and use type assertion
-  const likePostHandler: RequestHandler = (req, res, next) => {
-    postsController.likePost(req as any, res).catch(error => next(error));
+  // Like a post
+  const likePostHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await postsController.likePost(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
-  router.post('/:id/like', authenticateToken as any, likePostHandler);
+  router.post('/:id/like', authenticateToken, likePostHandler);
 
-  // Unlike a post - define as RequestHandler and use type assertion
-  const unlikePostHandler: RequestHandler = (req, res, next) => {
-    postsController.unlikePost(req as any, res).catch(error => next(error));
+  // Unlike a post
+  const unlikePostHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await postsController.unlikePost(req, res);
+    } catch (error) {
+      next(error);
+    }
   };
-  router.post('/:id/unlike', authenticateToken as any, unlikePostHandler);
+  router.post('/:id/unlike', authenticateToken, unlikePostHandler);
 
   // COMMENT ROUTES
-  // Get comments for a post - define as RequestHandler and use type assertion
-  const getPostCommentsHandler: RequestHandler = (req, res, next) => {
-    commentsController.getPostComments(
-      { ...req, params: { postId: req.params.id } } as any,
-      res,
-      next
-    );
+  // Get comments for a post
+  const getPostCommentsHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await commentsController.getPostComments(
+        { ...req, params: { postId: req.params.id } },
+        res,
+        next
+      );
+    } catch (error) {
+      next(error);
+    }
   };
   router.get('/:id/comments', getPostCommentsHandler);
 
-  // Create a comment on a post - define as RequestHandler and use type assertion
-  const createPostCommentHandler: RequestHandler = (req, res, next) => {
-    commentsController.createPostComment(
-      { ...req, params: { postId: req.params.id } } as any,
-      res,
-      next
-    );
+  // Create a comment on a post
+  const createPostCommentHandler: RequestHandler = async (req, res, next) => {
+    try {
+      await commentsController.createComment(
+        { ...req, params: { postId: req.params.id } },
+        res
+      );
+    } catch (error) {
+      next(error);
+    }
   };
-  router.post(
-    '/:id/comments',
-    authenticateToken as any,
-    createPostCommentHandler
-  );
+  router.post('/:id/comments', authenticateToken, createPostCommentHandler);
 
   return router;
 }

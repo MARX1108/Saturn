@@ -1,12 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { NotificationService } from '../services/notification.service';
 import { BadRequestError } from '../../../utils/errors';
-import { DbUser } from '../../auth/models/user';
-
-// Extend Request to include user property
-interface RequestWithUser extends Request {
-  user?: DbUser;
-}
 
 export class NotificationsController {
   private notificationService: NotificationService;
@@ -19,7 +13,7 @@ export class NotificationsController {
    * Get notifications for the authenticated user
    */
   async getNotifications(
-    req: RequestWithUser,
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void | Response> {
@@ -62,7 +56,7 @@ export class NotificationsController {
    * Mark specific notifications as read
    */
   async markRead(
-    req: RequestWithUser,
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void | Response> {
@@ -97,7 +91,7 @@ export class NotificationsController {
    * Mark all notifications as read for the authenticated user
    */
   async markAllRead(
-    req: RequestWithUser,
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void | Response> {
@@ -122,7 +116,7 @@ export class NotificationsController {
    * Get count of unread notifications for the authenticated user
    */
   async getUnreadCount(
-    req: RequestWithUser,
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void | Response> {
@@ -133,9 +127,8 @@ export class NotificationsController {
       }
       const userId = req.user.id;
 
-      // Get unread notification count
-      const count =
-        await this.notificationService.getUnreadNotificationCount(userId);
+      // Get unread count
+      const count = await this.notificationService.getUnreadCount(userId);
 
       return res.status(200).json({ count });
     } catch (error) {

@@ -1,7 +1,14 @@
-import express, { Request, Response, Router, NextFunction } from 'express';
+import express, {
+  Request,
+  Response,
+  Router,
+  NextFunction,
+  RequestHandler,
+} from 'express';
 import { ActorsController } from '../controllers/actorsController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
+import multer from 'multer';
 
 /**
  * Configure actor routes with the controller
@@ -27,47 +34,90 @@ export function configureActorRoutes(
   });
 
   // Search actors
-  router.get('/search', function (req, res, next) {
-    actorsController.searchActors(req as any, res).catch(next);
-  });
+  router.get('/search', (async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await actorsController.searchActors(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler);
 
   // Create new actor
-  router.post('/', function (req, res, next) {
+  router.post('/', (async (req: Request, res: Response, next: NextFunction) => {
     const upload = imageUpload.single('avatarFile');
-    upload(req, res, function (err) {
+    upload(req, res, async err => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      actorsController.createActor(req as any, res).catch(error => next(error));
+      try {
+        await actorsController.createActor(req, res);
+      } catch (error) {
+        next(error);
+      }
     });
-  });
+  }) as RequestHandler);
 
   // Get actor posts - defined before /:username to ensure proper route handling
-  router.get('/:username/posts', function (req, res, next) {
-    actorsController.getActorPosts(req, res, next);
-  });
+  router.get('/:username/posts', (async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await actorsController.getActorPosts(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler);
 
   // Get actor by username
-  router.get('/:username', function (req, res, next) {
-    // Cast to any to bypass the type checking error
-    actorsController.getActorByUsername(req as any, res).catch(next);
-  });
+  router.get('/:username', (async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await actorsController.getActorByUsername(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler);
 
-  // Update actor - requires authentication - need to cast auth middleware to any to bypass type error
-  router.put('/:username', auth as any, function (req, res, next) {
+  // Update actor - requires authentication
+  router.put('/:username', auth, (async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     const upload = imageUpload.single('avatarFile');
-    upload(req, res, function (err) {
+    upload(req, res, async err => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      actorsController.updateActor(req as any, res).catch(error => next(error));
+      try {
+        await actorsController.updateActor(req, res);
+      } catch (error) {
+        next(error);
+      }
     });
-  });
+  }) as RequestHandler);
 
   // Delete actor - requires authentication
-  router.delete('/:username', auth as any, function (req, res, next) {
-    actorsController.deleteActor(req as any, res).catch(next);
-  });
+  router.delete('/:username', auth, (async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await actorsController.deleteActor(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler);
 
   return router;
 }
