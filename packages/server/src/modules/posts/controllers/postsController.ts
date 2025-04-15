@@ -221,8 +221,13 @@ export class PostsController {
 
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map(post => this.formatPostResponse(post, userId || undefined))
+        result.posts.map((post: Post) =>
+          this.formatPostResponse(post, userId || undefined)
+        )
       );
+
+      // Calculate if there are more posts
+      const hasMore = result.offset + result.posts.length < result.total;
 
       return res.json({
         posts: formattedPosts,

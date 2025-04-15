@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { CommentService } from '../services/comment.service';
-import { BadRequestError } from '../../../utils/errors';
+import { AppError, ErrorType } from '../../../utils/errors';
 import { DbUser } from '../../auth/models/user';
 
 // Extend Request to include user property
@@ -32,7 +32,11 @@ export class CommentsController {
 
       // Validate pagination params
       if (isNaN(limit) || limit < 1 || isNaN(offset) || offset < 0) {
-        throw new BadRequestError('Invalid pagination parameters');
+        throw new AppError(
+          'Invalid pagination parameters',
+          400,
+          ErrorType.VALIDATION
+        );
       }
 
       // Get comments for the post
@@ -64,7 +68,11 @@ export class CommentsController {
 
       // Get user ID from authenticated user
       if (!req.user || !req.user.id) {
-        throw new BadRequestError('User ID not found in request');
+        throw new AppError(
+          'User ID not found in request',
+          400,
+          ErrorType.VALIDATION
+        );
       }
       const authorId = req.user.id;
 
@@ -95,7 +103,11 @@ export class CommentsController {
 
       // Get user ID from authenticated user
       if (!req.user || !req.user.id) {
-        throw new BadRequestError('User ID not found in request');
+        throw new AppError(
+          'User ID not found in request',
+          400,
+          ErrorType.VALIDATION
+        );
       }
       const userId = req.user.id;
 
