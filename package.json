@@ -5,6 +5,10 @@
   "workspaces": [
     "packages/*"
   ],
+  "resolutions": {
+    "@types/express": "4.17.21",
+    "@types/express-serve-static-core": "4.17.33"
+  },
   "scripts": {
     "dev": "concurrently \"yarn workspace @fyp-saturn/server dev\" \"yarn workspace @fyp-saturn/client dev\"",
     "dev:mobile": "yarn workspace @fyp-saturn/mobile-app start",
