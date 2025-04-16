@@ -27,10 +27,10 @@ const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   // Form state
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [formErrors, setFormErrors] = useState({
-    email: '',
+    username: '',
     password: '',
   });
 
@@ -38,16 +38,13 @@ const LoginScreen: React.FC = () => {
   const validateForm = (): boolean => {
     let isValid = true;
     const errors = {
-      email: '',
+      username: '',
       password: '',
     };
 
-    // Validate email
-    if (!email.trim()) {
-      errors.email = 'Email is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      errors.email = 'Email is invalid';
+    // Validate username
+    if (!username.trim()) {
+      errors.username = 'Username is required';
       isValid = false;
     }
 
@@ -73,7 +70,7 @@ const LoginScreen: React.FC = () => {
     }
 
     try {
-      await login({ email, password });
+      await login({ username, password });
       // Navigation will be handled by the AppNavigator based on isAuthenticated state
     } catch (e) {
       // Error is already handled in the Auth Context
@@ -104,13 +101,12 @@ const LoginScreen: React.FC = () => {
 
           <View style={styles.form}>
             <TextInputWrapper
-              label="Email"
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoComplete="email"
-              value={email}
-              onChangeText={setEmail}
-              error={formErrors.email}
+              label="Username"
+              placeholder="Enter your username"
+              autoComplete="username"
+              value={username}
+              onChangeText={setUsername}
+              error={formErrors.username}
             />
 
             <TextInputWrapper
