@@ -23,7 +23,10 @@ export default function configureWebFingerRoutes(
   router.get(
     '/.well-known/webfinger',
     (req: Request, res: Response, next: NextFunction) => {
-      webFingerController.getResource(req, res).catch(next);
+      // Use type assertion to satisfy the controller's type requirement
+      webFingerController
+        .getResource(req as Request & { services: ServiceContainer }, res)
+        .catch(next);
     }
   );
 

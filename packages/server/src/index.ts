@@ -69,7 +69,7 @@ export async function startServer(): Promise<{
     initPlugins(app);
 
     // Apply middlewares for services and backwards compatibility
-    app.use(serviceMiddleware as RequestHandler);
+    app.use(serviceMiddleware(services));
     app.use(compatibilityMiddleware as RequestHandler);
 
     // Register routes using the standardized configuration pattern
