@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   RefreshControl,
+  SafeAreaView,
 } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useTheme } from '@react-navigation/native';
@@ -16,6 +17,9 @@ import profileService from '../../services/profileService';
 import { useAuth } from '../../context/AuthContext';
 import PostCard from '../../components/feed/PostCard';
 import { MainStackParamList } from '../../navigation/types';
+import { Ionicons } from '@expo/vector-icons';
+import StyledText from '../../components/ui/StyledText';
+import { useTheme as useAppTheme } from '../../theme/ThemeContext';
 
 type ProfileScreenRouteProp = RouteProp<MainStackParamList, 'Profile'>;
 
@@ -83,10 +87,11 @@ const ProfileHeader = ({
   );
 };
 
-const ProfileScreen = () => {
+const ProfileScreen: React.FC = () => {
   const route = useRoute<ProfileScreenRouteProp>();
   const { currentUser } = useAuth();
   const theme = useTheme();
+  const appTheme = useAppTheme();
 
   // Get username from route params or use current user's username
   const { username = currentUser?.preferredUsername } = route.params || {};
@@ -174,6 +179,35 @@ const ProfileScreen = () => {
     );
   };
 
+  // Render empty state
+  const renderEmptyComponent = () => {
+    if (isLoading) return null;
+
+    return (
+      <View style={styles.emptyContainer}>
+        <Ionicons
+          name="images-outline"
+          size={48}
+          color={appTheme.colors.textSecondary}
+          style={styles.emptyIcon}
+        />
+        <StyledText
+          weight="medium"
+          color={appTheme.colors.textSecondary}
+          style={styles.emptyText}
+        >
+          No posts yet
+        </StyledText>
+        <StyledText
+          color={appTheme.colors.textSecondary}
+          style={styles.emptySubtext}
+        >
+          Share your first post to get started
+        </StyledText>
+      </View>
+    );
+  };
+
   // Display loading state
   if (isLoading && !profileData) {
     return (
@@ -193,7 +227,10 @@ const ProfileScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top']}
+    >
       <FlatList
         data={userPosts}
         keyExtractor={item => item.id}
@@ -205,13 +242,7 @@ const ProfileScreen = () => {
             isLoading={isLoading}
           />
         }
-        ListEmptyComponent={
-          !isLoading ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No posts yet</Text>
-            </View>
-          ) : null
-        }
+        ListEmptyComponent={renderEmptyComponent}
         ListFooterComponent={renderFooter}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
@@ -225,7 +256,7 @@ const ProfileScreen = () => {
         }
         contentContainerStyle={styles.contentContainer}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -253,14 +284,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptyContainer: {
-    padding: 40,
-    justifyContent: 'center',
+    padding: 32,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIcon: {
+    marginBottom: 16,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
     textAlign: 'center',
-    opacity: 0.6,
   },
   footerContainer: {
     padding: 20,

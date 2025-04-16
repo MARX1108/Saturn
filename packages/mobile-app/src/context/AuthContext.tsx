@@ -9,6 +9,7 @@ import { User, LoginRequest, RegisterRequest, ApiError } from '../types/api';
 import apiService from '../services/apiService';
 import tokenService from '../services/tokenService';
 import appConfig from '../config/appConfig';
+import Toast from 'react-native-toast-message';
 
 // Define the shape of the auth context state
 interface AuthContextState {
@@ -100,7 +101,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
     } catch (error) {
       const apiError = error as ApiError;
-      setError(apiError.message || 'Login failed. Please try again.');
+      const errorMessage =
+        apiError.status === 401
+          ? 'Incorrect username or password.'
+          : apiError.message || 'Login failed. Please try again.';
+
+      setError(errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: errorMessage,
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -137,7 +148,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
     } catch (error) {
       const apiError = error as ApiError;
-      setError(apiError.message || 'Registration failed. Please try again.');
+      const errorMessage =
+        apiError.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: errorMessage,
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -158,7 +176,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(false);
     } catch (error) {
       console.error('Logout error:', error);
-      setError('Failed to logout. Please try again.');
+      const errorMessage = 'Failed to logout. Please try again.';
+      setError(errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Logout Failed',
+        text2: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }

@@ -10,6 +10,9 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import StyledText from '../../components/ui/StyledText';
+import { useTheme } from '../../theme/ThemeContext';
 
 // Components
 import PostCard from '../../components/feed/PostCard';
@@ -27,6 +30,7 @@ import { ApiError } from '../../types/api';
  */
 const FeedScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
 
   // State
   const [posts, setPosts] = useState<Post[]>([]);
@@ -149,10 +153,25 @@ const FeedScreen: React.FC = () => {
 
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No posts yet.</Text>
-        <Text style={styles.emptySubtext}>
-          Follow more users or check back later.
-        </Text>
+        <Ionicons
+          name="newspaper-outline"
+          size={48}
+          color={theme.colors.textSecondary}
+          style={styles.emptyIcon}
+        />
+        <StyledText
+          weight="medium"
+          color={theme.colors.textSecondary}
+          style={styles.emptyText}
+        >
+          No posts yet
+        </StyledText>
+        <StyledText
+          color={theme.colors.textSecondary}
+          style={styles.emptySubtext}
+        >
+          Follow more users or check back later
+        </StyledText>
       </View>
     );
   };
@@ -178,7 +197,10 @@ const FeedScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top']}
+    >
       {/* Loading State */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -199,8 +221,8 @@ const FeedScreen: React.FC = () => {
                 <RefreshControl
                   refreshing={isRefreshing}
                   onRefresh={handleRefresh}
-                  colors={['#3498db']}
-                  tintColor="#3498db"
+                  colors={[theme.colors.primary]}
+                  tintColor={theme.colors.primary}
                 />
               }
             />
@@ -226,19 +248,19 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Extra padding at bottom for better UX
   },
   emptyContainer: {
-    padding: 24,
+    padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emptyIcon: {
+    marginBottom: 16,
+  },
   emptyText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#555',
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#777',
     textAlign: 'center',
   },
   errorContainer: {
