@@ -34,6 +34,7 @@ export interface CreateNotificationDto {
   type: NotificationType;
   postId?: string;
   commentId?: string;
+  read?: boolean;
 }
 
 /**

@@ -15,7 +15,7 @@ import configurePostRoutes from './modules/posts/routes/postRoutes';
 import configureAuthRoutes from './modules/auth/routes/authRoutes';
 import { configureActivityPubRoutes } from './modules/activitypub/routes/activitypubRoutes';
 import { configureMediaRoutes } from './modules/media/routes/mediaRoutes';
-import configureNotificationRoutes from './modules/notifications/routes/notification.routes';
+import { configureNotificationRoutes } from './modules/notifications/routes/notification.routes';
 import configureCommentRoutes from './modules/comments/routes/comment.routes';
 
 const app = express();

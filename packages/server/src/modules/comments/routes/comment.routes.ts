@@ -26,7 +26,7 @@ export default function configureCommentRoutes(
     '/:commentId',
     authenticate(container.authService),
     (req, res, next) => {
-      commentsController.deleteCommentById(req, res).catch(next);
+      commentsController.deleteComment(req, res).catch(next);
     }
   );
 

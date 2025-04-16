@@ -10,10 +10,14 @@ import { AppError, ErrorType } from '../../../utils/errors';
 
 export class NotificationService {
   private repository: NotificationRepository;
-  private actorService: ActorService;
+  private actorService?: ActorService;
 
-  constructor(repository: NotificationRepository, actorService: ActorService) {
+  constructor(repository: NotificationRepository, actorService?: ActorService) {
     this.repository = repository;
+    this.actorService = actorService;
+  }
+
+  setActorService(actorService: ActorService) {
     this.actorService = actorService;
   }
 
@@ -146,8 +150,8 @@ export class NotificationService {
       notifications.map(async notification => {
         const formatted: FormattedNotification = { ...notification };
 
-        // Get actor details if actorUserId is present
-        if (notification.actorUserId) {
+        // Get actor details if actorUserId is present and actorService is available
+        if (notification.actorUserId && this.actorService) {
           try {
             const actor = await this.actorService.getActorById(
               notification.actorUserId
@@ -184,7 +188,11 @@ export class NotificationService {
   }
 
   async getNotifications(userId: string): Promise<Notification[]> {
-    return this.repository.findByRecipient(userId, { limit: 50, offset: 0 });
+    const result = await this.repository.findByRecipient(userId, {
+      limit: 50,
+      offset: 0,
+    });
+    return result.notifications;
   }
 
   async markRead(id: string, userId: string): Promise<void> {

@@ -78,24 +78,29 @@ export function createServiceContainer(
   const notificationRepository = new NotificationRepository(db);
 
   // Create base services
+  const uploadService = new UploadService();
+  const authService = new AuthService(authRepository);
+
+  // Create services with proper initialization order
+  // First create NotificationService without ActorService
+  const notificationService = new NotificationService(notificationRepository);
+
+  // Create ActorService with domain
   const actorService = new ActorService(
     actorRepository,
     notificationService,
     domain
   );
-  const uploadService = new UploadService();
-  const authService = new AuthService(authRepository);
 
-  // Create services that depend on other services
+  // Set ActorService back into NotificationService
+  notificationService.setActorService(actorService);
+
+  // Create remaining services
   const postService = new PostService(
     postRepository,
     actorService,
     notificationService,
     domain
-  );
-  const notificationService = new NotificationService(
-    notificationRepository,
-    actorService
   );
   const commentService = new CommentService(
     commentRepository,
