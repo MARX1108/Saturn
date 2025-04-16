@@ -1,52 +1,20 @@
 {
-  "name": "fyp-saturn",
-  "version": "0.1.0",
+  "name": "saturn",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "packages/*"
   ],
-  "resolutions": {
-    "@types/express": "4.17.21",
-    "@types/express-serve-static-core": "4.17.33"
-  },
   "scripts": {
-    "dev": "concurrently \"yarn workspace @fyp-saturn/server dev\" \"yarn workspace @fyp-saturn/client dev\"",
-    "dev:mobile": "yarn workspace @fyp-saturn/mobile-app start",
-    "build": "yarn workspaces run build",
-    "test": "yarn workspaces run test",
-    "lint": "yarn workspaces run lint",
-    "lint:mobile": "eslint \"packages/mobile-app/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "yarn lint --fix",
-    "lint:mobile:fix": "yarn lint:mobile --fix",
-    "format": "prettier --write \"packages/**/*.{js,jsx,ts,tsx,json,md}\"",
-    "format:mobile": "prettier --write \"packages/mobile-app/**/*.{js,jsx,ts,tsx,json,md}\"",
-    "prepare": "husky"
+    "start": "yarn workspace @saturn/server start",
+    "dev": "yarn workspace @saturn/server dev",
+    "test": "yarn workspace @saturn/server test",
+    "build": "yarn workspace @saturn/server build",
+    "lint": "yarn workspace @saturn/server lint"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@testing-library/react": "^16.2.0",
-    "@types/jest": "^29.5.14",
-    "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.29.1",
-    "@typescript-eslint/parser": "^8.29.1",
-    "concurrently": "^8.2.1",
-    "eslint": "^9.24.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-prettier": "^5.2.6",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-native": "^5.0.0",
-    "husky": "^9.1.7",
-    "jest": "^29.5.0",
-    "lint-staged": "^15.5.0",
-    "prettier": "^3.5.3",
-    "ts-jest": "^29.1.0",
-    "typescript-eslint": "^8.29.1"
-  },
-  "dependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "bcryptjs": "^3.0.2",
-    "multer": "^1.4.5-lts.2"
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
   }
 }

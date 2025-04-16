@@ -1,13 +1,17 @@
 import { ActorService } from '../../src/modules/actors/services/actorService';
-import configureActorRoutes from '../../src/modules/actors/routes/actorRoutes';
+import { configureActorRoutes } from '../../src/modules/actors/routes/actorRoutes';
 import { mock } from 'jest-mock-extended';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { mkdir, rm } from 'fs/promises';
 import { existsSync } from 'fs';
+import { UploadService } from '../../src/modules/media/services/uploadService';
+import { PostService } from '../../src/modules/posts/services/postService';
 
-// Mock the ActorService
+// Mock the services
 const mockActorService = mock<ActorService>();
+const mockUploadService = mock<UploadService>();
+const mockPostService = mock<PostService>();
 
 // Create temporary directories for uploads
 const uploadsDir = join(tmpdir(), 'saturn-test-uploads');
@@ -27,22 +31,23 @@ beforeAll(async () => {
     await mkdir(headersDir, { recursive: true });
   }
 
-  // Configure the test app with the mock service
+  // Configure the test app with the mock services
   global.testApp.use((req, res, next) => {
     req.services = {
       actorService: mockActorService,
-      postService: {} as any,
+      uploadService: mockUploadService,
+      postService: mockPostService,
     };
     next();
   });
-  global.testApp.use(
-    '/api/actors',
-    configureActorRoutes({
-      actorService: mockActorService,
-      postService: {} as any,
-      uploadService: {} as any,
-    })
-  );
+
+  // Configure routes with mock services
+  const serviceContainer = {
+    actorService: mockActorService,
+    uploadService: mockUploadService,
+    postService: mockPostService,
+  };
+  global.testApp.use('/api/actors', configureActorRoutes(serviceContainer));
 });
 
 afterAll(async () => {
@@ -53,8 +58,10 @@ afterAll(async () => {
 // Tests
 describe('Actor Routes', () => {
   beforeEach(() => {
-    // Reset mock before each test
+    // Reset mocks before each test
     mockActorService.mockReset();
+    mockUploadService.mockReset();
+    mockPostService.mockReset();
   });
 
   describe('GET /api/actors', () => {
