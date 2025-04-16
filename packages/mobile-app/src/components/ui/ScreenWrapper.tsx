@@ -14,6 +14,7 @@ interface ScreenWrapperProps extends ViewProps {
   useSafeArea?: boolean;
   padding?: keyof ThemeType['spacing'] | number;
   backgroundColor?: string;
+  statusBarStyle?: 'light-content' | 'dark-content';
 }
 
 const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
@@ -21,6 +22,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   useSafeArea = true,
   padding = 'md',
   backgroundColor,
+  statusBarStyle,
   style,
   ...props
 }) => {
@@ -32,6 +34,11 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
 
   // Default background color from theme if not provided
   const bgColor = backgroundColor || theme.colors.background;
+
+  // Determine status bar style based on background color or prop
+  const barStyle =
+    statusBarStyle ||
+    (bgColor === theme.colors.white ? 'dark-content' : 'light-content');
 
   const viewStyles = {
     flex: 1,
@@ -46,9 +53,8 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
     <>
       <StatusBar
         backgroundColor={bgColor}
-        barStyle={
-          bgColor === theme.colors.white ? 'dark-content' : 'light-content'
-        }
+        barStyle={barStyle}
+        translucent={true}
       />
       <Container style={[viewStyles, style]} {...props}>
         {children}

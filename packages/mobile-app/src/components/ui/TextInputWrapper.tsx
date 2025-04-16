@@ -8,6 +8,8 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import StyledText from './StyledText';
 
 interface TextInputWrapperProps extends TextInputProps {
   label?: string;
@@ -27,24 +29,46 @@ const TextInputWrapper: React.FC<TextInputWrapperProps> = ({
   errorStyle,
   ...textInputProps
 }) => {
+  const theme = useTheme();
+
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
+      {label && (
+        <StyledText
+          weight="medium"
+          color={theme.colors.text}
+          style={[styles.label, labelStyle]}
+        >
+          {label}
+        </StyledText>
+      )}
       <View
         style={[
           styles.inputContainer,
+          { backgroundColor: theme.colors.surfaceVariant },
           inputContainerStyle,
           error ? styles.inputError : null,
         ]}
       >
         <TextInput
-          style={styles.input}
-          placeholderTextColor="#888"
+          style={[
+            styles.input,
+            { color: theme.colors.text, fontSize: theme.typography.fontSizeMd },
+          ]}
+          placeholderTextColor={theme.colors.textSecondary}
           autoCapitalize="none"
           {...textInputProps}
         />
       </View>
-      {error && <Text style={[styles.errorText, errorStyle]}>{error}</Text>}
+      {error && (
+        <StyledText
+          weight="regular"
+          color={theme.colors.error}
+          style={[styles.errorText, errorStyle]}
+        >
+          {error}
+        </StyledText>
+      )}
     </View>
   );
 };
@@ -55,30 +79,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 16,
     marginBottom: 8,
-    fontWeight: '600',
-    color: '#333',
   },
   inputContainer: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   inputError: {
-    borderColor: '#e74c3c',
+    borderColor: '#ED4956',
   },
   input: {
-    fontSize: 16,
     width: '100%',
-    color: '#333',
   },
   errorText: {
-    color: '#e74c3c',
-    fontSize: 14,
     marginTop: 4,
   },
 });

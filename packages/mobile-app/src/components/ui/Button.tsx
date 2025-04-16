@@ -42,13 +42,13 @@ const Button: React.FC<ButtonProps> = ({
   const getBackgroundColor = () => {
     switch (variant) {
       case 'secondary':
-        return theme.colors.secondary;
+        return theme.colors.surfaceVariant;
       case 'outline':
       case 'text':
         return theme.colors.transparent;
       case 'primary':
       default:
-        return theme.colors.primary;
+        return disabled ? theme.colors.surfaceVariant : theme.colors.primary;
     }
   };
 
@@ -60,9 +60,10 @@ const Button: React.FC<ButtonProps> = ({
       case 'text':
         return theme.colors.primary;
       case 'primary':
+        return disabled ? theme.colors.textSecondary : theme.colors.white;
       case 'secondary':
       default:
-        return theme.colors.white;
+        return theme.colors.text;
     }
   };
 
@@ -83,7 +84,7 @@ const Button: React.FC<ButtonProps> = ({
       case 'small':
         return {
           paddingVertical: theme.spacing.xs,
-          paddingHorizontal: theme.spacing.md,
+          paddingHorizontal: theme.spacing.sm,
         };
       case 'large':
         return {
@@ -117,7 +118,7 @@ const Button: React.FC<ButtonProps> = ({
     ...getPadding(),
     ...getBorderStyle(),
     backgroundColor: getBackgroundColor(),
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.pill,
     opacity: disabled ? 0.6 : 1,
     width: fullWidth ? '100%' : 'auto',
     flexDirection: 'row' as const,
@@ -141,7 +142,7 @@ const Button: React.FC<ButtonProps> = ({
         <>
           {leftIcon && <span style={styles.leftIcon}>{leftIcon}</span>}
           <StyledText
-            weight="medium"
+            weight="semibold"
             color={getTextColor()}
             style={{ fontSize: theme.typography[getFontSize()] }}
           >

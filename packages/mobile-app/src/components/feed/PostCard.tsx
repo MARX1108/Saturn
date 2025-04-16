@@ -5,6 +5,7 @@ import { Post } from '../../types/post';
 import { formatDistanceToNow } from 'date-fns';
 import { PROFILE } from '../../navigation/routes';
 import { useTheme } from '../../theme/ThemeContext';
+import StyledText from '../ui/StyledText';
 
 interface PostCardProps {
   post: Post;
@@ -85,22 +86,32 @@ const PostCard: React.FC<PostCardProps> = ({
           />
         </TouchableOpacity>
         <TouchableOpacity style={styles.userInfo} onPress={handleAuthorPress}>
-          <Text style={[styles.userName, { color: theme.colors.text }]}>
+          <StyledText
+            weight="semibold"
+            color={theme.colors.text}
+            style={styles.userName}
+          >
             {post.author?.name || post.author?.preferredUsername || 'Anonymous'}
-          </Text>
-          <Text
-            style={[styles.timestamp, { color: theme.colors.textSecondary }]}
+          </StyledText>
+          <StyledText
+            weight="regular"
+            color={theme.colors.textSecondary}
+            style={styles.timestamp}
           >
             {formattedDate}
-          </Text>
+          </StyledText>
         </TouchableOpacity>
       </View>
 
       {/* Post Content */}
       <View style={styles.contentContainer}>
-        <Text style={[styles.content, { color: theme.colors.text }]}>
+        <StyledText
+          weight="regular"
+          color={theme.colors.text}
+          style={styles.content}
+        >
           {post.content}
-        </Text>
+        </StyledText>
       </View>
 
       {/* Post Media (if exists) */}
@@ -130,29 +141,30 @@ const PostCard: React.FC<PostCardProps> = ({
           style={styles.engagementButton}
           onPress={handleLikePress}
         >
-          <Text
-            style={[
-              styles.engagementText,
-              { color: theme.colors.textSecondary },
-              post.likedByUser && { color: theme.colors.primary },
-            ]}
+          <StyledText
+            weight="medium"
+            color={
+              post.likedByUser
+                ? theme.colors.instagramLikeRed
+                : theme.colors.textSecondary
+            }
+            style={styles.engagementText}
           >
             ♥ {post.likes || 0} Likes
-          </Text>
+          </StyledText>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.engagementButton}
           onPress={handleCommentPress}
         >
-          <Text
-            style={[
-              styles.engagementText,
-              { color: theme.colors.textSecondary },
-            ]}
+          <StyledText
+            weight="medium"
+            color={theme.colors.textSecondary}
+            style={styles.engagementText}
           >
             💬 {post.shares || 0} Comments
-          </Text>
+          </StyledText>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -161,59 +173,54 @@ const PostCard: React.FC<PostCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
+    borderRadius: 0,
+    padding: 0,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#DBDBDB',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    padding: 12,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     marginRight: 12,
   },
   userInfo: {
     flex: 1,
   },
   userName: {
-    fontWeight: '600',
-    fontSize: 16,
+    fontSize: 14,
   },
   timestamp: {
     fontSize: 12,
     marginTop: 2,
   },
   contentContainer: {
-    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingBottom: 8,
   },
   content: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
   },
   mediaContainer: {
-    marginBottom: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
+    width: '100%',
+    aspectRatio: 1,
   },
   media: {
     width: '100%',
-    aspectRatio: 1,
-    borderRadius: 12,
+    height: '100%',
   },
   engagementBar: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
     borderTopWidth: 1,
-    paddingTop: 12,
+    padding: 12,
   },
   engagementButton: {
     flexDirection: 'row',

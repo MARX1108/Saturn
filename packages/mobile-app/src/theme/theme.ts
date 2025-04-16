@@ -1,99 +1,92 @@
 /**
  * Main theme configuration for the app
  * Defines colors, spacing, typography, and other style constants
- * Follows a modern, minimalist aesthetic inspired by Obsidian and Instagram
+ * Follows a modern, minimalist aesthetic inspired by Instagram
  */
 
 // Light and dark theme variants
 const lightColors = {
-  // Primary colors (more muted and sophisticated)
-  primary: '#5D5FEF', // Refined purple-blue
-  secondary: '#7879F1', // Lighter secondary
+  // Primary colors (Instagram-inspired)
+  primary: '#0095F6', // Instagram blue
+  secondary: '#8E8E93', // Instagram secondary
   accent: '#A5A6F6', // Soft accent
 
-  // Neutral colors - subtle gradations
+  // Neutral colors - Instagram-inspired grays
   background: '#FFFFFF',
-  surface: '#F8F9FA',
-  surfaceVariant: '#F0F1F5',
+  surface: '#FAFAFA', // Instagram's background
+  surfaceVariant: '#F2F2F2',
 
-  // Text colors - improved contrast
-  text: '#222222', // Deeper black for primary text
-  textSecondary: '#636978', // Balanced secondary text
-  textTertiary: '#989DB3', // Soft muted text
+  // Text colors - Instagram-inspired
+  text: '#262626', // Instagram's primary text
+  textSecondary: '#8E8E93', // Instagram's secondary text
+  textTertiary: '#C7C7CC', // Instagram's tertiary text
 
-  // Status colors - slightly muted
+  // Status colors - Instagram-inspired
   success: '#4BB543',
-  error: '#E53935',
+  error: '#ED4956', // Instagram's error/like red
   warning: '#FFA726',
-  info: '#2196F3',
+  info: '#0095F6', // Same as primary
 
-  // Borders & Dividers - subtle
-  border: '#E8E9EC',
-  divider: '#EEEEF2',
+  // Borders & Dividers - Instagram-inspired
+  border: '#DBDBDB', // Instagram's border color
+  divider: '#EFEFEF', // Instagram's divider color
 
   // Misc
   white: '#FFFFFF',
   black: '#000000',
   transparent: 'transparent',
 
-  // Instagram-inspired elements
+  // Instagram-specific colors
   instagramGradientStart: '#405DE6',
   instagramGradientEnd: '#E1306C',
-
-  // Obsidian-inspired elements
-  obsidianPurple: '#7C71DA',
-  obsidianBackground: '#262626',
+  instagramLikeRed: '#ED4956',
+  instagramStoryBorder: '#C7C7CC',
 };
 
 const darkColors = {
   // Primary colors
-  primary: '#7879F1',
-  secondary: '#5D5FEF',
+  primary: '#0095F6',
+  secondary: '#8E8E93',
   accent: '#A5A6F6',
 
-  // Neutral colors - Obsidian inspired
-  background: '#121212',
-  surface: '#1E1E1E',
-  surfaceVariant: '#2D2D2D',
+  // Neutral colors - Dark mode Instagram-inspired
+  background: '#000000',
+  surface: '#121212',
+  surfaceVariant: '#1C1C1E',
 
   // Text colors
-  text: '#E8E8E8', // Off-white for better readability
-  textSecondary: '#B0B3BC',
-  textTertiary: '#8A8D98',
+  text: '#F5F5F5',
+  textSecondary: '#8E8E93',
+  textTertiary: '#636366',
 
-  // Status colors - adjusted for dark theme
+  // Status colors
   success: '#4BB543',
-  error: '#E53935',
+  error: '#ED4956',
   warning: '#FFA726',
-  info: '#2196F3',
+  info: '#0095F6',
 
   // Borders & Dividers
-  border: '#3A3A3A',
-  divider: '#323232',
+  border: '#2C2C2E',
+  divider: '#1C1C1E',
 
   // Misc
   white: '#FFFFFF',
   black: '#000000',
   transparent: 'transparent',
 
-  // Instagram-inspired elements
+  // Instagram-specific colors
   instagramGradientStart: '#405DE6',
   instagramGradientEnd: '#E1306C',
-
-  // Obsidian-inspired elements
-  obsidianPurple: '#7C71DA',
-  obsidianBackground: '#262626',
+  instagramLikeRed: '#ED4956',
+  instagramStoryBorder: '#2C2C2E',
 };
 
 export const theme = {
   colors: {
     ...lightColors,
-
-    // Add dark theme colors for later implementation
     dark: darkColors,
   },
 
-  // More generous spacing for modern, airy feel
   spacing: {
     xxs: 2,
     xs: 4,
@@ -106,11 +99,10 @@ export const theme = {
   },
 
   typography: {
-    // Using system fonts for now, but could be replaced with custom fonts
-    // fontFamily: 'Inter' would be a modern alternative
-    fontFamily: 'System',
+    // Instagram's font stack
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 
-    // Font sizes - slightly adjusted for better readability
     fontSizeXxs: 10,
     fontSizeXs: 12,
     fontSizeSm: 14,
@@ -120,20 +112,18 @@ export const theme = {
     fontSizeXxl: 26,
     fontSizeTitle: 32,
 
-    // Font weights - standard values
+    // Instagram's font weights
     fontWeightLight: '300',
     fontWeightRegular: '400',
     fontWeightMedium: '500',
     fontWeightSemibold: '600',
     fontWeightBold: '700',
 
-    // Line heights for better readability
     lineHeightTight: 1.2,
     lineHeightNormal: 1.5,
     lineHeightRelaxed: 1.75,
   },
 
-  // Enhanced border radius options for modern, rounded aesthetics
   borderRadius: {
     none: 0,
     xs: 4,
@@ -141,11 +131,11 @@ export const theme = {
     md: 12,
     lg: 16,
     xl: 24,
-    pill: 500, // For pill-shaped buttons
-    circle: 999, // For circular elements like avatar
+    pill: 500,
+    circle: 999,
+    story: 100, // Instagram story border radius
   },
 
-  // Refined shadows with softer appearance
   shadows: {
     none: {
       shadowColor: 'transparent',
@@ -184,7 +174,6 @@ export const theme = {
     },
   },
 
-  // Animation durations
   animation: {
     fast: 200,
     normal: 300,
