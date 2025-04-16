@@ -1,6 +1,6 @@
 export const appConfig = {
   // Base URL for API requests
-  apiBaseUrl: 'http://localhost:4000', // Remove trailing slash
+  apiBaseUrl: 'http://localhost:4000',
 
   // API endpoints
   endpoints: {
@@ -12,25 +12,22 @@ export const appConfig = {
     actors: {
       getUserProfile: '/api/actors/:username',
       searchActors: '/api/actors/search',
-      updateActor: '/api/actors/:username', // Used for PUT requests to update an actor
+      updateActor: '/api/actors/:username',
       deleteActor: '/api/actors/:username',
-      getUserPosts: '/api/users/:username/posts', // Fix path to match API
     },
     posts: {
-      feed: '/api/posts', // Update to match server route
-      createPost: '/api/posts', // This is used for POST requests to create a new post
+      feed: '/api/posts',
+      createPost: '/api/posts', // POST endpoint for creating new posts
       getPost: '/api/posts/:id',
       updatePost: '/api/posts/:id',
       deletePost: '/api/posts/:id',
-      // Like/Unlike functionality uses the same endpoint with different HTTP methods:
-      // POST /api/posts/:id/like - Like a post
-      // DELETE /api/posts/:id/like - Unlike a post
       likePost: '/api/posts/:id/like',
+      getUserPosts: '/api/users/:username/posts', // Moved from actors to posts namespace
     },
     media: {
-      upload: '/api/media/upload', // Note: API docs indicate this is not fully implemented (501)
-      getMedia: '/api/media/:id', // Note: API docs indicate this is not fully implemented (501)
-      deleteMedia: '/api/media/:id', // Note: API docs indicate this is not fully implemented (501)
+      upload: '/api/media/upload',
+      getMedia: '/api/media/:id',
+      deleteMedia: '/api/media/:id',
     },
   },
 };

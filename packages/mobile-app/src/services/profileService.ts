@@ -58,7 +58,7 @@ const profileService = {
     limit: number = 20
   ): Promise<{ posts: Post[]; hasMore: boolean; totalCount?: number }> => {
     try {
-      const url = appConfig.endpoints.actors.getUserPosts.replace(
+      const url = appConfig.endpoints.posts.getUserPosts.replace(
         ':username',
         username
       );

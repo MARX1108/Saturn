@@ -18,10 +18,12 @@ import TextInputWrapper from '../../components/ui/TextInputWrapper';
 import Button from '../../components/ui/Button';
 import postService from '../../services/postService';
 import { useTheme } from '../../theme/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 const CreatePostScreen = () => {
   const navigation = useNavigation();
   const theme = useTheme();
+  const { user } = useAuth();
 
   // State management
   const [postContent, setPostContent] = useState('');
@@ -97,13 +99,22 @@ const CreatePostScreen = () => {
 
   // Handle post submission
   const handleSubmitPost = async () => {
-    if ((!postContent.trim() && !selectedImage) || isSubmitting) return;
+    if (
+      (!postContent.trim() && !selectedImage) ||
+      isSubmitting ||
+      !user?.username
+    )
+      return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      await postService.createPost(postContent.trim(), selectedImage);
+      await postService.createPost(
+        postContent.trim(),
+        user.username,
+        selectedImage
+      );
 
       // On success, go back to previous screen
       navigation.goBack();

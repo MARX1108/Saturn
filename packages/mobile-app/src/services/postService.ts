@@ -100,19 +100,26 @@ export const postService = {
   /**
    * Create a new post
    * @param content - The text content of the post
+   * @param username - The username of the user creating the post
    * @param mediaAsset - Optional image asset to upload with the post
    * @returns Promise with the newly created post
    */
   createPost: async (
     content: string,
+    username: string,
     mediaAsset?: ImagePickerAsset | null
   ): Promise<Post> => {
     try {
+      if (!username) {
+        throw new Error('Username is required to create a post');
+      }
+
       const url = appConfig.endpoints.posts.createPost;
 
       // Create FormData to match API expectations
       const formData = new FormData();
       formData.append('content', content);
+      formData.append('username', username);
 
       // Add media file if provided
       if (mediaAsset) {
@@ -121,7 +128,7 @@ export const postService = {
           name: mediaAsset.fileName || 'photo.jpg',
           type: mediaAsset.mimeType || 'image/jpeg',
         };
-        formData.append('mediaFile', fileObject as any);
+        formData.append('attachments', fileObject as any);
       }
 
       // Use multipart/form-data as required by API documentation
