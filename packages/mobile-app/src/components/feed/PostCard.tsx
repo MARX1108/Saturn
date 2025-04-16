@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Post } from '../../types/post';
 import { formatDistanceToNow } from 'date-fns';
 import { PROFILE } from '../../navigation/routes';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface PostCardProps {
   post: Post;
@@ -21,6 +22,7 @@ const PostCard: React.FC<PostCardProps> = ({
   onAuthorPress,
 }) => {
   const navigation = useNavigation();
+  const theme = useTheme();
 
   // Format the timestamp
   const formattedDate = post.createdAt
@@ -58,9 +60,15 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
+  // Check if post has a valid image attachment
+  const hasImageAttachment =
+    post.attachments?.length > 0 &&
+    post.attachments[0].type === 'Image' &&
+    post.attachments[0].url;
+
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       activeOpacity={0.9}
       onPress={handlePostPress}
     >
@@ -77,35 +85,59 @@ const PostCard: React.FC<PostCardProps> = ({
           />
         </TouchableOpacity>
         <TouchableOpacity style={styles.userInfo} onPress={handleAuthorPress}>
-          <Text style={styles.userName}>
+          <Text style={[styles.userName, { color: theme.colors.text }]}>
             {post.author?.name || post.author?.preferredUsername || 'Anonymous'}
           </Text>
-          <Text style={styles.timestamp}>{formattedDate}</Text>
+          <Text
+            style={[styles.timestamp, { color: theme.colors.textSecondary }]}
+          >
+            {formattedDate}
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Post Content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.content}>{post.content}</Text>
+        <Text style={[styles.content, { color: theme.colors.text }]}>
+          {post.content}
+        </Text>
       </View>
 
       {/* Post Media (if exists) */}
-      {post.mediaUrl && (
-        <Image
-          source={{ uri: post.mediaUrl }}
-          style={styles.media}
-          resizeMode="cover"
-        />
+      {hasImageAttachment && (
+        <View style={styles.mediaContainer}>
+          <Image
+            source={{ uri: post.attachments[0].url }}
+            style={styles.media}
+            resizeMode="cover"
+            accessibilityLabel="Post image"
+            onError={e =>
+              console.warn(
+                'Failed to load post image:',
+                post.attachments[0].url,
+                e.nativeEvent.error
+              )
+            }
+          />
+        </View>
       )}
 
       {/* Engagement Bar */}
-      <View style={styles.engagementBar}>
+      <View
+        style={[styles.engagementBar, { borderTopColor: theme.colors.border }]}
+      >
         <TouchableOpacity
           style={styles.engagementButton}
           onPress={handleLikePress}
         >
-          <Text style={[styles.engagementText, post.liked && styles.likedText]}>
-            ♥ {post.likeCount || 0} Likes
+          <Text
+            style={[
+              styles.engagementText,
+              { color: theme.colors.textSecondary },
+              post.likedByUser && { color: theme.colors.primary },
+            ]}
+          >
+            ♥ {post.likes || 0} Likes
           </Text>
         </TouchableOpacity>
 
@@ -113,8 +145,13 @@ const PostCard: React.FC<PostCardProps> = ({
           style={styles.engagementButton}
           onPress={handleCommentPress}
         >
-          <Text style={styles.engagementText}>
-            💬 {post.commentCount || 0} Comments
+          <Text
+            style={[
+              styles.engagementText,
+              { color: theme.colors.textSecondary },
+            ]}
+          >
+            💬 {post.shares || 0} Comments
           </Text>
         </TouchableOpacity>
       </View>
@@ -124,7 +161,6 @@ const PostCard: React.FC<PostCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -144,7 +180,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
-    backgroundColor: '#f0f0f0', // Placeholder background
   },
   userInfo: {
     flex: 1,
@@ -152,11 +187,9 @@ const styles = StyleSheet.create({
   userName: {
     fontWeight: '600',
     fontSize: 16,
-    color: '#333',
   },
   timestamp: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
   },
   contentContainer: {
@@ -165,19 +198,21 @@ const styles = StyleSheet.create({
   content: {
     fontSize: 16,
     lineHeight: 22,
-    color: '#333',
+  },
+  mediaContainer: {
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   media: {
     width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 12,
+    aspectRatio: 1,
+    borderRadius: 12,
   },
   engagementBar: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
     paddingTop: 12,
   },
   engagementButton: {
@@ -187,10 +222,6 @@ const styles = StyleSheet.create({
   },
   engagementText: {
     fontSize: 14,
-    color: '#666',
-  },
-  likedText: {
-    color: '#e74c3c',
   },
 });
 

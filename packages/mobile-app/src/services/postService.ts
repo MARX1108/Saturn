@@ -1,6 +1,7 @@
 import apiService from './apiService';
 import { Post } from '../types/post';
 import appConfig from '../config/appConfig';
+import { ImagePickerAsset } from 'expo-image-picker';
 
 /**
  * Post Service
@@ -81,15 +82,29 @@ export const postService = {
   /**
    * Create a new post
    * @param content - The text content of the post
+   * @param mediaAsset - Optional image asset to upload with the post
    * @returns Promise with the newly created post
    */
-  createPost: async (content: string): Promise<Post> => {
+  createPost: async (
+    content: string,
+    mediaAsset?: ImagePickerAsset | null
+  ): Promise<Post> => {
     try {
       const url = appConfig.endpoints.posts.createPost;
 
       // Create FormData to match API expectations
       const formData = new FormData();
       formData.append('content', content);
+
+      // Add media file if provided
+      if (mediaAsset) {
+        const fileObject = {
+          uri: mediaAsset.uri,
+          name: mediaAsset.fileName || 'photo.jpg',
+          type: mediaAsset.mimeType || 'image/jpeg',
+        };
+        formData.append('mediaFile', fileObject as any);
+      }
 
       // Use multipart/form-data as required by API documentation
       return await apiService.postForm<Post>(url, formData);

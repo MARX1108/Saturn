@@ -7,13 +7,17 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
+  Image,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 import ScreenWrapper from '../../components/ui/ScreenWrapper';
 import TextInputWrapper from '../../components/ui/TextInputWrapper';
 import Button from '../../components/ui/Button';
 import postService from '../../services/postService';
-import { useTheme } from '@react-navigation/native';
+import { useTheme } from '../../theme/ThemeContext';
 
 const CreatePostScreen = () => {
   const navigation = useNavigation();
@@ -21,21 +25,85 @@ const CreatePostScreen = () => {
 
   // State management
   const [postContent, setPostContent] = useState('');
+  const [selectedImage, setSelectedImage] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Calculate if the post button should be enabled
-  const isPostButtonEnabled = postContent.trim().length > 0 && !isSubmitting;
+  const isPostButtonEnabled =
+    (postContent.trim().length > 0 || selectedImage) && !isSubmitting;
+
+  // Request media library permissions
+  const getMediaLibraryPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Please grant camera roll permissions to select photos.',
+        [{ text: 'OK' }]
+      );
+      return false;
+    }
+    return true;
+  };
+
+  // Request camera permissions
+  const getCameraPermission = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Please grant camera permissions to take photos.',
+        [{ text: 'OK' }]
+      );
+      return false;
+    }
+    return true;
+  };
+
+  // Pick image from library
+  const pickImage = async () => {
+    const hasPermission = await getMediaLibraryPermission();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0]);
+    }
+  };
+
+  // Take photo with camera
+  const takePhoto = async () => {
+    const hasPermission = await getCameraPermission();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0]);
+    }
+  };
 
   // Handle post submission
   const handleSubmitPost = async () => {
-    if (!postContent.trim() || isSubmitting) return;
+    if ((!postContent.trim() && !selectedImage) || isSubmitting) return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      await postService.createPost(postContent.trim());
+      await postService.createPost(postContent.trim(), selectedImage);
 
       // On success, go back to previous screen
       navigation.goBack();
@@ -44,6 +112,7 @@ const CreatePostScreen = () => {
       setError('Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);
+      setSelectedImage(null);
     }
   };
 
@@ -60,13 +129,22 @@ const CreatePostScreen = () => {
     >
       <ScreenWrapper style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View
+          style={[styles.header, { borderBottomColor: theme.colors.border }]}
+        >
           <TouchableOpacity
             onPress={handleCancel}
             style={styles.cancelButton}
             disabled={isSubmitting}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text
+              style={[
+                styles.cancelButtonText,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
+              Cancel
+            </Text>
           </TouchableOpacity>
 
           <Button
@@ -83,8 +161,15 @@ const CreatePostScreen = () => {
 
         {/* Error message */}
         {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+          <View
+            style={[
+              styles.errorContainer,
+              { backgroundColor: theme.colors.surfaceVariant },
+            ]}
+          >
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {error}
+            </Text>
           </View>
         )}
 
@@ -102,9 +187,78 @@ const CreatePostScreen = () => {
           editable={!isSubmitting}
         />
 
+        {/* Media selection buttons */}
+        <View style={styles.mediaButtonsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.mediaButton,
+              { backgroundColor: theme.colors.surfaceVariant },
+            ]}
+            onPress={pickImage}
+            disabled={isSubmitting}
+          >
+            <Ionicons
+              name="image-outline"
+              size={24}
+              color={theme.colors.text}
+            />
+            <Text
+              style={[styles.mediaButtonText, { color: theme.colors.text }]}
+            >
+              Choose Photo
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.mediaButton,
+              { backgroundColor: theme.colors.surfaceVariant },
+            ]}
+            onPress={takePhoto}
+            disabled={isSubmitting}
+          >
+            <Ionicons
+              name="camera-outline"
+              size={24}
+              color={theme.colors.text}
+            />
+            <Text
+              style={[styles.mediaButtonText, { color: theme.colors.text }]}
+            >
+              Take Photo
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Selected image preview */}
+        {selectedImage && (
+          <View style={styles.imagePreviewContainer}>
+            <Image
+              source={{ uri: selectedImage.uri }}
+              style={styles.imagePreview}
+              resizeMode="cover"
+            />
+            <TouchableOpacity
+              style={[
+                styles.removeImageButton,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+              onPress={() => setSelectedImage(null)}
+              disabled={isSubmitting}
+            >
+              <Ionicons name="close" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Loading indicator */}
         {isSubmitting && (
-          <View style={styles.loadingContainer}>
+          <View
+            style={[
+              styles.loadingContainer,
+              { backgroundColor: theme.colors.background + 'CC' },
+            ]}
+          >
             <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         )}
@@ -123,7 +277,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eaeaea',
     marginBottom: 16,
   },
   cancelButton: {
@@ -132,16 +285,14 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 16,
-    color: '#666',
   },
   postButton: {
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#1DA1F2',
   },
   postButtonDisabled: {
-    backgroundColor: '#AAD8F2',
+    opacity: 0.5,
   },
   postButtonText: {
     color: 'white',
@@ -159,14 +310,48 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   errorContainer: {
-    backgroundColor: '#FFEBEE',
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
   },
   errorText: {
-    color: '#D32F2F',
     fontSize: 14,
+  },
+  mediaButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  mediaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  mediaButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  imagePreview: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContainer: {
     position: 'absolute',
@@ -176,7 +361,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
 });
 
