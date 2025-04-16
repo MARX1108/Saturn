@@ -2,14 +2,16 @@ import express from 'express';
 import { ActorService } from '../../modules/actors/services/actorService';
 import { Actor } from '../../modules/actors/models/actor';
 
-export function configureTestActorRoutes(actorService: ActorService) {
+export function configureTestActorRoutes(
+  actorService: ActorService
+): express.Router {
   const router = express.Router();
 
   const checkAuth = (
     req: express.Request & { user?: { username: string } },
     res: express.Response,
     next: express.NextFunction
-  ) => {
+  ): void | express.Response => {
     const user = req.user;
     if (!user?.username) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -43,7 +45,7 @@ export function configureTestActorRoutes(actorService: ActorService) {
       };
 
       res.json(formattedResponse);
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -77,7 +79,7 @@ export function configureTestActorRoutes(actorService: ActorService) {
       };
 
       res.json(formattedResponse);
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
