@@ -100,7 +100,7 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
 
         // Clear tokens on refresh failure
-        await tokenService.clearTokens();
+        await tokenService.removeToken();
 
         throw refreshError;
       }

@@ -1,6 +1,6 @@
 export const appConfig = {
   // Base URL for API requests
-  apiBaseUrl: 'http://localhost:4000/', // Replace with your actual production API URL
+  apiBaseUrl: 'http://localhost:4000', // Remove trailing slash
 
   // API endpoints
   endpoints: {
@@ -14,10 +14,10 @@ export const appConfig = {
       searchActors: '/api/actors/search',
       updateActor: '/api/actors/:username', // Used for PUT requests to update an actor
       deleteActor: '/api/actors/:username',
-      getUserPosts: '/users/:username/posts', // Fetch posts for a specific user
+      getUserPosts: '/api/users/:username/posts', // Fix path to match API
     },
     posts: {
-      feed: '/api/posts', // This is used for GET requests to fetch the feed
+      feed: '/api/posts', // Update to match server route
       createPost: '/api/posts', // This is used for POST requests to create a new post
       getPost: '/api/posts/:id',
       updatePost: '/api/posts/:id',

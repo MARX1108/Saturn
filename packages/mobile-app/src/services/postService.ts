@@ -2,6 +2,7 @@ import apiService from './apiService';
 import { Post } from '../types/post';
 import appConfig from '../config/appConfig';
 import { ImagePickerAsset } from 'expo-image-picker';
+import { ApiError } from '../types/api';
 
 /**
  * Post Service
@@ -17,17 +18,27 @@ export const postService = {
   fetchFeedPosts: async (page = 1, limit = 20): Promise<Post[]> => {
     try {
       const params = { page, limit };
-      // Using the correct URL from appConfig that matches API documentation
       const url = appConfig.endpoints.posts.feed;
 
       const response = await apiService.get<{
         posts: Post[];
         hasMore: boolean;
       }>(url, { params });
+
       return response.posts;
     } catch (error) {
+      const apiError = error as ApiError;
+
+      if (apiError.status === 401) {
+        throw new Error('Please log in to view posts');
+      }
+
+      if (apiError.status === 404) {
+        throw new Error('Feed not available. Please try again later.');
+      }
+
       console.error('Error fetching feed posts:', error);
-      throw error;
+      throw new Error('Failed to load posts. Please try again.');
     }
   },
 
@@ -38,13 +49,21 @@ export const postService = {
    */
   getPostById: async (postId: string): Promise<Post> => {
     try {
-      // Use the URL from appConfig and replace the :id placeholder
       const url = appConfig.endpoints.posts.getPost.replace(':id', postId);
-      // Authentication is optional for this endpoint but recommended to get proper likedByUser status
       return await apiService.get<Post>(url);
     } catch (error) {
+      const apiError = error as ApiError;
+
+      if (apiError.status === 401) {
+        throw new Error('Please log in to view this post');
+      }
+
+      if (apiError.status === 404) {
+        throw new Error('Post not found');
+      }
+
       console.error(`Error fetching post ${postId}:`, error);
-      throw error;
+      throw new Error('Failed to load post. Please try again.');
     }
   },
 

@@ -15,19 +15,20 @@ export default function configurePostRoutes(
   const router = Router();
 
   // Public routes
-  router.get('/posts', (req: Request, res: Response, next: NextFunction) => {
-    postsController.getFeed(req, res, next).catch(next);
-  });
-
   router.get(
-    '/posts/:id',
+    '/',
+    authenticate(authService),
     (req: Request, res: Response, next: NextFunction) => {
-      postsController.getPostById(req, res, next).catch(next);
+      postsController.getFeed(req, res, next).catch(next);
     }
   );
 
+  router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
+    postsController.getPostById(req, res, next).catch(next);
+  });
+
   router.get(
-    '/users/:username/posts',
+    '/users/:username',
     (req: Request, res: Response, next: NextFunction) => {
       postsController.getPostsByUsername(req, res, next).catch(next);
     }
@@ -35,7 +36,7 @@ export default function configurePostRoutes(
 
   // Protected routes
   router.post(
-    '/posts',
+    '/',
     authenticate(authService),
     (req: Request, res: Response, next: NextFunction) => {
       postsController.createPost(req, res, next).catch(next);
@@ -43,7 +44,7 @@ export default function configurePostRoutes(
   );
 
   router.put(
-    '/posts/:id',
+    '/:id',
     authenticate(authService),
     (req: Request, res: Response, next: NextFunction) => {
       postsController.updatePost(req, res, next).catch(next);
@@ -51,7 +52,7 @@ export default function configurePostRoutes(
   );
 
   router.delete(
-    '/posts/:id',
+    '/:id',
     authenticate(authService),
     (req: Request, res: Response, next: NextFunction) => {
       postsController.deletePost(req, res).catch(next);
@@ -59,7 +60,7 @@ export default function configurePostRoutes(
   );
 
   router.post(
-    '/posts/:id/like',
+    '/:id/like',
     authenticate(authService),
     (req: Request, res: Response, next: NextFunction) => {
       postsController.likePost(req, res).catch(next);
@@ -67,7 +68,7 @@ export default function configurePostRoutes(
   );
 
   router.delete(
-    '/posts/:id/like',
+    '/:id/like',
     authenticate(authService),
     (req: Request, res: Response, next: NextFunction) => {
       postsController.unlikePost(req, res).catch(next);
@@ -76,14 +77,14 @@ export default function configurePostRoutes(
 
   // Comment routes
   router.get(
-    '/posts/:id/comments',
+    '/:id/comments',
     (req: Request, res: Response, next: NextFunction) => {
       commentsController.getComments(req, res).catch(next);
     }
   );
 
   router.post(
-    '/posts/:id/comments',
+    '/:id/comments',
     authenticate(authService),
     (req: Request, res: Response, next: NextFunction) => {
       commentsController.createComment(req, res).catch(next);

@@ -14,7 +14,7 @@ interface User {
 
 export class AuthRepository extends MongoRepository<DbUser> {
   constructor(db: Db) {
-    super(db, 'users');
+    super(db, 'actors');
 
     // Create indexes for common auth queries
     this.collection.createIndex({ username: 1 }, { unique: true });
@@ -22,7 +22,7 @@ export class AuthRepository extends MongoRepository<DbUser> {
   }
 
   async findByUsername(username: string): Promise<DbUser | null> {
-    return this.findOne({ username });
+    return this.findOne({ preferredUsername: username });
   }
 
   async findByEmail(email: string): Promise<DbUser | null> {
@@ -30,6 +30,6 @@ export class AuthRepository extends MongoRepository<DbUser> {
   }
 
   async findById(id: string): Promise<DbUser | null> {
-    return this.findOne({ id });
+    return this.findOne({ _id: id });
   }
 }
