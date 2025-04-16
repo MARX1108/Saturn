@@ -9,6 +9,25 @@ import { Post } from '../types/post';
  */
 const profileService = {
   /**
+   * Search for users by query string
+   * @param query - The search query string
+   * @returns Promise with an array of matching users
+   */
+  searchActors: async (query: string): Promise<User[]> => {
+    try {
+      return await apiService.get<User[]>(
+        appConfig.endpoints.actors.searchActors,
+        {
+          params: { q: query },
+        }
+      );
+    } catch (error) {
+      console.error('Error searching for users:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Fetch a user's profile by username
    * @param username - The username of the profile to fetch
    * @returns Promise with the user profile data

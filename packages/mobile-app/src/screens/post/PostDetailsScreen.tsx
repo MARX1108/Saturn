@@ -8,7 +8,7 @@ import postService from '../../services/postService';
 import ScreenWrapper from '../../components/ui/ScreenWrapper';
 import PostCard from '../../components/feed/PostCard';
 import StyledText from '../../components/ui/StyledText';
-import { COLOR_PALETTE } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import BackButton from '../../components/ui/BackButton';
 
@@ -18,6 +18,7 @@ type PostDetailsNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 const PostDetailsScreen: React.FC = () => {
   const navigation = useNavigation<PostDetailsNavigationProp>();
   const route = useRoute<PostDetailsRouteProp>();
+  const theme = useTheme();
 
   // Get postId from route params
   const { postId } = route.params;
@@ -60,7 +61,7 @@ const PostDetailsScreen: React.FC = () => {
 
   return (
     <ScreenWrapper>
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
         <BackButton onPress={handleGoBack} />
         <StyledText style={styles.headerTitle}>Post</StyledText>
       </View>
@@ -68,7 +69,7 @@ const PostDetailsScreen: React.FC = () => {
       <ScrollView style={styles.container}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLOR_PALETTE.primary} />
+            <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         ) : error ? (
           <ErrorMessage message={error} />
@@ -77,10 +78,20 @@ const PostDetailsScreen: React.FC = () => {
             <PostCard post={post} detailed />
 
             {/* Comments section placeholder */}
-            <View style={styles.commentsSection}>
+            <View
+              style={[
+                styles.commentsSection,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+            >
               <StyledText style={styles.commentsTitle}>Comments</StyledText>
               <View style={styles.commentsList}>
-                <StyledText style={styles.commentsPlaceholder}>
+                <StyledText
+                  style={[
+                    styles.commentsPlaceholder,
+                    { color: theme.colors.textSecondary },
+                  ]}
+                >
                   Comments functionality coming soon
                 </StyledText>
               </View>
@@ -104,7 +115,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLOR_PALETTE.borderLight,
   },
   headerTitle: {
     fontSize: 18,
@@ -122,7 +132,6 @@ const styles = StyleSheet.create({
   },
   commentsSection: {
     padding: 16,
-    backgroundColor: COLOR_PALETTE.backgroundSecondary,
   },
   commentsTitle: {
     fontSize: 16,
@@ -133,7 +142,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   commentsPlaceholder: {
-    color: COLOR_PALETTE.textSecondary,
     fontStyle: 'italic',
   },
 });
