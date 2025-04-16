@@ -16,6 +16,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import TextInputWrapper from '../../components/ui/TextInputWrapper';
 import { AuthStackParamList } from '../../navigation/types';
+import { useTheme } from '../../theme/ThemeContext';
+import StyledText from '../../components/ui/StyledText';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -25,6 +27,7 @@ type LoginScreenNavigationProp = NativeStackNavigationProp<
 const LoginScreen: React.FC = () => {
   const { login, isLoading, error, clearError } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const theme = useTheme();
 
   // Form state
   const [username, setUsername] = useState('');
@@ -79,7 +82,9 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
@@ -89,13 +94,31 @@ const LoginScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to your account</Text>
+            <StyledText
+              weight="bold"
+              style={[styles.title, { color: theme.colors.text }]}
+            >
+              Welcome Back
+            </StyledText>
+            <StyledText
+              style={[styles.subtitle, { color: theme.colors.textSecondary }]}
+            >
+              Sign in to your account
+            </StyledText>
           </View>
 
           {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View
+              style={[
+                styles.errorContainer,
+                { backgroundColor: theme.colors.error + '15' },
+              ]}
+            >
+              <StyledText
+                style={[styles.errorText, { color: theme.colors.error }]}
+              >
+                {error}
+              </StyledText>
             </View>
           )}
 
@@ -128,26 +151,54 @@ const LoginScreen: React.FC = () => {
                 )
               }
             >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              <StyledText
+                style={[
+                  styles.forgotPasswordText,
+                  { color: theme.colors.primary },
+                ]}
+              >
+                Forgot Password?
+              </StyledText>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[
+                styles.button,
+                { backgroundColor: theme.colors.primary },
+                isLoading && [
+                  styles.buttonDisabled,
+                  { backgroundColor: theme.colors.primary + '80' },
+                ],
+              ]}
               onPress={handleLogin}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={theme.colors.white} />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <StyledText
+                  weight="bold"
+                  style={[styles.buttonText, { color: theme.colors.white }]}
+                >
+                  Sign In
+                </StyledText>
               )}
             </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
+            <StyledText
+              style={[styles.footerText, { color: theme.colors.textSecondary }]}
+            >
+              Don't have an account?{' '}
+            </StyledText>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.linkText}>Sign Up</Text>
+              <StyledText
+                weight="bold"
+                style={[styles.linkText, { color: theme.colors.primary }]}
+              >
+                Sign Up
+              </StyledText>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -159,7 +210,6 @@ const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
@@ -174,13 +224,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
   },
   form: {
     width: '100%',
@@ -191,23 +238,19 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#3498db',
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#3498db',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonDisabled: {
-    backgroundColor: '#94c6e7',
+    opacity: 0.8,
   },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
@@ -215,22 +258,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#666',
     fontSize: 14,
   },
   linkText: {
-    color: '#3498db',
     fontSize: 14,
-    fontWeight: '600',
   },
   errorContainer: {
-    backgroundColor: '#ffebee',
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
   },
   errorText: {
-    color: '#e53935',
     fontSize: 14,
   },
 });

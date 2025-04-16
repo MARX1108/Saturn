@@ -12,6 +12,24 @@ const apiClient = axios.create({
   timeout: 15000, // 15 seconds
 });
 
+// Queue to store requests that failed due to token expiration
+let isRefreshing = false;
+let failedQueue: {
+  resolve: (value?: unknown) => void;
+  reject: (reason?: any) => void;
+}[] = [];
+
+const processQueue = (error: any = null) => {
+  failedQueue.forEach(promise => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
 // Request interceptor to add auth token to requests
 apiClient.interceptors.request.use(
   async config => {
@@ -26,10 +44,69 @@ apiClient.interceptors.request.use(
   error => Promise.reject(error)
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and token refresh
 apiClient.interceptors.response.use(
   response => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config;
+
+    // Handle 401 errors (unauthorized)
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => apiClient(originalRequest))
+          .catch(err => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Attempt to refresh the token
+        const refreshToken = await tokenService.getRefreshToken();
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        const response = await apiClient.post('/auth/refresh', {
+          refreshToken,
+        });
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+        // Store new tokens
+        await tokenService.setToken(accessToken);
+        await tokenService.setRefreshToken(newRefreshToken);
+
+        // Update authorization header
+        apiClient.defaults.headers.common['Authorization'] =
+          `Bearer ${accessToken}`;
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+        processQueue();
+        isRefreshing = false;
+
+        // Retry original request
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError);
+        isRefreshing = false;
+
+        // Clear tokens on refresh failure
+        await tokenService.clearTokens();
+
+        throw refreshError;
+      }
+    }
+
+    // Format error response
     const errorResponse: ApiError = {
       status: error.response?.status || 500,
       message:
@@ -37,6 +114,7 @@ apiClient.interceptors.response.use(
         error.message ||
         'An unexpected error occurred',
       data: error.response?.data || null,
+      code: error.response?.data?.code || 'UNKNOWN_ERROR',
     };
 
     return Promise.reject(errorResponse);

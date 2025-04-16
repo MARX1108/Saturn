@@ -53,7 +53,11 @@ const TextInputWrapper: React.FC<TextInputWrapperProps> = ({
         <TextInput
           style={[
             styles.input,
-            { color: theme.colors.text, fontSize: theme.typography.fontSizeMd },
+            {
+              color: theme.colors.text,
+              fontSize: theme.typography.fontSizeMd,
+              fontFamily: theme.typography.fontFamily,
+            },
           ]}
           placeholderTextColor={theme.colors.textSecondary}
           autoCapitalize="none"

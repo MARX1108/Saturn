@@ -1,5 +1,6 @@
-import { Db } from "mongodb";
-import { MongoRepository } from "../../shared/repositories/baseRepository";
+import { Db } from 'mongodb';
+import { MongoRepository } from '../../shared/repositories/baseRepository';
+import { DbUser } from '../models/user';
 
 // Define basic Auth types - expand as needed
 interface User {
@@ -11,24 +12,24 @@ interface User {
   [key: string]: any;
 }
 
-export class AuthRepository extends MongoRepository<User> {
+export class AuthRepository extends MongoRepository<DbUser> {
   constructor(db: Db) {
-    super(db, "users");
+    super(db, 'users');
 
     // Create indexes for common auth queries
     this.collection.createIndex({ username: 1 }, { unique: true });
     this.collection.createIndex({ email: 1 }, { unique: true });
   }
 
-  async findByUsername(username: string): Promise<User | null> {
+  async findByUsername(username: string): Promise<DbUser | null> {
     return this.findOne({ username });
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<DbUser | null> {
     return this.findOne({ email });
   }
 
-  async findById(id: string): Promise<User | null> {
+  async findById(id: string): Promise<DbUser | null> {
     return this.findOne({ id });
   }
 }

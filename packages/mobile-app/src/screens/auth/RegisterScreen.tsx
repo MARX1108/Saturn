@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import TextInputWrapper from '../../components/ui/TextInputWrapper';
 import { AuthStackParamList } from '../../navigation/types';
+import { useTheme } from '../../theme/ThemeContext';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -24,14 +25,17 @@ type RegisterScreenNavigationProp = NativeStackNavigationProp<
 const RegisterScreen: React.FC = () => {
   const { register, isLoading, error, clearError } = useAuth();
   const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const theme = useTheme();
 
   // Form state
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [formErrors, setFormErrors] = useState({
     username: '',
+    email: '',
     displayName: '',
     password: '',
     passwordConfirmation: '',
@@ -42,6 +46,7 @@ const RegisterScreen: React.FC = () => {
     let isValid = true;
     const errors = {
       username: '',
+      email: '',
       displayName: '',
       password: '',
       passwordConfirmation: '',
@@ -54,6 +59,15 @@ const RegisterScreen: React.FC = () => {
     } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       errors.username =
         'Username can only contain letters, numbers, and underscores';
+      isValid = false;
+    }
+
+    // Validate email
+    if (!email.trim()) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Please enter a valid email address';
       isValid = false;
     }
 
@@ -94,22 +108,21 @@ const RegisterScreen: React.FC = () => {
     }
 
     try {
-      // Only send fields expected by the backend
       await register({
         username,
+        email,
         displayName: displayName || undefined,
         password,
-        // passwordConfirmation is removed as it's not needed by the backend
       });
-      // Navigation will be handled by the AppNavigator based on isAuthenticated state
     } catch (e) {
-      // Error is already handled in the Auth Context
       console.log('Registration error:', e);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
@@ -119,12 +132,23 @@ const RegisterScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Sign up to get started</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
+              Create Account
+            </Text>
+            <Text
+              style={[styles.subtitle, { color: theme.colors.textSecondary }]}
+            >
+              Sign up to get started
+            </Text>
           </View>
 
           {error && (
-            <View style={styles.errorContainer}>
+            <View
+              style={[
+                styles.errorContainer,
+                { backgroundColor: theme.colors.error },
+              ]}
+            >
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
@@ -137,6 +161,16 @@ const RegisterScreen: React.FC = () => {
               value={username}
               onChangeText={setUsername}
               error={formErrors.username}
+            />
+
+            <TextInputWrapper
+              label="Email"
+              placeholder="Enter your email address"
+              autoComplete="email"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+              error={formErrors.email}
             />
 
             <TextInputWrapper
@@ -168,22 +202,36 @@ const RegisterScreen: React.FC = () => {
             />
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[
+                styles.button,
+                { backgroundColor: theme.colors.primary },
+                isLoading && styles.buttonDisabled,
+              ]}
               onPress={handleRegister}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={theme.colors.white} />
               ) : (
-                <Text style={styles.buttonText}>Create Account</Text>
+                <Text
+                  style={[styles.buttonText, { color: theme.colors.white }]}
+                >
+                  Create Account
+                </Text>
               )}
             </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+            <Text
+              style={[styles.footerText, { color: theme.colors.textSecondary }]}
+            >
+              Already have an account?
+            </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.linkText}>Sign In</Text>
+              <Text style={[styles.linkText, { color: theme.colors.primary }]}>
+                Sign In
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -195,15 +243,13 @@ const RegisterScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
-    justifyContent: 'center',
+    padding: 16,
   },
   header: {
     marginBottom: 32,
@@ -211,56 +257,48 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+  },
+  errorContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#fff',
+    fontSize: 14,
   },
   form: {
-    width: '100%',
-    marginBottom: 24,
+    gap: 16,
   },
   button: {
-    backgroundColor: '#3498db',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
+    height: 48,
+    borderRadius: 8,
     justifyContent: 'center',
-    marginTop: 16,
+    alignItems: 'center',
+    marginTop: 8,
   },
   buttonDisabled: {
-    backgroundColor: '#94c6e7',
+    opacity: 0.7,
   },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginTop: 24,
   },
   footerText: {
-    color: '#666',
     fontSize: 14,
   },
   linkText: {
-    color: '#3498db',
     fontSize: 14,
     fontWeight: '600',
-  },
-  errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#e53935',
-    fontSize: 14,
   },
 });
 

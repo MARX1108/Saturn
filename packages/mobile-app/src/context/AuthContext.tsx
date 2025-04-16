@@ -33,6 +33,13 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+interface RegisterRequest {
+  username: string;
+  email: string;
+  displayName?: string;
+  password: string;
+}
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -92,7 +99,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         credentials
       );
 
-      const { user: userData, token: authToken } = response;
+      // Ensure we have both user data and token
+      if (!response.token) {
+        throw new Error('No token received from server');
+      }
+
+      const { actor: userData, token: authToken } = response;
+
+      // Validate token format
+      if (typeof authToken !== 'string' || !authToken.trim()) {
+        throw new Error('Invalid token format received');
+      }
 
       // Save token and update state
       await tokenService.saveToken(authToken);
@@ -124,22 +141,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     clearError();
 
     try {
-      // Ensure we're sending the correct field names as expected by the backend API
-      // Backend expects: username, password, displayName, bio
       const payload = {
         username: details.username,
+        email: details.email,
         password: details.password,
-        displayName: details.displayName || details.name, // Fallback in case name is used
-        bio: details.bio || '',
+        displayName: details.displayName || details.username,
       };
 
-      console.log('Registration payload:', payload);
       const response = await apiService.post(
         appConfig.endpoints.auth.register,
         payload
       );
 
+      // Ensure we have both actor data and token
+      if (!response.token) {
+        throw new Error('No token received from server');
+      }
+
       const { actor: userData, token: authToken } = response;
+
+      // Validate token format
+      if (typeof authToken !== 'string' || !authToken.trim()) {
+        throw new Error('Invalid token format received');
+      }
 
       // Save token and update state
       await tokenService.saveToken(authToken);

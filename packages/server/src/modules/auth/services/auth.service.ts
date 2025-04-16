@@ -15,15 +15,23 @@ export class AuthService {
   }
 
   /**
+   * Generate a JWT token for a user
+   */
+  private generateToken(user: DbUser): string {
+    return jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+  }
+
+  /**
    * Authenticate a user with username and password
-   * @param username The user's username
-   * @param password The user's password
-   * @returns User object without password if authentication is successful, null otherwise
    */
   async authenticateUser(
     username: string,
     password: string
-  ): Promise<Record<string, any> | null> {
+  ): Promise<{ actor: Omit<DbUser, 'password'>; token: string } | null> {
     // Find user using repository
     const user = await this.repository.findByUsername(username);
 
@@ -68,16 +76,22 @@ export class AuthService {
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
-    return userWithoutPassword;
+    // Generate token
+    const token = this.generateToken(user);
+
+    return {
+      actor: userWithoutPassword,
+      token,
+    };
   }
 
   async createUser(
     username: string,
     password: string,
     email: string
-  ): Promise<DbUser> {
+  ): Promise<{ actor: Omit<DbUser, 'password'>; token: string }> {
     const hashedPassword = await bcryptjs.hash(password, 10);
-    return {
+    const user: DbUser = {
       _id: new ObjectId().toString(),
       id: new ObjectId().toString(),
       username,
@@ -88,6 +102,20 @@ export class AuthService {
       email,
       createdAt: new Date(),
       updatedAt: new Date(),
+    };
+
+    // Save user to database
+    await this.repository.create(user);
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+
+    // Generate token
+    const token = this.generateToken(user);
+
+    return {
+      actor: userWithoutPassword,
+      token,
     };
   }
 
@@ -104,18 +132,7 @@ export class AuthService {
       const user = await this.repository.findById(decoded.id);
       if (!user) return null;
 
-      return {
-        _id: user._id,
-        id: user.id,
-        username: user.username,
-        preferredUsername: user.preferredUsername,
-        password: user.password,
-        followers: user.followers,
-        following: user.following,
-        email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      };
+      return user;
     } catch (error) {
       return null;
     }

@@ -22,8 +22,8 @@ export class AuthController {
    */
   async register(req: Request, res: Response): Promise<Response> {
     const { username, password, email } = req.body;
-    const user = await this.authService.createUser(username, password, email);
-    return res.status(201).json(user);
+    const result = await this.authService.createUser(username, password, email);
+    return res.status(201).json(result);
   }
 
   /**
@@ -31,8 +31,13 @@ export class AuthController {
    */
   async login(req: Request, res: Response): Promise<Response> {
     const { username, password } = req.body;
-    const token = await this.authService.authenticateUser(username, password);
-    return res.json({ token });
+    const result = await this.authService.authenticateUser(username, password);
+
+    if (!result) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    return res.json(result);
   }
 
   /**
