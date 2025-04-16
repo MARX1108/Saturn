@@ -184,16 +184,15 @@ export class NotificationService {
   }
 
   async getNotifications(userId: string): Promise<Notification[]> {
-    // Implementation
-    return [];
+    return this.repository.findByRecipient(userId, { limit: 50, offset: 0 });
   }
 
   async markRead(id: string, userId: string): Promise<void> {
-    // Implementation
+    await this.repository.markAsRead([id], userId);
   }
 
   async markAllRead(userId: string): Promise<void> {
-    // Implementation
+    await this.repository.markAllAsRead(userId);
   }
 
   async getUnreadCount(recipientUserId: string): Promise<number> {

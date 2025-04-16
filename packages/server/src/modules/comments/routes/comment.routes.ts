@@ -1,28 +1,33 @@
 import { Router } from 'express';
+import { ServiceContainer } from '../../../utils/container';
 import { CommentsController } from '../controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
-import { AuthService } from '../../auth/services/auth.service';
 
 /**
  * Configure comment routes with the controller
  */
 export default function configureCommentRoutes(
-  commentsController: CommentsController,
-  authService: AuthService
+  container: ServiceContainer
 ): Router {
   const router = Router();
+  const commentsController = container.commentsController;
 
   // Public routes
-  router.get('/comments/:postId', (req, res) =>
-    commentsController.getComments(req, res)
-  );
+  router.get('/:postId', (req, res, next) => {
+    commentsController.getComments(req, res).catch(next);
+  });
 
   // Protected routes
-  router.post('/comments', authenticate(authService), (req, res) =>
-    commentsController.createComment(req, res)
-  );
-  router.delete('/comments/:id', authenticate(authService), (req, res) =>
-    commentsController.deleteComment(req, res)
+  router.post('/', authenticate(container.authService), (req, res, next) => {
+    commentsController.createComment(req, res).catch(next);
+  });
+
+  router.delete(
+    '/:commentId',
+    authenticate(container.authService),
+    (req, res, next) => {
+      commentsController.deleteCommentById(req, res).catch(next);
+    }
   );
 
   return router;

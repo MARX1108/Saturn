@@ -3,14 +3,22 @@ import crypto from 'crypto';
 import bcryptjs from 'bcryptjs';
 import { Actor, CreateActorRequest } from '../models/actor';
 import { ActorRepository } from '../repositories/actorRepository';
+import { NotificationService } from '../../notifications/services/notification.service';
+import { NotificationType } from '../../notifications/models/notification';
 import { AppError, ErrorType } from '../../../utils/errors';
 
 export class ActorService {
   private repository: ActorRepository;
+  private notificationService: NotificationService;
   private domain: string;
 
-  constructor(repository: ActorRepository, domain: string) {
+  constructor(
+    repository: ActorRepository,
+    notificationService: NotificationService,
+    domain: string
+  ) {
     this.repository = repository;
+    this.notificationService = notificationService;
     this.domain = domain;
   }
 
@@ -88,7 +96,19 @@ export class ActorService {
   }
 
   async followActor(actorId: string, targetActorId: string): Promise<boolean> {
-    return this.repository.addFollowing(actorId, targetActorId);
+    const success = await this.repository.addFollowing(actorId, targetActorId);
+
+    if (success) {
+      // Create notification for the followed user
+      await this.notificationService.createNotification({
+        recipientUserId: targetActorId,
+        actorUserId: actorId,
+        type: NotificationType.FOLLOW,
+        read: false,
+      });
+    }
+
+    return success;
   }
 
   async unfollowActor(

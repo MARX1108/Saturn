@@ -3,20 +3,25 @@ import { v4 as uuidv4 } from 'uuid';
 import { Post, CreatePostRequest, UpdatePostRequest } from '../models/post';
 import { PostRepository } from '../repositories/postRepository';
 import { ActorService } from '../../actors/services/actorService';
+import { NotificationService } from '../../notifications/services/notification.service';
+import { NotificationType } from '../../notifications/models/notification';
 import { AppError, ErrorType } from '../../../utils/errors';
 
 export class PostService {
   private repository: PostRepository;
   private actorService: ActorService;
+  private notificationService: NotificationService;
   private domain: string;
 
   constructor(
     repository: PostRepository,
     actorService: ActorService,
+    notificationService: NotificationService,
     domain: string
   ) {
     this.repository = repository;
     this.actorService = actorService;
+    this.notificationService = notificationService;
     this.domain = domain;
   }
 
@@ -76,7 +81,8 @@ export class PostService {
 
   async getPostsByUsername(
     username: string,
-    paginationOptions: { limit: number; offset: number }
+    paginationOptions: { limit: number; offset: number },
+    requestingUserId?: string
   ): Promise<{ posts: Post[]; total: number; limit: number; offset: number }> {
     // Find the actor by username
     const actor = await this.actorService.getActorByUsername(username);
@@ -160,7 +166,20 @@ export class PostService {
       return false;
     }
 
-    return this.repository.likePost(id, actorId);
+    const success = await this.repository.likePost(id, actorId);
+
+    if (success) {
+      // Create notification for the post author
+      await this.notificationService.createNotification({
+        recipientUserId: post.authorId,
+        actorUserId: actorId,
+        type: NotificationType.LIKE,
+        postId: id,
+        read: false,
+      });
+    }
+
+    return success;
   }
 
   async unlikePost(id: string, actorId: string): Promise<boolean> {

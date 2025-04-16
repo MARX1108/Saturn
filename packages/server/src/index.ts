@@ -15,6 +15,8 @@ import configurePostRoutes from './modules/posts/routes/postRoutes';
 import configureAuthRoutes from './modules/auth/routes/authRoutes';
 import { configureActivityPubRoutes } from './modules/activitypub/routes/activitypubRoutes';
 import { configureMediaRoutes } from './modules/media/routes/mediaRoutes';
+import configureNotificationRoutes from './modules/notifications/routes/notification.routes';
+import configureCommentRoutes from './modules/comments/routes/comment.routes';
 
 const app = express();
 const PORT = config.port || 4000;
@@ -93,6 +95,12 @@ export async function startServer(): Promise<{
 
     const mediaRouter = configureMediaRoutes(services);
     app.use('/api/media', mediaRouter); // Mount media routes at /api/media
+
+    const notificationRouter = configureNotificationRoutes(services);
+    app.use('/api/notifications', notificationRouter);
+
+    const commentRouter = configureCommentRoutes(services);
+    app.use('/api/comments', commentRouter);
 
     // Error handling middleware should be last
     app.use(errorHandler as ErrorRequestHandler);
