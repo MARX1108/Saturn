@@ -22,12 +22,8 @@ export default function configureWebFingerRoutes(
   // WebFinger endpoint for actor discovery
   router.get(
     '/.well-known/webfinger',
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await webFingerController.getResource(req, res);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      webFingerController.getResource(req, res).catch(next);
     }
   );
 

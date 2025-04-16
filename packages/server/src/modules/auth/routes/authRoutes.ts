@@ -18,39 +18,20 @@ export default function configureAuthRoutes(
   // Register new user
   router.post(
     '/register',
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await authController.register(req, res);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      authController.register(req, res).catch(next);
     }
   );
 
   // Login user
-  router.post(
-    '/login',
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await authController.login(req, res);
-      } catch (error) {
-        next(error);
-      }
-    }
-  );
+  router.post('/login', (req: Request, res: Response, next: NextFunction) => {
+    authController.login(req, res).catch(next);
+  });
 
   // Get current user (protected route)
-  router.get(
-    '/me',
-    auth,
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await authController.getCurrentUser(req, res);
-      } catch (error) {
-        next(error);
-      }
-    }
-  );
+  router.get('/me', auth, (req: Request, res: Response, next: NextFunction) => {
+    authController.getCurrentUser(req, res).catch(next);
+  });
 
   return router;
 }

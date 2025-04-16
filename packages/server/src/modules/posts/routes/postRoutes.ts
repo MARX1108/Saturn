@@ -15,67 +15,87 @@ export default function configurePostRoutes(
   const router = Router();
 
   // Public routes
-  router.get('/posts', (req: Request, res: Response, next: NextFunction) =>
-    postsController.getFeed(req, res, next)
+  router.get('/posts', (req: Request, res: Response, next: NextFunction) => {
+    postsController.getFeed(req, res, next).catch(next);
+  });
+
+  router.get(
+    '/posts/:id',
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.getPostById(req, res, next).catch(next);
+    }
   );
-  router.get('/posts/:id', (req: Request, res: Response, next: NextFunction) =>
-    postsController.getPostById(req, res, next)
-  );
+
   router.get(
     '/users/:username/posts',
-    (req: Request, res: Response, next: NextFunction) =>
-      postsController.getPostsByUsername(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.getPostsByUsername(req, res, next).catch(next);
+    }
   );
 
   // Protected routes
   router.post(
     '/posts',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) =>
-      postsController.createPost(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.createPost(req, res, next).catch(next);
+    }
   );
+
   router.put(
     '/posts/:id',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) =>
-      postsController.updatePost(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.updatePost(req, res, next).catch(next);
+    }
   );
+
   router.delete(
     '/posts/:id',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) =>
-      postsController.deletePost(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.deletePost(req, res).catch(next);
+    }
   );
+
   router.post(
     '/posts/:id/like',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) =>
-      postsController.likePost(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.likePost(req, res).catch(next);
+    }
   );
+
   router.delete(
     '/posts/:id/like',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) =>
-      postsController.unlikePost(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      postsController.unlikePost(req, res).catch(next);
+    }
   );
 
   // Comment routes
   router.get(
     '/posts/:id/comments',
-    (req: Request, res: Response, next: NextFunction) =>
-      commentsController.getComments(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      commentsController.getComments(req, res).catch(next);
+    }
   );
+
   router.post(
     '/posts/:id/comments',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) =>
-      commentsController.createComment(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      commentsController.createComment(req, res).catch(next);
+    }
   );
+
   router.delete(
     '/comments/:id',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) =>
-      commentsController.deleteComment(req, res, next)
+    (req: Request, res: Response, next: NextFunction) => {
+      commentsController.deleteComment(req, res).catch(next);
+    }
   );
 
   return router;

@@ -24,7 +24,10 @@ export type ServiceType =
   | 'postsController'
   | 'commentsController'
   | 'commentService'
-  | 'notificationService';
+  | 'notificationService'
+  | 'mediaService'
+  | 'activityPubService'
+  | 'webfingerService';
 
 /**
  * Available repositories that can be resolved from the container
@@ -50,6 +53,9 @@ export interface ServiceContainer {
   commentService: CommentService;
   notificationService: NotificationService;
   uploadService: UploadService;
+  mediaService: any; // TODO: Add proper type
+  activityPubService: any; // TODO: Add proper type
+  webfingerService: any; // TODO: Add proper type
 
   // Method to resolve services by name for more flexible DI
   getService<T>(name: ServiceType | string): T | null;
@@ -109,6 +115,9 @@ export function createServiceContainer(
     commentService,
     notificationService,
     uploadService,
+    mediaService: undefined, // TODO: Add proper implementation
+    activityPubService: undefined, // TODO: Add proper implementation
+    webfingerService: undefined, // TODO: Add proper implementation
 
     // Implement getService method for flexible service resolution
     getService<T>(name: ServiceType | string): T | null {

@@ -28,85 +28,58 @@ export default function configureActorRoutes(
   });
 
   // Search actors
-  router.get(
-    '/search',
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await actorsController.searchActors(req, res);
-      } catch (error) {
-        next(error);
-      }
-    }
-  );
+  router.get('/search', (req: Request, res: Response, next: NextFunction) => {
+    actorsController.searchActors(req, res).catch(next);
+  });
 
   // Create new actor
-  router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/', (req: Request, res: Response, next: NextFunction) => {
     const upload = imageUpload.single('avatarFile');
-    upload(req, res, async err => {
+    upload(req, res, err => {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      try {
-        await actorsController.createActor(req, res);
-      } catch (error) {
-        next(error);
-      }
+      actorsController.createActor(req, res).catch(next);
     });
   });
 
-  // Get actor posts - defined before /:username to ensure proper route handling
+  // Get actor posts
   router.get(
     '/:username/posts',
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await actorsController.getActorPosts(req, res, next);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      actorsController.getActorPosts(req, res, next).catch(next);
     }
   );
 
   // Get actor by username
   router.get(
     '/:username',
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await actorsController.getActorByUsername(req, res);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      actorsController.getActorByUsername(req, res).catch(next);
     }
   );
 
-  // Update actor - requires authentication
+  // Update actor
   router.put(
-    '/:username',
+    '/:id',
     auth,
-    async (req: Request, res: Response, next: NextFunction) => {
+    (req: Request, res: Response, next: NextFunction) => {
       const upload = imageUpload.single('avatarFile');
-      upload(req, res, async err => {
+      upload(req, res, err => {
         if (err) {
           return res.status(400).json({ error: err.message });
         }
-        try {
-          await actorsController.updateActor(req, res);
-        } catch (error) {
-          next(error);
-        }
+        actorsController.updateActor(req, res).catch(next);
       });
     }
   );
 
-  // Delete actor - requires authentication
+  // Delete actor
   router.delete(
-    '/:username',
+    '/:id',
     auth,
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await actorsController.deleteActor(req, res);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      actorsController.deleteActor(req, res).catch(next);
     }
   );
 

@@ -26,6 +26,10 @@ export class PostService {
       throw new AppError('Actor not found', 404, ErrorType.NOT_FOUND);
     }
 
+    if (!actor._id) {
+      throw new AppError('Actor ID is missing', 500, ErrorType.SERVER_ERROR);
+    }
+
     const post: Post = {
       id: `${process.env.APP_URL}/api/posts/${Date.now()}`,
       authorId: actor._id,
@@ -39,6 +43,7 @@ export class PostService {
       attributedTo: `${process.env.APP_URL}/api/actors/${actor._id}`,
       url: `${process.env.APP_URL}/api/posts/${Date.now()}`,
       replies: [],
+      likes: [],
       shares: 0,
       sensitive: request.sensitive || false,
       contentWarning: request.contentWarning,

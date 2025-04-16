@@ -20,33 +20,20 @@ export function configureMediaRoutes(
   // Create controller with injected service
   const mediaController = new MediaController(mediaService);
 
-  // Define routes with explicit RequestHandler types
-  const uploadMediaHandler: RequestHandler = async (req, res, next) => {
-    try {
-      await mediaController.uploadMedia(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.post('/upload', uploadMediaHandler);
+  // Upload media
+  router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
+    mediaController.uploadMedia(req, res).catch(next);
+  });
 
-  const getMediaHandler: RequestHandler = async (req, res, next) => {
-    try {
-      await mediaController.getMedia(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.get('/:id', getMediaHandler);
+  // Get media by ID
+  router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
+    mediaController.getMedia(req, res).catch(next);
+  });
 
-  const deleteMediaHandler: RequestHandler = async (req, res, next) => {
-    try {
-      await mediaController.deleteMedia(req, res);
-    } catch (error) {
-      next(error);
-    }
-  };
-  router.delete('/:id', deleteMediaHandler);
+  // Delete media
+  router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
+    mediaController.deleteMedia(req, res).catch(next);
+  });
 
   return router;
 }
