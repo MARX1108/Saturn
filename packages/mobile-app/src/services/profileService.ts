@@ -50,33 +50,36 @@ const profileService = {
    * @param username - The username of the user whose posts to fetch
    * @param page - Optional page number for pagination
    * @param limit - Optional limit of posts per page
-   * @returns Promise with an array of posts
+   * @returns Promise with posts data including pagination info
    */
   fetchUserPosts: async (
     username: string,
     page: number = 1,
     limit: number = 20
-  ): Promise<Post[]> => {
-    // This endpoint is not documented in the API documentation
-    // TODO: Consult with backend team to confirm if this endpoint exists
-    console.warn(
-      'The /api/actors/:username/posts endpoint is not documented in the API documentation'
-    );
-    return [];
-
-    // Original implementation preserved for reference:
-    /*
+  ): Promise<{ posts: Post[]; hasMore: boolean; totalCount?: number }> => {
     try {
-      const url = appConfig.endpoints.actors.getUserPosts.replace(':username', username);
-      const response = await apiService.get<{posts: Post[], hasMore: boolean}>(
-        `${url}?page=${page}&limit=${limit}`
+      const url = appConfig.endpoints.actors.getUserPosts.replace(
+        ':username',
+        username
       );
-      return response.posts || [];
+
+      const response = await apiService.get<{
+        posts: Post[];
+        hasMore: boolean;
+        totalCount?: number;
+      }>(url, {
+        params: { page, limit },
+      });
+
+      return {
+        posts: response.posts || [],
+        hasMore: response.hasMore || false,
+        totalCount: response.totalCount,
+      };
     } catch (error) {
       console.error('Error fetching user posts:', error);
       throw error;
     }
-    */
   },
 
   /**

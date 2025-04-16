@@ -55,7 +55,7 @@ export const postService = {
    */
   likePost: async (postId: string): Promise<Post> => {
     try {
-      const url = `/api/posts/${postId}/like`;
+      const url = appConfig.endpoints.posts.likePost.replace(':id', postId);
       return await apiService.post<Post>(url);
     } catch (error) {
       console.error(`Error liking post ${postId}:`, error);
@@ -66,13 +66,12 @@ export const postService = {
   /**
    * Unlike a post
    * @param postId - ID of the post to unlike
-   * @returns Promise with the updated post
+   * @returns Promise<void> - The unlike operation completes successfully
    */
-  unlikePost: async (postId: string): Promise<{ success: boolean }> => {
+  unlikePost: async (postId: string): Promise<void> => {
     try {
-      const url = `/api/posts/${postId}/unlike`;
-      // Changed from delete to post to match API requirements
-      return await apiService.post<{ success: boolean }>(url);
+      const url = appConfig.endpoints.posts.likePost.replace(':id', postId);
+      await apiService.delete(url);
     } catch (error) {
       console.error(`Error unliking post ${postId}:`, error);
       throw error;

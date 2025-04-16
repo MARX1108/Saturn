@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useTheme } from '@react-navigation/native';
@@ -94,45 +95,84 @@ const ProfileScreen = () => {
   const [profileData, setProfileData] = useState<User | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(false);
+  const [totalPostCount, setTotalPostCount] = useState<number | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 10;
 
+  // Fetch profile and posts data
+  const fetchData = async (page = 1, shouldRefresh = false) => {
+    if (!username) {
+      setError('Username not provided');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const [profileResponse, postsResponse] = await Promise.all([
+        profileService.fetchUserProfile(username),
+        profileService.fetchUserPosts(username, page, postsPerPage),
+      ]);
+
+      setProfileData(profileResponse);
+      setUserPosts(prevPosts =>
+        shouldRefresh
+          ? postsResponse.posts
+          : [...prevPosts, ...postsResponse.posts]
+      );
+      setHasMorePosts(postsResponse.hasMore);
+      setTotalPostCount(postsResponse.totalCount);
+      setIsCurrentUser(currentUser?.preferredUsername === username);
+    } catch (err) {
+      console.error('Error fetching profile data:', err);
+      setError('Failed to load profile data');
+    }
+  };
+
+  // Initial data fetch
   useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!username) {
-        setError('Username not provided');
-        setIsLoading(false);
-        return;
-      }
-
+    const loadInitialData = async () => {
       setIsLoading(true);
       setError(null);
-
-      try {
-        // Fetch only profile data since fetchUserPosts endpoint is not available in API docs
-        const profileResponse = await profileService.fetchUserProfile(username);
-        setProfileData(profileResponse);
-
-        // Set empty posts array since the endpoint is not available
-        setUserPosts([]);
-
-        // Add a console warning about the missing endpoint
-        console.warn(
-          'Unable to fetch user posts: API endpoint not documented/available'
-        );
-
-        // Determine if this is the current user's profile
-        setIsCurrentUser(currentUser?.preferredUsername === username);
-      } catch (err) {
-        console.error('Error fetching profile data:', err);
-        setError('Failed to load profile data');
-      } finally {
-        setIsLoading(false);
-      }
+      await fetchData(1, true);
+      setIsLoading(false);
     };
 
-    fetchProfileData();
+    loadInitialData();
   }, [username, currentUser]);
+
+  // Pull to refresh handler
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setCurrentPage(1);
+    await fetchData(1, true);
+    setIsRefreshing(false);
+  }, [username]);
+
+  // Load more posts handler
+  const handleLoadMore = useCallback(async () => {
+    if (!hasMorePosts || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+    await fetchData(nextPage, false);
+    setCurrentPage(nextPage);
+    setIsLoadingMore(false);
+  }, [hasMorePosts, isLoadingMore, currentPage]);
+
+  // Loading footer component
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+    return (
+      <View style={styles.footerContainer}>
+        <ActivityIndicator color={theme.colors.primary} />
+      </View>
+    );
+  };
 
   // Display loading state
   if (isLoading && !profileData) {
@@ -172,6 +212,17 @@ const ProfileScreen = () => {
             </View>
           ) : null
         }
+        ListFooterComponent={renderFooter}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
         contentContainerStyle={styles.contentContainer}
       />
     </View>
@@ -210,6 +261,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     opacity: 0.6,
+  },
+  footerContainer: {
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerContainer: {
     padding: 20,

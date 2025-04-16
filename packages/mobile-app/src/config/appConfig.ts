@@ -14,9 +14,7 @@ export const appConfig = {
       searchActors: '/api/actors/search',
       updateActor: '/api/actors/:username', // Used for PUT requests to update an actor
       deleteActor: '/api/actors/:username',
-      // The getUserPosts endpoint is not documented in API.
-      // Consider confirming with backend team if this endpoint exists.
-      // getUserPosts: '/api/actors/:username/posts',
+      getUserPosts: '/users/:username/posts', // Fetch posts for a specific user
     },
     posts: {
       feed: '/api/posts', // This is used for GET requests to fetch the feed
@@ -24,8 +22,10 @@ export const appConfig = {
       getPost: '/api/posts/:id',
       updatePost: '/api/posts/:id',
       deletePost: '/api/posts/:id',
+      // Like/Unlike functionality uses the same endpoint with different HTTP methods:
+      // POST /api/posts/:id/like - Like a post
+      // DELETE /api/posts/:id/like - Unlike a post
       likePost: '/api/posts/:id/like',
-      unlikePost: '/api/posts/:id/unlike',
     },
     media: {
       upload: '/api/media/upload', // Note: API docs indicate this is not fully implemented (501)

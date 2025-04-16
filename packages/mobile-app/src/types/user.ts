@@ -1,12 +1,12 @@
 /**
  * User Interface
  * Defines the structure of user data in the application
- * Aligned with the expected structure from the backend API
+ * Aligned with the backend API model
  */
 export interface User {
   _id: string;
   preferredUsername: string;
-  name: string; // This is the display name
+  name: string;
   bio?: string;
   icon?: {
     url: string;

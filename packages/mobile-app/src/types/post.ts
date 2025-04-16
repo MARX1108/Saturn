@@ -1,7 +1,7 @@
 /**
  * Post Interface
  * Defines the structure of post data in the application
- * Aligned with the expected structure from the backend API
+ * Aligned with the backend API model
  */
 export interface Post {
   id: string;
@@ -21,7 +21,8 @@ export interface Post {
   sensitive: boolean;
   contentWarning: string;
   likes: number;
-  likedByUser: boolean;
+  likedBy: string[]; // Array of user IDs who liked the post
+  likedByUser: boolean; // Client-side computed field
   shares: number;
 }
 
