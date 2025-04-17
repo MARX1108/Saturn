@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1744853780228" clover="3.2.0">
-  <project timestamp="1744853780228" name="All files">
-    <metrics statements="174" coveredstatements="44" conditionals="62" coveredconditionals="3" methods="46" coveredmethods="7" elements="282" coveredelements="54" complexity="0" loc="174" ncloc="174" packages="8" files="8" classes="8"/>
+<coverage generated="1744853884098" clover="3.2.0">
+  <project timestamp="1744853884098" name="All files">
+    <metrics statements="174" coveredstatements="52" conditionals="62" coveredconditionals="3" methods="46" coveredmethods="7" elements="282" coveredelements="62" complexity="0" loc="174" ncloc="174" packages="8" files="8" classes="8"/>
     <package name="middleware">
       <metrics statements="49" coveredstatements="8" conditionals="26" coveredconditionals="2" methods="8" coveredmethods="1"/>
       <file name="auth.ts" path="/Users/marxw/Saturn/packages/server/src/middleware/auth.ts">
@@ -106,35 +106,35 @@
       </file>
     </package>
     <package name="modules.actors.routes">
-      <metrics statements="26" coveredstatements="5" conditionals="6" coveredconditionals="1" methods="9" coveredmethods="1"/>
+      <metrics statements="26" coveredstatements="12" conditionals="6" coveredconditionals="1" methods="9" coveredmethods="1"/>
       <file name="actorRoutes.ts" path="/Users/marxw/Saturn/packages/server/src/modules/actors/routes/actorRoutes.ts">
-        <metrics statements="26" coveredstatements="5" conditionals="6" coveredconditionals="1" methods="9" coveredmethods="1"/>
+        <metrics statements="26" coveredstatements="12" conditionals="6" coveredconditionals="1" methods="9" coveredmethods="1"/>
         <line num="13" count="2" type="stmt"/>
         <line num="14" count="2" type="stmt"/>
         <line num="15" count="2" type="cond" truecount="1" falsecount="1"/>
         <line num="18" count="2" type="stmt"/>
         <line num="26" count="2" type="stmt"/>
-        <line num="31" count="0" type="stmt"/>
+        <line num="31" count="2" type="stmt"/>
         <line num="32" count="0" type="stmt"/>
-        <line num="36" count="0" type="stmt"/>
+        <line num="36" count="2" type="stmt"/>
         <line num="37" count="0" type="stmt"/>
         <line num="38" count="0" type="stmt"/>
         <line num="39" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="40" count="0" type="stmt"/>
         <line num="42" count="0" type="stmt"/>
-        <line num="47" count="0" type="stmt"/>
+        <line num="47" count="2" type="stmt"/>
         <line num="50" count="0" type="stmt"/>
-        <line num="55" count="0" type="stmt"/>
+        <line num="55" count="2" type="stmt"/>
         <line num="58" count="0" type="stmt"/>
-        <line num="63" count="0" type="stmt"/>
+        <line num="63" count="2" type="stmt"/>
         <line num="67" count="0" type="stmt"/>
         <line num="68" count="0" type="stmt"/>
         <line num="69" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="70" count="0" type="stmt"/>
         <line num="72" count="0" type="stmt"/>
-        <line num="78" count="0" type="stmt"/>
+        <line num="78" count="2" type="stmt"/>
         <line num="82" count="0" type="stmt"/>
-        <line num="86" count="0" type="stmt"/>
+        <line num="86" count="2" type="stmt"/>
       </file>
     </package>
     <package name="modules.auth.controllers">
@@ -203,15 +203,15 @@
       </file>
     </package>
     <package name="routes">
-      <metrics statements="6" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+      <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
       <file name="index.ts" path="/Users/marxw/Saturn/packages/server/src/routes/index.ts">
-        <metrics statements="6" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
         <line num="11" count="2" type="stmt"/>
         <line num="14" count="2" type="stmt"/>
         <line num="17" count="2" type="stmt"/>
         <line num="18" count="2" type="stmt"/>
         <line num="24" count="2" type="stmt"/>
-        <line num="26" count="0" type="stmt"/>
+        <line num="26" count="2" type="stmt"/>
       </file>
     </package>
     <package name="utils">

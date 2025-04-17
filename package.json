@@ -8,7 +8,7 @@
   "scripts": {
     "start": "yarn workspace @saturn/server start",
     "dev": "yarn workspace @saturn/server dev",
-    "test": "yarn workspace @saturn/server test",
+    "test": "jest",
     "build": "yarn workspace @saturn/server build",
     "lint": "yarn workspace @saturn/server lint"
   },
