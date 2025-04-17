@@ -1,52 +1,20 @@
 import express from 'express';
 import { Db } from 'mongodb';
-import { mock } from 'jest-mock-extended';
-import { AuthService } from '../../src/modules/auth/services/authService';
-import { ActorService } from '../../src/modules/actors/services/actorService';
-import { PostsController } from '../../src/modules/posts/controllers/postsController';
-import { CommentsController } from '../../src/modules/comments/controllers/comments.controller';
-import { UploadService } from '../../src/modules/uploads/services/uploadService';
-import { PostService } from '../../src/modules/posts/services/postService';
 import { Request, Response, NextFunction } from 'express';
-import { DbUser } from '../src/models/user';
-import { createServiceContainer } from '../src/config/serviceContainer';
 import { configureRoutes } from '@/routes';
-import { CommentService } from '../src/modules/comments/services/commentService';
-import { MediaService } from '../src/modules/media/services/mediaService';
-import { NotificationService } from '../src/modules/notifications/services/notificationService';
-import multer from 'multer';
-
-// Export mock services for tests
-export const mockAuthService = mock<AuthService>();
-export const mockActorService = mock<ActorService>();
-export const mockPostsController = mock<PostsController>();
-export const mockCommentsController = mock<CommentsController>();
-export const mockUploadService = mock<UploadService>();
-export const mockPostService = mock<PostService>();
-
-// Mock multer middleware
-const mockMulterMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => next();
-
-export const mockAuthMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  req.user = {
-    _id: 'test-user-id',
-    id: 'test-user-id',
-    preferredUsername: 'testuser',
-    email: 'test@example.com',
-    password: 'hashedpassword',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as DbUser;
-  next();
-};
+import { AuthController } from '@/modules/auth/controllers/authController';
+import { ActorsController } from '@/modules/actors/controllers/actorsController';
+import { PostsController } from '@/modules/posts/controllers/postsController';
+import { CommentsController } from '@/modules/comments/controllers/comments.controller';
+import {
+  mockAuthService,
+  mockActorService,
+  mockPostService,
+  mockUploadService,
+  mockNotificationService,
+  mockCommentService,
+  mockAuthMiddleware,
+} from './mockSetup';
 
 export async function createTestApp(db: Db, domain: string) {
   const app = express();
@@ -60,79 +28,42 @@ export async function createTestApp(db: Db, domain: string) {
   // Add JSON body parser
   app.use(express.json());
 
-  // Create mock services
-  const mockAuthService = mock<AuthService>();
-  const mockActorService = mock<ActorService>();
-  const mockPostService = mock<PostService>();
-  const mockCommentService = mock<CommentService>();
-  const mockMediaService = mock<MediaService>();
-  const mockNotificationService = mock<NotificationService>();
-  const mockUploadService = mock<UploadService>();
-
-  // Configure mock services
-  mockPostService.getPostById.mockImplementation(async id => {
-    if (id === 'nonexistent') return null;
-    return {
-      id,
-      content: 'Test post content',
-      authorId: 'test-user-id',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      likes: [],
-      shares: 0,
-      sensitive: false,
-      contentWarning: null,
-      attachments: [],
-      actor: {
-        id: 'test-user-id',
-        username: 'testuser',
-      },
-    };
-  });
-
-  mockPostService.getFeed.mockResolvedValue({
-    posts: [
-      {
-        id: 'test-post-id',
-        content: 'Test post content',
-        authorId: 'test-user-id',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        likes: [],
-        shares: 0,
-        sensitive: false,
-        contentWarning: null,
-        attachments: [],
-        actor: {
-          id: 'test-user-id',
-          username: 'testuser',
-        },
-      },
-    ],
-    hasMore: false,
-  });
-
-  // Configure upload service mock
-  mockUploadService.configureImageUploadMiddleware.mockReturnValue(
-    mockMulterMiddleware
+  // Create real controllers with mock services
+  const postsController = new PostsController(
+    mockPostService,
+    mockActorService,
+    mockUploadService,
+    domain
+  );
+  const commentsController = new CommentsController(mockCommentService);
+  const authController = new AuthController(mockAuthService, mockActorService);
+  const actorsController = new ActorsController(
+    mockActorService,
+    mockUploadService,
+    mockPostService,
+    domain
   );
 
-  // Create service container with mock services
+  // Create service container with mock services and real controllers
   const serviceContainer = {
+    // Services
     authService: mockAuthService,
     actorService: mockActorService,
     postService: mockPostService,
     commentService: mockCommentService,
-    mediaService: mockMediaService,
+    mediaService: mockUploadService,
     notificationService: mockNotificationService,
     uploadService: mockUploadService,
+    // Controllers
+    postsController,
+    commentsController,
+    authController,
+    actorsController,
   };
 
-  // Apply middleware
+  // Apply middleware in correct order
   app.use(require('cors')());
-  app.use(mockAuthMiddleware);
-
-  // Mount routes with service container
+  app.use(mockAuthMiddleware); // Apply auth middleware before routes
   app.use('/api', configureRoutes(serviceContainer));
 
   // Error handling middleware

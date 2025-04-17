@@ -1,13 +1,46 @@
-import { createTestApp } from '../helpers/testApp';
+import { mockPostService, mockActorService } from '../helpers/mockSetup';
 import { createTestPost } from '../helpers/testUtils';
 import request from 'supertest';
 
-describe('Post Routes', () => {
-  const app = createTestApp();
+beforeEach(() => {
+  // Reset mocks before each test
+  mockPostService.mockReset();
+  mockActorService.mockReset();
+});
 
+describe('Post Routes', () => {
   describe('GET /api/posts', () => {
     it('should return posts feed', async () => {
-      const response = await request(app)
+      const mockDate = new Date();
+      const mockActor = {
+        id: 'test-user-id',
+        username: 'testuser',
+        email: 'test@example.com',
+        createdAt: mockDate,
+        updatedAt: mockDate,
+      };
+
+      const mockPost = {
+        id: 'test-post-id',
+        content: 'Test post content',
+        authorId: 'test-user-id',
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        likes: [],
+        shares: 0,
+        sensitive: false,
+        contentWarning: null,
+        attachments: [],
+        actor: mockActor,
+      };
+
+      mockPostService.getFeed.mockResolvedValue({
+        posts: [mockPost],
+        hasMore: false,
+      });
+
+      const response = await global
+        .request(global.testApp)
         .get('/api/posts')
         .set('Authorization', 'Bearer mock-test-token');
 
@@ -19,18 +52,46 @@ describe('Post Routes', () => {
 
   describe('GET /api/posts/:id', () => {
     it('should return a post by id', async () => {
-      const post = await createTestPost();
+      const mockDate = new Date();
+      const mockActor = {
+        id: 'test-user-id',
+        username: 'testuser',
+        email: 'test@example.com',
+        createdAt: mockDate,
+        updatedAt: mockDate,
+      };
 
-      const response = await request(app)
-        .get(`/api/posts/${post.id}`)
+      const mockPost = {
+        id: 'test-post-id',
+        content: 'Test post content',
+        authorId: 'test-user-id',
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        likes: [],
+        shares: 0,
+        sensitive: false,
+        contentWarning: null,
+        attachments: [],
+        actor: mockActor,
+      };
+
+      mockPostService.getPostById.mockResolvedValue(mockPost);
+      mockActorService.findById.mockResolvedValue(mockActor);
+
+      const response = await global
+        .request(global.testApp)
+        .get(`/api/posts/${mockPost.id}`)
         .set('Authorization', 'Bearer mock-test-token');
 
       expect(response.status).toBe(200);
-      expect(response.body.id).toBe(post.id);
+      expect(response.body.id).toBe(mockPost.id);
     });
 
     it('should return 404 if post not found', async () => {
-      const response = await request(app)
+      mockPostService.getPostById.mockResolvedValue(null);
+
+      const response = await global
+        .request(global.testApp)
         .get('/api/posts/nonexistent')
         .set('Authorization', 'Bearer mock-test-token');
 

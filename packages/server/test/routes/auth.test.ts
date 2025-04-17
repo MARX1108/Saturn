@@ -1,4 +1,4 @@
-import { mockAuthService, mockActorService } from '../helpers/testApp';
+import { mockAuthService, mockActorService } from '../helpers/mockSetup';
 
 beforeEach(() => {
   // Reset mocks before each test
@@ -48,7 +48,7 @@ describe('Auth Routes', () => {
   describe('POST /api/auth/login', () => {
     it('should login a user', async () => {
       const mockToken = { token: 'mock-jwt-token' };
-      mockAuthService.authenticateUser.mockResolvedValue(mockToken);
+      mockAuthService.login.mockResolvedValue(mockToken);
 
       const response = await global
         .request(global.testApp)
@@ -60,7 +60,7 @@ describe('Auth Routes', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockToken);
-      expect(mockAuthService.authenticateUser).toHaveBeenCalledWith(
+      expect(mockAuthService.login).toHaveBeenCalledWith(
         'testuser',
         'password123'
       );
