@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">29.03% </span>
+                <span class="strong">12.9% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>9/31</span>
+                <span class='fraction'>4/31</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">18.75% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/16</span>
+                <span class='fraction'>0/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">22.22% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/9</span>
+                <span class='fraction'>0/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">29.03% </span>
+                <span class="strong">12.9% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>9/31</span>
+                <span class='fraction'>4/31</span>
             </div>
         
             
@@ -195,21 +195,21 @@
 <a name='L130'></a><a href='#L130'>130</a>
 <a name='L131'></a><a href='#L131'>131</a>
 <a name='L132'></a><a href='#L132'>132</a>
-<a name='L133'></a><a href='#L133'>133</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
+<a name='L133'></a><a href='#L133'>133</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -234,9 +234,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -337,11 +337,11 @@ export class UploadService {
    * @param uploadDir Optional custom upload directory path
    * @returns Configured multer storage
    */
-  private configureStorage(uploadDir?: string): multer.StorageEngine {
-    const defaultDir = path.join(process.cwd(), "uploads");
-    const destination = uploadDir || defaultDir;
+  private <span class="fstat-no" title="function not covered" >configureStorage(</span>uploadDir?: string): multer.StorageEngine {
+    const defaultDir = <span class="cstat-no" title="statement not covered" >path.join(process.cwd(), "uploads");</span>
+    const destination = <span class="cstat-no" title="statement not covered" >uploadDir || defaultDir;</span>
 &nbsp;
-    return multer.diskStorage({
+<span class="cstat-no" title="statement not covered" >    return multer.diskStorage({</span>
       destination: <span class="fstat-no" title="function not covered" >async </span>(req, file, cb) =&gt; {
 <span class="cstat-no" title="statement not covered" >        try {</span>
 <span class="cstat-no" title="statement not covered" >          await fs.mkdir(destination, { recursive: true });</span>
@@ -362,13 +362,13 @@ export class UploadService {
    * @param options Configuration options
    * @returns Configured multer middleware
    */
-  public configureImageUploadMiddleware(options?: {
+  public <span class="fstat-no" title="function not covered" >configureImageUploadMiddleware(</span>options?: {
     fileSizeLimitMB?: number;
     uploadDir?: string;
   }): multer.Multer {
-    const fileSizeLimit = (options?.fileSizeLimitMB || <span class="branch-1 cbranch-no" title="branch not covered" >5)</span> * 1024 * 1024; // Default 5MB
+    const fileSizeLimit = <span class="cstat-no" title="statement not covered" >(options?.fileSizeLimitMB || 5) * 1024 * 1024;</span> // Default 5MB
 &nbsp;
-    return multer({
+<span class="cstat-no" title="statement not covered" >    return multer({</span>
       storage: this.configureStorage(options?.uploadDir),
       limits: { fileSize: fileSizeLimit },
       fileFilter: <span class="fstat-no" title="function not covered" >(r</span>eq, file, cb) =&gt; {
@@ -466,7 +466,7 @@ export class UploadService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-16T23:49:14.961Z
+                at 2025-04-17T00:10:13.120Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

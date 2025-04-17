@@ -1,5 +1,5 @@
 import { ActorService } from '../../src/modules/actors/services/actorService';
-import { configureActorRoutes } from '../../src/modules/actors/routes/actorRoutes';
+import configureActorRoutes from '../../src/modules/actors/routes/actorRoutes';
 import { mock } from 'jest-mock-extended';
 import { tmpdir } from 'os';
 import { join } from 'path';
