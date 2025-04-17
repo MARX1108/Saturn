@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.42% </span>
+                <span class="strong">15.38% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>10/14</span>
+                <span class='fraction'>2/13</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>1/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.42% </span>
+                <span class="strong">15.38% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>10/14</span>
+                <span class='fraction'>2/13</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -125,36 +125,36 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -189,31 +189,31 @@ export class AuthController {
   /**
    * Register a new user
    */
-  async register(req: Request, res: Response): Promise&lt;Response&gt; {
-    const { username, password, email } = req.body;
-    const result = await this.authService.createUser(username, password, email);
-    return res.status(201).json(result);
+<span class="fstat-no" title="function not covered" >  as</span>ync register(req: Request, res: Response): Promise&lt;Response&gt; {
+    const { username, password, email } = <span class="cstat-no" title="statement not covered" >req.body;</span>
+    const result = <span class="cstat-no" title="statement not covered" >await this.authService.createUser(username, password, email);</span>
+<span class="cstat-no" title="statement not covered" >    return res.status(201).json(result);</span>
   }
 &nbsp;
   /**
    * Login user
    */
-  async login(req: Request, res: Response): Promise&lt;Response&gt; {
-    const { username, password } = req.body;
-    const result = await this.authService.authenticateUser(username, password);
+<span class="fstat-no" title="function not covered" >  as</span>ync login(req: Request, res: Response): Promise&lt;Response&gt; {
+    const { username, password } = <span class="cstat-no" title="statement not covered" >req.body;</span>
+    const result = <span class="cstat-no" title="statement not covered" >await this.authService.authenticateUser(username, password);</span>
 &nbsp;
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (!result) {
+<span class="cstat-no" title="statement not covered" >    if (!result) {</span>
 <span class="cstat-no" title="statement not covered" >      return res.status(401).json({ error: 'Invalid credentials' });</span>
     }
 &nbsp;
-    return res.json(result);
+<span class="cstat-no" title="statement not covered" >    return res.json(result);</span>
   }
 &nbsp;
   /**
    * Get current authenticated user
    */
-<span class="fstat-no" title="function not covered" >  async </span>getCurrentUser(req: Request, res: Response): Promise&lt;Response&gt; {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!req.user) {</span>
+<span class="fstat-no" title="function not covered" >  as</span>ync getCurrentUser(req: Request, res: Response): Promise&lt;Response&gt; {
+<span class="cstat-no" title="statement not covered" >    if (!req.user) {</span>
 <span class="cstat-no" title="statement not covered" >      return res.status(401).json({ error: 'Authentication required' });</span>
     }
 <span class="cstat-no" title="statement not covered" >    return res.json(req.user);</span>
@@ -226,7 +226,7 @@ export class AuthController {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-04-17T01:12:21.235Z
+                at 2025-04-17T01:36:20.168Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

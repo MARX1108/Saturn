@@ -7,14 +7,14 @@ import { PostsController } from '../../src/modules/posts/controllers/postsContro
 import { CommentsController } from '../../src/modules/comments/controllers/comments.controller';
 import { UploadService } from '../../src/modules/uploads/services/uploadService';
 import { PostService } from '../../src/modules/posts/services/postService';
-import configureRoutes from '../../src/routes';
 import { Request, Response, NextFunction } from 'express';
 import { DbUser } from '../src/models/user';
 import { createServiceContainer } from '../src/config/serviceContainer';
-import { mainRouter } from '../src/routes';
+import { configureRoutes } from '@/routes';
 import { CommentService } from '../src/modules/comments/services/commentService';
 import { MediaService } from '../src/modules/media/services/mediaService';
 import { NotificationService } from '../src/modules/notifications/services/notificationService';
+import multer from 'multer';
 
 // Export mock services for tests
 export const mockAuthService = mock<AuthService>();
@@ -23,6 +23,13 @@ export const mockPostsController = mock<PostsController>();
 export const mockCommentsController = mock<CommentsController>();
 export const mockUploadService = mock<UploadService>();
 export const mockPostService = mock<PostService>();
+
+// Mock multer middleware
+const mockMulterMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => next();
 
 export const mockAuthMiddleware = (
   req: Request,
@@ -60,6 +67,7 @@ export async function createTestApp(db: Db, domain: string) {
   const mockCommentService = mock<CommentService>();
   const mockMediaService = mock<MediaService>();
   const mockNotificationService = mock<NotificationService>();
+  const mockUploadService = mock<UploadService>();
 
   // Configure mock services
   mockPostService.getPostById.mockImplementation(async id => {
@@ -104,6 +112,11 @@ export async function createTestApp(db: Db, domain: string) {
     hasMore: false,
   });
 
+  // Configure upload service mock
+  mockUploadService.configureImageUploadMiddleware.mockReturnValue(
+    mockMulterMiddleware
+  );
+
   // Create service container with mock services
   const serviceContainer = {
     authService: mockAuthService,
@@ -112,6 +125,7 @@ export async function createTestApp(db: Db, domain: string) {
     commentService: mockCommentService,
     mediaService: mockMediaService,
     notificationService: mockNotificationService,
+    uploadService: mockUploadService,
   };
 
   // Apply middleware
@@ -119,7 +133,7 @@ export async function createTestApp(db: Db, domain: string) {
   app.use(mockAuthMiddleware);
 
   // Mount routes with service container
-  app.use('/api', mainRouter(serviceContainer));
+  app.use('/api', configureRoutes(serviceContainer));
 
   // Error handling middleware
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
