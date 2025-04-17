@@ -1,5 +1,8 @@
 import { mockPostService, mockPostsController } from '../helpers/testApp';
 
+// Mock token for authentication
+const mockToken = 'mock-test-token';
+
 beforeEach(() => {
   // Reset mocks before each test
   mockPostService.mockReset();
@@ -18,6 +21,7 @@ describe('Post Routes', () => {
       const response = await global
         .request(global.testApp)
         .get('/api/posts')
+        .set('Authorization', `Bearer ${mockToken}`)
         .expect(200);
 
       expect(response.body).toEqual(mockPosts);
@@ -27,25 +31,33 @@ describe('Post Routes', () => {
 
   describe('GET /api/posts/:id', () => {
     it('should return a post by id', async () => {
-      const mockPost = { id: '1', title: 'Test Post' };
-      mockPostsController.getPostById.mockResolvedValue(mockPost);
+      console.log('!!! DEBUG: Starting getPostById test');
+      const post = await createTestPost();
+      console.log('!!! DEBUG: Created test post with id:', post.id);
 
       const response = await global
         .request(global.testApp)
-        .get('/api/posts/1')
-        .expect(200);
+        .get(`/api/posts/${post.id}`)
+        .set('Authorization', `Bearer ${mockToken}`);
 
-      expect(response.body).toEqual(mockPost);
-      expect(mockPostsController.getPostById).toHaveBeenCalledWith('1');
+      console.log('!!! DEBUG: Response status:', response.status);
+      console.log('!!! DEBUG: Response body:', response.body);
+
+      expect(response.status).toBe(200);
+      expect(response.body.id).toBe(post.id);
     });
 
     it('should return 404 if post not found', async () => {
-      mockPostsController.getPostById.mockResolvedValue(null);
-
-      await global
+      console.log('!!! DEBUG: Starting getPostById 404 test');
+      const response = await global
         .request(global.testApp)
         .get('/api/posts/nonexistent')
-        .expect(404);
+        .set('Authorization', `Bearer ${mockToken}`);
+
+      console.log('!!! DEBUG: Response status:', response.status);
+      console.log('!!! DEBUG: Response body:', response.body);
+
+      expect(response.status).toBe(404);
     });
   });
 });

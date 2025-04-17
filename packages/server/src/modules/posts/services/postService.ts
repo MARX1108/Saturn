@@ -63,6 +63,7 @@ export class PostService {
   }
 
   async getPostById(id: string): Promise<Post | null> {
+    console.log('!!! DEBUG: Entering PostService.getPostById with id:', id);
     return this.repository.findById(id);
   }
 

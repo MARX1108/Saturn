@@ -178,19 +178,15 @@ export class PostsController {
     next: NextFunction
   ): Promise<void | Response> {
     try {
-      const { id } = req.params;
-      const post = await this.postService.getPostById(id);
-
-      if (!post) {
-        return res.status(404).json({ error: 'Post not found' });
-      }
-
-      // Format post
-      const formattedPost = await this.formatPostResponse(
-        post,
-        req.user?.id || undefined
+      console.log(
+        '!!! DEBUG: Entering PostsController.getPostById with id:',
+        req.params.id
       );
-
+      const post = await this.postService.getPostById(req.params.id);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+      const formattedPost = this.formatPostResponse(post);
       return res.json(formattedPost);
     } catch (error) {
       next(error);

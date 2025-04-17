@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1744852222808" clover="3.2.0">
-  <project timestamp="1744852222808" name="All files">
-    <metrics statements="202" coveredstatements="104" conditionals="48" coveredconditionals="7" methods="48" coveredmethods="18" elements="298" coveredelements="129" complexity="0" loc="202" ncloc="202" packages="8" files="8" classes="8"/>
+<coverage generated="1744852341245" clover="3.2.0">
+  <project timestamp="1744852341245" name="All files">
+    <metrics statements="202" coveredstatements="106" conditionals="48" coveredconditionals="7" methods="48" coveredmethods="18" elements="298" coveredelements="131" complexity="0" loc="202" ncloc="202" packages="8" files="8" classes="8"/>
     <package name="middleware">
-      <metrics statements="51" coveredstatements="14" conditionals="21" coveredconditionals="3" methods="9" coveredmethods="2"/>
+      <metrics statements="51" coveredstatements="16" conditionals="21" coveredconditionals="3" methods="9" coveredmethods="2"/>
       <file name="auth.ts" path="/Users/marxw/Saturn/packages/server/src/middleware/auth.ts">
-        <metrics statements="51" coveredstatements="14" conditionals="21" coveredconditionals="3" methods="9" coveredmethods="2"/>
+        <metrics statements="51" coveredstatements="16" conditionals="21" coveredconditionals="3" methods="9" coveredmethods="2"/>
         <line num="2" count="3" type="stmt"/>
         <line num="14" count="3" type="cond" truecount="2" falsecount="0"/>
         <line num="16" count="3" type="stmt"/>
@@ -44,11 +44,11 @@
         <line num="112" count="24" type="stmt"/>
         <line num="113" count="1" type="stmt"/>
         <line num="114" count="1" type="stmt"/>
-        <line num="115" count="1" type="cond" truecount="1" falsecount="0"/>
-        <line num="116" count="1" type="stmt"/>
-        <line num="119" count="0" type="stmt"/>
-        <line num="120" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="121" count="0" type="stmt"/>
+        <line num="115" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="116" count="0" type="stmt"/>
+        <line num="119" count="1" type="stmt"/>
+        <line num="120" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="121" count="1" type="stmt"/>
         <line num="124" count="0" type="stmt"/>
         <line num="125" count="0" type="stmt"/>
         <line num="127" count="0" type="stmt"/>
@@ -196,7 +196,7 @@
         <line num="18" count="3" type="stmt"/>
         <line num="22" count="0" type="stmt"/>
         <line num="26" count="3" type="stmt"/>
-        <line num="27" count="2" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
         <line num="30" count="3" type="stmt"/>
         <line num="33" count="0" type="stmt"/>
         <line num="38" count="3" type="stmt"/>
