@@ -1,17 +1,12 @@
-import { ActorService } from '../../src/modules/actors/services/actorService';
-import configureActorRoutes from '../../src/modules/actors/routes/actorRoutes';
-import { mock } from 'jest-mock-extended';
+import {
+  mockActorService,
+  mockUploadService,
+  mockPostService,
+} from '../helpers/testApp';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { mkdir, rm } from 'fs/promises';
 import { existsSync } from 'fs';
-import { UploadService } from '../../src/modules/media/services/uploadService';
-import { PostService } from '../../src/modules/posts/services/postService';
-
-// Mock the services
-const mockActorService = mock<ActorService>();
-const mockUploadService = mock<UploadService>();
-const mockPostService = mock<PostService>();
 
 // Create temporary directories for uploads
 const uploadsDir = join(tmpdir(), 'saturn-test-uploads');
@@ -30,24 +25,6 @@ beforeAll(async () => {
   if (!existsSync(headersDir)) {
     await mkdir(headersDir, { recursive: true });
   }
-
-  // Configure the test app with the mock services
-  global.testApp.use((req, res, next) => {
-    req.services = {
-      actorService: mockActorService,
-      uploadService: mockUploadService,
-      postService: mockPostService,
-    };
-    next();
-  });
-
-  // Configure routes with mock services
-  const serviceContainer = {
-    actorService: mockActorService,
-    uploadService: mockUploadService,
-    postService: mockPostService,
-  };
-  global.testApp.use('/api/actors', configureActorRoutes(serviceContainer));
 });
 
 afterAll(async () => {
@@ -64,40 +41,43 @@ describe('Actor Routes', () => {
     mockPostService.mockReset();
   });
 
-  describe('GET /api/actors', () => {
-    it('should return a list of actors', async () => {
+  describe('GET /api/actors/search', () => {
+    it('should search actors', async () => {
       const mockActors = [
         { id: '1', name: 'Actor 1' },
         { id: '2', name: 'Actor 2' },
       ];
-      mockActorService.listActors.mockResolvedValue(mockActors);
+      mockActorService.searchActors.mockResolvedValue(mockActors);
 
       const response = await global
         .request(global.testApp)
-        .get('/api/actors')
+        .get('/api/actors/search')
+        .query({ q: 'test' })
         .expect(200);
 
       expect(response.body).toEqual(mockActors);
-      expect(mockActorService.listActors).toHaveBeenCalled();
+      expect(mockActorService.searchActors).toHaveBeenCalled();
     });
   });
 
-  describe('GET /api/actors/:id', () => {
-    it('should return an actor by id', async () => {
-      const mockActor = { id: '1', name: 'Test Actor' };
-      mockActorService.getActorById.mockResolvedValue(mockActor);
+  describe('GET /api/actors/:username', () => {
+    it('should return an actor by username', async () => {
+      const mockActor = { id: '1', username: 'testactor' };
+      mockActorService.getActorByUsername.mockResolvedValue(mockActor);
 
       const response = await global
         .request(global.testApp)
-        .get('/api/actors/1')
+        .get('/api/actors/testactor')
         .expect(200);
 
       expect(response.body).toEqual(mockActor);
-      expect(mockActorService.getActorById).toHaveBeenCalledWith('1');
+      expect(mockActorService.getActorByUsername).toHaveBeenCalledWith(
+        'testactor'
+      );
     });
 
     it('should return 404 if actor not found', async () => {
-      mockActorService.getActorById.mockResolvedValue(null);
+      mockActorService.getActorByUsername.mockResolvedValue(null);
 
       await global
         .request(global.testApp)
@@ -105,6 +85,4 @@ describe('Actor Routes', () => {
         .expect(404);
     });
   });
-
-  // ... rest of the test cases ...
 });

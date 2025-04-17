@@ -3,11 +3,19 @@ import { Db } from 'mongodb';
 import { mock } from 'jest-mock-extended';
 import { AuthService } from '../../src/modules/auth/services/authService';
 import { ActorService } from '../../src/modules/actors/services/actorService';
-import configureAuthRoutes from '../../src/modules/auth/routes/authRoutes';
+import { PostsController } from '../../src/modules/posts/controllers/postsController';
+import { CommentsController } from '../../src/modules/comments/controllers/comments.controller';
+import { UploadService } from '../../src/modules/uploads/services/uploadService';
+import { PostService } from '../../src/modules/posts/services/postService';
+import configureRoutes from '../../src/routes';
 
 // Export mock services for tests
 export const mockAuthService = mock<AuthService>();
 export const mockActorService = mock<ActorService>();
+export const mockPostsController = mock<PostsController>();
+export const mockCommentsController = mock<CommentsController>();
+export const mockUploadService = mock<UploadService>();
+export const mockPostService = mock<PostService>();
 
 export async function createTestApp(db: Db, domain: string) {
   const app = express();
@@ -21,10 +29,14 @@ export async function createTestApp(db: Db, domain: string) {
   // Add JSON body parser
   app.use(express.json());
 
-  // Create service container
+  // Create service container with all required services
   const serviceContainer = {
     authService: mockAuthService,
     actorService: mockActorService,
+    postsController: mockPostsController,
+    commentsController: mockCommentsController,
+    uploadService: mockUploadService,
+    postService: mockPostService,
   };
 
   // Add service container middleware
@@ -33,9 +45,9 @@ export async function createTestApp(db: Db, domain: string) {
     next();
   });
 
-  // Mount auth routes
-  console.log('!!! DEBUG: Attempting to mount auth routes at /api/auth !!!');
-  app.use('/api/auth', configureAuthRoutes(serviceContainer));
+  // Mount all routes under /api
+  console.log('!!! DEBUG: Attempting to mount all routes under /api !!!');
+  app.use('/api', configureRoutes(serviceContainer));
 
   return app;
 }
