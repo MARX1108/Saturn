@@ -1,22 +1,4 @@
-import { AuthService } from '../../src/modules/auth/services/authService';
-import { ActorService } from '../../src/modules/actors/services/actorService';
-import { mock } from 'jest-mock-extended';
-
-// Mock the services
-const mockAuthService = mock<AuthService>();
-const mockActorService = mock<ActorService>();
-
-// Setup and cleanup
-beforeAll(() => {
-  // Configure the test app with the mock services
-  global.testApp.use((req, res, next) => {
-    req.services = {
-      authService: mockAuthService,
-      actorService: mockActorService,
-    };
-    next();
-  });
-});
+import { mockAuthService, mockActorService } from '../helpers/testApp';
 
 beforeEach(() => {
   // Reset mocks before each test
@@ -42,7 +24,7 @@ describe('Auth Routes', () => {
         username: 'testuser',
         email: 'test@example.com',
       };
-      mockAuthService.register.mockResolvedValue(mockUser);
+      mockAuthService.createUser.mockResolvedValue(mockUser);
 
       const response = await global
         .request(global.testApp)
@@ -55,33 +37,33 @@ describe('Auth Routes', () => {
         .expect(201);
 
       expect(response.body).toEqual(mockUser);
-      expect(mockAuthService.register).toHaveBeenCalledWith({
-        username: 'testuser',
-        email: 'test@example.com',
-        password: 'password123',
-      });
+      expect(mockAuthService.createUser).toHaveBeenCalledWith(
+        'testuser',
+        'password123',
+        'test@example.com'
+      );
     });
   });
 
   describe('POST /api/auth/login', () => {
     it('should login a user', async () => {
-      const mockToken = 'mock-jwt-token';
-      mockAuthService.login.mockResolvedValue(mockToken);
+      const mockToken = { token: 'mock-jwt-token' };
+      mockAuthService.authenticateUser.mockResolvedValue(mockToken);
 
       const response = await global
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
-          email: 'test@example.com',
+          username: 'testuser',
           password: 'password123',
         })
         .expect(200);
 
-      expect(response.body).toEqual({ token: mockToken });
-      expect(mockAuthService.login).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-      });
+      expect(response.body).toEqual(mockToken);
+      expect(mockAuthService.authenticateUser).toHaveBeenCalledWith(
+        'testuser',
+        'password123'
+      );
     });
   });
 });
