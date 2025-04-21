@@ -11,12 +11,6 @@ import { mockServiceContainer } from './mockSetup';
 export async function createTestApp(db: Db, domain: string) {
   const app = express();
 
-  // Add test ping route for debugging
-  app.get('/test-ping', (req, res) => {
-    console.log('!!! DEBUG: /test-ping endpoint reached !!!');
-    res.status(200).send('pong');
-  });
-
   // Add JSON body parser
   app.use(express.json());
 
@@ -57,10 +51,6 @@ export async function createTestApp(db: Db, domain: string) {
     authController,
     actorsController,
   };
-
-  console.log(
-    `!!! DEBUG: In createTestApp, before configuring routes. uploadService from container: ${typeof serviceContainer.uploadService}`
-  );
 
   // Apply middleware in correct order
   app.use(require('cors')());

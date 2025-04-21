@@ -23,10 +23,6 @@ jest.mock('@/middleware/auth', () => {
         banner: null,
       },
     } as any;
-    console.log(
-      '!!! DEBUG: Mocked @/middleware/auth running, setting req.user:',
-      req.user.id
-    );
     next();
   };
 

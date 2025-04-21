@@ -7,16 +7,6 @@ beforeEach(() => {
 });
 
 describe('Auth Routes', () => {
-  describe('TEMP DEBUG: Basic Ping Test', () => {
-    it('should reach basic ping route', async () => {
-      const response = await global
-        .request(global.testApp)
-        .get('/test-ping')
-        .expect(200);
-      expect(response.text).toBe('pong');
-    });
-  });
-
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
       const mockUser = {
