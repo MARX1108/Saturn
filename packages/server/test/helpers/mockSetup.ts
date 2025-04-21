@@ -25,6 +25,10 @@ global.mockUploadService = mockUploadService;
 global.mockNotificationService = mockNotificationService;
 global.mockCommentService = mockCommentService;
 
+console.log(
+  `!!! DEBUG: mockUploadService defined in mockSetup. Global type: ${typeof global.mockUploadService}, Method type: ${typeof global.mockUploadService?.configureImageUploadMiddleware}`
+);
+
 // Mock methods called during setup
 const mockMulterMiddleware = (
   req: Request,
@@ -129,3 +133,7 @@ export const mockServiceContainer: ServiceContainer = {
   notificationService: mockNotificationService,
   commentService: mockCommentService,
 };
+
+console.log(
+  `!!! DEBUG: mockServiceContainer created. Has uploadService?: ${!!mockServiceContainer.uploadService}, Method type: ${typeof mockServiceContainer.uploadService?.configureImageUploadMiddleware}`
+);

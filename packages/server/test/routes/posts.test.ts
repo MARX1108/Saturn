@@ -13,17 +13,13 @@ describe('Post Routes', () => {
       const mockActor = {
         id: 'test-user-id',
         username: 'testuser',
-        email: 'test@example.com',
-        createdAt: mockDate,
-        updatedAt: mockDate,
       };
 
       const mockPost = {
         id: 'test-post-id',
         content: 'Test post content',
         authorId: 'test-user-id',
-        createdAt: mockDate,
-        updatedAt: mockDate,
+        published: mockDate,
         likes: [],
         shares: 0,
         sensitive: false,
@@ -54,17 +50,13 @@ describe('Post Routes', () => {
       const mockActor = {
         id: 'test-user-id',
         username: 'testuser',
-        email: 'test@example.com',
-        createdAt: mockDate,
-        updatedAt: mockDate,
       };
 
-      const mockPost = {
+      const mockPostData = {
         id: 'test-post-id',
         content: 'Test post content',
         authorId: 'test-user-id',
-        createdAt: mockDate,
-        updatedAt: mockDate,
+        published: mockDate,
         likes: [],
         shares: 0,
         sensitive: false,
@@ -73,16 +65,16 @@ describe('Post Routes', () => {
         actor: mockActor,
       };
 
-      global.mockPostService.getPostById.mockResolvedValue(mockPost);
+      global.mockPostService.getPostById.mockResolvedValue(mockPostData);
       global.mockActorService.findById.mockResolvedValue(mockActor);
 
       const response = await global
         .request(global.testApp)
-        .get(`/api/posts/${mockPost.id}`)
+        .get(`/api/posts/${mockPostData.id}`)
         .set('Authorization', 'Bearer mock-test-token');
 
       expect(response.status).toBe(200);
-      expect(response.body.id).toBe(mockPost.id);
+      expect(response.body.id).toBe(mockPostData.id);
     });
 
     it('should return 404 if post not found', async () => {

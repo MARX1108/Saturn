@@ -6,15 +6,7 @@ import { AuthController } from '@/modules/auth/controllers/authController';
 import { ActorsController } from '@/modules/actors/controllers/actorsController';
 import { PostsController } from '@/modules/posts/controllers/postsController';
 import { CommentsController } from '@/modules/comments/controllers/comments.controller';
-import {
-  mockAuthService,
-  mockActorService,
-  mockPostService,
-  mockUploadService,
-  mockNotificationService,
-  mockCommentService,
-  mockAuthMiddleware,
-} from './mockSetup';
+import { mockServiceContainer, mockAuthMiddleware } from './mockSetup';
 
 export async function createTestApp(db: Db, domain: string) {
   const app = express();
@@ -30,36 +22,45 @@ export async function createTestApp(db: Db, domain: string) {
 
   // Create real controllers with mock services
   const postsController = new PostsController(
-    mockPostService,
-    mockActorService,
-    mockUploadService,
+    mockServiceContainer.postService,
+    mockServiceContainer.actorService,
+    mockServiceContainer.uploadService,
     domain
   );
-  const commentsController = new CommentsController(mockCommentService);
-  const authController = new AuthController(mockAuthService, mockActorService);
+  const commentsController = new CommentsController(
+    mockServiceContainer.commentService
+  );
+  const authController = new AuthController(
+    mockServiceContainer.authService,
+    mockServiceContainer.actorService
+  );
   const actorsController = new ActorsController(
-    mockActorService,
-    mockUploadService,
-    mockPostService,
+    mockServiceContainer.actorService,
+    mockServiceContainer.uploadService,
+    mockServiceContainer.postService,
     domain
   );
 
   // Create service container with mock services and real controllers
   const serviceContainer = {
     // Services
-    authService: mockAuthService,
-    actorService: mockActorService,
-    postService: mockPostService,
-    commentService: mockCommentService,
-    mediaService: mockUploadService,
-    notificationService: mockNotificationService,
-    uploadService: mockUploadService,
+    authService: mockServiceContainer.authService,
+    actorService: mockServiceContainer.actorService,
+    postService: mockServiceContainer.postService,
+    commentService: mockServiceContainer.commentService,
+    mediaService: mockServiceContainer.uploadService,
+    notificationService: mockServiceContainer.notificationService,
+    uploadService: mockServiceContainer.uploadService,
     // Controllers
     postsController,
     commentsController,
     authController,
     actorsController,
   };
+
+  console.log(
+    `!!! DEBUG: In createTestApp, before configuring routes. uploadService from container: ${typeof serviceContainer.uploadService}`
+  );
 
   // Apply middleware in correct order
   app.use(require('cors')());

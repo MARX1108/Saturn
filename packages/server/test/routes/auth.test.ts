@@ -1,9 +1,9 @@
-import { mockAuthService, mockActorService } from '../helpers/mockSetup';
+import request from 'supertest';
 
 beforeEach(() => {
-  // Reset mocks before each test
-  mockAuthService.mockReset();
-  mockActorService.mockReset();
+  // Reset mocks before each test using global instances
+  global.mockAuthService.mockReset();
+  global.mockActorService.mockReset();
 });
 
 describe('Auth Routes', () => {
@@ -24,7 +24,7 @@ describe('Auth Routes', () => {
         username: 'testuser',
         email: 'test@example.com',
       };
-      mockAuthService.createUser.mockResolvedValue(mockUser);
+      global.mockAuthService.createUser.mockResolvedValue(mockUser);
 
       const response = await global
         .request(global.testApp)
@@ -37,7 +37,7 @@ describe('Auth Routes', () => {
         .expect(201);
 
       expect(response.body).toEqual(mockUser);
-      expect(mockAuthService.createUser).toHaveBeenCalledWith(
+      expect(global.mockAuthService.createUser).toHaveBeenCalledWith(
         'testuser',
         'password123',
         'test@example.com'
@@ -48,7 +48,7 @@ describe('Auth Routes', () => {
   describe('POST /api/auth/login', () => {
     it('should login a user', async () => {
       const mockToken = { token: 'mock-jwt-token' };
-      mockAuthService.login.mockResolvedValue(mockToken);
+      global.mockAuthService.login.mockResolvedValue(mockToken);
 
       const response = await global
         .request(global.testApp)
@@ -60,7 +60,7 @@ describe('Auth Routes', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockToken);
-      expect(mockAuthService.login).toHaveBeenCalledWith(
+      expect(global.mockAuthService.login).toHaveBeenCalledWith(
         'testuser',
         'password123'
       );

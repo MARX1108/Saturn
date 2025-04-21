@@ -23,9 +23,10 @@ export default function configureActorRoutes(
   );
 
   // Configure image upload middleware with UploadService
-  const imageUpload = uploadService.configureImageUploadMiddleware({
-    fileSizeLimitMB: 5, // 5MB limit
-  });
+  // Temporarily commented out to debug setup
+  // const imageUpload = uploadService.configureImageUploadMiddleware({
+  //   fileSizeLimitMB: 5, // 5MB limit
+  // });
 
   // Search actors
   router.get('/search', (req: Request, res: Response, next: NextFunction) => {
@@ -34,13 +35,8 @@ export default function configureActorRoutes(
 
   // Create new actor
   router.post('/', (req: Request, res: Response, next: NextFunction) => {
-    const upload = imageUpload.single('avatarFile');
-    upload(req, res, err => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-      actorsController.createActor(req, res).catch(next);
-    });
+    // Temporarily modified to skip upload
+    actorsController.createActor(req, res).catch(next);
   });
 
   // Get actor posts
@@ -64,13 +60,8 @@ export default function configureActorRoutes(
     '/:id',
     auth,
     (req: Request, res: Response, next: NextFunction) => {
-      const upload = imageUpload.single('avatarFile');
-      upload(req, res, err => {
-        if (err) {
-          return res.status(400).json({ error: err.message });
-        }
-        actorsController.updateActor(req, res).catch(next);
-      });
+      // Temporarily modified to skip upload
+      actorsController.updateActor(req, res).catch(next);
     }
   );
 
