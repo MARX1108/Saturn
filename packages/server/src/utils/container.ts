@@ -12,6 +12,13 @@ import { CommentRepository } from '../modules/comments/repositories/comment.repo
 import { NotificationService } from '../modules/notifications/services/notification.service';
 import { NotificationRepository } from '../modules/notifications/repositories/notification.repository';
 import { UploadService } from '../modules/media/services/upload.service';
+import { ActivityPubService } from '../modules/activitypub/services/activitypub.service';
+import { WebfingerService } from '../modules/webfinger/services/webfinger.service';
+import { MediaService } from '../modules/media/services/media.service';
+import { ActivityPubRepository } from '../modules/activitypub/repositories/activitypub.repository';
+import { WebfingerRepository } from '../modules/webfinger/repositories/webfinger.repository';
+import { MediaRepository } from '../modules/media/repositories/media.repository';
+import path from 'path';
 
 /**
  * Available services that can be resolved from the container
@@ -53,9 +60,9 @@ export interface ServiceContainer {
   commentService: CommentService;
   notificationService: NotificationService;
   uploadService: UploadService;
-  mediaService: any; // TODO: Add proper type
-  activityPubService: any; // TODO: Add proper type
-  webfingerService: any; // TODO: Add proper type
+  mediaService: MediaService;
+  activityPubService: ActivityPubService;
+  webfingerService: WebfingerService;
 
   // Method to resolve services by name for more flexible DI
   getService<T>(name: ServiceType | string): T | null;
@@ -70,12 +77,18 @@ export function createServiceContainer(
   db: Db,
   domain: string
 ): ServiceContainer {
+  // Define common paths
+  const uploadPath = path.join(process.cwd(), 'uploads');
+
   // Create repositories
   const actorRepository = new ActorRepository(db);
   const postRepository = new PostRepository(db);
   const authRepository = new AuthRepository(db);
   const commentRepository = new CommentRepository(db);
   const notificationRepository = new NotificationRepository(db);
+  const activityPubRepository = new ActivityPubRepository(db, domain);
+  const webfingerRepository = new WebfingerRepository(db);
+  const mediaRepository = new MediaRepository(db);
 
   // Create base services
   const uploadService = new UploadService();
@@ -108,6 +121,12 @@ export function createServiceContainer(
     actorService,
     notificationService
   );
+  const activityPubService = new ActivityPubService(
+    activityPubRepository,
+    domain
+  );
+  const webfingerService = new WebfingerService(webfingerRepository, domain);
+  const mediaService = new MediaService(mediaRepository, uploadPath);
 
   // Create controllers with dependencies
   const postsController = new PostsController(
@@ -129,9 +148,9 @@ export function createServiceContainer(
     commentService,
     notificationService,
     uploadService,
-    mediaService: undefined, // TODO: Add proper implementation
-    activityPubService: undefined, // TODO: Add proper implementation
-    webfingerService: undefined, // TODO: Add proper implementation
+    mediaService,
+    activityPubService,
+    webfingerService,
 
     // Implement getService method for flexible service resolution
     getService<T>(name: ServiceType | string): T | null {

@@ -303,11 +303,14 @@ describe('Posts Routes', () => {
       const response = await request(app).get('/posts?tag=testing');
 
       expect(response.status).toBe(200);
+      expect(response.body.posts.length).toBe(2);
       expect(
-        response.body.posts.some(p => p.content.includes('#testing'))
+        response.body.posts.some((p: any) => p.content.includes('#testing'))
       ).toBe(true);
       expect(
-        response.body.posts.every(p => !p.content.includes('#development'))
+        response.body.posts.every(
+          (p: any) => !p.content.includes('#development')
+        )
       ).toBe(true);
     });
 

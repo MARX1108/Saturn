@@ -21,7 +21,7 @@ export class CommentRepository extends MongoRepository<Comment> {
       createdAt: new Date(),
     };
 
-    const result = await this.collection.insertOne(comment as any);
+    const result = await this.collection.insertOne(comment);
     return {
       ...comment,
       _id: result.insertedId.toString(),

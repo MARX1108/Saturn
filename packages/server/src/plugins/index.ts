@@ -1,4 +1,5 @@
 import { Application } from 'express';
+import { Post } from '../modules/posts/models/post';
 
 export interface HookData {
   [key: string]: any;
@@ -11,7 +12,7 @@ export interface ServerPlugin {
   hooks?: {
     [hookName: string]: (data: HookData) => void | Promise<void>;
   };
-  onNewPost?(postData: any): void;
+  onNewPost?(postData: Post): void;
 }
 
 const plugins: ServerPlugin[] = [];

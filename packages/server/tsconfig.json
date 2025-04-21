@@ -12,7 +12,8 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@test/*": ["test/*"]
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "isolatedModules": true

@@ -1,4 +1,4 @@
-import { Db, ObjectId } from 'mongodb';
+import { Db, ObjectId, Filter } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
 import { Notification } from '../models/notification';
 
@@ -25,7 +25,7 @@ export class NotificationRepository extends MongoRepository<Notification> {
       createdAt: new Date(),
     };
 
-    const result = await this.collection.insertOne(notification as any);
+    const result = await this.collection.insertOne(notification);
     return {
       ...notification,
       _id: result.insertedId.toString(),
@@ -46,7 +46,7 @@ export class NotificationRepository extends MongoRepository<Notification> {
     const { limit, offset } = options;
 
     // Build query filter
-    const filter: any = { recipientUserId };
+    const filter: Filter<Notification> = { recipientUserId };
     if (read !== undefined) {
       filter.read = read;
     }

@@ -1,10 +1,17 @@
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'mongodb';
+import { Actor } from '../../modules/actors/models/actor';
+
+interface IconInfo {
+  type: 'Image';
+  mediaType: string;
+  url: string;
+}
 
 export class MockActorService {
   private actors = new Map();
   private domain: string;
 
-  constructor(domain = "test.domain") {
+  constructor(domain = 'test.domain') {
     this.domain = domain;
   }
 
@@ -12,44 +19,57 @@ export class MockActorService {
     return this.actors.has(username);
   }
 
-  async getActorByUsername(username: string): Promise<any> {
+  async getActorByUsername(username: string): Promise<Actor | null> {
     return this.actors.get(username) || null;
   }
 
-  async createActor(actorData: any, iconInfo?: any): Promise<any> {
-    const actor = {
-      _id: new ObjectId(),
-      preferredUsername: actorData.username,
-      name: actorData.displayName || actorData.username,
-      summary: actorData.bio || "",
-      id: `https://${this.domain}/users/${actorData.username}`,
-      inbox: `https://${this.domain}/users/${actorData.username}/inbox`,
-      outbox: `https://${this.domain}/users/${actorData.username}/outbox`,
-      followers: `https://${this.domain}/users/${actorData.username}/followers`,
-      following: `https://${this.domain}/users/${actorData.username}/following`,
-      type: "Person",
+  async createActor(
+    actorData: Partial<Actor>,
+    iconInfo?: IconInfo
+  ): Promise<Actor> {
+    const actor: Actor = {
+      _id: new ObjectId().toString(),
+      preferredUsername: actorData.preferredUsername || 'unknown',
+      name: actorData.name || actorData.preferredUsername || 'unknown',
+      username: actorData.username || actorData.preferredUsername || 'unknown',
+      displayName:
+        actorData.displayName ||
+        actorData.name ||
+        actorData.preferredUsername ||
+        'unknown',
+      summary: actorData.summary || '',
+      id: `https://${this.domain}/users/${actorData.preferredUsername}`,
+      inbox: `https://${this.domain}/users/${actorData.preferredUsername}/inbox`,
+      outbox: `https://${this.domain}/users/${actorData.preferredUsername}/outbox`,
+      followers: `https://${this.domain}/users/${actorData.preferredUsername}/followers`,
+      type: 'Person',
       icon: iconInfo || undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      bio: actorData.bio || '',
     };
 
-    this.actors.set(actorData.username, actor);
+    this.actors.set(actor.preferredUsername, actor);
     return actor;
   }
 
   async updateActor(
     username: string,
-    updates: any,
-    iconInfo?: any,
-  ): Promise<any> {
+    updates: Partial<Actor>,
+    iconInfo?: IconInfo
+  ): Promise<Actor | null> {
     const actor = this.actors.get(username);
     if (!actor) {
       return null;
     }
 
-    const updatedActor = {
+    const updatedActor: Actor = {
       ...actor,
-      name: updates.displayName || actor.name,
-      summary: updates.bio || actor.summary,
+      name: updates.name || actor.name,
+      summary: updates.summary || actor.summary,
+      bio: updates.bio || actor.bio,
       icon: iconInfo || actor.icon,
+      updatedAt: new Date(),
     };
 
     this.actors.set(username, updatedActor);

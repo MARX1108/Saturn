@@ -1,5 +1,6 @@
 import { Request, Response, Application } from 'express';
-import { ServerPlugin } from './index';
+import { ServerPlugin, HookData } from './index';
+import { Post } from '../modules/posts/models/post';
 
 const helloPlugin: ServerPlugin = {
   name: 'hello-plugin',
@@ -14,8 +15,17 @@ const helloPlugin: ServerPlugin = {
     });
   },
 
-  onNewPost(postData: any) {
-    console.log('New post created:', postData.id);
+  hooks: {
+    // Example hook: Log when a new user is created
+    // onNewUser: (data: HookData) => {
+    //   console.log('New user hook triggered:', data);
+    // }
+  },
+
+  onNewPost(postData: Post) {
+    console.log(
+      `👋 Hello Plugin says: New post created by ${postData.actor.username}!`
+    );
   },
 };
 
