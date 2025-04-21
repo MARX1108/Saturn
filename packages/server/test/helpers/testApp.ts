@@ -61,14 +61,39 @@ export async function createTestApp(db: Db, domain: string) {
 
   // Improved Error handling middleware
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('Error caught by middleware:', err?.message);
-    if (err && typeof err.statusCode === 'number') {
+    // Keep the detailed logging for now
+    console.error('--- Error Handler Start ---');
+    console.error('Error Object:', JSON.stringify(err, null, 2));
+    console.error('Error Message:', err?.message);
+    console.error('Error StatusCode (on obj):', err?.statusCode);
+    console.error('Error Type:', typeof err);
+    console.error('err instanceof Error:', err instanceof Error);
+    console.error('err instanceof AppError:', err instanceof AppError);
+    console.error('--- Error Handler Check ---');
+
+    // Prioritize checking instanceof AppError
+    if (err instanceof AppError) {
+      console.error(
+        `Caught AppError: Status ${err.statusCode}, Message: ${err.message}`
+      );
+      res.status(err.statusCode).json({ error: err.message });
+    } else if (
+      err &&
+      typeof err.statusCode === 'number' &&
+      err.statusCode >= 400 &&
+      err.statusCode < 500
+    ) {
+      // Fallback for errors that look like client errors but aren't AppError instances
+      console.error(
+        `Caught error with status ${err.statusCode}, sending specific response.`
+      );
       res
         .status(err.statusCode)
         .json({ error: err.message || 'An error occurred' });
     } else {
       // Default internal server error for unexpected errors
-      console.error(err.stack); // Log full stack for unexpected errors
+      console.error('Caught unexpected error, sending 500.');
+      console.error(err?.stack || err); // Log full stack for unexpected errors
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });

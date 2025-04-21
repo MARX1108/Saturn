@@ -3,6 +3,13 @@ import { AuthController } from '../controllers/authController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
 
+// Async Handler Wrapper
+const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
 /**
  * Configure authentication routes with the controller
  */
@@ -15,23 +22,20 @@ export default function configureAuthRoutes(
   // Create controller with injected dependencies
   const authController = new AuthController(actorService, authService);
 
+  // Bind methods
+  const boundRegister = authController.register.bind(authController);
+  const boundLogin = authController.login.bind(authController);
+  const boundGetCurrentUser =
+    authController.getCurrentUser.bind(authController);
+
   // Register new user
-  router.post(
-    '/register',
-    (req: Request, res: Response, next: NextFunction) => {
-      authController.register(req, res).catch(next);
-    }
-  );
+  router.post('/register', asyncHandler(boundRegister));
 
   // Login user
-  router.post('/login', (req: Request, res: Response, next: NextFunction) => {
-    authController.login(req, res).catch(next);
-  });
+  router.post('/login', asyncHandler(boundLogin));
 
   // Get current user (protected route)
-  router.get('/me', auth, (req: Request, res: Response, next: NextFunction) => {
-    authController.getCurrentUser(req, res).catch(next);
-  });
+  router.get('/me', auth, asyncHandler(boundGetCurrentUser));
 
   return router;
 }
