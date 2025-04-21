@@ -68,25 +68,26 @@ export class PostsController {
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void | Response> {
+  ): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Authentication required' });
+        throw new AppError('Authentication required', ErrorType.Unauthorized);
       }
       const userId = req.user.id || '';
       const actor = await this.actorService.getActorById(userId);
 
       if (!actor) {
-        return res.status(404).json({ error: 'User not found' });
+        throw new AppError('User not found', ErrorType.NotFound);
       }
 
       const { content, sensitive, contentWarning } = req.body;
       const files = req.files as Express.Multer.File[];
 
       if (!content && (!files || files.length === 0)) {
-        return res
-          .status(400)
-          .json({ error: 'Post must contain content or attachments' });
+        throw new AppError(
+          'Post must contain content or attachments',
+          ErrorType.BadRequest
+        );
       }
 
       // Process attachments
@@ -130,7 +131,7 @@ export class PostsController {
       // Format response
       const formattedPost = await this.formatPostResponse(post, userId);
 
-      return res.status(201).json(formattedPost);
+      res.status(201).json(formattedPost);
     } catch (error) {
       next(error);
     }
@@ -143,10 +144,10 @@ export class PostsController {
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void | Response> {
+  ): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Authentication required' });
+        throw new AppError('Authentication required', ErrorType.Unauthorized);
       }
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
@@ -160,7 +161,7 @@ export class PostsController {
         )
       );
 
-      return res.json({
+      res.json({
         posts: formattedPosts,
         hasMore,
       });
@@ -176,14 +177,14 @@ export class PostsController {
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void | Response> {
+  ): Promise<void> {
     try {
       const post = await this.postService.getPostById(req.params.id);
       if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
+        throw new AppError('Post not found', ErrorType.NotFound);
       }
       const formattedPost = await this.formatPostResponse(post, req.user?.id);
-      return res.json(formattedPost);
+      res.json(formattedPost);
     } catch (error) {
       next(error);
     }
@@ -196,7 +197,7 @@ export class PostsController {
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void | Response> {
+  ): Promise<void> {
     try {
       const { username } = req.params;
       const page = parseInt(req.query.page as string) || 1;
@@ -220,7 +221,7 @@ export class PostsController {
       // Calculate if there are more posts
       const hasMore = result.offset + result.posts.length < result.total;
 
-      return res.json({
+      res.json({
         posts: formattedPosts,
         hasMore,
       });
@@ -236,10 +237,10 @@ export class PostsController {
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void | Response> {
+  ): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Authentication required' });
+        throw new AppError('Unauthorized', ErrorType.Unauthorized);
       }
       const { id } = req.params;
       const userId = req.user.id || '';
@@ -252,15 +253,16 @@ export class PostsController {
       });
 
       if (!post) {
-        return res
-          .status(404)
-          .json({ error: 'Post not found or not authorized' });
+        throw new AppError(
+          'Post not found or not authorized',
+          ErrorType.NotFound
+        );
       }
 
       // Format post
       const formattedPost = await this.formatPostResponse(post, userId);
 
-      return res.json(formattedPost);
+      res.json(formattedPost);
     } catch (error) {
       next(error);
     }
@@ -269,59 +271,87 @@ export class PostsController {
   /**
    * Delete post
    */
-  async deletePost(req: Request, res: Response): Promise<Response> {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+  async deletePost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AppError('Unauthorized', ErrorType.Unauthorized);
+      }
+      const { id } = req.params;
+      const userId = req.user.id || '';
+
+      const deleted = await this.postService.deletePost(id, userId);
+
+      if (!deleted) {
+        throw new AppError(
+          'Post not found or not authorized',
+          ErrorType.NotFound
+        );
+      }
+
+      res.status(204).end();
+    } catch (error) {
+      next(error);
     }
-    const { id } = req.params;
-    const userId = req.user.id || '';
-
-    const deleted = await this.postService.deletePost(id, userId);
-
-    if (!deleted) {
-      return res
-        .status(404)
-        .json({ error: 'Post not found or not authorized' });
-    }
-
-    return res.status(204).end();
   }
 
   /**
    * Like a post
    */
-  async likePost(req: Request, res: Response): Promise<Response> {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+  async likePost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AppError('Unauthorized', ErrorType.Unauthorized);
+      }
+      const { id } = req.params;
+      const userId = req.user.id || '';
+
+      const liked = await this.postService.likePost(id, userId);
+
+      if (!liked) {
+        throw new AppError(
+          'Post already liked or not found',
+          ErrorType.BadRequest
+        );
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
     }
-    const { id } = req.params;
-    const userId = req.user.id || '';
-
-    const liked = await this.postService.likePost(id, userId);
-
-    if (!liked) {
-      return res.status(400).json({ error: 'Post already liked or not found' });
-    }
-
-    return res.status(200).json({ success: true });
   }
 
   /**
    * Unlike a post
    */
-  async unlikePost(req: Request, res: Response): Promise<Response> {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+  async unlikePost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AppError('Unauthorized', ErrorType.Unauthorized);
+      }
+      const { id } = req.params;
+      const userId = req.user.id || '';
+
+      const unliked = await this.postService.unlikePost(id, userId);
+
+      if (!unliked) {
+        throw new AppError('Post not liked or not found', ErrorType.BadRequest);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
     }
-    const { id } = req.params;
-    const userId = req.user.id || '';
-
-    const unliked = await this.postService.unlikePost(id, userId);
-
-    if (!unliked) {
-      return res.status(400).json({ error: 'Post not liked or not found' });
-    }
-
-    return res.status(200).json({ success: true });
   }
 }

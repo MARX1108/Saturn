@@ -7,6 +7,7 @@ import { ActorsController } from '@/modules/actors/controllers/actorsController'
 import { PostsController } from '@/modules/posts/controllers/postsController';
 import { CommentsController } from '@/modules/comments/controllers/comments.controller';
 import { mockServiceContainer } from './mockSetup';
+import { AppError } from '@/utils/errors';
 
 export async function createTestApp(db: Db, domain: string) {
   const app = express();
@@ -58,10 +59,18 @@ export async function createTestApp(db: Db, domain: string) {
   // Pass the complete mock container to configureRoutes
   app.use('/api', configureRoutes(mockServiceContainer));
 
-  // Error handling middleware
+  // Improved Error handling middleware
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Something broke!' });
+    console.error('Error caught by middleware:', err?.message);
+    if (err && typeof err.statusCode === 'number') {
+      res
+        .status(err.statusCode)
+        .json({ error: err.message || 'An error occurred' });
+    } else {
+      // Default internal server error for unexpected errors
+      console.error(err.stack); // Log full stack for unexpected errors
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   });
 
   return app;

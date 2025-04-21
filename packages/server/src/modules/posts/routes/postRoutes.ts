@@ -4,6 +4,13 @@ import { CommentsController } from '../../comments/controllers/comments.controll
 import { authenticate } from '../../../middleware/auth';
 import { AuthService } from '../../auth/services/auth.service';
 
+// Async Handler Wrapper
+const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
 /**
  * Configure post routes with the controller
  */
@@ -14,89 +21,58 @@ export default function configurePostRoutes(
 ): Router {
   const router = Router();
 
-  // Public routes
-  router.get(
-    '/',
-    authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.getFeed(req, res, next).catch(next);
-    }
-  );
+  // Bind controller methods to ensure 'this' context is correct
+  const boundGetFeed = postsController.getFeed.bind(postsController);
+  const boundGetPostById = postsController.getPostById.bind(postsController);
+  const boundGetPostsByUsername =
+    postsController.getPostsByUsername.bind(postsController);
+  const boundCreatePost = postsController.createPost.bind(postsController);
+  const boundUpdatePost = postsController.updatePost.bind(postsController);
+  const boundDeletePost = postsController.deletePost.bind(postsController);
+  const boundLikePost = postsController.likePost.bind(postsController);
+  const boundUnlikePost = postsController.unlikePost.bind(postsController);
+  const boundGetComments =
+    commentsController.getComments.bind(commentsController); // Bind comments controller too
+  const boundCreateComment =
+    commentsController.createComment.bind(commentsController);
+  const boundDeleteComment =
+    commentsController.deleteComment.bind(commentsController);
 
-  router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
-    postsController.getPostById(req, res, next).catch(next);
-  });
+  // Public routes using asyncHandler
+  router.get('/', authenticate(authService), asyncHandler(boundGetFeed));
+  router.get('/:id', asyncHandler(boundGetPostById));
+  router.get('/users/:username', asyncHandler(boundGetPostsByUsername));
 
-  router.get(
-    '/users/:username',
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.getPostsByUsername(req, res, next).catch(next);
-    }
-  );
-
-  // Protected routes
-  router.post(
-    '/',
-    authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.createPost(req, res, next).catch(next);
-    }
-  );
-
-  router.put(
-    '/:id',
-    authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.updatePost(req, res, next).catch(next);
-    }
-  );
-
+  // Protected routes using asyncHandler
+  router.post('/', authenticate(authService), asyncHandler(boundCreatePost));
+  router.put('/:id', authenticate(authService), asyncHandler(boundUpdatePost));
   router.delete(
     '/:id',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.deletePost(req, res).catch(next);
-    }
+    asyncHandler(boundDeletePost)
   );
-
   router.post(
     '/:id/like',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.likePost(req, res).catch(next);
-    }
+    asyncHandler(boundLikePost)
   );
-
   router.delete(
     '/:id/like',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      postsController.unlikePost(req, res).catch(next);
-    }
+    asyncHandler(boundUnlikePost)
   );
 
-  // Comment routes
-  router.get(
-    '/:id/comments',
-    (req: Request, res: Response, next: NextFunction) => {
-      commentsController.getComments(req, res).catch(next);
-    }
-  );
-
+  // Comment routes using asyncHandler
+  router.get('/:id/comments', asyncHandler(boundGetComments));
   router.post(
     '/:id/comments',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      commentsController.createComment(req, res).catch(next);
-    }
+    asyncHandler(boundCreateComment)
   );
-
   router.delete(
     '/comments/:id',
     authenticate(authService),
-    (req: Request, res: Response, next: NextFunction) => {
-      commentsController.deleteComment(req, res).catch(next);
-    }
+    asyncHandler(boundDeleteComment)
   );
 
   return router;
