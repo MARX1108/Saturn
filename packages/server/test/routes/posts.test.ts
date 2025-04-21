@@ -1,11 +1,9 @@
-import { mockPostService, mockActorService } from '../helpers/mockSetup';
-import { createTestPost } from '../helpers/testUtils';
 import request from 'supertest';
 
 beforeEach(() => {
-  // Reset mocks before each test
-  mockPostService.mockReset();
-  mockActorService.mockReset();
+  global.mockAuthService.mockReset();
+  global.mockActorService.mockReset();
+  global.mockPostService.mockReset();
 });
 
 describe('Post Routes', () => {
@@ -34,7 +32,7 @@ describe('Post Routes', () => {
         actor: mockActor,
       };
 
-      mockPostService.getFeed.mockResolvedValue({
+      global.mockPostService.getFeed.mockResolvedValue({
         posts: [mockPost],
         hasMore: false,
       });
@@ -75,8 +73,8 @@ describe('Post Routes', () => {
         actor: mockActor,
       };
 
-      mockPostService.getPostById.mockResolvedValue(mockPost);
-      mockActorService.findById.mockResolvedValue(mockActor);
+      global.mockPostService.getPostById.mockResolvedValue(mockPost);
+      global.mockActorService.findById.mockResolvedValue(mockActor);
 
       const response = await global
         .request(global.testApp)
@@ -88,7 +86,7 @@ describe('Post Routes', () => {
     });
 
     it('should return 404 if post not found', async () => {
-      mockPostService.getPostById.mockResolvedValue(null);
+      global.mockPostService.getPostById.mockResolvedValue(null);
 
       const response = await global
         .request(global.testApp)

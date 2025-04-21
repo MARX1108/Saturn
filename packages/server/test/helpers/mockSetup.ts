@@ -7,50 +7,23 @@ import { NotificationService } from '@/modules/notifications/services/notificati
 import { CommentService } from '@/modules/comments/services/commentService';
 import { Request, Response, NextFunction } from 'express';
 import { DbUser } from '@/models/user';
+import { ServiceContainer } from '@/types';
 
-// Create and export mock services with all required methods
-export const mockAuthService = mock<AuthService>({
-  createUser: jest.fn(),
-  login: jest.fn(),
-  validateToken: jest.fn(),
-  getCurrentUser: jest.fn(),
-});
+// Create mock services
+const mockAuthService = mock<AuthService>();
+const mockActorService = mock<ActorService>();
+const mockPostService = mock<PostService>();
+const mockUploadService = mock<UploadService>();
+const mockNotificationService = mock<NotificationService>();
+const mockCommentService = mock<CommentService>();
 
-export const mockActorService = mock<ActorService>({
-  findById: jest.fn(),
-  findByUsername: jest.fn(),
-  createActor: jest.fn(),
-  getActorById: jest.fn(),
-  getActorByUsername: jest.fn(),
-});
-
-export const mockPostService = mock<PostService>({
-  getPostById: jest.fn(),
-  getFeed: jest.fn(),
-  createPost: jest.fn(),
-  updatePost: jest.fn(),
-  deletePost: jest.fn(),
-  getPostsByUsername: jest.fn(),
-});
-
-export const mockUploadService = mock<UploadService>({
-  configureImageUploadMiddleware: jest.fn(),
-  uploadFile: jest.fn(),
-  deleteFile: jest.fn(),
-});
-
-export const mockNotificationService = mock<NotificationService>({
-  createNotification: jest.fn(),
-  getNotifications: jest.fn(),
-  markAsRead: jest.fn(),
-});
-
-export const mockCommentService = mock<CommentService>({
-  createComment: jest.fn(),
-  getComments: jest.fn(),
-  deleteComment: jest.fn(),
-  updateComment: jest.fn(),
-});
+// Attach to global scope
+global.mockAuthService = mockAuthService;
+global.mockActorService = mockActorService;
+global.mockPostService = mockPostService;
+global.mockUploadService = mockUploadService;
+global.mockNotificationService = mockNotificationService;
+global.mockCommentService = mockCommentService;
 
 // Mock methods called during setup
 const mockMulterMiddleware = (
@@ -128,7 +101,6 @@ export const mockAuthMiddleware = (
     password: 'hashedpassword',
     createdAt: mockDate,
     updatedAt: mockDate,
-    // Add any additional required fields
     isAdmin: false,
     isVerified: true,
     profile: {
@@ -146,4 +118,14 @@ export const mockAuthMiddleware = (
   console.log('!!! DEBUG: mockAuthMiddleware setting user:', mockUser);
 
   next();
+};
+
+// Create and export the container using these mocks
+export const mockServiceContainer: ServiceContainer = {
+  authService: mockAuthService,
+  actorService: mockActorService,
+  postService: mockPostService,
+  uploadService: mockUploadService,
+  notificationService: mockNotificationService,
+  commentService: mockCommentService,
 };

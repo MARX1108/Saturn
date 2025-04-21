@@ -1,44 +1,37 @@
-import {
-  mockActorService,
-  mockUploadService,
-  mockPostService,
-} from '../helpers/testApp';
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { mkdir, rm } from 'fs/promises';
-import { existsSync } from 'fs';
+import request from 'supertest';
 
-// Create temporary directories for uploads
-const uploadsDir = join(tmpdir(), 'saturn-test-uploads');
-const avatarsDir = join(uploadsDir, 'avatars');
-const headersDir = join(uploadsDir, 'headers');
-
-// Setup and cleanup
-beforeAll(async () => {
-  // Create upload directories if they don't exist
-  if (!existsSync(uploadsDir)) {
-    await mkdir(uploadsDir, { recursive: true });
-  }
-  if (!existsSync(avatarsDir)) {
-    await mkdir(avatarsDir, { recursive: true });
-  }
-  if (!existsSync(headersDir)) {
-    await mkdir(headersDir, { recursive: true });
-  }
+beforeEach(() => {
+  global.mockAuthService.mockReset();
+  global.mockActorService.mockReset();
 });
 
-afterAll(async () => {
-  // Clean up upload directories
-  await rm(uploadsDir, { recursive: true, force: true });
-});
-
-// Tests
 describe('Actor Routes', () => {
-  beforeEach(() => {
-    // Reset mocks before each test
-    mockActorService.mockReset();
-    mockUploadService.mockReset();
-    mockPostService.mockReset();
+  describe('GET /api/actors', () => {
+    it('should return actors', async () => {
+      const mockDate = new Date();
+      const mockActor = {
+        id: 'test-user-id',
+        username: 'testuser',
+        email: 'test@example.com',
+        createdAt: mockDate,
+        updatedAt: mockDate,
+      };
+
+      global.mockActorService.searchActors.mockResolvedValue({
+        actors: [mockActor],
+        hasMore: false,
+      });
+
+      const response = await global
+        .request(global.testApp)
+        .get('/api/actors')
+        .set('Authorization', 'Bearer mock-test-token');
+
+      expect(response.status).toBe(200);
+      expect(response.body.actors).toBeDefined();
+      expect(Array.isArray(response.body.actors)).toBe(true);
+      expect(global.mockActorService.searchActors).toHaveBeenCalled();
+    });
   });
 
   describe('GET /api/actors/search', () => {
@@ -47,7 +40,7 @@ describe('Actor Routes', () => {
         { id: '1', name: 'Actor 1' },
         { id: '2', name: 'Actor 2' },
       ];
-      mockActorService.searchActors.mockResolvedValue(mockActors);
+      global.mockActorService.searchActors.mockResolvedValue(mockActors);
 
       const response = await global
         .request(global.testApp)
@@ -56,14 +49,14 @@ describe('Actor Routes', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockActors);
-      expect(mockActorService.searchActors).toHaveBeenCalled();
+      expect(global.mockActorService.searchActors).toHaveBeenCalled();
     });
   });
 
   describe('GET /api/actors/:username', () => {
     it('should return an actor by username', async () => {
       const mockActor = { id: '1', username: 'testactor' };
-      mockActorService.getActorByUsername.mockResolvedValue(mockActor);
+      global.mockActorService.getActorByUsername.mockResolvedValue(mockActor);
 
       const response = await global
         .request(global.testApp)
@@ -71,13 +64,13 @@ describe('Actor Routes', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockActor);
-      expect(mockActorService.getActorByUsername).toHaveBeenCalledWith(
+      expect(global.mockActorService.getActorByUsername).toHaveBeenCalledWith(
         'testactor'
       );
     });
 
     it('should return 404 if actor not found', async () => {
-      mockActorService.getActorByUsername.mockResolvedValue(null);
+      global.mockActorService.getActorByUsername.mockResolvedValue(null);
 
       await global
         .request(global.testApp)
