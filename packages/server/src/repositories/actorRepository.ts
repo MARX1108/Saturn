@@ -36,12 +36,13 @@ export class ActorRepository extends MongoRepository<Actor> {
         mediaType: string;
       };
     }
-  ): Promise<boolean> {
-    const result = await this.collection.updateOne(
-      { _id: new ObjectId(id).toHexString() }, // Convert ObjectId to string
-      { $set: updates }
+  ): Promise<Actor | null> {
+    const result = await this.collection.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: updates, $currentDate: { updatedAt: true } },
+      { returnDocument: 'after' }
     );
-    return result.modifiedCount > 0;
+    return result;
   }
 
   async findFollowers(actorId: string, page = 1, limit = 20): Promise<Actor[]> {
@@ -58,12 +59,16 @@ export class ActorRepository extends MongoRepository<Actor> {
       .toArray();
   }
 
-  async findById(id: string): Promise<Actor | null> {
-    if (!ObjectId.isValid(id)) {
+  async findById(id: string | ObjectId): Promise<Actor | null> {
+    try {
+      const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+      // Pass the ObjectId directly to the filter
+      return this.collection.findOne({ _id: objectId });
+    } catch (error) {
+      // Handle invalid ObjectId strings gracefully
+      console.error(`Invalid ObjectId format: ${id}`, error);
       return null;
     }
-    // Corrected Filter: Use ObjectId directly for _id field with collection method
-    return this.collection.findOne({ _id: new ObjectId(id) });
   }
 
   async findFollowing(actorId: string, page = 1, limit = 20): Promise<Actor[]> {

@@ -23,7 +23,7 @@ import path from 'path';
 import { AuthController } from '@/modules/auth/controllers/authController';
 import { ActorsController } from '@/modules/actors/controllers/actorsController';
 import { ActivityPubController } from '@/modules/activitypub/controllers/activitypubController';
-import { WebfingerController } from '@/modules/webfinger/controllers/webfingerController';
+import { WebFingerController } from '@/modules/webfinger/controllers/webfingerController';
 import { MediaController } from '../modules/media/controllers/media.controller';
 
 /**
@@ -77,7 +77,7 @@ export interface ServiceContainer {
   authController: AuthController;
   actorsController: ActorsController;
   activityPubController: ActivityPubController;
-  webfingerController: WebfingerController;
+  webfingerController: WebFingerController;
   mediaController: MediaController;
   domain: string;
 
@@ -138,7 +138,11 @@ export function createServiceContainer(
     activityPubService,
     domain
   );
-  const webfingerController = new WebfingerController(webfingerService);
+  const webfingerController = new WebFingerController(
+    actorService,
+    webfingerService,
+    domain
+  );
   const mediaController = new MediaController(mediaService);
   const postsController = new PostsController(
     postService,

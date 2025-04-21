@@ -38,7 +38,7 @@ export function configureTestActorRoutes(
         icon: actor.icon
           ? {
               type: 'Image',
-              mediaType: 'image/jpeg',
+              mediaType: 'image/jpeg', // Assuming jpeg, adjust if needed
               url: actor.icon.url,
             }
           : undefined,
@@ -53,12 +53,15 @@ export function configureTestActorRoutes(
   // PUT /:username
   router.put('/:username', checkAuth, async (req, res) => {
     try {
-      const { name, bio, icon } = req.body;
-      const updatedActor = await actorService.updateActor(req.params.username, {
-        name,
-        bio,
-        icon,
-      });
+      const { name, summary, icon } = req.body; // Use summary instead of bio
+      const updatedActor = await actorService.updateProfile(
+        req.params.username,
+        {
+          name,
+          summary, // Pass summary
+          icon,
+        }
+      );
 
       if (!updatedActor) {
         return res.status(404).json({ error: 'Actor not found' });
@@ -72,7 +75,7 @@ export function configureTestActorRoutes(
         icon: updatedActor.icon
           ? {
               type: 'Image',
-              mediaType: 'image/jpeg',
+              mediaType: 'image/jpeg', // Assuming jpeg
               url: updatedActor.icon.url,
             }
           : undefined,

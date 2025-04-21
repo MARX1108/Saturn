@@ -80,15 +80,8 @@ export class ActorService {
 
   async updateProfile(
     id: string,
-    updates: {
-      displayName?: string;
-      icon?: {
-        type: 'Image'; // Add type field
-        url: string;
-        mediaType: string;
-      };
-    }
-  ): Promise<boolean> {
+    updates: Partial<Actor>
+  ): Promise<Actor | null> {
     return this.repository.updateProfile(id, updates);
   }
 
@@ -134,9 +127,9 @@ export class ActorService {
     return this.repository.findByUsername(username);
   }
 
-  async deleteActor(username: string): Promise<boolean> {
-    const result = await this.repository.deleteByUsername(username);
-    return result.deletedCount > 0;
+  async deleteActor(id: string): Promise<boolean> {
+    const result = await this.repository.deleteById(id);
+    return result;
   }
 
   async getFullActorByUsername(username: string): Promise<Actor | null> {

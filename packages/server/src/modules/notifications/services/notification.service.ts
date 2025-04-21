@@ -15,14 +15,17 @@ import {
   UpdateResult,
   DeleteResult,
   Collection,
-  OptionalId as MongoOptionalId,
+  OptionalUnlessRequiredId,
 } from 'mongodb';
 import { PostService } from '@/modules/posts/services/postService';
 import { CommentService } from '@/modules/comments/services/comment.service';
 import { Actor } from '@/modules/actors/models/actor';
 
-// Define utility type if not available elsewhere
-type OptionalUnlessRequiredId<T> = MongoOptionalId<T>;
+// Define a simple logger interface or import a proper logger
+interface Logger {
+  // ... existing code ...
+  // type OptionalUnlessRequiredId<T> = MongoOptionalId<T>; // Removed local declaration
+}
 
 export class NotificationService {
   private notificationRepository?: NotificationRepository;

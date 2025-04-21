@@ -8,7 +8,13 @@ import { NotificationService } from '@/modules/notifications/services/notificati
 import { Actor } from '../../src/modules/actors/models/actor';
 // Mocks (using jest-mock-extended or similar)
 import { mock, MockProxy } from 'jest-mock-extended';
-// ... existing code ...
+
+// Add declarations for mocks and service instance
+let mockPostRepository: MockProxy<PostRepository>;
+let mockActorService: MockProxy<ActorService>;
+let mockNotificationService: MockProxy<NotificationService>;
+let mockDb: MockProxy<Db>;
+let postService: PostService;
 
 const nonExistentPostId = new ObjectId().toHexString();
 
