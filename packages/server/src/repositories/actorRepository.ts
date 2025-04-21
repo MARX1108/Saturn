@@ -1,6 +1,7 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 import { Actor } from '@/modules/actors/models/actor';
 import { MongoRepository } from './baseRepository';
+import { BaseRepository } from '@/repositories/baseRepository'; // Assuming base class
 
 export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {
@@ -58,8 +59,11 @@ export class ActorRepository extends MongoRepository<Actor> {
   }
 
   async findById(id: string): Promise<Actor | null> {
-    // Use ObjectId for querying _id field
-    return this.findOne({ _id: new ObjectId(id) });
+    if (!ObjectId.isValid(id)) {
+      return null;
+    }
+    // Corrected Filter: Use ObjectId directly for _id field with collection method
+    return this.collection.findOne({ _id: new ObjectId(id) });
   }
 
   async findFollowing(actorId: string, page = 1, limit = 20): Promise<Actor[]> {

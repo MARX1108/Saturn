@@ -30,7 +30,9 @@ export class ActorRepository extends MongoRepository<Actor> {
     id: string | ObjectId,
     updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>>
   ): Promise<boolean> {
-    return this.updateById(id, { $set: updates });
+    const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+    // Use ObjectId directly in the filter
+    return this.updateById(objectId, { $set: updates });
   }
 
   async addFollowing(
@@ -49,5 +51,67 @@ export class ActorRepository extends MongoRepository<Actor> {
     return this.updateById(actorId, {
       $pull: { following: targetActorId },
     } as UpdateFilter<Actor>);
+  }
+
+  // Add usernameExists method
+  async usernameExists(preferredUsername: string): Promise<boolean> {
+    const count = await this.countDocuments({ preferredUsername });
+    return count > 0;
+  }
+
+  // Add findFollowers method
+  async findFollowers(
+    actorApId: string,
+    page = 1,
+    limit = 20
+  ): Promise<Actor[]> {
+    const skip = (page - 1) * limit;
+    // Find actors where actorApId is in their following list
+    return this.find({ following: actorApId }, { skip, limit });
+  }
+
+  // Add findFollowing method (based on ActorService logic)
+  async findFollowing(
+    actorId: string | ObjectId,
+    page = 1,
+    limit = 20
+  ): Promise<Actor[]> {
+    const actor = await this.findById(actorId);
+    if (!actor || !actor.following || actor.following.length === 0) return [];
+
+    const skip = (page - 1) * limit;
+    // Find actors whose AP IDs are in the actor's following list
+    return this.find({ id: { $in: actor.following } }, { skip, limit });
+  }
+
+  // Add search method
+  async search(query: string, limit = 10): Promise<Actor[]> {
+    if (!query) {
+      return [];
+    }
+    // Simple search by preferredUsername or displayName (case-insensitive)
+    const filter: Filter<Actor> = {
+      $or: [
+        { preferredUsername: { $regex: query, $options: 'i' } },
+        { displayName: { $regex: query, $options: 'i' } },
+      ],
+    };
+    return this.find(filter, { limit });
+  }
+
+  // Add updateProfileByUsername method
+  async updateProfileByUsername(
+    preferredUsername: string,
+    updates: Partial<Actor>
+  ): Promise<Actor | null> {
+    return this.findOneAndUpdate(
+      { preferredUsername },
+      { $set: { ...updates, updatedAt: new Date() } }
+    );
+  }
+
+  // Add deleteByUsername method
+  async deleteByUsername(preferredUsername: string): Promise<boolean> {
+    return this.deleteOne({ preferredUsername });
   }
 }

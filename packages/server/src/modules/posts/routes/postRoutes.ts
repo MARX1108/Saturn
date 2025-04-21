@@ -3,6 +3,7 @@ import { PostsController } from '../controllers/postsController';
 import { CommentsController } from '../../comments/controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
 import { AuthService } from '../../auth/services/auth.service';
+import { ServiceContainer } from '../../../utils/container';
 
 // Async Handler Wrapper
 const asyncHandler =
@@ -15,11 +16,19 @@ const asyncHandler =
  * Configure post routes with the controller
  */
 export default function configurePostRoutes(
-  postsController: PostsController,
-  commentsController: CommentsController,
-  authService: AuthService
+  container: ServiceContainer
 ): Router {
   const router = Router();
+  // Ensure all required services AND domain are retrieved
+  const { postService, actorService, uploadService, domain } = container;
+
+  // Ensure PostsController gets all 4 arguments
+  const postsController = new PostsController(
+    postService,
+    actorService,
+    uploadService,
+    domain // Ensure domain is passed
+  );
 
   // Bind controller methods to ensure 'this' context is correct
   const boundGetFeed = postsController.getFeed.bind(postsController);

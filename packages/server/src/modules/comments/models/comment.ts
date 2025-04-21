@@ -9,6 +9,8 @@ export interface Comment {
   postId: string;
   authorId: string;
   content: string;
+  likesCount?: number;
+  likedBy?: string[];
   createdAt: Date;
   updatedAt?: Date;
 }

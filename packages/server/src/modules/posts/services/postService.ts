@@ -27,12 +27,25 @@ export interface UpdatePostData {
 }
 
 export class PostService {
+  private notificationService!: NotificationService; // Mark for definite assignment
+
   constructor(
     private postRepository: PostRepository,
     private actorService: ActorService,
-    private notificationService: NotificationService,
     private domain: string
   ) {}
+
+  // Setter for NotificationService
+  public setNotificationService(
+    notificationService: NotificationService
+  ): void {
+    this.notificationService = notificationService;
+  }
+
+  // Setter for ActorService (needed based on container.ts edit)
+  public setActorService(actorService: ActorService): void {
+    this.actorService = actorService;
+  }
 
   // --- Create Post ---
   async createPost(data: CreatePostData): Promise<Post> {
@@ -57,20 +70,22 @@ export class PostService {
       content: data.content,
       visibility: data.visibility || 'public', // Default visibility
       sensitive: data.sensitive || false,
-      summary: data.summary,
+      summary: data.summary, // Optional summary
       attachments: data.attachments || [],
-      published: now,
-      createdAt: now,
-      updatedAt: now,
-      attributedTo: actor.id, // Author's AP ID
-      to: ['https://www.w3.org/ns/activitystreams#Public'], // Default audience (adjust based on visibility)
-      cc: [],
-      url: postUrl,
-      replyCount: 0,
-      likesCount: 0,
-      sharesCount: 0,
-      likedBy: [],
-      sharedBy: [],
+      published: now, // Set published time
+      createdAt: now, // Set internal createdAt
+      updatedAt: now, // Set internal updatedAt
+      attributedTo: actor.id, // Author's AP ID (URL)
+      to: [], // Initialize, will be set based on visibility
+      cc: [], // Initialize, will be set based on visibility
+      url: postUrl, // Canonical AP URL
+      replyCount: 0, // Initialize count
+      likesCount: 0, // Initialize count
+      sharesCount: 0, // Initialize count
+      likedBy: [], // Initialize array
+      sharedBy: [], // Initialize array
+      // inReplyTo: data.inReplyTo, // Add if supporting replies
+      // tag: [], // Initialize if supporting tags/mentions
     };
 
     // Adjust to/cc based on visibility
@@ -105,91 +120,109 @@ export class PostService {
   }
 
   // --- Get Feed ---
-  async getFeed(options: {
-    limit?: number;
-    offset?: number;
-    userId?: string;
-  }): Promise<{ posts: Post[]; hasMore: boolean }> {
-    // Basic feed implementation - gets latest posts
-    // TODO: Implement proper feed logic (following, timelines, etc.)
-    const limit = options.limit || 20;
-    const offset = options.offset || 0;
+  async getFeed(
+    options: { page?: number; limit?: number } = {}
+  ): Promise<{ posts: Post[]; hasMore: boolean }> {
+    const { page = 1, limit = 20 } = options; // Destructure options
+    const skip = (page - 1) * limit;
 
-    const posts = await this.postRepository.find(
-      { visibility: 'public' }, // Simplistic filter
-      { limit, skip: offset, sort: { published: -1 } }
-    );
-    const total = await this.postRepository.countDocuments({
-      visibility: 'public',
+    // Call repository's findFeed method
+    const posts = await this.postRepository.findFeed({
+      sort: { published: -1 }, // Default sort
+      skip,
+      limit: limit + 1, // Fetch one extra to check if there's more
     });
-    const hasMore = offset + posts.length < total;
 
-    return { posts, hasMore };
+    const hasMore = posts.length > limit;
+    const paginatedPosts = posts.slice(0, limit);
+
+    // Populate actor data for each post
+    const populatedPosts = await Promise.all(
+      paginatedPosts.map(async post => {
+        if (!post.actor && post.actorId) {
+          try {
+            const fetchedActor = await this.actorService.getActorById(
+              post.actorId.toString()
+            );
+            post.actor = fetchedActor || undefined;
+          } catch (error) {
+            console.error(
+              `Failed to populate actor ${post.actorId} for post ${post._id}:`,
+              error
+            );
+            // Decide how to handle posts with missing actors
+          }
+        }
+        return post;
+      })
+    );
+
+    return { posts: populatedPosts, hasMore };
+  }
+
+  // Add getPostsByUsername - DEFERRED IMPLEMENTATION
+  async getPostsByUsername(
+    username: string,
+    options: { limit: number; offset: number }
+  ): Promise<{ posts: Post[]; total: number; limit: number; offset: number }> {
+    // TODO: Implement this correctly. Needs to find actor by username,
+    // then find posts by actorId, potentially requiring ActorRepository injection
+    // or moving logic to PostRepository.
+    console.warn(
+      `PostService.getPostsByUsername called but not fully implemented for: ${username}`
+    );
+    return {
+      posts: [],
+      total: 0,
+      limit: options.limit,
+      offset: options.offset,
+    };
   }
 
   // --- Update Post ---
   async updatePost(
-    postId: string,
+    postId: string, // AP ID (URL)
     actorId: string | ObjectId,
     updates: UpdatePostData
   ): Promise<Post | null> {
-    const post = await this.getPostById(postId);
-    if (!post) {
-      throw new AppError('Post not found', 404, ErrorType.NOT_FOUND);
-    }
-
-    const actorObjectId =
-      typeof actorId === 'string' ? new ObjectId(actorId) : actorId;
-    if (post.actorId.toHexString() !== actorObjectId.toHexString()) {
+    // Check ownership first using the repository method
+    const isOwner = await this.postRepository.isOwner(postId, actorId);
+    if (!isOwner) {
       throw new AppError(
         'User not authorized to update this post',
-        403, // Forbidden status code
+        403,
         ErrorType.FORBIDDEN
       );
     }
-
-    // Construct the update object, only including fields present in updates
-    const updatePayload: Partial<Post> = {};
-    if (updates.content !== undefined) updatePayload.content = updates.content;
-    if (updates.visibility !== undefined)
-      updatePayload.visibility = updates.visibility;
-    if (updates.sensitive !== undefined)
-      updatePayload.sensitive = updates.sensitive;
-    if (updates.summary !== undefined) updatePayload.summary = updates.summary;
-    if (updates.attachments !== undefined)
-      updatePayload.attachments = updates.attachments;
-    updatePayload.updatedAt = new Date();
-
-    return this.postRepository.findOneAndUpdate(
-      { id: postId },
-      { $set: updatePayload }
-    );
+    // Call repository update method (which uses findOneAndUpdate)
+    return this.postRepository.update(postId, updates);
   }
 
   // --- Delete Post ---
   async deletePost(
-    postId: string,
+    postId: string, // AP ID (URL)
     actorId: string | ObjectId
   ): Promise<boolean> {
-    const post = await this.getPostById(postId);
-    if (!post) {
-      throw new AppError('Post not found', 404, ErrorType.NOT_FOUND);
-    }
-
-    const actorObjectId =
-      typeof actorId === 'string' ? new ObjectId(actorId) : actorId;
-    if (post.actorId.toHexString() !== actorObjectId.toHexString()) {
+    // Check ownership first using the repository method
+    const isOwner = await this.postRepository.isOwner(postId, actorId);
+    if (!isOwner) {
       throw new AppError(
         'User not authorized to delete this post',
-        403, // Forbidden status code
+        403,
         ErrorType.FORBIDDEN
       );
     }
 
     // TODO: Handle ActivityPub Tombstone object creation/federation
 
-    const result = await this.postRepository.deleteOne({ id: postId });
-    return result;
+    // Call repository deleteById method (which deletes by AP ID)
+    return this.postRepository.deleteById(postId);
+  }
+
+  // Keep isOwner method, but have it call repository
+  async isOwner(postId: string, actorId: string | ObjectId): Promise<boolean> {
+    // Call repository method
+    return this.postRepository.isOwner(postId, actorId);
   }
 
   // --- Like Post ---

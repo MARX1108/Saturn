@@ -47,12 +47,16 @@ export class PostRepository extends MongoRepository<Post> {
   }
 
   async findFeed(options?: FindOptions<Post>): Promise<Post[]> {
-    console.warn('findFeed not fully implemented - using basic find');
-    return this.find({ visibility: 'public' }, options);
+    return this.find(
+      { visibility: 'public' },
+      {
+        sort: { published: -1 },
+        ...options,
+      }
+    );
   }
 
   async countFeed(): Promise<number> {
-    console.warn('countFeed not fully implemented - using basic count');
     return this.countDocuments({ visibility: 'public' });
   }
 
@@ -98,9 +102,29 @@ export class PostRepository extends MongoRepository<Post> {
     } as Filter<Post>);
   }
 
-  async deleteById(id: string): Promise<boolean> {
-    const filter = { _id: new ObjectId(id) } as Filter<any>;
-    const result = await this.collection.deleteOne(filter);
+  async isOwner(postId: string, actorId: string | ObjectId): Promise<boolean> {
+    const actorObjectId =
+      typeof actorId === 'string' ? new ObjectId(actorId) : actorId;
+    const post = await this.findOne({ id: postId, actorId: actorObjectId });
+    return !!post;
+  }
+
+  async update(postId: string, updates: Partial<Post>): Promise<Post | null> {
+    return this.findOneAndUpdate(
+      { id: postId },
+      { $set: { ...updates, updatedAt: new Date() } }
+    );
+  }
+
+  async deleteById(postId: string): Promise<boolean> {
+    return this.deleteOne({ id: postId });
+  }
+
+  async deleteByObjectId(id: string | ObjectId): Promise<boolean> {
+    const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+    const result = await this.collection.deleteOne({
+      _id: objectId,
+    } as Filter<Post>);
     return result.deletedCount > 0;
   }
 }

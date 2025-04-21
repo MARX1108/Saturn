@@ -2,35 +2,32 @@ import { Db, ObjectId } from 'mongodb';
 import { Post } from '@/modules/posts/models/post';
 import { PostRepository } from '@/modules/posts/repositories/postRepository';
 import { executeHook } from '../plugins';
+import { ActorService } from '@/modules/actors/services/actorService';
+import { NotificationService } from '@/modules/notifications/services/notification.service';
 
 export class PostService {
-  private repository: PostRepository;
-  private domain: string;
+  constructor(
+    private repository: PostRepository,
+    private actorService: ActorService,
+    private domain: string,
+    private notificationService?: NotificationService
+  ) {}
 
-  constructor(db: Db, domain: string) {
-    this.repository = new PostRepository(db);
-    this.domain = domain;
-  }
-
-  async createPost(
-    postData: CreatePostRequest,
-    actorId: string
-  ): Promise<Post> {
+  async createPost(postInputData: any, actorId: ObjectId): Promise<Post> {
     // Create a new post
     const post = {
-      content: postData.content,
-      actorId: new ObjectId(actorId),
+      content: postInputData.content,
+      actorId: actorId,
       createdAt: new Date(),
-      sensitive: postData.sensitive || false,
-      contentWarning: postData.contentWarning || '',
-      attachments: postData.attachments || [],
+      sensitive: postInputData.sensitive || false,
+      attachments: postInputData.attachments || [],
       likes: 0,
       replies: 0,
       reposts: 0,
       // Add ActivityPub fields for federation
       type: 'Note',
       id: `https://${this.domain}/posts/${new ObjectId()}`,
-      attributedTo: `https://${this.domain}/users/${postData.username}`,
+      attributedTo: `https://${this.domain}/users/${postInputData.username}`,
     } as Post;
 
     const createdPost = await this.repository.create(post);
@@ -66,8 +63,8 @@ export class PostService {
 
   async updatePost(
     postId: string,
-    actorId: string,
-    updates: Partial<CreatePostRequest>
+    actorId: ObjectId,
+    updates: Partial<any>
   ): Promise<Post | null> {
     // Verify ownership
     const isOwner = await this.repository.isOwner(postId, actorId);
@@ -76,11 +73,10 @@ export class PostService {
     }
 
     // Update the post
-    const updateData: Partial<Post> = {
-      content: updates.content,
-      sensitive: updates.sensitive || false,
-      contentWarning: updates.contentWarning || '',
-    };
+    const updateData: Partial<Post> = {};
+    if (updates.content) updateData.content = updates.content;
+    if (updates.sensitive !== undefined)
+      updateData.sensitive = updates.sensitive;
 
     const success = await this.repository.update(postId, updateData);
     if (!success) {
@@ -100,14 +96,12 @@ export class PostService {
     return this.repository.delete(postId);
   }
 
-  async likePost(postId: string, _actorId: string): Promise<boolean> {
-    // TODO: Implement like tracking to prevent multiple likes
-    // For now, just increment the like count
-    return this.repository.likePost(postId);
+  async likePost(postId: string, actorId: string): Promise<boolean> {
+    // Basic implementation, might need more checks (e.g., already liked?)
+    return this.repository.likePost(postId, actorId);
   }
 
-  async unlikePost(postId: string, _actorId: string): Promise<boolean> {
-    // TODO: Check if the user has liked the post before decrementing
-    return this.repository.unlikePost(postId);
+  async unlikePost(postId: string, actorId: string): Promise<boolean> {
+    return this.repository.unlikePost(postId, actorId);
   }
 }

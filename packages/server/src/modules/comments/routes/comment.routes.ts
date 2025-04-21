@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ServiceContainer } from '../../../utils/container';
 import { CommentsController } from '../controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
+import { Request, Response, NextFunction } from 'express';
 
 /**
  * Configure comment routes with the controller
@@ -18,9 +19,13 @@ export default function configureCommentRoutes(
   });
 
   // Protected routes
-  router.post('/', authenticate(container.authService), (req, res, next) => {
-    commentsController.createComment(req, res).catch(next);
-  });
+  router.post(
+    '/',
+    authenticate(container.authService),
+    (req: Request, res: Response, next: NextFunction) => {
+      commentsController.createComment(req, res, next).catch(next);
+    }
+  );
 
   router.delete(
     '/:commentId',

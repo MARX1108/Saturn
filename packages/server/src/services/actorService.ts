@@ -14,11 +14,11 @@ export class ActorService {
   }
 
   async createActor(
-    actorData: CreateActorRequest,
+    actorInputData: /* CreateActorRequest */ any, // Rename param, use any temporarily
     iconInfo?: { url: string; mediaType: string }
   ): Promise<Actor> {
     // Validate required fields
-    if (!actorData.password) {
+    if (!actorInputData.password) {
       throw new Error('Password is required to create an actor');
     }
 
@@ -27,43 +27,43 @@ export class ActorService {
 
     // Prepare new actor object
     const actorId = new ObjectId();
-    const newActor: Actor = {
+    const actor: Actor = {
       _id: actorId,
       id: actorId.toHexString(),
-      preferredUsername: actorData.username,
-      name: actorData.displayName || actorData.username,
-      bio: actorData.bio || '',
+      preferredUsername: actorInputData.username,
+      name: actorInputData.displayName || actorInputData.username,
       createdAt: new Date(),
+      updatedAt: new Date(),
 
       // ActivityPub fields
       type: 'Person',
-      username: actorData.username,
-      inbox: `https://${this.domain}/users/${actorData.username}/inbox`,
-      outbox: `https://${this.domain}/users/${actorData.username}/outbox`,
-      followers: `https://${this.domain}/users/${actorData.username}/followers`,
+      username: actorInputData.username,
+      inbox: `https://${this.domain}/users/${actorInputData.username}/inbox`,
+      outbox: `https://${this.domain}/users/${actorInputData.username}/outbox`,
+      followers: `https://${this.domain}/users/${actorInputData.username}/followers`,
       following: [], // Ensure only one definition of following
 
       publicKey: {
-        id: `https://${this.domain}/users/${actorData.username}#main-key`,
-        owner: `https://${this.domain}/users/${actorData.username}`,
+        id: `https://${this.domain}/users/${actorInputData.username}#main-key`,
+        owner: `https://${this.domain}/users/${actorInputData.username}`,
         publicKeyPem: publicKey,
       },
       privateKey: privateKey,
 
       // Security data
-      password: actorData.password, // Should be hashed before reaching here
+      password: actorInputData.password, // Should be hashed before reaching here
 
       // Additional data
       icon: iconInfo ? { type: 'Image', ...iconInfo } : undefined,
     };
 
     // Hash the password before saving
-    const hashedPassword = await bcryptjs.hash(actorData.password, 10);
-    newActor.password = hashedPassword; // Replace the plain password with the hashed one
+    const hashedPassword = await bcryptjs.hash(actorInputData.password, 10);
+    actor.password = hashedPassword; // Replace the plain password with the hashed one
 
     // Wrap repository call in a try-catch block
     try {
-      return await this.repository.create(newActor);
+      return await this.repository.create(actor);
     } catch (error) {
       console.error('Error creating actor in repository:', error);
       throw new Error('Failed to create actor');
@@ -82,7 +82,6 @@ export class ActorService {
     id: string,
     updates: {
       displayName?: string;
-      bio?: string;
       icon?: {
         type: 'Image'; // Add type field
         url: string;
@@ -118,7 +117,7 @@ export class ActorService {
 
   async updateActor(
     username: string,
-    updates: { displayName?: string; bio?: string },
+    updates: { displayName?: string },
     iconInfo?: { url: string; mediaType: string }
   ): Promise<Actor | null> {
     const updateData: Partial<Actor> = {
@@ -146,15 +145,11 @@ export class ActorService {
 
     return {
       ...actor,
-      '@context': [
-        'https://www.w3.org/ns/activitystreams',
-        'https://w3id.org/security/v1',
-      ],
     };
   }
 
-  async searchActors(query: string): Promise<Actor[]> {
-    return this.repository.searchByUsername(query);
+  async searchActors(query: string, limit = 10): Promise<Actor[]> {
+    return this.repository.search(query, limit);
   }
 
   private async generateKeyPair(): Promise<{

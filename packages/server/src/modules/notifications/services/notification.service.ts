@@ -4,7 +4,7 @@ import {
   FormattedNotification,
   NotificationType,
 } from '../models/notification';
-import { NotificationRepository } from '@/modules/notifications/repositories/notificationRepository';
+import { NotificationRepository } from '@/modules/notifications/repositories/notification.repository';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { AppError, ErrorType } from '../../../utils/errors';
 import {
@@ -14,29 +14,44 @@ import {
   UpdateFilter,
   UpdateResult,
   DeleteResult,
+  Collection,
+  OptionalId as MongoOptionalId,
 } from 'mongodb';
 import { PostService } from '@/modules/posts/services/postService';
 import { CommentService } from '@/modules/comments/services/comment.service';
+import { Actor } from '@/modules/actors/models/actor';
+
+// Define utility type if not available elsewhere
+type OptionalUnlessRequiredId<T> = MongoOptionalId<T>;
 
 export class NotificationService {
   private notificationRepository?: NotificationRepository;
   private db: Db;
   private actorService: ActorService;
-  private postService: PostService;
-  private commentService: CommentService;
+  private postService!: PostService; // Mark for definite assignment
+  private commentService!: CommentService; // Mark for definite assignment
 
   constructor(
     db: Db,
-    actorService: ActorService,
-    postService: PostService,
-    commentService: CommentService
+    actorService: ActorService
+    // Remove PostService, CommentService from constructor
   ) {
     this.db = db;
     this.actorService = actorService;
+    // Services will be injected via setters
+  }
+
+  // Setter for PostService
+  public setPostService(postService: PostService): void {
     this.postService = postService;
+  }
+
+  // Setter for CommentService
+  public setCommentService(commentService: CommentService): void {
     this.commentService = commentService;
   }
 
+  // Keep existing setActorService if it's used elsewhere, though not for the cycle
   setActorService(actorService: ActorService) {
     this.actorService = actorService;
   }
@@ -51,37 +66,37 @@ export class NotificationService {
     // Prevent self-notification
     if (data.actorUserId && data.recipientUserId === data.actorUserId) {
       console.log('Skipping self-notification');
-      // Optionally, throw an error or return null/undefined
       return null;
     }
 
     const now = new Date();
-    // Ensure the data passed to repository.create matches OptionalId<Notification>
+    // Manually construct notification data to ensure correct types and avoid overwrites
     const notificationData: OptionalUnlessRequiredId<Notification> = {
-      recipientUserId:
-        typeof data.recipientUserId === 'string'
-          ? new ObjectId(data.recipientUserId)
-          : data.recipientUserId,
-      actorUserId: data.actorUserId
-        ? typeof data.actorUserId === 'string'
-          ? new ObjectId(data.actorUserId)
-          : data.actorUserId
-        : undefined,
-      type: data.type,
-      postId: data.postId
-        ? typeof data.postId === 'string'
-          ? new ObjectId(data.postId)
-          : data.postId
-        : undefined,
-      commentId: data.commentId
-        ? typeof data.commentId === 'string'
-          ? new ObjectId(data.commentId)
-          : data.commentId
-        : undefined,
-      read: false,
+      recipientUserId: data.recipientUserId, // Already string in DTO
+      type: data.type, // Enum value
+      read: data.read ?? false, // Use provided value or default to false
       createdAt: now,
-      // Add other required fields with defaults if necessary
+      updatedAt: now, // Add required updatedAt
     };
+
+    // Add optional fields if they exist in the DTO and convert IDs if necessary
+    if (data.actorUserId) {
+      // Assume actorUserId in DTO is string as per model
+      notificationData.actorUserId = data.actorUserId;
+    }
+    if (data.postId) {
+      // Assume postId in DTO is string as per model
+      notificationData.postId = data.postId;
+    }
+    if (data.commentId) {
+      // Assume commentId in DTO is string as per model
+      notificationData.commentId = data.commentId;
+    }
+    // if (data.content) { // Content is not part of the base Notification model
+    //   notificationData.content = data.content;
+    // }
+
+    // Explicitly exclude spreading ...data to prevent type mismatches/overwrites
 
     const createdNotification = await this.repository.create(notificationData);
     // TODO: Potentially push notification via WebSocket or other real-time mechanism
@@ -131,7 +146,7 @@ export class NotificationService {
   async markNotificationsAsRead(
     userId: string | ObjectId,
     notificationIds?: string[]
-  ): Promise<UpdateResult> {
+  ): Promise<UpdateResult | { acknowledged: boolean; modifiedCount: number }> {
     const userObjectId =
       typeof userId === 'string' ? new ObjectId(userId) : userId;
     const filter: Filter<Notification> = {
@@ -143,11 +158,14 @@ export class NotificationService {
         $in: notificationIds.map(id => new ObjectId(id)),
       };
     }
-    // Assuming repository has updateMany or similar method
-    // This might need adjustment based on actual NotificationRepository implementation
-    return this.repository.updateMany(filter, {
+    // updateMany not in base repository, use collection method directly
+    const result = await this.collection.updateMany(filter, {
       $set: { read: true, updatedAt: new Date() },
     });
+    return {
+      acknowledged: result.acknowledged,
+      modifiedCount: result.modifiedCount,
+    };
   }
 
   /**
@@ -180,7 +198,21 @@ export class NotificationService {
     // Process notifications in parallel
     await Promise.all(
       notifications.map(async notification => {
-        const formatted: FormattedNotification = { ...notification };
+        // Manually construct FormattedNotification
+        const formatted: Partial<FormattedNotification> = {
+          id:
+            notification._id instanceof ObjectId
+              ? notification._id.toHexString()
+              : notification._id!,
+          recipientUserId: notification.recipientUserId,
+          type: notification.type,
+          postId: notification.postId,
+          commentId: notification.commentId,
+          read: notification.read,
+          createdAt: notification.createdAt,
+          updatedAt: notification.updatedAt, // Add required updatedAt
+          // content: notification.content, // Add if content exists on base Notification
+        };
 
         // Get actor details if actorUserId is present and actorService is available
         if (notification.actorUserId && this.actorService) {
@@ -207,7 +239,7 @@ export class NotificationService {
           }
         }
 
-        formattedNotifications.push(formatted);
+        formattedNotifications.push(formatted as FormattedNotification);
       })
     );
 
@@ -275,9 +307,10 @@ export class NotificationService {
   private async formatNotification(
     notification: Notification
   ): Promise<FormattedNotification> {
-    let actor = null;
+    let actor: Actor | null = null;
     if (notification.actorUserId) {
       try {
+        // Use findById which expects string | ObjectId
         actor = await this.actorService.getActorById(notification.actorUserId);
       } catch (error) {
         console.warn(
@@ -294,21 +327,26 @@ export class NotificationService {
           displayName: actor.displayName || actor.name,
           avatarUrl: actor.icon?.url,
         }
-      : null;
+      : undefined;
 
-    const post = notification.postId?.toString();
-    const comment = notification.commentId?.toString();
-
-    return {
-      id: notification._id!.toString(),
+    // Construct the FormattedNotification object with all required fields
+    const formattedResult: FormattedNotification = {
+      id:
+        notification._id instanceof ObjectId
+          ? notification._id.toHexString()
+          : notification._id!,
+      recipientUserId: notification.recipientUserId,
       type: notification.type,
-      actor: formattedActor || undefined,
-      postId: post || undefined,
-      commentId: comment || undefined,
+      actor: formattedActor,
+      postId: notification.postId,
+      commentId: notification.commentId,
       read: notification.read,
       createdAt: notification.createdAt,
-      updatedAt: notification.updatedAt,
+      updatedAt: notification.updatedAt, // Add required updatedAt
+      // content: notification.content, // Add if content exists on base Notification
     };
+
+    return formattedResult;
   }
 
   // Add missing base repository methods if not extending directly
@@ -322,4 +360,9 @@ export class NotificationService {
 
   // Helper for ObjectId conversion (if needed)
   // private toObjectId(id: string | ObjectId): ObjectId { ... }
+
+  // Need access to the collection for updateMany
+  private get collection(): Collection<Notification> {
+    return this.db.collection<Notification>('notifications');
+  }
 }

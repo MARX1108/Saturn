@@ -20,6 +20,11 @@ export const mockActivityPubService = mock<any>();
 export const mockWebfingerService = mock<any>();
 export const mockPostsController = mock<any>();
 export const mockCommentsController = mock<any>();
+export const mockAuthController = mock<any>();
+export const mockActorsController = mock<any>();
+export const mockMediaController = mock<any>();
+export const mockActivityPubController = mock<any>();
+export const mockWebfingerController = mock<any>();
 
 // Attach to global scope
 (global as any).mockAuthService = mockAuthService;
@@ -33,6 +38,11 @@ export const mockCommentsController = mock<any>();
 (global as any).mockWebfingerService = mockWebfingerService;
 (global as any).mockPostsController = mockPostsController;
 (global as any).mockCommentsController = mockCommentsController;
+(global as any).mockAuthController = mockAuthController;
+(global as any).mockActorsController = mockActorsController;
+(global as any).mockMediaController = mockMediaController;
+(global as any).mockActivityPubController = mockActivityPubController;
+(global as any).mockWebfingerController = mockWebfingerController;
 
 // Mock methods called during setup
 // const mockMulterMiddleware = (req: Request, res: Response, next: NextFunction) => next();
@@ -70,29 +80,41 @@ mockActorService.getActorByUsername.mockResolvedValue(mockActor as any);
 
 mockPostService.getPostById.mockImplementation(async id => {
   if (id === 'nonexistent') return null;
+  const postObjectId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c2');
+  const postUrl = `https://test.domain/posts/${id}`;
+  const actorObjectId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c1');
+  const actorApId = 'https://test.domain/users/testuser';
   return {
-    _id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c2'),
-    id: `https://test.domain/posts/${id}`,
+    _id: postObjectId,
+    id: postUrl,
+    type: 'Note' as const,
+    actorId: actorObjectId,
     content: 'Test post content',
-    actorId: mockActor._id.toString(),
+    visibility: 'public',
+    sensitive: false,
+    summary: undefined,
+    attachments: [],
+    published: mockDate,
     createdAt: mockDate,
     updatedAt: mockDate,
-    likes: 0,
-    likedBy: [],
-    shares: 0,
-    sensitive: false,
-    contentWarning: null,
-    attachments: [],
-    actor: mockActor,
-    type: 'Note' as const,
-    visibility: 'public',
-    published: mockDate,
+    attributedTo: actorApId,
     to: ['https://www.w3.org/ns/activitystreams#Public'],
-    cc: [],
-    url: `https://test.domain/posts/${id}`,
-    replies: { items: [] },
-    attributedTo: mockActor.id,
-  } as any;
+    cc: [`${actorApId}/followers`],
+    url: postUrl,
+    replyCount: 0,
+    likesCount: 0,
+    sharesCount: 0,
+    likedBy: [],
+    sharedBy: [],
+    actor: {
+      // Include actor summary
+      id: actorApId,
+      username: 'testuser@test.domain',
+      preferredUsername: 'testuser',
+      displayName: 'Test User',
+      icon: undefined,
+    },
+  } as Post; // Ensure the mock return type matches Post model
 });
 
 mockPostService.getFeed.mockResolvedValue({
@@ -100,26 +122,34 @@ mockPostService.getFeed.mockResolvedValue({
     {
       _id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c3'),
       id: 'https://test.domain/posts/test-post-id',
+      type: 'Note' as const,
+      actorId: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c1'),
       content: 'Test post content',
-      actorId: mockActor._id.toString(),
+      visibility: 'public',
+      sensitive: false,
+      summary: undefined,
+      attachments: [],
+      published: mockDate,
       createdAt: mockDate,
       updatedAt: mockDate,
-      likes: 0,
-      likedBy: [],
-      shares: 0,
-      sensitive: false,
-      contentWarning: null,
-      attachments: [],
-      actor: mockActor,
-      type: 'Note' as const,
-      visibility: 'public',
-      published: mockDate,
+      attributedTo: 'https://test.domain/users/testuser',
       to: ['https://www.w3.org/ns/activitystreams#Public'],
-      cc: [],
+      cc: ['https://test.domain/users/testuser/followers'],
       url: 'https://test.domain/posts/test-post-id',
-      replies: { items: [] },
-      attributedTo: mockActor.id,
-    } as any,
+      replyCount: 0,
+      likesCount: 0,
+      sharesCount: 0,
+      likedBy: [],
+      sharedBy: [],
+      actor: {
+        // Include actor summary
+        id: 'https://test.domain/users/testuser',
+        username: 'testuser@test.domain',
+        preferredUsername: 'testuser',
+        displayName: 'Test User',
+        icon: undefined,
+      },
+    } as Post, // Ensure the mock return type matches Post model
   ],
   hasMore: false,
 });
@@ -138,6 +168,11 @@ export const mockServiceContainer: ServiceContainer = {
   webfingerService: mockWebfingerService,
   postsController: mockPostsController,
   commentsController: mockCommentsController,
+  authController: mockAuthController,
+  actorsController: mockActorsController,
+  activityPubController: mockActivityPubController,
+  webfingerController: mockWebfingerController,
+  mediaController: mockMediaController,
   getService: jest.fn().mockImplementation(<T>(name: string): T | null => {
     const serviceName = name as keyof ServiceContainer;
     if (

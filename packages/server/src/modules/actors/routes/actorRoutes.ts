@@ -35,8 +35,7 @@ export default function configureActorRoutes(
 
   // Create new actor
   router.post('/', (req: Request, res: Response, next: NextFunction) => {
-    // Temporarily modified to skip upload
-    actorsController.createActor(req, res).catch(next);
+    actorsController.createActor(req, res, next).catch(next);
   });
 
   // Get actor posts

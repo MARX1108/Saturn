@@ -9,22 +9,29 @@ import { Actor } from '@/modules/actors/models/actor';
 import { Post } from '@/modules/posts/models/post';
 import { ObjectId } from 'mongodb';
 import { OptionalId } from 'mongodb';
+import { CreateNotificationDto } from '../../notifications/models/notification';
 
 export class CommentService {
   private repository: CommentRepository;
-  private postService: PostService;
-  private actorService: ActorService;
-  private notificationService: NotificationService;
+  private postService!: PostService;
+  private actorService!: ActorService;
+  private notificationService!: NotificationService;
 
-  constructor(
-    repository: CommentRepository,
-    postService: PostService,
-    actorService: ActorService,
-    notificationService: NotificationService
-  ) {
+  constructor(repository: CommentRepository) {
     this.repository = repository;
+  }
+
+  public setPostService(postService: PostService): void {
     this.postService = postService;
+  }
+
+  public setActorService(actorService: ActorService): void {
     this.actorService = actorService;
+  }
+
+  public setNotificationService(
+    notificationService: NotificationService
+  ): void {
     this.notificationService = notificationService;
   }
 
@@ -64,12 +71,17 @@ export class CommentService {
 
     // Send notification to post author (if different from comment author)
     if (post.actorId.toHexString() !== actor._id.toHexString()) {
+      const commentIdForNotification =
+        createdComment._id instanceof ObjectId
+          ? createdComment._id.toHexString()
+          : createdComment._id; // Assume it's string if not ObjectId
+
       await this.notificationService.createNotification({
         recipientUserId: post.actorId.toHexString(),
         actorUserId: actor._id.toHexString(),
         type: NotificationType.COMMENT,
         postId: post._id.toHexString(),
-        commentId: createdComment._id?.toHexString(),
+        commentId: commentIdForNotification, // <<< Use checked variable
       });
     }
 
@@ -78,7 +90,7 @@ export class CommentService {
       data.content,
       authorId,
       postId,
-      createdComment._id
+      createdComment._id // Pass original id here
     );
 
     return createdComment;
@@ -198,16 +210,19 @@ export class CommentService {
         mentionedUser._id!.toHexString() !==
           (typeof authorId === 'string' ? authorId : authorId.toHexString())
       ) {
-        await this.notificationService.createNotification({
-          type: 'mention',
+        const commentIdForNotification =
+          commentId instanceof ObjectId ? commentId.toHexString() : commentId; // Assume string if not ObjectId
+
+        const notificationDto: CreateNotificationDto = {
+          type: NotificationType.MENTION,
           recipientUserId: mentionedUser._id!.toHexString(),
           actorUserId:
             typeof authorId === 'string' ? authorId : authorId.toHexString(),
           content: `mentioned you in a comment: ${content.substring(0, 50)}...`,
           postId: typeof postId === 'string' ? postId : postId.toHexString(),
-          commentId:
-            commentId instanceof ObjectId ? commentId.toHexString() : commentId,
-        });
+          commentId: commentIdForNotification, // <<< Use checked variable
+        };
+        await this.notificationService.createNotification(notificationDto);
       }
     }
   }

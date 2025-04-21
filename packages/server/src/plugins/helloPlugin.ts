@@ -22,10 +22,10 @@ const helloPlugin: ServerPlugin = {
     // }
   },
 
-  onNewPost(postData: Post) {
-    console.log(
-      `👋 Hello Plugin says: New post created by ${postData.actor.username}!`
-    );
+  onNewPost: (postData: Post): void => {
+    // Check if actor data exists before accessing username
+    const authorUsername = postData.actor?.username || 'an unknown user';
+    console.log(`👋 Hello Plugin says: New post created by ${authorUsername}!`);
   },
 };
 

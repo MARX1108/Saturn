@@ -39,6 +39,7 @@ export interface CreateNotificationDto {
   postId?: string;
   commentId?: string;
   read?: boolean;
+  content?: string;
 }
 
 /**
@@ -46,11 +47,16 @@ export interface CreateNotificationDto {
  */
 export interface FormattedNotification extends Notification {
   id: string;
+  type: NotificationType;
   actor?: {
     id: string;
     username: string;
     displayName?: string;
     avatarUrl?: string;
   };
-  // Additional content details could be added here if needed
+  postId?: string;
+  commentId?: string;
+  content?: string;
+  read: boolean;
+  createdAt: Date;
 }

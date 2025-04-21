@@ -1,25 +1,59 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { CommentService } from '../services/comment.service';
-import { Comment } from '../models/comment';
+import {
+  Comment,
+  CreateCommentDto as CommentModelDto,
+} from '../models/comment';
+import { AppError, ErrorType } from '@/utils/errors';
+
+// Define DTO locally if needed for input shape, but use Model DTO for service call
+interface CreateCommentInput {
+  content: string;
+}
 
 export class CommentsController {
-  private commentService: CommentService;
+  constructor(private commentService: CommentService) {}
 
-  constructor(commentService: CommentService) {
-    this.commentService = commentService;
-  }
+  async createComment(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const postId = req.params.postId;
+      const { content } = req.body as CreateCommentInput;
+      const actorId = req.user?.id;
 
-  async createComment(req: Request, res: Response): Promise<Response> {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      if (!actorId) {
+        throw new AppError(
+          'Authentication required',
+          401,
+          ErrorType.UNAUTHORIZED
+        );
+      }
+      if (!content) {
+        throw new AppError(
+          'Comment content is required',
+          400,
+          ErrorType.BAD_REQUEST
+        );
+      }
+
+      // Pass the full CreateCommentDto required by the service method's type signature
+      const commentData: CommentModelDto = {
+        postId: postId, // Include postId
+        authorId: actorId, // Include authorId
+        content: content, // Include content
+      };
+      const comment = await this.commentService.createComment(
+        postId,
+        actorId,
+        commentData // Pass the complete DTO object
+      );
+      res.status(201).json(comment);
+    } catch (error) {
+      next(error);
     }
-    const { postId, content } = req.body;
-    const comment = await this.commentService.createComment(
-      postId,
-      content,
-      req.user.id
-    );
-    return res.status(201).json(comment);
   }
 
   async getComments(req: Request, res: Response): Promise<Response> {

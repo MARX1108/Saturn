@@ -1,24 +1,30 @@
-import { Db } from 'mongodb';
-import { ActorService } from '../modules/actors/services/actorService';
+import { Db, MongoClient } from 'mongodb';
+import config from '../config';
+import { ActorService } from '@/modules/actors/services/actorService';
 import { ActorRepository } from '../modules/actors/repositories/actorRepository';
-import { PostService } from '../modules/posts/services/postService';
+import { PostService } from '@/modules/posts/services/postService';
 import { PostRepository } from '../modules/posts/repositories/postRepository';
-import { AuthService } from '../modules/auth/services/auth.service';
-import { AuthRepository } from '../modules/auth/repositories/auth.repository';
-import { PostsController } from '../modules/posts/controllers/postsController';
-import { CommentsController } from '../modules/comments/controllers/comments.controller';
-import { CommentService } from '../modules/comments/services/comment.service';
-import { CommentRepository } from '../modules/comments/repositories/comment.repository';
-import { NotificationService } from '../modules/notifications/services/notification.service';
+import { AuthService } from '@/modules/auth/services/auth.service';
+import { AuthRepository } from '@/modules/auth/repositories/auth.repository';
+import { PostsController } from '@/modules/posts/controllers/postsController';
+import { CommentsController } from '@/modules/comments/controllers/comments.controller';
+import { CommentService } from '@/modules/comments/services/comment.service';
+import { CommentRepository } from '@/modules/comments/repositories/comment.repository';
+import { NotificationService } from '@/modules/notifications/services/notification.service';
 import { NotificationRepository } from '../modules/notifications/repositories/notification.repository';
 import { UploadService } from '../modules/media/services/upload.service';
-import { ActivityPubService } from '../modules/activitypub/services/activitypub.service';
-import { WebfingerService } from '../modules/webfinger/services/webfinger.service';
+import { ActivityPubService } from '@/modules/activitypub/services/activitypub.service';
+import { WebfingerService } from '@/modules/webfinger/services/webfinger.service';
 import { MediaService } from '../modules/media/services/media.service';
-import { ActivityPubRepository } from '../modules/activitypub/repositories/activitypub.repository';
-import { WebfingerRepository } from '../modules/webfinger/repositories/webfinger.repository';
+import { ActivityPubRepository } from '@/modules/activitypub/repositories/activitypub.repository';
+import { WebfingerRepository } from '@/modules/webfinger/repositories/webfinger.repository';
 import { MediaRepository } from '../modules/media/repositories/media.repository';
 import path from 'path';
+import { AuthController } from '@/modules/auth/controllers/authController';
+import { ActorsController } from '@/modules/actors/controllers/actorsController';
+import { ActivityPubController } from '@/modules/activitypub/controllers/activitypubController';
+import { WebfingerController } from '@/modules/webfinger/controllers/webfinger.controller';
+import { MediaController } from '../modules/media/controllers/media.controller';
 
 /**
  * Available services that can be resolved from the container
@@ -34,7 +40,12 @@ export type ServiceType =
   | 'notificationService'
   | 'mediaService'
   | 'activityPubService'
-  | 'webfingerService';
+  | 'webfingerService'
+  | 'authController'
+  | 'actorsController'
+  | 'activityPubController'
+  | 'webfingerController'
+  | 'mediaController';
 
 /**
  * Available repositories that can be resolved from the container
@@ -63,9 +74,14 @@ export interface ServiceContainer {
   mediaService: MediaService;
   activityPubService: ActivityPubService;
   webfingerService: WebfingerService;
+  authController: AuthController;
+  actorsController: ActorsController;
+  activityPubController: ActivityPubController;
+  webfingerController: WebfingerController;
+  mediaController: MediaController;
 
   // Method to resolve services by name for more flexible DI
-  getService<T>(name: ServiceType | string): T | null;
+  getService<T>(name: keyof ServiceContainer): T | null;
 }
 
 /**
@@ -80,7 +96,8 @@ export function createServiceContainer(
   // Define common paths
   const uploadPath = path.join(process.cwd(), 'uploads');
 
-  // Create repositories
+  // Repositories
+  const uploadService = new UploadService();
   const actorRepository = new ActorRepository(db);
   const postRepository = new PostRepository(db);
   const authRepository = new AuthRepository(db);
@@ -90,77 +107,77 @@ export function createServiceContainer(
   const webfingerRepository = new WebfingerRepository(db);
   const mediaRepository = new MediaRepository(db);
 
-  // Create base services
-  const uploadService = new UploadService();
+  // Correct AuthService instantiation
   const authService = new AuthService(authRepository);
-
-  // Create services with proper initialization order
-  // First create NotificationService without ActorService
-  const notificationService = new NotificationService(notificationRepository);
-
-  // Create ActorService with domain
-  const actorService = new ActorService(
-    actorRepository,
-    notificationService,
-    domain
-  );
-
-  // Set ActorService back into NotificationService
-  notificationService.setActorService(actorService);
-
-  // Create remaining services
-  const postService = new PostService(
-    postRepository,
-    actorService,
-    notificationService,
-    domain
-  );
-  const commentService = new CommentService(
-    commentRepository,
-    postService,
-    actorService,
-    notificationService
-  );
+  const webfingerService = new WebfingerService(webfingerRepository, domain);
+  const mediaService = new MediaService(mediaRepository, uploadPath);
   const activityPubService = new ActivityPubService(
     activityPubRepository,
     domain
   );
-  const webfingerService = new WebfingerService(webfingerRepository, domain);
-  const mediaService = new MediaService(mediaRepository, uploadPath);
 
-  // Create controllers with dependencies
+  // Instantiate services involved in circular dependencies with corrected constructors
+  const actorService = new ActorService(actorRepository, domain);
+  const postService = new PostService(postRepository, actorService, domain);
+  const notificationService = new NotificationService(db, actorService);
+  const commentService = new CommentService(commentRepository);
+
+  // Set circular dependencies using setter methods
+  actorService.setNotificationService(notificationService);
+  postService.setNotificationService(notificationService);
+  notificationService.setPostService(postService);
+  notificationService.setCommentService(commentService);
+  commentService.setPostService(postService);
+  commentService.setActorService(actorService);
+  commentService.setNotificationService(notificationService);
+
+  // Instantiate controllers with correct dependencies
+  const activityPubController = new ActivityPubController(
+    actorService,
+    activityPubService,
+    domain
+  );
+  const webfingerController = new WebfingerController(webfingerService);
+  const mediaController = new MediaController(mediaService);
   const postsController = new PostsController(
     postService,
     actorService,
     uploadService,
     domain
   );
-
   const commentsController = new CommentsController(commentService);
+  const authController = new AuthController(actorService, authService);
+  const actorsController = new ActorsController(
+    actorService,
+    uploadService,
+    postService,
+    domain
+  );
 
-  // Create the container with all services
-  const container: ServiceContainer = {
+  // Container definition
+  const serviceContainer: ServiceContainer = {
+    authService,
     actorService,
     postService,
-    authService,
-    postsController,
-    commentsController,
     commentService,
     notificationService,
     uploadService,
     mediaService,
     activityPubService,
     webfingerService,
-
-    // Implement getService method for flexible service resolution
-    getService<T>(name: ServiceType | string): T | null {
-      // Cast to the correct type
-      if (name in this) {
-        return (this as any)[name] as T;
-      }
-      return null;
+    postsController,
+    commentsController,
+    authController,
+    actorsController,
+    activityPubController,
+    webfingerController,
+    mediaController,
+    getService: <T>(name: keyof ServiceContainer): T | null => {
+      // Ensure the service exists before trying to access it
+      const service = (serviceContainer as any)[name] as T | undefined;
+      return service || null;
     },
   };
 
-  return container;
+  return serviceContainer;
 }

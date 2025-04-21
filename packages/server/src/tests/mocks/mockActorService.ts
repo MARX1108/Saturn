@@ -28,7 +28,7 @@ export class MockActorService {
     iconInfo?: IconInfo
   ): Promise<Actor> {
     const actor: Actor = {
-      _id: new ObjectId().toString(),
+      _id: new ObjectId(),
       preferredUsername: actorData.preferredUsername || 'unknown',
       name: actorData.name || actorData.preferredUsername || 'unknown',
       username: actorData.username || actorData.preferredUsername || 'unknown',
@@ -67,7 +67,6 @@ export class MockActorService {
       ...actor,
       name: updates.name || actor.name,
       summary: updates.summary || actor.summary,
-      bio: updates.bio || actor.bio,
       icon: iconInfo || actor.icon,
       updatedAt: new Date(),
     };
