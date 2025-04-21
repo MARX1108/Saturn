@@ -1,8 +1,8 @@
-import { Db, ObjectId } from "mongodb";
-import crypto from "crypto";
-import { Actor, CreateActorRequest } from "../types/actor";
-import { ActorRepository } from "../repositories/actorRepository";
-import bcryptjs from "bcryptjs"; // Replace bcrypt with bcryptjs
+import { Db, ObjectId } from 'mongodb';
+import crypto from 'crypto';
+import { Actor } from '@/modules/actors/models/actor';
+import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
+import bcryptjs from 'bcryptjs'; // Replace bcrypt with bcryptjs
 
 export class ActorService {
   private repository: ActorRepository;
@@ -15,11 +15,11 @@ export class ActorService {
 
   async createActor(
     actorData: CreateActorRequest,
-    iconInfo?: { url: string; mediaType: string },
+    iconInfo?: { url: string; mediaType: string }
   ): Promise<Actor> {
     // Validate required fields
     if (!actorData.password) {
-      throw new Error("Password is required to create an actor");
+      throw new Error('Password is required to create an actor');
     }
 
     // Generate keypair for ActivityPub federation
@@ -28,15 +28,16 @@ export class ActorService {
     // Prepare new actor object
     const actorId = new ObjectId();
     const newActor: Actor = {
-      _id: actorId.toHexString(), // Convert ObjectId to string
+      _id: actorId,
+      id: actorId.toHexString(),
       preferredUsername: actorData.username,
       name: actorData.displayName || actorData.username,
-      bio: actorData.bio || "",
+      bio: actorData.bio || '',
       createdAt: new Date(),
 
       // ActivityPub fields
-      type: "Person",
-      id: `https://${this.domain}/users/${actorData.username}`,
+      type: 'Person',
+      username: actorData.username,
       inbox: `https://${this.domain}/users/${actorData.username}/inbox`,
       outbox: `https://${this.domain}/users/${actorData.username}/outbox`,
       followers: `https://${this.domain}/users/${actorData.username}/followers`,
@@ -53,7 +54,7 @@ export class ActorService {
       password: actorData.password, // Should be hashed before reaching here
 
       // Additional data
-      icon: iconInfo ? { type: "Image", ...iconInfo } : undefined,
+      icon: iconInfo ? { type: 'Image', ...iconInfo } : undefined,
     };
 
     // Hash the password before saving
@@ -64,8 +65,8 @@ export class ActorService {
     try {
       return await this.repository.create(newActor);
     } catch (error) {
-      console.error("Error creating actor in repository:", error);
-      throw new Error("Failed to create actor");
+      console.error('Error creating actor in repository:', error);
+      throw new Error('Failed to create actor');
     }
   }
 
@@ -83,11 +84,11 @@ export class ActorService {
       displayName?: string;
       bio?: string;
       icon?: {
-        type: "Image"; // Add type field
+        type: 'Image'; // Add type field
         url: string;
         mediaType: string;
       };
-    },
+    }
   ): Promise<boolean> {
     return this.repository.updateProfile(id, updates);
   }
@@ -110,7 +111,7 @@ export class ActorService {
 
   async unfollowActor(
     actorId: string,
-    targetActorId: string,
+    targetActorId: string
   ): Promise<boolean> {
     return this.repository.removeFollowing(actorId, targetActorId);
   }
@@ -118,16 +119,16 @@ export class ActorService {
   async updateActor(
     username: string,
     updates: { displayName?: string; bio?: string },
-    iconInfo?: { url: string; mediaType: string },
+    iconInfo?: { url: string; mediaType: string }
   ): Promise<Actor | null> {
     const updateData: Partial<Actor> = {
       ...updates,
-      icon: iconInfo ? { type: "Image", ...iconInfo } : undefined,
+      icon: iconInfo ? { type: 'Image', ...iconInfo } : undefined,
     };
 
     const result = await this.repository.updateProfileByUsername(
       username,
-      updateData,
+      updateData
     );
     if (!result) return null;
 
@@ -145,9 +146,9 @@ export class ActorService {
 
     return {
       ...actor,
-      "@context": [
-        "https://www.w3.org/ns/activitystreams",
-        "https://w3id.org/security/v1",
+      '@context': [
+        'https://www.w3.org/ns/activitystreams',
+        'https://w3id.org/security/v1',
       ],
     };
   }
@@ -162,16 +163,16 @@ export class ActorService {
   }> {
     return new Promise((resolve, reject) => {
       crypto.generateKeyPair(
-        "rsa",
+        'rsa',
         {
           modulusLength: 2048,
           publicKeyEncoding: {
-            type: "spki",
-            format: "pem",
+            type: 'spki',
+            format: 'pem',
           },
           privateKeyEncoding: {
-            type: "pkcs8",
-            format: "pem",
+            type: 'pkcs8',
+            format: 'pem',
           },
         },
         (err, publicKey, privateKey) => {
@@ -180,7 +181,7 @@ export class ActorService {
             return;
           }
           resolve({ publicKey, privateKey });
-        },
+        }
       );
     });
   }

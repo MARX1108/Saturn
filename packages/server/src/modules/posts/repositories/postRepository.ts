@@ -7,9 +7,11 @@ import {
   FindOneAndUpdateOptions,
   ModifyResult,
   WithId,
+  FindOptions,
 } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { Post } from '../models/post';
+import { Post, Attachment } from '@/modules/posts/models/post';
+import { Actor } from '@/modules/actors/models/actor';
 
 export class PostRepository extends MongoRepository<Post> {
   constructor(db: Db) {
@@ -18,6 +20,8 @@ export class PostRepository extends MongoRepository<Post> {
     // Create indexes for common queries
     this.collection.createIndex({ 'actor.id': 1, createdAt: -1 });
     this.collection.createIndex({ createdAt: -1 });
+    this.collection.createIndex({ actorId: 1, published: -1 });
+    this.collection.createIndex({ id: 1 }, { unique: true });
   }
 
   async findByUsername(
@@ -42,18 +46,14 @@ export class PostRepository extends MongoRepository<Post> {
     });
   }
 
-  async findFeed(page = 1, limit = 20): Promise<Post[]> {
-    const skip = (page - 1) * limit;
-    return this.collection
-      .find({})
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+  async findFeed(options?: FindOptions<Post>): Promise<Post[]> {
+    console.warn('findFeed not fully implemented - using basic find');
+    return this.find({ visibility: 'public' }, options);
   }
 
   async countFeed(): Promise<number> {
-    return this.collection.countDocuments({});
+    console.warn('countFeed not fully implemented - using basic count');
+    return this.countDocuments({ visibility: 'public' });
   }
 
   async likePost(postId: string, actorId: string): Promise<boolean> {
@@ -72,65 +72,35 @@ export class PostRepository extends MongoRepository<Post> {
     return result.modifiedCount > 0;
   }
 
-  async findById(id: string): Promise<Post | null> {
-    return this.findOne({ id });
+  async findPostsByAuthorId(
+    actorId: string | ObjectId,
+    options?: FindOptions<Post>
+  ): Promise<{ posts: Post[]; total: number }> {
+    const authorObjectId =
+      typeof actorId === 'string' ? new ObjectId(actorId) : actorId;
+    const filter = { actorId: authorObjectId };
+    const posts = await this.find(filter, options);
+    const total = await this.countDocuments(filter);
+    return { posts, total };
   }
 
-  async findByIdAndActorId(id: string, actorId: string): Promise<Post | null> {
+  async findByIdAndActorId(
+    postId: string | ObjectId,
+    actorId: string | ObjectId
+  ): Promise<Post | null> {
+    const postObjectId =
+      typeof postId === 'string' ? new ObjectId(postId) : postId;
+    const actorObjectId =
+      typeof actorId === 'string' ? new ObjectId(actorId) : actorId;
     return this.findOne({
-      id,
-      'actor.id': actorId,
-    });
-  }
-
-  async updateById(id: string, update: Partial<Post>): Promise<Post | null> {
-    const filter = { _id: new ObjectId(id) } as Filter<any>;
-    const updateDoc: UpdateFilter<Post> = {
-      $set: { ...update, updatedAt: new Date() },
-    };
-    const options: FindOneAndUpdateOptions = { returnDocument: 'after' };
-
-    const result: WithId<Post> | null = await this.collection.findOneAndUpdate(
-      filter,
-      updateDoc,
-      options
-    );
-
-    return result;
+      _id: postObjectId,
+      actorId: actorObjectId,
+    } as Filter<Post>);
   }
 
   async deleteById(id: string): Promise<boolean> {
     const filter = { _id: new ObjectId(id) } as Filter<any>;
     const result = await this.collection.deleteOne(filter);
     return result.deletedCount > 0;
-  }
-
-  /**
-   * Find posts by author ID with pagination
-   *
-   * NOTE: This query would benefit from an index on { "actor.id": 1, createdAt: -1 }
-   * for efficient querying and sorting
-   */
-  async findPostsByAuthorId(
-    authorId: string,
-    options: { limit: number; offset: number }
-  ): Promise<{ posts: Post[]; total: number }> {
-    const { limit, offset } = options;
-
-    // Query filter
-    const filter = { 'actor.id': authorId };
-
-    // Get posts with pagination and sorting
-    const posts = await this.collection
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .skip(offset)
-      .limit(limit)
-      .toArray();
-
-    // Get total count for pagination
-    const total = await this.collection.countDocuments(filter);
-
-    return { posts, total };
   }
 }

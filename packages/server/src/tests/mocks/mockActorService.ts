@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { Actor } from '../../modules/actors/models/actor';
+import { Actor } from '@/modules/actors/models/actor';
 
 interface IconInfo {
   type: 'Image';

@@ -1,6 +1,6 @@
 import express from 'express';
-import { ActorService } from '../../modules/actors/services/actorService';
-import { Actor } from '../../modules/actors/models/actor';
+import { ActorService } from '@/modules/actors/services/actorService';
+import { Actor } from '@/modules/actors/models/actor';
 
 export function configureTestActorRoutes(
   actorService: ActorService

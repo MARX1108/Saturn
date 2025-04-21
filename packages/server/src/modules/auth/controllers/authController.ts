@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import _bcryptjs from 'bcryptjs';
-import { ActorService } from '../../actors/services/actorService';
+import { ActorService } from '@/modules/actors/services/actorService';
 import { AuthService } from '../services/auth.service';
 import { generateToken } from '../../../middleware/auth';
 import { DbUser } from '../models/user';

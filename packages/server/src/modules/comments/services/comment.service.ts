@@ -4,8 +4,11 @@ import { PostService } from '../../posts/services/postService';
 import { ActorService } from '../../actors/services/actorService';
 import { NotificationService } from '../../notifications/services/notification.service';
 import { NotificationType } from '../../notifications/models/notification';
-import { AppError, ErrorType } from '../../../utils/errors';
-import { Actor } from '../../actors/models/actor';
+import { AppError, ErrorType } from '@/utils/errors';
+import { Actor } from '@/modules/actors/models/actor';
+import { Post } from '@/modules/posts/models/post';
+import { ObjectId } from 'mongodb';
+import { OptionalId } from 'mongodb';
 
 export class CommentService {
   private repository: CommentRepository;
@@ -32,69 +35,53 @@ export class CommentService {
    * @param content - The comment text content
    */
   async createComment(
-    postId: string,
-    authorId: string,
-    content: string
-  ): Promise<FormattedComment> {
-    // Validate content
-    if (!content || content.trim().length === 0) {
-      throw new AppError(
-        'Comment content cannot be empty',
-        400,
-        ErrorType.VALIDATION
-      );
-    }
-
-    // Check if post exists
-    const post = await this.postService.getPostById(postId);
+    postId: string | ObjectId,
+    authorId: string | ObjectId,
+    data: CreateCommentDto
+  ): Promise<Comment> {
+    const post = await this.postService.getPostById(postId.toString());
     if (!post) {
-      throw new AppError(
-        `Post with ID ${postId} not found`,
-        404,
-        ErrorType.NOT_FOUND
-      );
+      throw new AppError('Post not found', 404, ErrorType.NOT_FOUND);
     }
 
-    // Get author information for notification
-    const author = await this.actorService.getActorById(authorId);
-    if (!author) {
-      throw new AppError(
-        `Actor with ID ${authorId} not found`,
-        404,
-        ErrorType.NOT_FOUND
-      );
+    const actor = await this.actorService.getActorById(authorId);
+    if (!actor) {
+      throw new AppError('Author not found', 404, ErrorType.NOT_FOUND);
     }
 
-    // Create the comment
-    const commentData: CreateCommentDto = {
-      postId,
-      authorId,
-      content: content.trim(),
+    const now = new Date();
+    const commentData: OptionalId<Comment> = {
+      ...data,
+      actorId: actor._id,
+      postId: post._id.toHexString(),
+      createdAt: now,
+      updatedAt: now,
+      likesCount: 0,
+      likedBy: [],
     };
 
-    const newComment = await this.repository.create(commentData);
+    const createdComment = await this.repository.create(commentData);
 
     // Send notification to post author (if different from comment author)
-    if (post.actor.id !== authorId) {
+    if (post.actorId.toHexString() !== actor._id.toHexString()) {
       await this.notificationService.createNotification({
-        recipientUserId: post.actor.id,
-        actorUserId: authorId,
+        recipientUserId: post.actorId.toHexString(),
+        actorUserId: actor._id.toHexString(),
         type: NotificationType.COMMENT,
-        postId: postId,
-        commentId: newComment._id?.toString(),
+        postId: post._id.toHexString(),
+        commentId: createdComment._id?.toHexString(),
       });
     }
 
     // Process mentions in content to send notifications
     await this.processMentions(
-      content,
+      data.content,
       authorId,
       postId,
-      newComment._id?.toString()
+      createdComment._id
     );
 
-    // Format and return the comment
-    return this.formatComment(newComment, author);
+    return createdComment;
   }
 
   /**
@@ -194,40 +181,33 @@ export class CommentService {
    */
   private async processMentions(
     content: string,
-    authorId: string,
-    postId: string,
-    commentId?: string
+    authorId: string | ObjectId,
+    postId: string | ObjectId,
+    commentId?: string | ObjectId
   ): Promise<void> {
-    // Regular expression to match @username mentions
-    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-    const mentions = content.match(mentionRegex);
-
+    const mentions = content.match(/@([a-zA-Z0-9_]+)/g);
     if (!mentions) return;
 
-    // Process each unique mention
-    const uniqueMentions = [...new Set(mentions.map(m => m.substring(1)))];
-
-    for (const username of uniqueMentions) {
-      // Find the mentioned actor
-      const mentionedActor =
+    for (const mention of mentions) {
+      const username = mention.substring(1);
+      const mentionedUser =
         await this.actorService.getActorByUsername(username);
 
-      if (mentionedActor && mentionedActor._id !== authorId) {
-        // Ensure mentionedActor._id is defined before using it
-        if (mentionedActor._id) {
-          // Send notification to the mentioned user
-          await this.notificationService.createNotification({
-            recipientUserId: mentionedActor._id,
-            actorUserId: authorId,
-            type: NotificationType.MENTION,
-            postId,
-            commentId,
-          });
-        } else {
-          console.error(
-            `Actor found for username ${username} but _id is undefined`
-          );
-        }
+      if (
+        mentionedUser &&
+        mentionedUser._id!.toHexString() !==
+          (typeof authorId === 'string' ? authorId : authorId.toHexString())
+      ) {
+        await this.notificationService.createNotification({
+          type: 'mention',
+          recipientUserId: mentionedUser._id!.toHexString(),
+          actorUserId:
+            typeof authorId === 'string' ? authorId : authorId.toHexString(),
+          content: `mentioned you in a comment: ${content.substring(0, 50)}...`,
+          postId: typeof postId === 'string' ? postId : postId.toHexString(),
+          commentId:
+            commentId instanceof ObjectId ? commentId.toHexString() : commentId,
+        });
       }
     }
   }

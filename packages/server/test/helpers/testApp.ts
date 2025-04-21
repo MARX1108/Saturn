@@ -10,12 +10,16 @@ import { mockServiceContainer } from './mockSetup';
 import { AppError } from '@/utils/errors';
 
 export async function createTestApp(db: Db, domain: string) {
+  console.log('[createTestApp] Starting...');
   const app = express();
 
   // Add JSON body parser
+  console.log('[createTestApp] Adding middleware (JSON parser, CORS)...');
   app.use(express.json());
+  app.use(require('cors')());
 
-  // Create real controllers with mock services
+  // --- TEMP: Comment out controller instantiation ---
+  console.log('[createTestApp] Creating controllers...');
   const postsController = new PostsController(
     mockServiceContainer.postService,
     mockServiceContainer.actorService,
@@ -35,31 +39,17 @@ export async function createTestApp(db: Db, domain: string) {
     mockServiceContainer.postService,
     domain
   );
+  console.log('[createTestApp] Controllers created.');
 
-  // Create service container with mock services and real controllers
-  const serviceContainer = {
-    // Services
-    authService: mockServiceContainer.authService,
-    actorService: mockServiceContainer.actorService,
-    postService: mockServiceContainer.postService,
-    commentService: mockServiceContainer.commentService,
-    mediaService: mockServiceContainer.uploadService,
-    notificationService: mockServiceContainer.notificationService,
-    uploadService: mockServiceContainer.uploadService,
-    // Controllers
-    postsController,
-    commentsController,
-    authController,
-    actorsController,
-  };
-
-  // Apply middleware in correct order
-  app.use(require('cors')());
-
-  // Pass the complete mock container to configureRoutes
+  // --- TEMP: Comment out route configuration ---
+  // console.log('[createTestApp] SKIPPING route configuration...');
+  console.log('[createTestApp] Mock service container prepared.');
+  console.log('[createTestApp] Calling configureRoutes...');
   app.use('/api', configureRoutes(mockServiceContainer));
+  console.log('[createTestApp] configureRoutes completed.');
 
   // Centralized error handling middleware
+  console.log('[createTestApp] Adding error handler...');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     console.log('-------------------------');
@@ -93,6 +83,8 @@ export async function createTestApp(db: Db, domain: string) {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
+  console.log('[createTestApp] Error handler added.');
 
+  console.log('[createTestApp] Returning app instance...');
   return app;
 }

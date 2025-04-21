@@ -1,6 +1,9 @@
-import { Request, Response } from "express";
-import { ActorService } from "../../actors/services/actorService";
-import { ActivityPubService } from "../services/activitypub.service";
+import { Request, Response } from 'express';
+import { ActorService } from '../../actors/services/actorService';
+import { ActivityPubService } from '../services/activitypub.service';
+import { PostService } from '@/modules/posts/services/postService';
+import { AppError, ErrorType } from '@/utils/errors';
+import { Actor } from '@/modules/actors/models/actor';
 
 export class ActivityPubController {
   private actorService: ActorService;
@@ -10,7 +13,7 @@ export class ActivityPubController {
   constructor(
     actorService: ActorService,
     activityPubService: ActivityPubService,
-    domain: string,
+    domain: string
   ) {
     this.actorService = actorService;
     this.activityPubService = activityPubService;
@@ -20,53 +23,36 @@ export class ActivityPubController {
   /**
    * Get ActivityPub actor profile
    */
-  async getActor(req: Request, res: Response): Promise<Response> {
-    try {
-      const { username } = req.params;
-      const actor = await this.actorService.getFullActorByUsername(username);
+  async getActor(req: Request, res: Response): Promise<void> {
+    const username = req.params.username;
+    // Use getActorByUsername which expects preferredUsername
+    const actor = await this.actorService.getActorByUsername(username);
 
-      if (!actor) {
-        return res.status(404).json({ error: "Actor not found" });
-      }
-
-      const acceptHeader = req.get("Accept") || "";
-
-      if (acceptHeader.includes("application/activity+json")) {
-        // Return ActivityPub format
-        const activityPubActor = {
-          "@context": [
-            "https://www.w3.org/ns/activitystreams",
-            "https://w3id.org/security/v1",
-          ],
-          id: `https://${this.domain}/users/${username}`,
-          type: "Person",
-          preferredUsername: username,
-          name: actor.name,
-          summary: actor.bio,
-          inbox: `https://${this.domain}/users/${username}/inbox`,
-          outbox: `https://${this.domain}/users/${username}/outbox`,
-          following: `https://${this.domain}/users/${username}/following`,
-          followers: `https://${this.domain}/users/${username}/followers`,
-          icon: actor.icon
-            ? {
-                type: "Image",
-                mediaType: actor.icon.mediaType,
-                url: actor.icon.url,
-              }
-            : undefined,
-          publicKey: actor.publicKey,
-        };
-
-        return res.json(activityPubActor);
-      }
-
-      // For non-ActivityPub requests, redirect to the profile page
-      res.redirect(302, `/profile/${username}`);
-      return res;
-    } catch (error) {
-      console.error("Error fetching actor:", error);
-      return res.status(500).json({ error: "Failed to fetch actor" });
+    if (!actor) {
+      res.status(404).send('Actor not found');
+      return;
     }
+
+    // Format actor for ActivityPub response
+    const actorResponse = {
+      '@context': [
+        'https://www.w3.org/ns/activitystreams',
+        'https://w3id.org/security/v1',
+      ],
+      id: actor.id,
+      type: actor.type,
+      preferredUsername: actor.preferredUsername,
+      name: actor.displayName || actor.name,
+      summary: actor.summary,
+      inbox: actor.inbox,
+      outbox: actor.outbox,
+      followers: actor.followers,
+      following: `https://${req.hostname}/users/${username}/following`, // Following collection URL
+      publicKey: actor.publicKey,
+      icon: actor.icon, // Include icon if available
+    };
+
+    res.contentType('application/activity+json').json(actorResponse);
   }
 
   /**
@@ -77,13 +63,13 @@ export class ActivityPubController {
       // Use ActivityPubService to process the incoming activity
       await this.activityPubService.processIncomingActivity(
         req.body,
-        req.params.username,
+        req.params.username
       );
 
-      return res.status(202).json({ message: "Activity accepted" });
+      return res.status(202).json({ message: 'Activity accepted' });
     } catch (error) {
-      console.error("Error processing activity:", error);
-      return res.status(500).json({ error: "Failed to process activity" });
+      console.error('Error processing activity:', error);
+      return res.status(500).json({ error: 'Failed to process activity' });
     }
   }
 
@@ -97,17 +83,17 @@ export class ActivityPubController {
       // For now, return an empty collection
       // In a full implementation, you would fetch posts and convert to activities
       const outbox = {
-        "@context": "https://www.w3.org/ns/activitystreams",
+        '@context': 'https://www.w3.org/ns/activitystreams',
         id: `https://${this.domain}/users/${username}/outbox`,
-        type: "OrderedCollection",
+        type: 'OrderedCollection',
         totalItems: 0,
         orderedItems: [],
       };
 
       return res.json(outbox);
     } catch (error) {
-      console.error("Error fetching outbox:", error);
-      return res.status(500).json({ error: "Failed to fetch outbox" });
+      console.error('Error fetching outbox:', error);
+      return res.status(500).json({ error: 'Failed to fetch outbox' });
     }
   }
 }

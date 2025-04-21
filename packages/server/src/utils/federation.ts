@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import crypto from 'crypto';
 import { DateTime } from 'luxon';
-import { Actor } from '../modules/actors/models/actor';
+import { Actor } from '@/modules/actors/models/actor';
 import { ActivityPubActivity } from '../modules/activitypub/models/activitypub';
 
 // Helper for making signed HTTP requests to other ActivityPub servers

@@ -2,7 +2,11 @@ import { mock } from 'jest-mock-extended';
 import { ObjectId } from 'mongodb';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { PostService } from '@/modules/posts/services/postService';
-import { ServiceContainer } from '../../src/utils/container';
+import { ServiceContainer } from '@/utils/container';
+import { CommentService } from '@/modules/comments/services/comment.service';
+import { auth } from '@/middleware/auth';
+import { Actor } from '@/modules/actors/models/actor';
+import { Post } from '@/modules/posts/models/post';
 
 // Create mock services
 export const mockAuthService = mock<any>();

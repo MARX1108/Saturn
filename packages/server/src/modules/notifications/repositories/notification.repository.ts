@@ -14,25 +14,6 @@ export class NotificationRepository extends MongoRepository<Notification> {
   }
 
   /**
-   * Create a new notification
-   */
-  async create(
-    data: Omit<Notification, '_id' | 'createdAt' | 'read'>
-  ): Promise<Notification> {
-    const notification: Notification = {
-      ...data,
-      read: false,
-      createdAt: new Date(),
-    };
-
-    const result = await this.collection.insertOne(notification);
-    return {
-      ...notification,
-      _id: result.insertedId.toString(),
-    };
-  }
-
-  /**
    * Find notifications for a specific recipient
    * @param recipientUserId - The ID of the user to find notifications for
    * @param options - Pagination options

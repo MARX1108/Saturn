@@ -1,5 +1,5 @@
-import { Db } from "mongodb";
-import { ActorRepository } from "../repositories/actorRepository";
+import { Db } from 'mongodb';
+import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 
 export interface WebFingerResource {
   subject: string;
@@ -31,21 +31,21 @@ export class WebFingerService {
     const match = resource.match(/^acct:([^@]+)@(.+)$/);
 
     if (!match) {
-      throw new Error("Invalid resource format");
+      throw new Error('Invalid resource format');
     }
 
     const [, username, resourceDomain] = match;
 
     // Verify this is for our domain
     if (resourceDomain !== this.domain) {
-      throw new Error("Resource not found on this server");
+      throw new Error('Resource not found on this server');
     }
 
     // Find the actor
     const actor = await this.actorRepository.findByUsername(username);
 
     if (!actor) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     // Return WebFinger response
@@ -53,8 +53,8 @@ export class WebFingerService {
       subject: resource,
       links: [
         {
-          rel: "self",
-          type: "application/activity+json",
+          rel: 'self',
+          type: 'application/activity+json',
           href: actor.id,
         },
       ],

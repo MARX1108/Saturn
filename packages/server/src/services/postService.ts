@@ -1,7 +1,7 @@
-import { Db, ObjectId } from "mongodb";
-import { Post, CreatePostRequest } from "../types/post";
-import { PostRepository } from "../repositories/postRepository";
-import { executeHook } from "../plugins";
+import { Db, ObjectId } from 'mongodb';
+import { Post } from '@/modules/posts/models/post';
+import { PostRepository } from '@/modules/posts/repositories/postRepository';
+import { executeHook } from '../plugins';
 
 export class PostService {
   private repository: PostRepository;
@@ -14,7 +14,7 @@ export class PostService {
 
   async createPost(
     postData: CreatePostRequest,
-    actorId: string,
+    actorId: string
   ): Promise<Post> {
     // Create a new post
     const post = {
@@ -22,13 +22,13 @@ export class PostService {
       actorId: new ObjectId(actorId),
       createdAt: new Date(),
       sensitive: postData.sensitive || false,
-      contentWarning: postData.contentWarning || "",
+      contentWarning: postData.contentWarning || '',
       attachments: postData.attachments || [],
       likes: 0,
       replies: 0,
       reposts: 0,
       // Add ActivityPub fields for federation
-      type: "Note",
+      type: 'Note',
       id: `https://${this.domain}/posts/${new ObjectId()}`,
       attributedTo: `https://${this.domain}/users/${postData.username}`,
     } as Post;
@@ -37,9 +37,9 @@ export class PostService {
 
     // Trigger plugin hook for new posts
     try {
-      executeHook("onNewPost", createdPost);
+      executeHook('onNewPost', createdPost);
     } catch (error) {
-      console.error("Error in post creation hook:", error);
+      console.error('Error in post creation hook:', error);
     }
 
     return createdPost;
@@ -52,14 +52,14 @@ export class PostService {
   async getPostsByUsername(
     username: string,
     page = 1,
-    limit = 20,
+    limit = 20
   ): Promise<{ posts: Post[]; hasMore: boolean }> {
     return this.repository.getPostsByUsername(username, page, limit);
   }
 
   async getFeed(
     page = 1,
-    limit = 20,
+    limit = 20
   ): Promise<{ posts: Post[]; hasMore: boolean }> {
     return this.repository.getFeed(page, limit);
   }
@@ -67,7 +67,7 @@ export class PostService {
   async updatePost(
     postId: string,
     actorId: string,
-    updates: Partial<CreatePostRequest>,
+    updates: Partial<CreatePostRequest>
   ): Promise<Post | null> {
     // Verify ownership
     const isOwner = await this.repository.isOwner(postId, actorId);
@@ -79,7 +79,7 @@ export class PostService {
     const updateData: Partial<Post> = {
       content: updates.content,
       sensitive: updates.sensitive || false,
-      contentWarning: updates.contentWarning || "",
+      contentWarning: updates.contentWarning || '',
     };
 
     const success = await this.repository.update(postId, updateData);

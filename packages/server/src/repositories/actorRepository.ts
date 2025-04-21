@@ -1,10 +1,10 @@
-import { Collection, Db, ObjectId } from "mongodb";
-import { Actor } from "../types/actor";
-import { MongoRepository } from "./baseRepository";
+import { Collection, Db, ObjectId } from 'mongodb';
+import { Actor } from '@/modules/actors/models/actor';
+import { MongoRepository } from './baseRepository';
 
 export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {
-    super(db, "actors");
+    super(db, 'actors');
 
     // Create indexes
     this.collection.createIndex({ preferredUsername: 1 }, { unique: true });
@@ -30,15 +30,15 @@ export class ActorRepository extends MongoRepository<Actor> {
       displayName?: string;
       bio?: string;
       icon?: {
-        type: "Image";
+        type: 'Image';
         url: string;
         mediaType: string;
       };
-    },
+    }
   ): Promise<boolean> {
     const result = await this.collection.updateOne(
       { _id: new ObjectId(id).toHexString() }, // Convert ObjectId to string
-      { $set: updates },
+      { $set: updates }
     );
     return result.modifiedCount > 0;
   }
@@ -57,61 +57,54 @@ export class ActorRepository extends MongoRepository<Actor> {
       .toArray();
   }
 
+  async findById(id: string): Promise<Actor | null> {
+    // Use ObjectId for querying _id field
+    return this.findOne({ _id: new ObjectId(id) });
+  }
+
   async findFollowing(actorId: string, page = 1, limit = 20): Promise<Actor[]> {
     const actor = await this.findById(actorId);
     if (!actor || !actor.following) {
       return [];
     }
-
-    // Handle following as a string URL in the type but as an array in implementation
-    // We need to check if following is actually an array in the database
-    const following = Array.isArray(actor.following) ? actor.following : [];
-    if (following.length === 0) {
-      return [];
-    }
-
+    // Map string IDs to ObjectIds for the $in query
+    const followingObjectIds = actor.following.map(id => new ObjectId(id));
     const skip = (page - 1) * limit;
-    if (typeof following === "string") {
-      throw new Error("Expected following to be an array, but got a string.");
-    }
-
-    const followingIds = (following as string[])
-      .slice(skip, skip + limit)
-      .map((id: string) => id); // Keep as strings
-
     return this.collection
       .find({
-        _id: { $in: followingIds },
+        _id: { $in: followingObjectIds },
       })
+      .skip(skip)
+      .limit(limit)
       .toArray();
   }
 
-  async addFollowing(actorId: string, targetActorId: string): Promise<boolean> {
+  async addFollowing(actorId: string, followUserId: string): Promise<boolean> {
     const result = await this.collection.updateOne(
-      { _id: new ObjectId(actorId).toHexString() }, // Convert ObjectId to string
-      { $addToSet: { following: targetActorId } }, // Keep `targetActorId` as a string
+      { _id: new ObjectId(actorId) },
+      { $addToSet: { following: followUserId } }
     );
-    return result.modifiedCount > 0;
+    return result.modifiedCount === 1;
   }
 
   async removeFollowing(
     actorId: string,
-    targetActorId: string,
+    unfollowUserId: string
   ): Promise<boolean> {
     const result = await this.collection.updateOne(
-      { _id: new ObjectId(actorId).toHexString() }, // Convert ObjectId to string
-      { $pull: { following: targetActorId } }, // Keep `targetActorId` as a string
+      { _id: new ObjectId(actorId) },
+      { $pull: { following: unfollowUserId } }
     );
-    return result.modifiedCount > 0;
+    return result.modifiedCount === 1;
   }
 
   async updateProfileByUsername(
     username: string,
-    updates: Partial<Actor>,
+    updates: Partial<Actor>
   ): Promise<boolean> {
     const result = await this.collection.updateOne(
       { preferredUsername: username },
-      { $set: updates },
+      { $set: updates }
     );
     return result.modifiedCount > 0;
   }
@@ -125,7 +118,7 @@ export class ActorRepository extends MongoRepository<Actor> {
 
   async searchByUsername(query: string): Promise<Actor[]> {
     return this.collection
-      .find({ preferredUsername: { $regex: query, $options: "i" } })
+      .find({ preferredUsername: { $regex: query, $options: 'i' } })
       .toArray();
   }
 }

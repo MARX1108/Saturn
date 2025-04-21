@@ -1,7 +1,10 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { PostService } from '../postService';
+import { PostService } from '@/modules/posts/services/postService';
 import { PostRepository } from '@/modules/posts/repositories/postRepository';
+import { ActorService } from '@/modules/actors/services/actorService';
+import { NotificationService } from '@/modules/notifications/services/notification.service';
+import { Actor } from '@/modules/actors/models/actor';
 
 // --- Mock ActorService ---
 // Basic mock for ActorService methods needed by PostService

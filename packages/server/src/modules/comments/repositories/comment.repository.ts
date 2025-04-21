@@ -13,33 +13,6 @@ export class CommentRepository extends MongoRepository<Comment> {
   }
 
   /**
-   * Create a new comment
-   */
-  async create(data: Omit<Comment, '_id' | 'createdAt'>): Promise<Comment> {
-    const comment: Comment = {
-      ...data,
-      createdAt: new Date(),
-    };
-
-    const result = await this.collection.insertOne(comment);
-    return {
-      ...comment,
-      _id: result.insertedId.toString(),
-    };
-  }
-
-  /**
-   * Find a comment by ID
-   */
-  async findById(id: string): Promise<Comment | null> {
-    if (!ObjectId.isValid(id)) {
-      return null;
-    }
-
-    return this.findOne({ _id: new ObjectId(id) });
-  }
-
-  /**
    * Find comments for a specific post with pagination
    */
   async findCommentsByPostId(

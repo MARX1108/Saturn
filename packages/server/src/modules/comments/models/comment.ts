@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
  */
 export interface Comment {
   _id?: string | ObjectId;
+  actorId: ObjectId;
   postId: string;
   authorId: string;
   content: string;

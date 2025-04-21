@@ -50,8 +50,12 @@ export default function configureActorRoutes(
   // Get actor by username
   router.get(
     '/:username',
-    (req: Request, res: Response, next: NextFunction) => {
-      actorsController.getActorByUsername(req, res).catch(next);
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await actorsController.getActorByUsername(req, res);
+      } catch (error) {
+        next(error);
+      }
     }
   );
 
@@ -59,9 +63,12 @@ export default function configureActorRoutes(
   router.put(
     '/:id',
     auth,
-    (req: Request, res: Response, next: NextFunction) => {
-      // Temporarily modified to skip upload
-      actorsController.updateActor(req, res).catch(next);
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await actorsController.updateActor(req, res, next);
+      } catch (error) {
+        next(error);
+      }
     }
   );
 
@@ -69,8 +76,12 @@ export default function configureActorRoutes(
   router.delete(
     '/:id',
     auth,
-    (req: Request, res: Response, next: NextFunction) => {
-      actorsController.deleteActor(req, res).catch(next);
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        await actorsController.deleteActor(req, res, next);
+      } catch (error) {
+        next(error);
+      }
     }
   );
 

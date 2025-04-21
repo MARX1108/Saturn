@@ -2,6 +2,10 @@ import request from 'supertest';
 import { jest } from '@jest/globals'; // Import jest for clearAllMocks
 import { mockActorService, mockAuthService } from '../helpers/mockSetup'; // Import mock services
 import { Actor } from '@/modules/actors/models/actor'; // Import Actor if needed
+import { ObjectId } from 'mongodb'; // Import ObjectId
+
+// Use a valid ObjectId string for mocks
+const mockObjectIdString = new ObjectId().toHexString();
 
 beforeEach(() => {
   // Clear all mocks defined using jest.fn() or jest.spyOn()
@@ -13,12 +17,11 @@ beforeEach(() => {
 describe('Auth Routes', () => {
   const mockDate = new Date();
   const mockActor: Actor = {
-    _id: 'mockUserId',
+    _id: new ObjectId(mockObjectIdString), // Use ObjectId
     id: 'https://test.domain/users/mockUser',
     username: 'mockUser@test.domain',
     preferredUsername: 'mockUser',
     displayName: 'Mock User',
-    bio: '',
     summary: '',
     type: 'Person',
     inbox: '',
@@ -50,6 +53,7 @@ describe('Auth Routes', () => {
         ...mockAuthResult,
         actor: {
           ...mockAuthResult.actor,
+          _id: mockAuthResult.actor._id.toHexString(), // Serialize ObjectId
           createdAt: mockAuthResult.actor.createdAt?.toISOString(),
           updatedAt: mockAuthResult.actor.updatedAt?.toISOString(),
         },
@@ -98,6 +102,7 @@ describe('Auth Routes', () => {
         ...mockAuthResult,
         actor: {
           ...mockAuthResult.actor,
+          _id: mockAuthResult.actor._id.toHexString(), // Serialize ObjectId
           createdAt: mockAuthResult.actor.createdAt?.toISOString(),
           updatedAt: mockAuthResult.actor.updatedAt?.toISOString(),
         },

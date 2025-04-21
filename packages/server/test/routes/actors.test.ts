@@ -2,9 +2,13 @@ import request from 'supertest';
 import { jest } from '@jest/globals';
 import { mockActorService } from '../helpers/mockSetup';
 import { Actor } from '@/modules/actors/models/actor';
+import { ObjectId } from 'mongodb';
 
 // Remove SearchActorsResult type if searchActors returns Actor[]
 // type SearchActorsResult = { actors: Actor[]; hasMore: boolean };
+
+// Use a valid ObjectId string for mocks
+const mockObjectIdString = new ObjectId().toHexString();
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -13,14 +17,13 @@ beforeEach(() => {
 describe('Actor Routes', () => {
   const mockDate = new Date();
   const fullMockActor: Actor = {
-    _id: '60a0f3f1e1b8f1a1a8b4c1c1',
+    _id: new ObjectId(mockObjectIdString),
     id: 'https://test.domain/users/testuser',
     username: 'testuser@test.domain',
     preferredUsername: 'testuser',
-    displayName: 'Test User',
+    displayName: 'Test User Display',
     name: 'Test User',
-    bio: 'Test bio',
-    summary: 'Test summary',
+    summary: 'Update summary',
     type: 'Person' as const,
     inbox: 'https://test.domain/users/testuser/inbox',
     outbox: 'https://test.domain/users/testuser/outbox',
@@ -60,25 +63,25 @@ describe('Actor Routes', () => {
         actors: [
           {
             ...fullMockActor,
-            _id: 'actor1',
+            _id: new ObjectId(),
             id: 'https://test.domain/users/actor1',
             preferredUsername: 'Actor 1',
           },
           {
             ...fullMockActor,
-            _id: 'actor2',
+            _id: new ObjectId(),
             id: 'https://test.domain/users/actor2',
             preferredUsername: 'Actor 2',
           },
         ],
         hasMore: false,
       };
-      // Assuming searchActors returns Actor[]
+      // Correct mock signature for searchActors
       (
         mockActorService.searchActors as jest.MockedFunction<
           typeof mockActorService.searchActors
         >
-      ).mockResolvedValue(mockSearchResult.actors); // Resolve with Actor[]
+      ).mockResolvedValue(mockSearchResult.actors); // Assuming signature is (query: string, limit?: number)
 
       const response = await request((global as any).testApp)
         .get('/api/actors/search')
@@ -87,6 +90,7 @@ describe('Actor Routes', () => {
 
       const expectedActor1 = {
         ...mockSearchResult.actors[0],
+        _id: mockSearchResult.actors[0]._id.toHexString(),
         createdAt: mockSearchResult.actors[0].createdAt.toISOString(),
         updatedAt: mockSearchResult.actors[0].updatedAt.toISOString(),
         publicKey: mockSearchResult.actors[0].publicKey,
@@ -94,6 +98,7 @@ describe('Actor Routes', () => {
 
       const expectedActor2 = {
         ...mockSearchResult.actors[1],
+        _id: mockSearchResult.actors[1]._id.toHexString(),
         createdAt: mockSearchResult.actors[1].createdAt.toISOString(),
         updatedAt: mockSearchResult.actors[1].updatedAt.toISOString(),
         publicKey: mockSearchResult.actors[1].publicKey,
@@ -109,6 +114,7 @@ describe('Actor Routes', () => {
     it('should return an actor by username', async () => {
       const specificMockActor = {
         ...fullMockActor,
+        _id: new ObjectId(),
         preferredUsername: 'testactor',
       };
       mockActorService.getActorByUsername.mockResolvedValue(specificMockActor);
@@ -119,6 +125,7 @@ describe('Actor Routes', () => {
 
       const expectedSerializedActor = {
         ...specificMockActor,
+        _id: specificMockActor._id.toHexString(),
         createdAt: specificMockActor.createdAt.toISOString(),
         updatedAt: specificMockActor.updatedAt.toISOString(),
       };

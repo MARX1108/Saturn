@@ -1,6 +1,6 @@
 import { Request, Response, Application } from 'express';
 import { ServerPlugin, HookData } from './index';
-import { Post } from '../modules/posts/models/post';
+import { Post } from '@/modules/posts/models/post';
 
 const helloPlugin: ServerPlugin = {
   name: 'hello-plugin',

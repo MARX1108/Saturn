@@ -1,4 +1,7 @@
 import { ObjectId } from 'mongodb';
+import { Actor } from '@/modules/actors/models/actor';
+import { Post } from '@/modules/posts/models/post';
+import { Comment } from '@/modules/comments/models/comment';
 
 /**
  * Notification types supported by the system
@@ -8,7 +11,7 @@ export enum NotificationType {
   LIKE = 'like',
   COMMENT = 'comment',
   MENTION = 'mention',
-  REPLY = 'reply',
+  REPOST = 'repost',
 }
 
 /**
@@ -23,6 +26,7 @@ export interface Notification {
   commentId?: string;
   read: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -41,6 +45,7 @@ export interface CreateNotificationDto {
  * Formatted notification with actor and content details
  */
 export interface FormattedNotification extends Notification {
+  id: string;
   actor?: {
     id: string;
     username: string;

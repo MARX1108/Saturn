@@ -1,5 +1,5 @@
-import { Db } from "mongodb";
-import { MongoRepository } from "../../shared/repositories/baseRepository";
+import { Db } from 'mongodb';
+import { MongoRepository } from '../../shared/repositories/baseRepository';
 
 // Define a basic ActivityPub object type - expand this as needed
 interface ActivityPubObject {
@@ -12,7 +12,7 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
   private domain: string;
 
   constructor(db: Db, domain: string) {
-    super(db, "activitypub");
+    super(db, 'activitypub');
     this.domain = domain;
 
     // Create any needed indexes
@@ -20,14 +20,10 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
     this.collection.createIndex({ type: 1 });
   }
 
-  async findById(id: string): Promise<ActivityPubObject | null> {
-    return this.findOne({ id });
-  }
-
   async findByType(
     type: string,
     page = 1,
-    limit = 20,
+    limit = 20
   ): Promise<ActivityPubObject[]> {
     const skip = (page - 1) * limit;
     return this.collection
@@ -46,7 +42,7 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
    */
   async saveActivity(
     activity: Partial<ActivityPubObject>,
-    targetUsername: string,
+    targetUsername: string
   ): Promise<ActivityPubObject> {
     // Add metadata to the activity
     const activityToSave = {
@@ -66,7 +62,7 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
     await this.collection.updateOne(
       { id: activityToSave.id },
       { $set: activityToSave },
-      { upsert: true },
+      { upsert: true }
     );
 
     // Explicitly cast to ActivityPubObject to satisfy TypeScript

@@ -3,6 +3,11 @@ import { jest } from '@jest/globals';
 import { mockActorService, mockPostService } from '../helpers/mockSetup'; // Import mocks
 import { Post } from '@/modules/posts/models/post'; // Import Post type
 import { Actor } from '@/modules/actors/models/actor'; // Import Actor type
+import { ObjectId } from 'mongodb'; // Import ObjectId
+
+// Use valid ObjectId strings for mocks
+const mockActorObjectIdString = new ObjectId().toHexString();
+const mockPostObjectIdString = new ObjectId().toHexString();
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -13,7 +18,7 @@ describe('Post Routes', () => {
   const mockDate = new Date();
   // Define mock author matching Actor type
   const mockAuthor: Actor = {
-    _id: '60a0f3f1e1b8f1a1a8b4c1c1', // String ID
+    _id: new ObjectId(mockActorObjectIdString), // Use ObjectId
     id: 'https://test.domain/users/testuser',
     username: 'testuser@test.domain',
     preferredUsername: 'testuser',
@@ -35,27 +40,32 @@ describe('Post Routes', () => {
   };
   // Define mock post matching Post type
   const fullMockPost: Post = {
-    _id: '60a0f3f1e1b8f1a1a8b4c1c2', // String ID
+    _id: new ObjectId(mockPostObjectIdString),
     id: 'https://test.domain/posts/mockPostId',
-    authorId: mockAuthor._id!, // Use authorId (string)
+    actorId: mockAuthor._id,
     content: 'Test post content',
     visibility: 'public',
-    published: mockDate, // Use published
-    updated: mockDate, // Use updated
+    published: mockDate,
+    createdAt: mockDate,
+    updatedAt: mockDate,
     type: 'Note' as const,
     to: ['https://www.w3.org/ns/activitystreams#Public'],
     cc: [],
     attributedTo: mockAuthor.id,
     url: 'https://test.domain/posts/mockPostId',
-    replies: [], // Should be string[]
-    likes: [], // Should be string[]
-    shares: 0,
+    replyCount: 0,
+    likesCount: 0,
+    likedBy: [],
+    sharesCount: 0,
+    sharedBy: [],
     sensitive: false,
-    contentWarning: undefined, // Match type string | undefined
+    summary: undefined,
     actor: {
-      // Actor summary object
       id: mockAuthor.id,
-      username: mockAuthor.preferredUsername, // Use preferredUsername to match type
+      username: mockAuthor.username,
+      preferredUsername: mockAuthor.preferredUsername,
+      displayName: mockAuthor.displayName,
+      icon: mockAuthor.icon,
     },
     attachments: [], // Optional
   };
@@ -82,15 +92,16 @@ describe('Post Routes', () => {
           id: mockAuthor.id,
           username: mockAuthor.preferredUsername,
           displayName: mockAuthor.displayName,
-          avatarUrl: mockAuthor.icon?.url, // Use icon?.url if available
+          iconUrl: mockAuthor.icon?.url,
         },
         createdAt: fullMockPost.published.toISOString(),
         sensitive: fullMockPost.sensitive,
         contentWarning: fullMockPost.contentWarning,
-        likes: 0, // formatPostResponse calculates length
-        likedByUser: false, // formatPostResponse calculates this
-        shares: fullMockPost.shares,
-        attachments: fullMockPost.attachments,
+        likes: fullMockPost.likesCount || 0,
+        likedByUser: false,
+        shares: fullMockPost.sharesCount || 0,
+        sharedByUser: false,
+        visibility: fullMockPost.visibility,
       };
 
       expect(response.body.posts[0]).toMatchObject(expectedResponsePost);
@@ -98,7 +109,7 @@ describe('Post Routes', () => {
       expect(mockPostService.getFeed).toHaveBeenCalled();
       // Check actorService was called for the post in the feed
       expect(mockActorService.getActorById).toHaveBeenCalledWith(
-        fullMockPost.actor.id
+        fullMockPost.actorId // Use actorId
       );
     });
 
@@ -130,17 +141,20 @@ describe('Post Routes', () => {
           id: mockAuthor.id,
           username: mockAuthor.preferredUsername,
           displayName: mockAuthor.displayName,
-          avatarUrl: mockAuthor.icon?.url,
+          iconUrl: mockAuthor.icon?.url,
         },
-        createdAt: fullMockPost.published.toISOString(),
-        likes: 0,
+        published: fullMockPost.published.toISOString(),
+        likes: fullMockPost.likesCount || 0,
         likedByUser: false,
-        shares: fullMockPost.shares,
+        shares: fullMockPost.sharesCount || 0,
+        sharedByUser: false,
+        visibility: fullMockPost.visibility,
       };
       expect(response.body).toMatchObject(expectedResponsePost);
       expect(mockPostService.getPostById).toHaveBeenCalledWith(fullMockPost.id);
+      // Actor should be fetched by ID if not embedded
       expect(mockActorService.getActorById).toHaveBeenCalledWith(
-        fullMockPost.actor.id
+        fullMockPost.actorId // Use actorId
       );
     });
 

@@ -1,129 +1,53 @@
-import { Db } from "mongodb";
-import { Actor } from "../models/actor";
-import { MongoRepository } from "../../shared/repositories/baseRepository";
+import { Db, ObjectId, Filter, UpdateFilter } from 'mongodb';
+import { MongoRepository } from '../../shared/repositories/baseRepository';
+import { Actor } from '@/modules/actors/models/actor';
 
 export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {
-    super(db, "actors");
-
-    // Create indexes
+    super(db, 'actors');
+    // Ensure indexes are created
+    this.collection.createIndex({ username: 1 }, { unique: true });
     this.collection.createIndex({ preferredUsername: 1 }, { unique: true });
+    this.collection.createIndex({ email: 1 }, { unique: true, sparse: true });
     this.collection.createIndex({ id: 1 }, { unique: true });
   }
 
+  // Specific methods needed beyond base repository
+
   async findByUsername(username: string): Promise<Actor | null> {
-    return this.findOne({
-      preferredUsername: username,
-    });
+    // Finds by full username (user@domain)
+    return this.findOne({ username: username });
   }
 
-  async usernameExists(username: string): Promise<boolean> {
-    const count = await this.collection.countDocuments({
-      preferredUsername: username,
-    });
-    return count > 0;
+  async findByPreferredUsername(
+    preferredUsername: string
+  ): Promise<Actor | null> {
+    // Finds by local username part
+    return this.findOne({ preferredUsername: preferredUsername });
   }
 
   async updateProfile(
-    id: string,
-    updates: {
-      displayName?: string;
-      bio?: string;
-      icon?: {
-        type: "Image";
-        url: string;
-        mediaType: string;
-      };
-    },
+    id: string | ObjectId,
+    updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>>
   ): Promise<boolean> {
-    const result = await this.collection.updateOne(
-      { _id: id },
-      { $set: updates },
-    );
-    return result.modifiedCount > 0;
+    return this.updateById(id, { $set: updates });
   }
 
-  async findFollowers(actorId: string, page = 1, limit = 20): Promise<Actor[]> {
-    const skip = (page - 1) * limit;
-
-    // Find actors where the given actorId is in their following list
-    return this.collection
-      .find({
-        following: actorId,
-      })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
-  }
-
-  async findFollowing(actorId: string, page = 1, limit = 20): Promise<Actor[]> {
-    const actor = await this.findById(actorId);
-    if (!actor || !actor.following) {
-      return [];
-    }
-
-    // Handle following as array in implementation
-    const following = Array.isArray(actor.following) ? actor.following : [];
-    if (following.length === 0) {
-      return [];
-    }
-
-    const skip = (page - 1) * limit;
-    const followingIds = following.slice(skip, skip + limit);
-
-    return this.collection
-      .find({
-        _id: { $in: followingIds },
-      })
-      .toArray();
-  }
-
-  async addFollowing(actorId: string, targetActorId: string): Promise<boolean> {
-    const result = await this.collection.updateOne(
-      { _id: actorId },
-      { $addToSet: { following: targetActorId } },
-    );
-    return result.modifiedCount > 0;
+  async addFollowing(
+    actorId: string | ObjectId,
+    targetActorId: string
+  ): Promise<boolean> {
+    return this.updateById(actorId, {
+      $addToSet: { following: targetActorId },
+    } as UpdateFilter<Actor>);
   }
 
   async removeFollowing(
-    actorId: string,
-    targetActorId: string,
+    actorId: string | ObjectId,
+    targetActorId: string
   ): Promise<boolean> {
-    const result = await this.collection.updateOne(
-      { _id: actorId },
-      { $pull: { following: targetActorId } },
-    );
-    return result.modifiedCount > 0;
-  }
-
-  async updateProfileByUsername(
-    username: string,
-    updates: Partial<Actor>,
-  ): Promise<boolean> {
-    const result = await this.collection.updateOne(
-      { preferredUsername: username },
-      { $set: updates },
-    );
-    return result.modifiedCount > 0;
-  }
-
-  async deleteByUsername(username: string): Promise<{ deletedCount: number }> {
-    const result = await this.collection.deleteOne({
-      preferredUsername: username,
-    });
-    return { deletedCount: result.deletedCount };
-  }
-
-  async searchByUsername(query: string): Promise<Actor[]> {
-    return this.collection
-      .find({
-        $or: [
-          { preferredUsername: { $regex: query, $options: "i" } },
-          { name: { $regex: query, $options: "i" } },
-        ],
-      })
-      .limit(20)
-      .toArray();
+    return this.updateById(actorId, {
+      $pull: { following: targetActorId },
+    } as UpdateFilter<Actor>);
   }
 }
