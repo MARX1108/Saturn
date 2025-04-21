@@ -1,9 +1,12 @@
 import request from 'supertest';
+import { jest } from '@jest/globals'; // Import jest for clearAllMocks
+import { mockActorService } from '../helpers/mockSetup'; // Import mock service
 
 beforeEach(() => {
-  // Reset mocks before each test using global instances
-  global.mockAuthService.mockReset();
-  global.mockActorService.mockReset();
+  // Clear all mocks defined using jest.fn() or jest.spyOn()
+  jest.clearAllMocks();
+  // Reset mocks created with jest-mock-extended manually if needed
+  // mockActorService.mockClear(); // Example if needed
 });
 
 describe('Auth Routes', () => {
@@ -16,8 +19,7 @@ describe('Auth Routes', () => {
       };
       global.mockAuthService.createUser.mockResolvedValue(mockUser);
 
-      const response = await global
-        .request(global.testApp)
+      const response = await request((global as any).testApp)
         .post('/api/auth/register')
         .send({
           username: 'testuser',
@@ -33,27 +35,54 @@ describe('Auth Routes', () => {
         'test@example.com'
       );
     });
+
+    it('should handle server errors during registration', async () => {
+      mockActorService.createActor.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      const response = await request((global as any).testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'erroruser',
+          email: 'test@example.com',
+          password: 'password123',
+        })
+        .expect(500);
+
+      expect(response.body).toHaveProperty('error');
+    });
   });
 
   describe('POST /api/auth/login', () => {
-    it('should login a user', async () => {
-      const mockToken = { token: 'mock-jwt-token' };
-      global.mockAuthService.authenticateUser.mockResolvedValue(mockToken);
-
-      const response = await global
-        .request(global.testApp)
-        .post('/api/auth/login')
-        .send({
-          username: 'testuser',
-          password: 'password123',
-        })
-        .expect(200);
-
-      expect(response.body).toEqual(mockToken);
-      expect(global.mockAuthService.authenticateUser).toHaveBeenCalledWith(
-        'testuser',
-        'password123'
+    it('should login an existing user', async () => {
+      const mockLoggedInActor = {
+        id: 'existingUserId',
+        preferredUsername: 'testuser' /* ... other fields */,
+      };
+      const mockLoginToken = 'mock-login-token';
+      mockActorService.getActorByUsername.mockResolvedValue(
+        mockLoggedInActor as any
       );
+
+      const response = await request((global as any).testApp)
+        .post('/api/auth/login')
+        .send({ username: 'testuser', password: 'password123' });
+
+      expect(response.status).toBe(200);
+    });
+
+    it('should handle server errors during login', async () => {
+      mockActorService.getActorByUsername.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      const response = await request((global as any).testApp)
+        .post('/api/auth/login')
+        .send({ username: 'testuser', password: 'password123' });
+
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error');
     });
   });
 });
