@@ -71,13 +71,21 @@ export class PostsController {
   ): Promise<void> {
     try {
       if (!req.user) {
-        throw new AppError('Authentication required', ErrorType.Unauthorized);
+        throw new AppError(
+          'Authentication required',
+          401, // Unauthorized
+          ErrorType.AUTHENTICATION
+        );
       }
       const userId = req.user.id || '';
       const actor = await this.actorService.getActorById(userId);
 
       if (!actor) {
-        throw new AppError('User not found', ErrorType.NotFound);
+        throw new AppError(
+          'User not found',
+          404, // Not Found
+          ErrorType.NOT_FOUND
+        );
       }
 
       const { content, sensitive, contentWarning } = req.body;
@@ -86,7 +94,8 @@ export class PostsController {
       if (!content && (!files || files.length === 0)) {
         throw new AppError(
           'Post must contain content or attachments',
-          ErrorType.BadRequest
+          400, // Bad Request
+          ErrorType.VALIDATION
         );
       }
 
@@ -147,7 +156,11 @@ export class PostsController {
   ): Promise<void> {
     try {
       if (!req.user) {
-        throw new AppError('Authentication required', ErrorType.Unauthorized);
+        throw new AppError(
+          'Authentication required',
+          401, // Unauthorized
+          ErrorType.AUTHENTICATION
+        );
       }
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
@@ -181,7 +194,11 @@ export class PostsController {
     try {
       const post = await this.postService.getPostById(req.params.id);
       if (!post) {
-        throw new AppError('Post not found', ErrorType.NotFound);
+        throw new AppError(
+          'Post not found',
+          404, // Not Found
+          ErrorType.NOT_FOUND
+        );
       }
       const formattedPost = await this.formatPostResponse(post, req.user?.id);
       res.json(formattedPost);
@@ -240,7 +257,11 @@ export class PostsController {
   ): Promise<void> {
     try {
       if (!req.user) {
-        throw new AppError('Unauthorized', ErrorType.Unauthorized);
+        throw new AppError(
+          'Unauthorized',
+          401, // Unauthorized
+          ErrorType.AUTHENTICATION
+        );
       }
       const { id } = req.params;
       const userId = req.user.id || '';
@@ -255,7 +276,8 @@ export class PostsController {
       if (!post) {
         throw new AppError(
           'Post not found or not authorized',
-          ErrorType.NotFound
+          404, // Not Found or 403 Forbidden? Using 404 based on message.
+          ErrorType.NOT_FOUND
         );
       }
 
@@ -278,7 +300,11 @@ export class PostsController {
   ): Promise<void> {
     try {
       if (!req.user) {
-        throw new AppError('Unauthorized', ErrorType.Unauthorized);
+        throw new AppError(
+          'Unauthorized',
+          401, // Unauthorized
+          ErrorType.AUTHENTICATION
+        );
       }
       const { id } = req.params;
       const userId = req.user.id || '';
@@ -288,7 +314,8 @@ export class PostsController {
       if (!deleted) {
         throw new AppError(
           'Post not found or not authorized',
-          ErrorType.NotFound
+          404, // Not Found or 403 Forbidden? Using 404 based on message.
+          ErrorType.NOT_FOUND
         );
       }
 
@@ -308,7 +335,11 @@ export class PostsController {
   ): Promise<void> {
     try {
       if (!req.user) {
-        throw new AppError('Unauthorized', ErrorType.Unauthorized);
+        throw new AppError(
+          'Unauthorized',
+          401, // Unauthorized
+          ErrorType.AUTHENTICATION
+        );
       }
       const { id } = req.params;
       const userId = req.user.id || '';
@@ -318,7 +349,8 @@ export class PostsController {
       if (!liked) {
         throw new AppError(
           'Post already liked or not found',
-          ErrorType.BadRequest
+          400, // Bad Request
+          ErrorType.VALIDATION // Or a different type?
         );
       }
 
@@ -338,7 +370,11 @@ export class PostsController {
   ): Promise<void> {
     try {
       if (!req.user) {
-        throw new AppError('Unauthorized', ErrorType.Unauthorized);
+        throw new AppError(
+          'Unauthorized',
+          401, // Unauthorized
+          ErrorType.AUTHENTICATION
+        );
       }
       const { id } = req.params;
       const userId = req.user.id || '';
@@ -346,7 +382,11 @@ export class PostsController {
       const unliked = await this.postService.unlikePost(id, userId);
 
       if (!unliked) {
-        throw new AppError('Post not liked or not found', ErrorType.BadRequest);
+        throw new AppError(
+          'Post not liked or not found',
+          400, // Bad Request
+          ErrorType.VALIDATION // Or a different type?
+        );
       }
 
       res.json({ success: true });

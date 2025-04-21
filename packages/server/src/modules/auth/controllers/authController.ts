@@ -31,7 +31,8 @@ export class AuthController {
       if (!username || !password) {
         throw new AppError(
           'Username and password are required',
-          ErrorType.BadRequest
+          400,
+          ErrorType.VALIDATION
         );
       }
       const result = await this.authService.createUser(
@@ -54,7 +55,8 @@ export class AuthController {
       if (!username || !password) {
         throw new AppError(
           'Username and password are required',
-          ErrorType.BadRequest
+          400,
+          ErrorType.VALIDATION
         );
       }
       const result = await this.authService.authenticateUser(
@@ -63,7 +65,11 @@ export class AuthController {
       );
 
       if (!result) {
-        throw new AppError('Invalid credentials', ErrorType.Unauthorized);
+        throw new AppError(
+          'Invalid credentials',
+          401,
+          ErrorType.AUTHENTICATION
+        );
       }
       res.json(result);
     } catch (error) {
@@ -81,7 +87,11 @@ export class AuthController {
   ): Promise<void> {
     try {
       if (!req.user) {
-        throw new AppError('Authentication required', ErrorType.Unauthorized);
+        throw new AppError(
+          'Authentication required',
+          401,
+          ErrorType.AUTHENTICATION
+        );
       }
       res.json(req.user);
     } catch (error) {

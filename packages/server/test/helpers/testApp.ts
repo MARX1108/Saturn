@@ -59,33 +59,29 @@ export async function createTestApp(db: Db, domain: string) {
   // Pass the complete mock container to configureRoutes
   app.use('/api', configureRoutes(mockServiceContainer));
 
-  // Improved Error handling middleware
+  // Centralized error handling middleware
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    // Keep the detailed logging for now
-    console.error('--- Error Handler Start ---');
-    console.error('Error Object:', JSON.stringify(err, null, 2));
-    console.error('Error Message:', err?.message);
-    console.error('Error StatusCode (on obj):', err?.statusCode);
-    console.error('Error Type:', typeof err);
-    console.error('err instanceof Error:', err instanceof Error);
-    console.error('err instanceof AppError:', err instanceof AppError);
-    console.error('--- Error Handler Check ---');
+    console.log('-------------------------');
+    console.log('Error Handler Called');
+    console.log('Error Object:', JSON.stringify(err)); // May be {} if properties aren't enumerable
+    console.log('Error Message:', err?.message);
+    console.log('Error StatusCode:', err?.statusCode);
+    console.log('Error Type:', typeof err);
+    console.log('err instanceof Error:', err instanceof Error);
+    console.log('err instanceof AppError:', err instanceof AppError);
+    console.log('-------------------------');
 
-    // Prioritize checking instanceof AppError
     if (err instanceof AppError) {
-      console.error(
-        `Caught AppError: Status ${err.statusCode}, Message: ${err.message}`
-      );
-      res.status(err.statusCode).json({ error: err.message });
-    } else if (
-      err &&
-      typeof err.statusCode === 'number' &&
-      err.statusCode >= 400 &&
-      err.statusCode < 500
-    ) {
-      // Fallback for errors that look like client errors but aren't AppError instances
-      console.error(
-        `Caught error with status ${err.statusCode}, sending specific response.`
+      // Use status code and message from AppError instances
+      console.log(`Caught AppError (${err.statusCode}), sending response.`);
+      res
+        .status(err.statusCode)
+        .json({ error: err.message || 'An error occurred' });
+    } else if (err && typeof err.statusCode === 'number') {
+      // Fallback for other errors with a statusCode property
+      console.log(
+        `Caught non-AppError with statusCode (${err.statusCode}), sending response.`
       );
       res
         .status(err.statusCode)
