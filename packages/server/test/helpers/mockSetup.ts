@@ -173,6 +173,7 @@ export const mockServiceContainer: ServiceContainer = {
   activityPubController: mockActivityPubController,
   webfingerController: mockWebfingerController,
   mediaController: mockMediaController,
+  domain: 'test.domain',
   getService: jest.fn().mockImplementation(<T>(name: string): T | null => {
     const serviceName = name as keyof ServiceContainer;
     if (

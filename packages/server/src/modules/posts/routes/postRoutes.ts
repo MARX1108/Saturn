@@ -20,7 +20,14 @@ export default function configurePostRoutes(
 ): Router {
   const router = Router();
   // Ensure all required services AND domain are retrieved
-  const { postService, actorService, uploadService, domain } = container;
+  const {
+    postService,
+    actorService,
+    uploadService,
+    commentsController,
+    authService,
+    domain,
+  } = container;
 
   // Ensure PostsController gets all 4 arguments
   const postsController = new PostsController(
@@ -65,8 +72,8 @@ export default function configurePostRoutes(
     authenticate(authService),
     asyncHandler(boundLikePost)
   );
-  router.delete(
-    '/:id/like',
+  router.post(
+    '/:id/unlike',
     authenticate(authService),
     asyncHandler(boundUnlikePost)
   );

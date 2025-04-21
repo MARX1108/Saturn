@@ -18,11 +18,7 @@ export function configureRoutes(serviceContainer: ServiceContainer): Router {
 
   // Mount posts routes
   console.log('[configureRoutes] Configuring posts routes...');
-  const { postsController, commentsController, authService } = serviceContainer;
-  router.use(
-    '/posts',
-    configurePostRoutes(postsController, commentsController, authService)
-  );
+  router.use('/posts', configurePostRoutes(serviceContainer));
   console.log('[configureRoutes] Posts routes configured.');
 
   // Mount actor routes

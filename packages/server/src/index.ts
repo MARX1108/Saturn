@@ -83,11 +83,7 @@ export async function startServer(): Promise<{
     const activityPubRouter = configureActivityPubRoutes(services);
     app.use('/', activityPubRouter); // ActivityPub endpoints must be at the root for federation
 
-    const postsRouter = configurePostRoutes(
-      services.postsController,
-      services.commentsController,
-      services.authService
-    );
+    const postsRouter = configurePostRoutes(services);
     app.use('/api/posts', postsRouter); // Fixed: Now correctly mounted at /api/posts
 
     const authRouter = configureAuthRoutes(services);

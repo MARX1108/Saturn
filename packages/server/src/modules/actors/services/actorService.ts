@@ -155,7 +155,7 @@ export class ActorService {
   // --- Delete Actor (by username) ---
   // Keep this method name if controllers/tests use it, but have it call repo
   async deleteActor(username: string): Promise<boolean> {
-    // Call repository method
+    // Call repository method and return its boolean result
     return this.actorRepository.deleteByUsername(username);
   }
 

@@ -29,10 +29,13 @@ export class ActorRepository extends MongoRepository<Actor> {
   async updateProfile(
     id: string | ObjectId,
     updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>>
-  ): Promise<boolean> {
+  ): Promise<Actor | null> {
     const objectId = typeof id === 'string' ? new ObjectId(id) : id;
-    // Use ObjectId directly in the filter
-    return this.updateById(objectId, { $set: updates });
+    // Use findOneAndUpdate to get the updated document
+    return this.findOneAndUpdate(
+      { _id: objectId } as Filter<Actor>, // Filter by ObjectId
+      { $set: { ...updates, updatedAt: new Date() } }
+    );
   }
 
   async addFollowing(

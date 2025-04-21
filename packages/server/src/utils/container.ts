@@ -23,7 +23,7 @@ import path from 'path';
 import { AuthController } from '@/modules/auth/controllers/authController';
 import { ActorsController } from '@/modules/actors/controllers/actorsController';
 import { ActivityPubController } from '@/modules/activitypub/controllers/activitypubController';
-import { WebfingerController } from '@/modules/webfinger/controllers/webfinger.controller';
+import { WebfingerController } from '@/modules/webfinger/controllers/webfingerController';
 import { MediaController } from '../modules/media/controllers/media.controller';
 
 /**
@@ -79,6 +79,7 @@ export interface ServiceContainer {
   activityPubController: ActivityPubController;
   webfingerController: WebfingerController;
   mediaController: MediaController;
+  domain: string;
 
   // Method to resolve services by name for more flexible DI
   getService<T>(name: keyof ServiceContainer): T | null;
@@ -172,6 +173,7 @@ export function createServiceContainer(
     activityPubController,
     webfingerController,
     mediaController,
+    domain,
     getService: <T>(name: keyof ServiceContainer): T | null => {
       // Ensure the service exists before trying to access it
       const service = (serviceContainer as any)[name] as T | undefined;
