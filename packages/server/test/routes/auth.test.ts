@@ -48,7 +48,7 @@ describe('Auth Routes', () => {
   describe('POST /api/auth/login', () => {
     it('should login a user', async () => {
       const mockToken = { token: 'mock-jwt-token' };
-      global.mockAuthService.login.mockResolvedValue(mockToken);
+      global.mockAuthService.authenticateUser.mockResolvedValue(mockToken);
 
       const response = await global
         .request(global.testApp)
@@ -60,7 +60,7 @@ describe('Auth Routes', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockToken);
-      expect(global.mockAuthService.login).toHaveBeenCalledWith(
+      expect(global.mockAuthService.authenticateUser).toHaveBeenCalledWith(
         'testuser',
         'password123'
       );

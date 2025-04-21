@@ -30,8 +30,9 @@ export class ActorsController {
    * Search actors by query
    */
   async searchActors(req: Request, res: Response): Promise<Response> {
-    const { query } = req.query;
-    const actors = await this.actorService.searchActors(query as string);
+    const { q } = req.query;
+    const searchQuery = (q as string) || '';
+    const actors = await this.actorService.searchActors(searchQuery);
     return res.json(actors);
   }
 

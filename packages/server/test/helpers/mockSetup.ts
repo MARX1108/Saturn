@@ -5,8 +5,6 @@ import { PostService } from '@/modules/posts/services/postService';
 import { UploadService } from '@/modules/uploads/services/uploadService';
 import { NotificationService } from '@/modules/notifications/services/notificationService';
 import { CommentService } from '@/modules/comments/services/commentService';
-import { Request, Response, NextFunction } from 'express';
-import { DbUser } from '@/models/user';
 import { ServiceContainer } from '@/types';
 
 // Create mock services
@@ -25,19 +23,19 @@ global.mockUploadService = mockUploadService;
 global.mockNotificationService = mockNotificationService;
 global.mockCommentService = mockCommentService;
 
-console.log(
-  `!!! DEBUG: mockUploadService defined in mockSetup. Global type: ${typeof global.mockUploadService}, Method type: ${typeof global.mockUploadService?.configureImageUploadMiddleware}`
-);
-
 // Mock methods called during setup
-const mockMulterMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => next();
-mockUploadService.configureImageUploadMiddleware.mockReturnValue(
-  mockMulterMiddleware
-);
+// const mockMulterMiddleware = (req: Request, res: Response, next: NextFunction) => next();
+// mockUploadService.configureImageUploadMiddleware.mockReturnValue(mockMulterMiddleware);
+
+// Ensure configureImageUploadMiddleware is still mocked if needed by controller setup
+if (
+  global.mockUploadService &&
+  global.mockUploadService.configureImageUploadMiddleware
+) {
+  global.mockUploadService.configureImageUploadMiddleware.mockReturnValue(
+    (req: any, res: any, next: any) => next()
+  );
+}
 
 // Configure default mock implementations
 const mockDate = new Date();
@@ -90,50 +88,12 @@ mockPostService.getFeed.mockResolvedValue({
   hasMore: false,
 });
 
-// Export mock auth middleware
-export const mockAuthMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  // Set up a complete mock user object
-  const mockUser = {
-    _id: 'test-user-id',
-    id: 'test-user-id',
-    preferredUsername: 'testuser',
-    email: 'test@example.com',
-    password: 'hashedpassword',
-    createdAt: mockDate,
-    updatedAt: mockDate,
-    isAdmin: false,
-    isVerified: true,
-    profile: {
-      displayName: 'Test User',
-      bio: 'Test bio',
-      avatar: null,
-      banner: null,
-    },
-  } as DbUser;
-
-  // Set the user on the request
-  req.user = mockUser;
-
-  // Log for debugging
-  console.log('!!! DEBUG: mockAuthMiddleware setting user:', mockUser);
-
-  next();
-};
-
 // Create and export the container using these mocks
 export const mockServiceContainer: ServiceContainer = {
-  authService: mockAuthService,
-  actorService: mockActorService,
-  postService: mockPostService,
-  uploadService: mockUploadService,
-  notificationService: mockNotificationService,
-  commentService: mockCommentService,
+  authService: global.mockAuthService,
+  actorService: global.mockActorService,
+  postService: global.mockPostService,
+  uploadService: global.mockUploadService,
+  notificationService: global.mockNotificationService,
+  commentService: global.mockCommentService,
 };
-
-console.log(
-  `!!! DEBUG: mockServiceContainer created. Has uploadService?: ${!!mockServiceContainer.uploadService}, Method type: ${typeof mockServiceContainer.uploadService?.configureImageUploadMiddleware}`
-);

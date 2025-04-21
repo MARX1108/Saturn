@@ -1,4 +1,49 @@
 // Global setup for Jest tests
+import { Request, Response, NextFunction } from 'express'; // Add express types for mock
+
+// Mock the actual authentication middleware module
+jest.mock('@/middleware/auth', () => {
+  // Define the mock middleware implementation once
+  const mockMiddlewareImplementation = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    req.user = {
+      _id: 'mockUserId',
+      id: 'mockUserId',
+      preferredUsername: 'mockUser',
+      email: 'mock@example.com',
+      isAdmin: false,
+      isVerified: true,
+      profile: {
+        displayName: 'Mock User',
+        bio: 'Mock Bio',
+        avatar: null,
+        banner: null,
+      },
+    } as any;
+    console.log(
+      '!!! DEBUG: Mocked @/middleware/auth running, setting req.user:',
+      req.user.id
+    );
+    next();
+  };
+
+  // Return the module mock
+  return {
+    __esModule: true, // Important if the original module uses ES modules
+    // Mock the 'authenticate' export (used by postRoutes)
+    authenticate: jest
+      .fn()
+      .mockImplementation(() => mockMiddlewareImplementation),
+    // Mock the 'auth' export (used by authRoutes)
+    auth: jest.fn().mockImplementation(() => mockMiddlewareImplementation),
+    // Mock any other exports from this module if they are used and need mocking
+    // e.g., generateToken: jest.fn().mockReturnValue('mock-jwt-token'),
+  };
+});
+
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient, Db } from 'mongodb';
 import {

@@ -6,8 +6,8 @@ beforeEach(() => {
 });
 
 describe('Actor Routes', () => {
-  describe('GET /api/actors', () => {
-    it('should return actors', async () => {
+  describe('GET /api/actors/search (was GET /api/actors)', () => {
+    it('should return actors via search endpoint (empty query)', async () => {
       const mockDate = new Date();
       const mockActor = {
         id: 'test-user-id',
@@ -24,18 +24,18 @@ describe('Actor Routes', () => {
 
       const response = await global
         .request(global.testApp)
-        .get('/api/actors')
+        .get('/api/actors/search?q=')
         .set('Authorization', 'Bearer mock-test-token');
 
       expect(response.status).toBe(200);
       expect(response.body.actors).toBeDefined();
       expect(Array.isArray(response.body.actors)).toBe(true);
-      expect(global.mockActorService.searchActors).toHaveBeenCalled();
+      expect(global.mockActorService.searchActors).toHaveBeenCalledWith('');
     });
   });
 
   describe('GET /api/actors/search', () => {
-    it('should search actors', async () => {
+    it('should search actors with a query', async () => {
       const mockActors = [
         { id: '1', name: 'Actor 1' },
         { id: '2', name: 'Actor 2' },
@@ -49,7 +49,7 @@ describe('Actor Routes', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockActors);
-      expect(global.mockActorService.searchActors).toHaveBeenCalled();
+      expect(global.mockActorService.searchActors).toHaveBeenCalledWith('test');
     });
   });
 

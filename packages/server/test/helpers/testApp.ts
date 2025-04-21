@@ -6,7 +6,7 @@ import { AuthController } from '@/modules/auth/controllers/authController';
 import { ActorsController } from '@/modules/actors/controllers/actorsController';
 import { PostsController } from '@/modules/posts/controllers/postsController';
 import { CommentsController } from '@/modules/comments/controllers/comments.controller';
-import { mockServiceContainer, mockAuthMiddleware } from './mockSetup';
+import { mockServiceContainer } from './mockSetup';
 
 export async function createTestApp(db: Db, domain: string) {
   const app = express();
@@ -64,7 +64,8 @@ export async function createTestApp(db: Db, domain: string) {
 
   // Apply middleware in correct order
   app.use(require('cors')());
-  app.use(mockAuthMiddleware); // Apply auth middleware before routes
+
+  // The real authenticate middleware used within configureRoutes will now be intercepted by the jest.mock in setup.ts
   app.use('/api', configureRoutes(serviceContainer));
 
   // Error handling middleware
