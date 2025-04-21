@@ -1,150 +1,251 @@
 import request from 'supertest';
-import { jest } from '@jest/globals'; // Import jest for clearAllMocks
-import { mockActorService, mockAuthService } from '../helpers/mockSetup'; // Import mock services
-import { Actor } from '@/modules/actors/models/actor'; // Import Actor if needed
-import { ObjectId } from 'mongodb'; // Import ObjectId
+import express from 'express';
+import { MongoClient, Db } from 'mongodb';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import configureAuthRoutes from '../../src/modules/auth/routes/authRoutes';
+import bcryptjs from 'bcryptjs'; // Replace bcrypt with bcryptjs
+import jwt from 'jsonwebtoken';
+import { ServiceContainer } from '../../src/utils/container';
+import { mockServiceContainer } from '../helpers/mockSetup';
 
-// Use a valid ObjectId string for mocks
-const mockObjectIdString = new ObjectId().toHexString();
+describe('Authentication Routes', () => {
+  let app: express.Application;
+  let db: Db;
+  let mongoServer: MongoMemoryServer;
+  let client: MongoClient;
 
-beforeEach(() => {
-  // Clear all mocks defined using jest.fn() or jest.spyOn()
-  jest.clearAllMocks();
-  // Reset mocks created with jest-mock-extended manually if needed
-  // mockActorService.mockClear(); // Example if needed
-});
+  beforeAll(async () => {
+    // Set up in-memory MongoDB for testing
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    client = new MongoClient(uri);
+    await client.connect();
+    db = client.db();
 
-describe('Auth Routes', () => {
-  const mockDate = new Date();
-  const mockActor: Actor = {
-    _id: new ObjectId(mockObjectIdString), // Use ObjectId
-    id: 'https://test.domain/users/mockUser',
-    username: 'mockUser@test.domain',
-    preferredUsername: 'mockUser',
-    displayName: 'Mock User',
-    summary: '',
-    type: 'Person',
-    inbox: '',
-    outbox: '',
-    followers: '',
-    createdAt: mockDate,
-    updatedAt: mockDate,
-    publicKey: { id: '', owner: '', publicKeyPem: '' },
-  };
-  const mockToken = 'mock-jwt-token';
-  const mockAuthResult = { actor: mockActor, token: mockToken };
+    // Set up Express app
+    app = express();
+    app.use(express.json());
+
+    // Configure JWT secret for testing
+    process.env.JWT_SECRET = 'test-secret-key';
+    const jwtSecret = process.env.JWT_SECRET!; // Define for use in tests
+
+    // Use the imported mockServiceContainer directly
+    // const serviceContainer: ServiceContainer = {
+    //   authService: {} as any,
+    //   actorService: {} as any,
+    //   postService: {} as any,
+    //   uploadService: {} as any,
+    //   commentService: {} as any,
+    //   notificationService: {} as any,
+    //   webfingerService: {} as any,
+    // };
+
+    // Configure routes, passing the full mock container
+    app.use('/', configureAuthRoutes(mockServiceContainer));
+  });
+
+  afterAll(async () => {
+    await client.close();
+    await mongoServer.stop();
+  });
+
+  beforeEach(async () => {
+    // Clear collections before each test
+    await db.collection('actors').deleteMany({});
+  });
 
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
-      // Controller calls authService.createUser
-      mockAuthService.createUser.mockResolvedValue(mockAuthResult);
+      const response = await request(app).post('/api/auth/register').send({
+        username: 'testuser',
+        password: 'password123',
+        displayName: 'Test User',
+        bio: 'This is a test bio',
+      });
 
-      const response = await request((global as any).testApp)
-        .post('/api/auth/register')
-        .send({
-          username: 'testuser',
-          email: 'test@example.com',
-          password: 'password123',
-        })
-        .expect(201);
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('actor');
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.actor.preferredUsername).toBe('testuser');
+      expect(response.body.actor.name).toBe('Test User');
+      expect(response.body.actor.summary).toBe('This is a test bio');
+      expect(response.body.actor).not.toHaveProperty('password');
+    });
 
-      // Adjust expectation for date serialization
-      const expectedBody = {
-        ...mockAuthResult,
-        actor: {
-          ...mockAuthResult.actor,
-          _id: mockAuthResult.actor._id.toHexString(), // Serialize ObjectId
-          createdAt: mockAuthResult.actor.createdAt?.toISOString(),
-          updatedAt: mockAuthResult.actor.updatedAt?.toISOString(),
-        },
-      };
+    it('should return 400 if username is missing', async () => {
+      const response = await request(app).post('/api/auth/register').send({
+        password: 'password123',
+        displayName: 'Test User',
+      });
 
-      expect(response.body).toEqual(expectedBody);
-      expect(mockAuthService.createUser).toHaveBeenCalledWith(
-        'testuser',
-        'password123',
-        'test@example.com' // Ensure email is passed if service expects it
-      );
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 if password is missing', async () => {
+      const response = await request(app).post('/api/auth/register').send({
+        username: 'testuser',
+        displayName: 'Test User',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 409 if username already exists', async () => {
+      // First create a user
+      await db.collection('actors').insertOne({
+        preferredUsername: 'existinguser',
+        password: await bcryptjs.hash('password123', 10),
+        name: 'Existing User',
+      });
+
+      // Try to create another user with the same username
+      const response = await request(app).post('/api/auth/register').send({
+        username: 'existinguser',
+        password: 'password123',
+        displayName: 'Test User',
+      });
+
+      expect(response.status).toBe(409);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should validate username format', async () => {
+      const response = await request(app).post('/api/auth/register').send({
+        username: 'invalid@username',
+        password: 'password123',
+        displayName: 'Test User',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toContain('Username can only contain');
+    });
+
+    it('should validate password length', async () => {
+      const response = await request(app).post('/api/auth/register').send({
+        username: 'validuser',
+        password: 'pass', // Too short
+        displayName: 'Test User',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toContain('Password must be');
     });
 
     it('should handle server errors during registration', async () => {
-      const expectedErrorMessage = 'Create user failed';
-      mockAuthService.createUser.mockRejectedValue(
-        new Error(expectedErrorMessage)
-      );
+      // Temporarily force an error by messing with the db reference
+      const originalCollection = db.collection;
+      db.collection = jest.fn().mockImplementationOnce(() => {
+        throw new Error('Database error');
+      });
 
-      const response = await request((global as any).testApp)
-        .post('/api/auth/register')
-        .send({
-          username: 'erroruser',
-          email: 'test@example.com',
-          password: 'password123',
-        })
-        .expect(500);
+      const response = await request(app).post('/api/auth/register').send({
+        username: 'newuser',
+        password: 'password123',
+        displayName: 'Test User',
+      });
 
-      // Expect specific error message from the AppError/generic handler
-      expect(response.body).toHaveProperty('error', expectedErrorMessage);
+      // Restore original function
+      db.collection = originalCollection;
+
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error');
     });
   });
 
   describe('POST /api/auth/login', () => {
+    beforeEach(async () => {
+      // Create a test user for login tests
+      const hashedPassword = await bcryptjs.hash('password123', 10);
+      await db.collection('actors').insertOne({
+        preferredUsername: 'testuser',
+        password: hashedPassword,
+        name: 'Test User',
+        summary: 'Test bio',
+      });
+    });
+
     it('should login an existing user', async () => {
-      // Controller calls authService.authenticateUser
-      mockAuthService.authenticateUser.mockResolvedValue(mockAuthResult);
+      const response = await request(app).post('/api/auth/login').send({
+        username: 'testuser',
+        password: 'password123',
+      });
 
-      const response = await request((global as any).testApp)
-        .post('/api/auth/login')
-        .send({ username: 'mockUser', password: 'password123' })
-        .expect(200); // Expect 200 for successful login
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('actor');
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.actor.preferredUsername).toBe('testuser');
+      expect(response.body.actor).not.toHaveProperty('password');
+    });
 
-      // Adjust expectation for date serialization
-      const expectedBody = {
-        ...mockAuthResult,
-        actor: {
-          ...mockAuthResult.actor,
-          _id: mockAuthResult.actor._id.toHexString(), // Serialize ObjectId
-          createdAt: mockAuthResult.actor.createdAt?.toISOString(),
-          updatedAt: mockAuthResult.actor.updatedAt?.toISOString(),
-        },
-      };
+    it('should return 400 if username is missing', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        password: 'password123',
+      });
 
-      expect(response.body).toEqual(expectedBody);
-      expect(mockAuthService.authenticateUser).toHaveBeenCalledWith(
-        'mockUser',
-        'password123'
-      );
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 400 if password is missing', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        username: 'testuser',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 401 if username does not exist', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        username: 'nonexistentuser',
+        password: 'password123',
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return 401 if password is incorrect', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        username: 'testuser',
+        password: 'wrongpassword',
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('error');
     });
 
     it('should handle server errors during login', async () => {
-      const expectedErrorMessage = 'Auth failed';
-      mockAuthService.authenticateUser.mockRejectedValue(
-        new Error(expectedErrorMessage)
-      );
+      // Temporarily force an error
+      const originalFindOne = db.collection('actors').findOne;
+      db.collection('actors').findOne = jest.fn().mockImplementationOnce(() => {
+        throw new Error('Database error');
+      });
 
-      const response = await request((global as any).testApp)
-        .post('/api/auth/login')
-        .send({ username: 'testuser', password: 'password123' })
-        .expect(500); // Expect 500 because authenticateUser failed
+      const response = await request(app).post('/api/auth/login').send({
+        username: 'testuser',
+        password: 'password123',
+      });
 
-      // Expect specific error message
-      expect(response.body).toHaveProperty('error', expectedErrorMessage);
+      // Restore original function
+      db.collection('actors').findOne = originalFindOne;
+
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty('error');
     });
 
-    it('should return 401 for invalid credentials', async () => {
-      // Mock returning null simulates failed auth check before AppError was thrown
-      // Now, controller throws AppError directly
-      const expectedErrorMessage = 'Invalid credentials';
-      mockAuthService.authenticateUser.mockResolvedValue(null);
-      // OR mock it to throw the specific AppError if that's the implementation:
-      // mockAuthService.authenticateUser.mockRejectedValue(new AppError(expectedErrorMessage, ErrorType.Unauthorized));
-
-      const response = await request((global as any).testApp)
+    it('should handle invalid JSON in the request body', async () => {
+      const invalidJsonResponse = await request(app)
         .post('/api/auth/login')
-        .send({ username: 'testuser', password: 'wrongpassword' })
-        .expect(401); // Expect 401 because controller throws AppError(..., Unauthorized)
+        .set('Content-Type', 'application/json')
+        .send('{"username": "testuser", "password": "password123"'); // Malformed JSON
 
-      // Expect specific error message from AppError
-      expect(response.body).toHaveProperty('error', expectedErrorMessage);
+      expect(invalidJsonResponse.status).toBe(400);
     });
   });
 });
