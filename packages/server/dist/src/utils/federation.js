@@ -1,25 +1,27 @@
-import fetch from 'node-fetch';
-import crypto from 'crypto';
-import { DateTime } from 'luxon';
-import { Actor } from '../modules/actors/models/actor';
-import { ActivityPubActivity } from '../modules/activitypub/models/activitypub';
-
+'use strict';
+var __importDefault =
+  (this && this.__importDefault) ||
+  function (mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.sendSignedRequest = sendSignedRequest;
+exports.fetchRemoteActor = fetchRemoteActor;
+exports.sendFollowRequest = sendFollowRequest;
+exports.fetchRemoteObject = fetchRemoteObject;
+exports.sendActivity = sendActivity;
+const node_fetch_1 = __importDefault(require('node-fetch'));
+const crypto_1 = __importDefault(require('crypto'));
+const luxon_1 = require('luxon');
 // Helper for making signed HTTP requests to other ActivityPub servers
-export async function sendSignedRequest(
-  url: string,
-  body: ActivityPubActivity,
-  privateKey: string,
-  keyId: string
-): Promise<Response> {
-  const digest = crypto
+async function sendSignedRequest(url, body, privateKey, keyId) {
+  const digest = crypto_1.default
     .createHash('sha256')
     .update(JSON.stringify(body))
     .digest('base64');
-
-  const date = DateTime.now().toUTC().toRFC2822();
+  const date = luxon_1.DateTime.now().toUTC().toRFC2822();
   const target = new URL(url);
   const path = target.pathname + target.search;
-
   // Create signature string
   const signString = [
     `(request-target): post ${path}`,
@@ -27,13 +29,11 @@ export async function sendSignedRequest(
     `date: ${date}`,
     `digest: SHA-256=${digest}`,
   ].join('\n');
-
   // Sign the string
-  const signature = crypto
+  const signature = crypto_1.default
     .createSign('sha256')
     .update(signString)
     .sign(privateKey, 'base64');
-
   // Create signature header
   const signatureHeader = [
     `keyId="${keyId}"`,
@@ -41,9 +41,8 @@ export async function sendSignedRequest(
     `headers="(request-target) host date digest"`,
     `signature="${signature}"`,
   ].join(',');
-
   // Make request with signature
-  const response = await fetch(url, {
+  const response = await (0, node_fetch_1.default)(url, {
     method: 'POST',
     headers: {
       Host: target.host,
@@ -55,55 +54,43 @@ export async function sendSignedRequest(
     },
     body: JSON.stringify(body),
   });
-
-  return response as unknown as Response;
+  return response;
 }
-
 // Fetch remote actor profile
-export async function fetchRemoteActor(actorUrl: string): Promise<unknown> {
+async function fetchRemoteActor(actorUrl) {
   try {
-    const response = await fetch(actorUrl, {
+    const response = await (0, node_fetch_1.default)(actorUrl, {
       headers: {
         Accept: 'application/activity+json',
       },
     });
-
     if (!response.ok) {
       throw new Error(`Failed to fetch remote actor: ${response.statusText}`);
     }
-
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/activity+json')) {
       throw new Error('Invalid content type received');
     }
-
     return await response.json();
   } catch (error) {
     console.error('Error fetching remote actor:', error);
     throw error;
   }
 }
-
 // Send a follow request to a remote actor
-export async function sendFollowRequest(
-  fromActor: Actor,
-  toActorUrl: string,
-  privateKey: string
-): Promise<ActivityPubActivity> {
+async function sendFollowRequest(fromActor, toActorUrl, privateKey) {
   try {
     // First fetch the target actor
-    const toActor = (await fetchRemoteActor(toActorUrl)) as ActivityPubActivity;
-
+    const toActor = await fetchRemoteActor(toActorUrl);
     // Create follow activity
-    const followActivity: ActivityPubActivity = {
+    const followActivity = {
       '@context': 'https://www.w3.org/ns/activitystreams',
-      id: `${fromActor.id}/activities/${crypto.randomUUID()}`,
+      id: `${fromActor.id}/activities/${crypto_1.default.randomUUID()}`,
       type: 'Follow',
       actor: fromActor.id,
       object: toActor.id,
       published: new Date().toISOString(),
     };
-
     // Send signed request to their inbox
     const response = await sendSignedRequest(
       toActor.inbox,
@@ -111,37 +98,28 @@ export async function sendFollowRequest(
       privateKey,
       `${fromActor.id}#main-key`
     );
-
     if (!response.ok) {
       throw new Error(`Failed to send follow request: ${response.statusText}`);
     }
-
     return followActivity;
   } catch (error) {
     console.error('Error sending follow request:', error);
     throw error;
   }
 }
-
-export async function fetchRemoteObject(url: string): Promise<unknown> {
-  const response = await fetch(url, {
+async function fetchRemoteObject(url) {
+  const response = await (0, node_fetch_1.default)(url, {
     headers: {
       Accept: 'application/activity+json',
     },
   });
-
   if (!response.ok) {
     throw new Error(`Failed to fetch remote object: ${response.statusText}`);
   }
-
   return response.json();
 }
-
-export async function sendActivity(
-  url: string,
-  activity: ActivityPubActivity
-): Promise<void> {
-  const response = await fetch(url, {
+async function sendActivity(url, activity) {
+  const response = await (0, node_fetch_1.default)(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/activity+json',
@@ -149,7 +127,6 @@ export async function sendActivity(
     },
     body: JSON.stringify(activity),
   });
-
   if (!response.ok) {
     throw new Error(`Failed to send activity: ${response.statusText}`);
   }

@@ -19,27 +19,27 @@ export function configureNotificationRoutes(
 
   // Get notifications for authenticated user
   const getNotificationsHandler: RequestHandler = (req, res, next) => {
-    notificationsController.getNotifications(req as any, res, next);
+    notificationsController.getNotifications(req, res, next);
   };
-  router.get('/', auth as any, getNotificationsHandler);
+  router.get('/', auth, getNotificationsHandler);
 
   // Mark specific notifications as read
   const markReadHandler: RequestHandler = (req, res, next) => {
-    notificationsController.markRead(req as any, res, next);
+    notificationsController.markRead(req, res, next);
   };
-  router.post('/mark-read', auth as any, markReadHandler);
+  router.post('/mark-read', auth, markReadHandler);
 
   // Mark all notifications as read
   const markAllReadHandler: RequestHandler = (req, res, next) => {
-    notificationsController.markAllRead(req as any, res, next);
+    notificationsController.markAllRead(req, res, next);
   };
-  router.post('/mark-all-read', auth as any, markAllReadHandler);
+  router.post('/mark-all-read', auth, markAllReadHandler);
 
   // Get unread notification count
   const getUnreadCountHandler: RequestHandler = (req, res, next) => {
-    notificationsController.getUnreadCount(req as any, res, next);
+    notificationsController.getUnreadCount(req, res, next);
   };
-  router.get('/unread-count', auth as any, getUnreadCountHandler);
+  router.get('/unread-count', auth, getUnreadCountHandler);
 
   return router;
 }

@@ -1,90 +1,65 @@
-import { Comment, CreateCommentDto, FormattedComment } from '../models/comment';
-import { CommentRepository } from '../repositories/comment.repository';
-import { PostService } from '../../posts/services/postService';
-import { ActorService } from '../../actors/services/actorService';
-import { NotificationService } from '../../notifications/services/notification.service';
-import { NotificationType } from '../../notifications/models/notification';
-import { AppError, ErrorType } from '../../../utils/errors';
-import { Actor } from '../../actors/models/actor';
-
-export class CommentService {
-  private repository: CommentRepository;
-  private postService: PostService;
-  private actorService: ActorService;
-  private notificationService: NotificationService;
-
-  constructor(
-    repository: CommentRepository,
-    postService: PostService,
-    actorService: ActorService,
-    notificationService: NotificationService
-  ) {
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.CommentService = void 0;
+const notification_1 = require('../../notifications/models/notification');
+const errors_1 = require('../../../utils/errors');
+class CommentService {
+  constructor(repository, postService, actorService, notificationService) {
     this.repository = repository;
     this.postService = postService;
     this.actorService = actorService;
     this.notificationService = notificationService;
   }
-
   /**
    * Create a new comment on a post
    * @param postId - The ID of the post
    * @param authorId - The ID of the comment author
    * @param content - The comment text content
    */
-  async createComment(
-    postId: string,
-    authorId: string,
-    content: string
-  ): Promise<FormattedComment> {
+  async createComment(postId, authorId, content) {
     // Validate content
     if (!content || content.trim().length === 0) {
-      throw new AppError(
+      throw new errors_1.AppError(
         'Comment content cannot be empty',
         400,
-        ErrorType.VALIDATION
+        errors_1.ErrorType.VALIDATION
       );
     }
-
     // Check if post exists
     const post = await this.postService.getPostById(postId);
     if (!post) {
-      throw new AppError(
+      throw new errors_1.AppError(
         `Post with ID ${postId} not found`,
         404,
-        ErrorType.NOT_FOUND
+        errors_1.ErrorType.NOT_FOUND
       );
     }
-
     // Get author information for notification
     const author = await this.actorService.getActorById(authorId);
     if (!author) {
-      throw new AppError(
+      throw new errors_1.AppError(
         `Actor with ID ${authorId} not found`,
         404,
-        ErrorType.NOT_FOUND
+        errors_1.ErrorType.NOT_FOUND
       );
     }
-
     // Create the comment
-    const commentData: CreateCommentDto = {
+    const commentData = {
       postId,
       authorId,
       content: content.trim(),
     };
-
     const newComment = await this.repository.create(commentData);
-
     // Send notification to post author (if different from comment author)
     if (post.actor.id !== authorId) {
       await this.notificationService.createNotification({
         recipientUserId: post.actor.id,
         actorUserId: authorId,
-        type: NotificationType.COMMENT,
+        type: notification_1.NotificationType.COMMENT,
         postId: postId,
         commentId: newComment._id?.toString(),
       });
     }
-
     // Process mentions in content to send notifications
     await this.processMentions(
       content,
@@ -92,41 +67,29 @@ export class CommentService {
       postId,
       newComment._id?.toString()
     );
-
     // Format and return the comment
     return this.formatComment(newComment, author);
   }
-
   /**
    * Get comments for a specific post
    * @param postId - The ID of the post
    * @param paginationOptions - Pagination options (limit, offset)
    */
-  async getCommentsForPost(
-    postId: string,
-    paginationOptions: { limit: number; offset: number }
-  ): Promise<{
-    comments: FormattedComment[];
-    total: number;
-    limit: number;
-    offset: number;
-  }> {
+  async getCommentsForPost(postId, paginationOptions) {
     // Check if post exists (optional)
     const post = await this.postService.getPostById(postId);
     if (!post) {
-      throw new AppError(
+      throw new errors_1.AppError(
         `Post with ID ${postId} not found`,
         404,
-        ErrorType.NOT_FOUND
+        errors_1.ErrorType.NOT_FOUND
       );
     }
-
     // Get comments with pagination
     const { comments, total } = await this.repository.findCommentsByPostId(
       postId,
       paginationOptions
     );
-
     // Format comments with author details
     const formattedComments = await Promise.all(
       comments.map(async comment => {
@@ -134,7 +97,6 @@ export class CommentService {
         return this.formatComment(comment, author);
       })
     );
-
     return {
       comments: formattedComments,
       total,
@@ -142,40 +104,30 @@ export class CommentService {
       offset: paginationOptions.offset,
     };
   }
-
   /**
    * Delete a comment
    * @param commentId - The ID of the comment to delete
    * @param requestingUserId - The ID of the user making the delete request
    */
-  async deleteComment(
-    commentId: string,
-    requestingUserId: string
-  ): Promise<boolean> {
+  async deleteComment(commentId, requestingUserId) {
     const result = await this.repository.deleteByIdAndAuthorId(
       commentId,
       requestingUserId
     );
-
     if (result.deletedCount === 0) {
-      throw new AppError(
+      throw new errors_1.AppError(
         "Comment not found or you don't have permission to delete it",
         404,
-        ErrorType.NOT_FOUND
+        errors_1.ErrorType.NOT_FOUND
       );
     }
-
     return true;
   }
-
   /**
    * Helper method to format a comment with author details
    * @private
    */
-  private formatComment(
-    comment: Comment,
-    author: Actor | null
-  ): FormattedComment {
+  formatComment(comment, author) {
     return {
       ...comment,
       author: {
@@ -187,31 +139,21 @@ export class CommentService {
       },
     };
   }
-
   /**
    * Process mentions in comment content to send notifications
    * @private
    */
-  private async processMentions(
-    content: string,
-    authorId: string,
-    postId: string,
-    commentId?: string
-  ): Promise<void> {
+  async processMentions(content, authorId, postId, commentId) {
     // Regular expression to match @username mentions
     const mentionRegex = /@([a-zA-Z0-9_]+)/g;
     const mentions = content.match(mentionRegex);
-
     if (!mentions) return;
-
     // Process each unique mention
     const uniqueMentions = [...new Set(mentions.map(m => m.substring(1)))];
-
     for (const username of uniqueMentions) {
       // Find the mentioned actor
       const mentionedActor =
         await this.actorService.getActorByUsername(username);
-
       if (mentionedActor && mentionedActor._id !== authorId) {
         // Ensure mentionedActor._id is defined before using it
         if (mentionedActor._id) {
@@ -219,7 +161,7 @@ export class CommentService {
           await this.notificationService.createNotification({
             recipientUserId: mentionedActor._id,
             actorUserId: authorId,
-            type: NotificationType.MENTION,
+            type: notification_1.NotificationType.MENTION,
             postId,
             commentId,
           });
@@ -231,9 +173,9 @@ export class CommentService {
       }
     }
   }
-
-  async getComments(postId: string): Promise<Comment[]> {
+  async getComments(postId) {
     // Implementation
     return [];
   }
 }
+exports.CommentService = CommentService;
