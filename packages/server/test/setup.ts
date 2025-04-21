@@ -42,11 +42,16 @@ jest.mock('@/middleware/auth', () => {
 
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient, Db } from 'mongodb';
-import {
-  connectDB,
-  disconnectDB,
-  clearDatabase,
-} from '../tests/helpers/dbHelper';
+// Removed dbHelper import
+// import {
+//   connectDB,
+//   disconnectDB,
+//   clearDatabase,
+// } from '../tests/helpers/dbHelper';
+
+// Use testUtils instead
+// import { setupTestDb, teardownTestDb } from './helpers/testUtils';
+
 import { createTestApp } from './helpers/testApp';
 import request from 'supertest';
 
@@ -65,7 +70,7 @@ jest.setTimeout(30000);
 let mongoServer: MongoMemoryServer;
 let mongoClient: MongoClient;
 let mongoDb: Db;
-let testApp: express.Application;
+let testApp: Express.Application;
 
 // Configure global Jest matchers
 expect.extend({
@@ -95,16 +100,16 @@ beforeAll(async (): Promise<void> => {
     const mongoUri = mongoServer.getUri();
 
     // Connect to the in-memory database
-    const connection = await connectDB(mongoUri);
-    mongoClient = connection.client;
-    mongoDb = connection.db;
+    mongoClient = new MongoClient(mongoUri);
+    await mongoClient.connect();
+    mongoDb = mongoClient.db();
 
     // Create test app with proper configuration
-    testApp = await createTestApp(mongoDb, process.env.DOMAIN);
+    testApp = await createTestApp(mongoDb, process.env.DOMAIN || 'test.domain');
 
     // Make app available globally for tests
-    global.testApp = testApp;
-    global.request = request;
+    (global as any).testApp = testApp;
+    (global as any).request = request;
   } catch (error) {
     console.error('Failed to setup test environment:', error);
     throw error;
@@ -116,7 +121,7 @@ afterAll(async (): Promise<void> => {
   try {
     // Disconnect from the database
     if (mongoClient) {
-      await disconnectDB(mongoClient);
+      await mongoClient.close();
     }
 
     // Stop the MongoDB Memory Server
@@ -133,7 +138,14 @@ afterAll(async (): Promise<void> => {
 beforeEach(async (): Promise<void> => {
   try {
     if (mongoDb) {
-      await clearDatabase(mongoDb);
+      // Clear all collections manually
+      const collections = await mongoDb.listCollections().toArray();
+      for (const collection of collections) {
+        // Avoid deleting system collections if any exist
+        if (!collection.name.startsWith('system.')) {
+          await mongoDb.collection(collection.name).deleteMany({});
+        }
+      }
     }
   } catch (error) {
     console.error('Failed to clear test database:', error);

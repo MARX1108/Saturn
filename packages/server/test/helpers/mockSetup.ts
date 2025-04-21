@@ -1,38 +1,43 @@
 import { mock } from 'jest-mock-extended';
-import { AuthService } from '@/modules/auth/services/authService';
+import { ObjectId } from 'mongodb';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { PostService } from '@/modules/posts/services/postService';
-import { UploadService } from '@/modules/uploads/services/uploadService';
-import { NotificationService } from '@/modules/notifications/services/notificationService';
-import { CommentService } from '@/modules/comments/services/commentService';
-import { ServiceContainer } from '@/types';
+import { ServiceContainer } from '../../src/utils/container';
 
 // Create mock services
-const mockAuthService = mock<AuthService>();
-const mockActorService = mock<ActorService>();
-const mockPostService = mock<PostService>();
-const mockUploadService = mock<UploadService>();
-const mockNotificationService = mock<NotificationService>();
-const mockCommentService = mock<CommentService>();
+export const mockAuthService = mock<any>();
+export const mockActorService = mock<ActorService>();
+export const mockPostService = mock<PostService>();
+export const mockUploadService = mock<any>();
+export const mockNotificationService = mock<any>();
+export const mockCommentService = mock<any>();
+export const mockMediaService = mock<any>();
+export const mockActivityPubService = mock<any>();
+export const mockWebfingerService = mock<any>();
+export const mockPostsController = mock<any>();
+export const mockCommentsController = mock<any>();
 
 // Attach to global scope
-global.mockAuthService = mockAuthService;
-global.mockActorService = mockActorService;
-global.mockPostService = mockPostService;
-global.mockUploadService = mockUploadService;
-global.mockNotificationService = mockNotificationService;
-global.mockCommentService = mockCommentService;
+(global as any).mockAuthService = mockAuthService;
+(global as any).mockActorService = mockActorService;
+(global as any).mockPostService = mockPostService;
+(global as any).mockUploadService = mockUploadService;
+(global as any).mockNotificationService = mockNotificationService;
+(global as any).mockCommentService = mockCommentService;
+(global as any).mockMediaService = mockMediaService;
+(global as any).mockActivityPubService = mockActivityPubService;
+(global as any).mockWebfingerService = mockWebfingerService;
+(global as any).mockPostsController = mockPostsController;
+(global as any).mockCommentsController = mockCommentsController;
 
 // Mock methods called during setup
 // const mockMulterMiddleware = (req: Request, res: Response, next: NextFunction) => next();
 // mockUploadService.configureImageUploadMiddleware.mockReturnValue(mockMulterMiddleware);
 
 // Ensure configureImageUploadMiddleware is still mocked if needed by controller setup
-if (
-  global.mockUploadService &&
-  global.mockUploadService.configureImageUploadMiddleware
-) {
-  global.mockUploadService.configureImageUploadMiddleware.mockReturnValue(
+const globalUploadService = (global as any).mockUploadService;
+if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
+  globalUploadService.configureImageUploadMiddleware.mockReturnValue(
     (req: any, res: any, next: any) => next()
   );
 }
@@ -40,60 +45,102 @@ if (
 // Configure default mock implementations
 const mockDate = new Date();
 const mockActor = {
-  id: 'test-user-id',
-  username: 'testuser',
-  email: 'test@example.com',
+  _id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c1'),
+  id: 'https://test.domain/users/testuser',
+  username: 'testuser@test.domain',
+  preferredUsername: 'testuser',
+  displayName: 'Test User',
+  name: 'Test User',
+  bio: 'Test bio',
+  summary: 'Test summary',
+  type: 'Person' as const,
+  inbox: 'https://test.domain/users/testuser/inbox',
+  outbox: 'https://test.domain/users/testuser/outbox',
+  followers: 'https://test.domain/users/testuser/followers',
   createdAt: mockDate,
   updatedAt: mockDate,
 };
 
-mockActorService.findById.mockResolvedValue(mockActor);
-mockActorService.findByUsername.mockResolvedValue(mockActor);
-mockActorService.getActorById.mockResolvedValue(mockActor);
-mockActorService.getActorByUsername.mockResolvedValue(mockActor);
+mockActorService.getActorById.mockResolvedValue(mockActor as any);
+mockActorService.getActorByUsername.mockResolvedValue(mockActor as any);
 
 mockPostService.getPostById.mockImplementation(async id => {
   if (id === 'nonexistent') return null;
   return {
-    id,
+    _id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c2'),
+    id: `https://test.domain/posts/${id}`,
     content: 'Test post content',
-    authorId: 'test-user-id',
+    actorId: mockActor._id.toString(),
     createdAt: mockDate,
     updatedAt: mockDate,
-    likes: [],
+    likes: 0,
+    likedBy: [],
     shares: 0,
     sensitive: false,
     contentWarning: null,
     attachments: [],
     actor: mockActor,
-  };
+    type: 'Note' as const,
+    visibility: 'public',
+    published: mockDate,
+    to: ['https://www.w3.org/ns/activitystreams#Public'],
+    cc: [],
+    url: `https://test.domain/posts/${id}`,
+    replies: { items: [] },
+    attributedTo: mockActor.id,
+  } as any;
 });
 
 mockPostService.getFeed.mockResolvedValue({
   posts: [
     {
-      id: 'test-post-id',
+      _id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c3'),
+      id: 'https://test.domain/posts/test-post-id',
       content: 'Test post content',
-      authorId: 'test-user-id',
+      actorId: mockActor._id.toString(),
       createdAt: mockDate,
       updatedAt: mockDate,
-      likes: [],
+      likes: 0,
+      likedBy: [],
       shares: 0,
       sensitive: false,
       contentWarning: null,
       attachments: [],
       actor: mockActor,
-    },
+      type: 'Note' as const,
+      visibility: 'public',
+      published: mockDate,
+      to: ['https://www.w3.org/ns/activitystreams#Public'],
+      cc: [],
+      url: 'https://test.domain/posts/test-post-id',
+      replies: { items: [] },
+      attributedTo: mockActor.id,
+    } as any,
   ],
   hasMore: false,
 });
 
 // Create and export the container using these mocks
+// Ensure ALL properties from ServiceContainer interface are present
 export const mockServiceContainer: ServiceContainer = {
-  authService: global.mockAuthService,
-  actorService: global.mockActorService,
-  postService: global.mockPostService,
-  uploadService: global.mockUploadService,
-  notificationService: global.mockNotificationService,
-  commentService: global.mockCommentService,
+  authService: mockAuthService,
+  actorService: mockActorService,
+  postService: mockPostService,
+  uploadService: mockUploadService,
+  notificationService: mockNotificationService,
+  commentService: mockCommentService,
+  mediaService: mockMediaService,
+  activityPubService: mockActivityPubService,
+  webfingerService: mockWebfingerService,
+  postsController: mockPostsController,
+  commentsController: mockCommentsController,
+  getService: jest.fn().mockImplementation(<T>(name: string): T | null => {
+    const serviceName = name as keyof ServiceContainer;
+    if (
+      Object.prototype.hasOwnProperty.call(mockServiceContainer, serviceName)
+    ) {
+      return mockServiceContainer[serviceName] as T;
+    }
+    return null;
+  }),
 };

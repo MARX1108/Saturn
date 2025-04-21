@@ -4,9 +4,26 @@ import { MongoClient, Db } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import path from 'path';
 import fs from 'fs';
-import jwt from 'jsonwebtoken';
-import { ActorService } from '../services/actorService';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { ActorService } from '@/modules/actors/services/actorService';
+import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
+import { NotificationService } from '@/modules/notifications/services/notification.service';
+import { mockNotificationService } from '@test/helpers/mockSetup';
 import { configureTestActorRoutes } from './helpers/configureTestActorRoutes';
+import { DbUser } from '@/modules/auth/models/user';
+import { ServiceContainer } from '@/utils/container';
+
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      actorService?: ActorService;
+      user?: DbUser | undefined;
+    }
+  }
+}
+
+const jwtSecret = process.env.JWT_SECRET || 'test-secret-key';
 
 describe('Actors Routes', () => {
   let app: express.Application;
@@ -15,6 +32,8 @@ describe('Actors Routes', () => {
   let client: MongoClient;
   let testUserToken: string;
   let actorService: ActorService;
+  let actorRepository: ActorRepository;
+  const testDomain = 'test.domain';
 
   beforeAll(async () => {
     // Set up in-memory MongoDB for testing
@@ -30,7 +49,7 @@ describe('Actors Routes', () => {
 
     // Set app locals
     app.locals.db = db;
-    app.locals.domain = 'test.domain';
+    app.locals.domain = testDomain;
 
     // Create uploads directory for tests
     const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -39,30 +58,59 @@ describe('Actors Routes', () => {
     fs.mkdirSync(publicAvatarsDir, { recursive: true });
 
     // Configure JWT secret for testing
-    process.env.JWT_SECRET = 'test-secret-key';
+    process.env.JWT_SECRET = jwtSecret;
 
-    // Create actor service
-    actorService = new ActorService(db, 'test.domain');
+    // Instantiate dependencies
+    actorRepository = new ActorRepository(db);
+    // Instantiate ActorService with repository, mock notification service, and domain
+    actorService = new ActorService(
+      actorRepository,
+      mockNotificationService as any,
+      testDomain
+    );
 
     // Setup authentication middleware
     app.use((req, res, next) => {
       req.actorService = actorService;
-
       const authHeader = req.headers.authorization;
       if (authHeader) {
         const token = authHeader.split(' ')[1];
         try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          req.user = decoded;
+          const decoded = jwt.verify(token, jwtSecret);
+          if (typeof decoded === 'object' && decoded !== null) {
+            req.user = {
+              _id: (decoded as any).id,
+              id: (decoded as any).id,
+              username: (decoded as any).username,
+              preferredUsername: (decoded as any).username,
+              followers: [],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              password: 'mockPassword',
+              following: [],
+              email: 'decoded@example.com',
+            } as DbUser;
+          } else {
+            req.user = undefined;
+          }
         } catch (_error) {
-          // Just continue without setting user
+          req.user = undefined;
         }
       }
       next();
     });
 
-    // Use our corrected test routes
-    app.use('/api', configureTestActorRoutes(db, 'test.domain'));
+    // Pass only actorService to configureTestActorRoutes
+    app.use('/api', configureTestActorRoutes(actorService));
+
+    // Placeholder route for testing JWT issues
+    app.get('/api/test-auth', (req, res) => {
+      if (req.user) {
+        res.json({ userId: (req.user as any).id });
+      } else {
+        res.status(401).json({ error: 'Unauthorized' });
+      }
+    });
   });
 
   afterAll(async () => {
@@ -87,7 +135,7 @@ describe('Actors Routes', () => {
     // Generate a token for secured endpoints
     testUserToken = jwt.sign(
       { id: user.insertedId.toString(), username: 'testuser' },
-      process.env.JWT_SECRET
+      jwtSecret
     );
   });
 
@@ -301,16 +349,17 @@ describe('Actors Routes', () => {
 
     it('should handle attempted update by another user', async () => {
       // Create another user
-      await db.collection('actors').insertOne({
+      const anotherUserResult = await db.collection('actors').insertOne({
         preferredUsername: 'anotheruser',
         name: 'Another User',
         type: 'Person',
       });
+      const anotherUserId = anotherUserResult.insertedId.toString();
 
       // Create token for this new user
       const anotherUserToken = jwt.sign(
-        { id: 'wrongid', username: 'anotheruser' },
-        process.env.JWT_SECRET
+        { id: anotherUserId, username: 'anotheruser' },
+        jwtSecret
       );
 
       // Try to update first user's profile with second user's token
@@ -379,16 +428,17 @@ describe('Actors Routes', () => {
 
     it('should handle attempted deletion by another user', async () => {
       // Create another user
-      await db.collection('actors').insertOne({
+      const anotherUserResult = await db.collection('actors').insertOne({
         preferredUsername: 'anotheruser',
         name: 'Another User',
         type: 'Person',
       });
+      const anotherUserId = anotherUserResult.insertedId.toString();
 
       // Create token for this new user
       const anotherUserToken = jwt.sign(
-        { id: 'wrongid', username: 'anotheruser' },
-        process.env.JWT_SECRET
+        { id: anotherUserId, username: 'anotheruser' },
+        jwtSecret
       );
 
       // Try to delete first user with second user's token
