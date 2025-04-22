@@ -317,59 +317,69 @@ export let isPostLikedTestState = false;
 
 mockPostsController.createPost.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.createPost CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
-    console.log('>>> Body:', req.body);
-    console.log('>>> Files:', req.files);
-
+    // FIXED: User check MUST be first
     if (!req.user) {
+      console.log('>>> createPost: No user found, returning 401.');
       return res
         .status(401)
         .json({ error: 'Unauthorized - No user found in controller mock' });
     }
 
-    let content = req.body.content;
-    let sensitive = req.body.sensitive;
-    let contentWarning = req.body.contentWarning;
+    console.log('>>> MOCK PostsController.createPost CALLED. User:' /* ... */);
+    console.log('>>> Body:', req.body);
+    console.log('>>> Files:', req.files);
 
-    // Handle multipart: Only require content IF no files are present
     const hasFiles =
       req.files && (req.files as Express.Multer.File[]).length > 0;
+
+    // FINAL Fix 2: If multipart, return minimal success focused on attachments immediately
     if (hasFiles) {
-      console.log('>>> Multipart detected, content check skipped.');
-      // Attempt to get fields from body anyway (might be populated by some middleware/superagent plugin)
-      content = req.body.content;
-      sensitive = req.body.sensitive;
-      contentWarning = req.body.contentWarning;
-    } else if (!content || String(content).trim() === '') {
-      // Require content only if NOT multipart
-      return res.status(400).json({ error: 'Content is required' });
-    }
-
-    const isSensitive = String(sensitive).toLowerCase() === 'true';
-
-    const attachments = ((req.files as Express.Multer.File[]) || []).map(
-      file => ({
+      console.log(
+        '>>> createPost: Multipart detected. Returning simplified attachment success.'
+      );
+      const attachments = (req.files as Express.Multer.File[]).map(file => ({
         type: 'Document' as const,
         mediaType: file.mimetype,
         url: `https://test.domain/media/${file.filename || 'mockfile.png'}`,
         name: file.originalname,
-      })
-    );
+      }));
+      const createdPost = {
+        _id: new ObjectId(),
+        id: `https://test.domain/posts/${new ObjectId().toHexString()}`,
+        type: 'Note',
+        actorId: new ObjectId(req.user._id), // User check already passed
+        content: req.body.content || null, // Use if present
+        sensitive: false, // Default
+        contentWarning: undefined,
+        attachments: attachments,
+        actor: { preferredUsername: req.user.preferredUsername }, // User check already passed
+      };
+      return res.status(201).json(createdPost); // Return early
+    }
+
+    // --- Handle non-multipart requests ---
+    const content = req.body.content;
+    if (!content || String(content).trim() === '') {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+    const sensitive = String(req.body.sensitive).toLowerCase() === 'true';
+    const contentWarning = sensitive
+      ? String(req.body.contentWarning || '')
+      : undefined;
 
     const createdPost = {
       ...mockPost,
       _id: new ObjectId(),
-      content: content ? String(content) : null,
-      sensitive: isSensitive,
-      contentWarning: isSensitive ? String(contentWarning || '') : undefined,
-      attachments: attachments,
+      content: content,
+      sensitive: sensitive,
+      contentWarning: contentWarning,
+      attachments: [],
       actor: { ...mockActor, preferredUsername: req.user.preferredUsername },
     };
+    console.log(
+      '>>> createPost: Final non-multipart createdPost:',
+      createdPost
+    );
     res.status(201).json(createdPost);
   }
 );
@@ -390,45 +400,42 @@ mockPostsController.getPostById.mockImplementation(
       knownTestPostIdString
     );
 
-    if (postId === 'invalid-id-format') {
-      return res.status(400).json({ error: 'Invalid ID format' });
-    }
-    if (postId === knownNonExistentIdString) {
+    // --- Basic ID validation ---
+    if (postId === 'invalid-id-format')
+      return res.status(400).json({ error: 'Invalid ID format' }); // Corrected typo
+    if (postId === knownNonExistentIdString)
       return res.status(404).json({ error: 'Post not found' });
-    }
-    // Check if it's a potentially valid but non-existent ObjectId
     try {
       new ObjectId(postId);
-      // Add specific check if the ID matches the known test post ID used in beforeEach
-      if (
-        postId !== knownTestPostIdString &&
-        postId !== mockPost._id.toHexString()
-      ) {
-        // This checks against the dynamically generated ID from beforeEach
-        // And the static mockPost ID just in case
-        console.log(
-          `>>> ID ${postId} does not match known test ID ${knownTestPostIdString} or static mock ID`
-        );
-        // Removed the random check, rely on specific non-existent ID test case
-        // return res.status(404).json({ error: 'Post not found' });
-      }
     } catch (e) {
-      return res
-        .status(400)
-        .json({ error: 'Post ID format invalid (ObjectId conversion failed)' });
+      return res.status(400).json({ error: 'Invalid ObjectId format' });
     }
+    // --- End Validation ---
 
-    // Simulate success
-    const postData = {
-      ...mockPost,
+    const user = req.user;
+    const username = user?.preferredUsername;
+    const checkUsername = knownTestUsername;
+    const shouldBeLiked = !!user && username === checkUsername;
+    console.log(
+      `>>> getPostById: User: ${username}, Known: ${checkUsername}, ShouldBeLiked: ${shouldBeLiked}`
+    );
+
+    // Re-attempting FIX for spread order:
+    // 1. Create the base object from mockPost
+    const postDataBase = {
+      ...mockPost, // Spread the base mock post
       _id: knownTestPostObjectId,
       id: knownTestPostUrl,
       url: knownTestPostUrl,
       content: 'This is a test post',
-      // FIXED: Check username for liked status
-      likedByUser:
-        !!req.user && req.user.preferredUsername === knownTestUsername,
     };
+    // 2. Create the final response by spreading base and *then* adding likedByUser
+    const postData = {
+      ...postDataBase,
+      likedByUser: shouldBeLiked, // Assign/overwrite likedByUser LAST
+    };
+
+    console.log('>>> getPostById: Final postData being sent:', postData);
     res.status(200).json(postData);
   }
 );
@@ -443,21 +450,23 @@ mockPostsController.getFeed.mockImplementation(
     );
     console.log('>>> Query Params:', req.query);
     try {
-      // FIXED: Check username for liked status
-      const likedByUserStatus =
-        !!req.user && req.user.preferredUsername === knownTestUsername;
+      const user = req.user;
+      const username = user?.preferredUsername;
+      const checkUsername = knownTestUsername;
+      const likedByUserStatus = !!user && username === checkUsername;
+      console.log(
+        `>>> getFeed: User: ${username}, Known: ${checkUsername}, LikedStatus: ${likedByUserStatus}`
+      );
 
-      // Generate MORE posts (e.g., 15)
       const generatedPosts = Array.from({ length: 15 }).map((_, i) => ({
         ...mockPost,
         _id: new ObjectId(),
         content: `Feed Post ${i + 1}`,
-        createdAt: new Date(Date.now() - i * 5000), // Vary dates
-        likedByUser: likedByUserStatus,
-        // Use the correct author structure
+        createdAt: new Date(Date.now() - i * 5000),
         author: {
-          preferredUsername: i % 4 === 0 ? 'otheruser' : knownTestUsername, // Vary author
+          preferredUsername: i % 4 === 0 ? 'otheruser' : knownTestUsername,
         },
+        likedByUser: likedByUserStatus,
       }));
 
       let allMockPosts = generatedPosts;
@@ -585,19 +594,28 @@ mockPostsController.likePost.mockImplementation(
     );
     const postId = req.params.id;
 
+    // DEBUG Log state at entry
+    console.log(
+      `>>> likePost: Entering. isPostLikedTestState = ${isPostLikedTestState}`
+    );
+
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    if (postId === knownNonExistentIdString) {
+    if (postId === knownNonExistentIdString)
       return res.status(404).json({ error: 'Post not found' });
-    }
-    // Simulate already liked
+
+    // DEBUG Log state before check
+    console.log(
+      `>>> likePost: Checking state. isPostLikedTestState = ${isPostLikedTestState}`
+    );
     if (isPostLikedTestState) {
+      console.log('>>> likePost: Post already liked, returning 409');
       return res.status(409).json({ error: 'Post already liked' });
     }
-    // Simulate basic validation failure
-    if (postId === 'invalid-id') {
+    if (postId === 'invalid-id')
       return res.status(400).json({ error: 'Invalid Post ID for like' });
-    }
+
     // Simulate success
+    console.log('>>> likePost: Setting state to true');
     isPostLikedTestState = true;
     res.status(200).json({ message: 'Post liked successfully' });
   }
@@ -613,19 +631,28 @@ mockPostsController.unlikePost.mockImplementation(
     );
     const postId = req.params.id;
 
+    // DEBUG Log state at entry
+    console.log(
+      `>>> unlikePost: Entering. isPostLikedTestState = ${isPostLikedTestState}`
+    );
+
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    if (postId === knownNonExistentIdString) {
+    if (postId === knownNonExistentIdString)
       return res.status(404).json({ error: 'Post not found' });
-    }
-    // Simulate not liked
+
+    // DEBUG Log state before check
+    console.log(
+      `>>> unlikePost: Checking state. isPostLikedTestState = ${isPostLikedTestState}`
+    );
     if (!isPostLikedTestState) {
+      console.log('>>> unlikePost: Post not liked, returning 409');
       return res.status(409).json({ error: 'Post not liked' });
     }
-    // Simulate basic validation failure
-    if (postId === 'invalid-id') {
+    if (postId === 'invalid-id')
       return res.status(400).json({ error: 'Invalid Post ID for unlike' });
-    }
+
     // Simulate success
+    console.log('>>> unlikePost: Setting state to false');
     isPostLikedTestState = false;
     res.status(200).json({ message: 'Post unliked successfully' });
   }
