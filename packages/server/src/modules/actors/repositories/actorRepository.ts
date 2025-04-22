@@ -40,19 +40,19 @@ export class ActorRepository extends MongoRepository<Actor> {
 
   async addFollowing(
     actorId: string | ObjectId,
-    targetActorId: string
+    targetActorApId: string
   ): Promise<boolean> {
     return this.updateById(actorId, {
-      $addToSet: { following: targetActorId },
+      $addToSet: { following: targetActorApId },
     } as UpdateFilter<Actor>);
   }
 
   async removeFollowing(
     actorId: string | ObjectId,
-    targetActorId: string
+    targetActorApId: string
   ): Promise<boolean> {
     return this.updateById(actorId, {
-      $pull: { following: targetActorId },
+      $pull: { following: targetActorApId },
     } as UpdateFilter<Actor>);
   }
 
