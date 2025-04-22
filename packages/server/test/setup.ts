@@ -4,40 +4,55 @@ import { Request, Response, NextFunction } from 'express'; // Add express types 
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
-  // Define the mock middleware implementation once
+  console.log('>>> jest.mock factory for @/middleware/auth EXECUTING'); // Log factory execution
   const mockMiddlewareImplementation = (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
-    req.user = {
-      _id: 'mockUserId',
-      id: 'mockUserId',
-      preferredUsername: 'mockUser',
-      email: 'mock@example.com',
-      isAdmin: false,
-      isVerified: true,
-      profile: {
-        displayName: 'Mock User',
-        bio: 'Mock Bio',
-        avatar: null,
-        banner: null,
-      },
-    } as any;
+    console.log(
+      `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
+    ); // Log middleware execution
+    // Simulate attaching user based on Authorization header for simplicity in tests
+    // IMPORTANT: This is basic simulation, real middleware is more complex
+    const authHeader = req.headers.authorization;
+    let user = undefined;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // In a real scenario, you'd verify the token
+      // Here, we just create a mock user if any Bearer token exists
+      user = {
+        _id: 'mockUserId',
+        id: 'mockUserId', // Or derive from token if needed
+        preferredUsername: 'testuser', // Use a consistent username for checks
+        email: 'mock@example.com',
+        isAdmin: false,
+        isVerified: true,
+        profile: {
+          displayName: 'Mock User',
+          bio: 'Mock Bio',
+          avatar: null,
+          banner: null,
+        },
+      } as any;
+    }
+    req.user = user;
+    console.log(
+      '>>> Mock authenticate MIDDLEWARE - req.user set to:',
+      req.user
+        ? { id: req.user._id, username: req.user.preferredUsername }
+        : undefined
+    ); // Log assigned user
     next();
   };
 
-  // Return the module mock
   return {
-    __esModule: true, // Important if the original module uses ES modules
-    // Mock the 'authenticate' export (used by postRoutes)
+    __esModule: true,
+    // Return the factory function for authenticate
     authenticate: jest
       .fn()
       .mockImplementation(() => mockMiddlewareImplementation),
-    // Mock the 'auth' export (used by authRoutes)
-    auth: jest.fn().mockImplementation(() => mockMiddlewareImplementation),
-    // Mock any other exports from this module if they are used and need mocking
-    // e.g., generateToken: jest.fn().mockReturnValue('mock-jwt-token'),
+    // Mock the named 'auth' export directly with the implementation
+    auth: mockMiddlewareImplementation,
   };
 });
 

@@ -19,26 +19,28 @@ export default function configurePostRoutes(
   container: ServiceContainer
 ): Router {
   console.log('[[configurePostRoutes]] Function executing...');
+  console.trace('configurePostRoutes TRACE');
   const router = Router();
-  // Ensure all required services AND domain are retrieved
+  // Ensure all required services AND controllers are retrieved
   const {
-    postService,
-    actorService,
-    uploadService,
-    commentsController,
-    authService,
-    domain,
+    // postService, // Not needed directly if using mocked controller
+    // actorService,
+    // uploadService,
+    commentsController, // Keep for comment routes
+    authService, // Keep for authenticate middleware
+    // domain, // Not needed directly
+    postsController, // <<< GET Controller from container
   } = container;
 
-  // Ensure PostsController gets all 4 arguments
-  const postsController = new PostsController(
-    postService,
-    actorService,
-    uploadService,
-    domain // Ensure domain is passed
-  );
+  // Ensure postsController exists
+  if (!postsController) {
+    throw new Error('PostsController not found in service container');
+  }
+  if (!commentsController) {
+    throw new Error('CommentsController not found in service container');
+  }
 
-  // Bind controller methods to ensure 'this' context is correct
+  // Bind controller methods from the MOCKED controller
   const boundGetFeed = postsController.getFeed.bind(postsController);
   const boundGetPostById = postsController.getPostById.bind(postsController);
   const boundGetPostsByUsername =
@@ -48,19 +50,23 @@ export default function configurePostRoutes(
   const boundDeletePost = postsController.deletePost.bind(postsController);
   const boundLikePost = postsController.likePost.bind(postsController);
   const boundUnlikePost = postsController.unlikePost.bind(postsController);
+
+  // Bind comment controller methods
   const boundGetComments =
-    commentsController.getComments.bind(commentsController); // Bind comments controller too
+    commentsController.getComments.bind(commentsController);
   const boundCreateComment =
     commentsController.createComment.bind(commentsController);
   const boundDeleteComment =
     commentsController.deleteComment.bind(commentsController);
 
   // Public routes using asyncHandler
+  // Pass authService to authenticate middleware factory
   router.get('/', authenticate(authService), asyncHandler(boundGetFeed));
   router.get('/:id', asyncHandler(boundGetPostById));
   router.get('/users/:username', asyncHandler(boundGetPostsByUsername));
 
   // Protected routes using asyncHandler
+  // Pass authService to authenticate middleware factory
   router.post('/', authenticate(authService), asyncHandler(boundCreatePost));
   router.put('/:id', authenticate(authService), asyncHandler(boundUpdatePost));
   router.delete(
@@ -80,6 +86,7 @@ export default function configurePostRoutes(
   );
 
   // Comment routes using asyncHandler
+  // Pass authService to authenticate middleware factory
   router.get('/:id/comments', asyncHandler(boundGetComments));
   router.post(
     '/:id/comments',
