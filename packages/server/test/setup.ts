@@ -5,6 +5,25 @@ import { Request, Response, NextFunction } from 'express'; // Add express types 
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
   console.log('>>> jest.mock factory for @/middleware/auth EXECUTING'); // Log factory execution
+
+  // Require jwt *inside* the factory function
+  const jwt = require('jsonwebtoken');
+
+  // Define the known user ID from mockSetup for default user
+  const knownTestUserIdHex = '60a0f3f1e1b8f1a1a8b4c1c1';
+  const knownTestUsername = 'testuser';
+  const defaultMockUser = {
+    _id: knownTestUserIdHex, // Use the hex string
+    id: knownTestUserIdHex, // Use the hex string
+    preferredUsername: knownTestUsername,
+    email: 'mock@example.com',
+    isAdmin: false,
+    isVerified: true,
+    profile: {
+      /* ... */
+    },
+  } as any;
+
   const mockMiddlewareImplementation = (
     req: Request,
     res: Response,
@@ -12,47 +31,71 @@ jest.mock('@/middleware/auth', () => {
   ) => {
     console.log(
       `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
-    ); // Log middleware execution
-    // Simulate attaching user based on Authorization header for simplicity in tests
-    // IMPORTANT: This is basic simulation, real middleware is more complex
+    );
     const authHeader = req.headers.authorization;
     let user = undefined;
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      // In a real scenario, you'd verify the token
-      // Here, we just create a mock user if any Bearer token exists
-      user = {
-        _id: 'mockUserId',
-        id: 'mockUserId', // Or derive from token if needed
-        preferredUsername: 'testuser', // Use a consistent username for checks
-        email: 'mock@example.com',
-        isAdmin: false,
-        isVerified: true,
-        profile: {
-          displayName: 'Mock User',
-          bio: 'Mock Bio',
-          avatar: null,
-          banner: null,
-        },
-      } as any;
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET || 'test-jwt-secret-key'
+        );
+        // Use the actual decoded ID and username from the token
+        user = {
+          ...defaultMockUser, // Start with defaults
+          _id: (decoded as any).id, // Use ID from token
+          id: (decoded as any).id, // Use ID from token
+          preferredUsername: (decoded as any).username, // Use username from token
+        };
+        console.log(
+          '>>> Mock authenticate MIDDLEWARE - Token VERIFIED, user set from token:',
+          { id: user._id, username: user.preferredUsername }
+        );
+      } catch (err) {
+        // Handle error type safely
+        let errorMessage = 'Unknown token verification error';
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+        console.log(
+          '>>> Mock authenticate MIDDLEWARE - Token VERIFICATION FAILED',
+          errorMessage
+        );
+        // For tests, we might still want to allow progression but without a valid user,
+        // or fall back to default. Falling back to default for now.
+        // user = defaultMockUser;
+        // OR treat as unauthorized explicitly if token is bad?
+        // Let's return 401 for bad tokens
+        return res.status(401).json({ error: 'Unauthorized - Invalid Token' });
+      }
+    } else {
+      // No token provided
+      console.log('>>> Mock authenticate MIDDLEWARE - No token found');
+      // If the route requires auth, let the controller/route handler return 401/403.
+      // The middleware itself often just calls next() if no token is present,
+      // unless it's configured to reject immediately.
+      // Let's simulate passing through without setting req.user if no token.
+      user = undefined;
     }
+
     req.user = user;
     console.log(
       '>>> Mock authenticate MIDDLEWARE - req.user set to:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
-    ); // Log assigned user
+    );
     next();
   };
 
   return {
     __esModule: true,
-    // Return the factory function for authenticate
     authenticate: jest
       .fn()
       .mockImplementation(() => mockMiddlewareImplementation),
-    // Mock the named 'auth' export directly with the implementation
-    auth: mockMiddlewareImplementation,
+    auth: mockMiddlewareImplementation, // Ensure named export is also updated
   };
 });
 

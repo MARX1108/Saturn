@@ -65,10 +65,20 @@ if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
 
 // Configure default mock implementations
 const mockDate = new Date();
+// Use a valid 24-char hex string for the mock user ID
+const knownTestUserIdHex = '60a0f3f1e1b8f1a1a8b4c1c1'; // Reusing a previous mock ID for consistency
+const knownTestUserId = new ObjectId(knownTestUserIdHex);
+const knownTestUsername = 'testuser'; // From auth mock
+const knownTestPostObjectId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c3'); // Consistent mock ID
+const knownTestPostIdString = knownTestPostObjectId.toHexString();
+const knownTestPostUrl = `https://test.domain/posts/${knownTestPostIdString}`;
+const knownNonExistentObjectId = new ObjectId('ffffffffffffffffffffffff');
+const knownNonExistentIdString = knownNonExistentObjectId.toHexString();
+
 const mockActor = {
-  _id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c1'),
-  id: 'https://test.domain/users/testuser',
-  username: 'testuser@test.domain',
+  _id: knownTestUserId, // Use the ObjectId instance
+  id: `https://test.domain/users/${knownTestUsername}`,
+  username: `${knownTestUsername}@test.domain`,
   preferredUsername: 'testuser',
   displayName: 'Test User',
   name: 'Test User',
@@ -270,13 +280,13 @@ export const mockServiceContainer: ServiceContainer = {
   }),
 };
 
-// --- Define a mock Post object for responses ---
+// --- Helper Data & Mocks ---
 const mockPost = {
-  _id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c3'),
-  id: 'https://test.domain/posts/test-post-id',
+  _id: knownTestPostObjectId,
+  id: knownTestPostUrl,
   type: 'Note' as const,
-  actorId: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c1'),
-  content: 'Mock post content from controller',
+  actorId: knownTestUserId, // Use the ObjectId instance directly
+  content: 'Default mock post content',
   visibility: 'public',
   sensitive: false,
   summary: undefined,
@@ -284,60 +294,81 @@ const mockPost = {
   published: mockDate,
   createdAt: mockDate,
   updatedAt: mockDate,
-  attributedTo: 'https://test.domain/users/testuser',
+  attributedTo: `https://test.domain/users/${knownTestUsername}`,
   to: ['https://www.w3.org/ns/activitystreams#Public'],
-  cc: ['https://test.domain/users/testuser/followers'],
-  url: 'https://test.domain/posts/test-post-id',
+  cc: [`https://test.domain/users/${knownTestUsername}/followers`],
+  url: knownTestPostUrl,
   replyCount: 0,
-  likesCount: 0,
+  likesCount: 0, // Start at 0
   sharesCount: 0,
   likedBy: [],
   sharedBy: [],
   actor: {
-    id: 'https://test.domain/users/testuser',
-    username: 'testuser@test.domain',
-    preferredUsername: 'testuser',
-    displayName: 'Test User',
-    icon: undefined,
+    ...mockActor,
+    _id: knownTestUserId, // Ensure consistent ID type
+    id: `https://test.domain/users/${knownTestUsername}`,
+    preferredUsername: knownTestUsername,
   },
 } as Post;
 
-// Add mock implementations for PostsController methods
+export let isPostLikedTestState = false;
+
+// --- CONTROLLER MOCKS ---
 
 mockPostsController.createPost.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.createPost CALLED. req.user:',
+      '>>> MOCK PostsController.createPost CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
     );
-    const { content, sensitive, contentWarning } = req.body;
-    // Basic validation simulation
-    if (!content) {
+    console.log('>>> Body:', req.body);
+    console.log('>>> Files:', req.files);
+
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ error: 'Unauthorized - No user found in controller mock' });
+    }
+
+    let content = req.body.content;
+    let sensitive = req.body.sensitive;
+    let contentWarning = req.body.contentWarning;
+
+    // Handle multipart: Only require content IF no files are present
+    const hasFiles =
+      req.files && (req.files as Express.Multer.File[]).length > 0;
+    if (hasFiles) {
+      console.log('>>> Multipart detected, content check skipped.');
+      // Attempt to get fields from body anyway (might be populated by some middleware/superagent plugin)
+      content = req.body.content;
+      sensitive = req.body.sensitive;
+      contentWarning = req.body.contentWarning;
+    } else if (!content || String(content).trim() === '') {
+      // Require content only if NOT multipart
       return res.status(400).json({ error: 'Content is required' });
     }
-    // Simulate attachment handling result (if files were present)
+
+    const isSensitive = String(sensitive).toLowerCase() === 'true';
+
     const attachments = ((req.files as Express.Multer.File[]) || []).map(
       file => ({
         type: 'Document' as const,
         mediaType: file.mimetype,
-        url: `https://test.domain/media/${file.filename}`, // Example URL
+        url: `https://test.domain/media/${file.filename || 'mockfile.png'}`,
         name: file.originalname,
       })
     );
-    // Simulate success
+
     const createdPost = {
       ...mockPost,
-      content: content,
-      sensitive: sensitive === 'true',
-      contentWarning: sensitive === 'true' ? contentWarning : undefined,
+      _id: new ObjectId(),
+      content: content ? String(content) : null,
+      sensitive: isSensitive,
+      contentWarning: isSensitive ? String(contentWarning || '') : undefined,
       attachments: attachments,
-      // Simulate author based on authenticated user from mock middleware
-      actor: {
-        ...mockActor,
-        preferredUsername: req.user?.preferredUsername || 'unknown',
-      },
+      actor: { ...mockActor, preferredUsername: req.user.preferredUsername },
     };
     res.status(201).json(createdPost);
   }
@@ -346,65 +377,118 @@ mockPostsController.createPost.mockImplementation(
 mockPostsController.getPostById.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.getPostById CALLED. req.user:',
+      '>>> MOCK PostsController.getPostById CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
     );
     const postId = req.params.id;
-    // Simulate invalid ID format
+    console.log(
+      '>>> Request Post ID:',
+      postId,
+      'Known Test Post ID:',
+      knownTestPostIdString
+    );
+
     if (postId === 'invalid-id-format') {
       return res.status(400).json({ error: 'Invalid ID format' });
     }
-    // Simulate not found
+    if (postId === knownNonExistentIdString) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    // Check if it's a potentially valid but non-existent ObjectId
     try {
-      new ObjectId(postId); // Check if valid ObjectId string
-      if (postId === new ObjectId().toString()) {
-        // Simulate a random valid ID not found
-        return res.status(404).json({ error: 'Post not found' });
+      new ObjectId(postId);
+      // Add specific check if the ID matches the known test post ID used in beforeEach
+      if (
+        postId !== knownTestPostIdString &&
+        postId !== mockPost._id.toHexString()
+      ) {
+        // This checks against the dynamically generated ID from beforeEach
+        // And the static mockPost ID just in case
+        console.log(
+          `>>> ID ${postId} does not match known test ID ${knownTestPostIdString} or static mock ID`
+        );
+        // Removed the random check, rely on specific non-existent ID test case
+        // return res.status(404).json({ error: 'Post not found' });
       }
     } catch (e) {
-      // If not a valid ObjectId string, potentially treat as not found or invalid based on real logic
       return res
-        .status(404)
-        .json({ error: 'Post not found (invalid ObjectId)' });
+        .status(400)
+        .json({ error: 'Post ID format invalid (ObjectId conversion failed)' });
     }
 
-    // Simulate success - return mock post, add like status
-    const postWithLike = {
+    // Simulate success
+    const postData = {
       ...mockPost,
-      _id: new ObjectId(postId), // Use requested ID for mock response _id
-      id: `https://test.domain/posts/${postId}`, // Update other IDs too
-      url: `https://test.domain/posts/${postId}`,
-      likedByUser: !!req.user, // Simplistic: liked if user is authenticated for test
+      _id: knownTestPostObjectId,
+      id: knownTestPostUrl,
+      url: knownTestPostUrl,
+      content: 'This is a test post',
+      // FIXED: Check username for liked status
+      likedByUser:
+        !!req.user && req.user.preferredUsername === knownTestUsername,
     };
-    res.status(200).json(postWithLike);
+    res.status(200).json(postData);
   }
 );
 
 mockPostsController.getFeed.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.getFeed CALLED. req.user:',
+      '>>> MOCK PostsController.getFeed CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
     );
-    // Simulate success - return a list containing mockPost
-    // Add pagination/filtering simulation if needed later
-    const response = {
-      posts: [{ ...mockPost, likedByUser: !!req.user }],
-      total: 1,
-      // hasMore: false,
-    };
-    res.status(200).json(response);
+    console.log('>>> Query Params:', req.query);
+    try {
+      // FIXED: Check username for liked status
+      const likedByUserStatus =
+        !!req.user && req.user.preferredUsername === knownTestUsername;
+
+      // Generate MORE posts (e.g., 15)
+      const generatedPosts = Array.from({ length: 15 }).map((_, i) => ({
+        ...mockPost,
+        _id: new ObjectId(),
+        content: `Feed Post ${i + 1}`,
+        createdAt: new Date(Date.now() - i * 5000), // Vary dates
+        likedByUser: likedByUserStatus,
+        // Use the correct author structure
+        author: {
+          preferredUsername: i % 4 === 0 ? 'otheruser' : knownTestUsername, // Vary author
+        },
+      }));
+
+      let allMockPosts = generatedPosts;
+
+      const usernameFilter = req.query.username as string;
+      if (usernameFilter) {
+        allMockPosts = allMockPosts.filter(
+          p => p.author.preferredUsername === usernameFilter
+        );
+      }
+
+      const limit = parseInt((req.query.limit as string) || '10', 10);
+      const offset = parseInt((req.query.offset as string) || '0', 10);
+      const paginatedPosts = allMockPosts.slice(offset, offset + limit);
+
+      const response = {
+        posts: paginatedPosts,
+        total: allMockPosts.length,
+      };
+      res.status(200).json(response);
+    } catch (error: any) {
+      console.error('>>> ERROR inside getFeed mock:', error);
+      res.status(500).json({ error: 'Internal server error in mock getFeed' });
+    }
   }
 );
 
 mockPostsController.getPostsByUsername.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.getPostsByUsername CALLED. req.user:',
+      '>>> MOCK PostsController.getPostsByUsername CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
@@ -413,7 +497,11 @@ mockPostsController.getPostsByUsername.mockImplementation(
     if (username === 'nonexistentuser') {
       return res.status(404).json({ error: 'User not found' });
     }
-    // Simulate success
+    if (username !== knownTestUsername) {
+      // Return empty for other users unless specifically handled
+      return res.status(200).json({ posts: [], total: 0 });
+    }
+    // Simulate success for known test user
     const response = {
       posts: [
         { ...mockPost, actor: { ...mockActor, preferredUsername: username } },
@@ -427,29 +515,31 @@ mockPostsController.getPostsByUsername.mockImplementation(
 mockPostsController.updatePost.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.updatePost CALLED. req.user:',
+      '>>> MOCK PostsController.updatePost CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
     );
     const postId = req.params.id;
     const { content } = req.body;
-    // Simulate auth check (assuming authenticate middleware added req.user)
+
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    // Simulate not found
-    if (postId === new ObjectId().toString()) {
+    if (postId === knownNonExistentIdString) {
       return res.status(404).json({ error: 'Post not found' });
     }
-    // Simulate forbidden
-    if (req.user.preferredUsername !== 'testuser') {
-      // Assuming testPostId belongs to testuser
+    // FIXED: Check permission based on username comparison for mock scenario
+    if (
+      postId === knownTestPostIdString &&
+      req.user.preferredUsername !== mockPost.actor.preferredUsername
+    ) {
+      console.log(
+        `>>> Permission check FAIL: User ${req.user.preferredUsername} != Actor ${mockPost.actor.preferredUsername}`
+      );
       return res.status(403).json({ error: 'Forbidden' });
     }
-    // Simulate missing content
-    if (!content) {
+    if (!content || content.trim() === '') {
       return res.status(400).json({ error: 'Content is required' });
     }
-    // Simulate success
     res
       .status(200)
       .json({ ...mockPost, _id: new ObjectId(postId), content: content });
@@ -459,23 +549,28 @@ mockPostsController.updatePost.mockImplementation(
 mockPostsController.deletePost.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.deletePost CALLED. req.user:',
+      '>>> MOCK PostsController.deletePost CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
     );
     const postId = req.params.id;
-    // Simulate auth check
+
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    // Simulate not found
-    if (postId === new ObjectId().toString()) {
+    if (postId === knownNonExistentIdString) {
       return res.status(404).json({ error: 'Post not found' });
     }
-    // Simulate forbidden
-    if (req.user.preferredUsername !== 'testuser') {
+    // FIXED: Check permission based on username comparison for mock scenario
+    if (
+      postId === knownTestPostIdString &&
+      req.user.preferredUsername !== mockPost.actor.preferredUsername
+    ) {
+      console.log(
+        `>>> Permission check FAIL: User ${req.user.preferredUsername} != Actor ${mockPost.actor.preferredUsername}`
+      );
       return res.status(403).json({ error: 'Forbidden' });
     }
-    // Simulate success
+    isPostLikedTestState = false;
     res.status(204).send();
   }
 );
@@ -483,18 +578,27 @@ mockPostsController.deletePost.mockImplementation(
 mockPostsController.likePost.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.likePost CALLED. req.user:',
+      '>>> MOCK PostsController.likePost CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
     );
     const postId = req.params.id;
+
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    // Simulate not found / already liked / basic validation fail -> 400
-    if (postId === new ObjectId().toString() || postId === 'invalid-id') {
-      return res.status(400).json({ error: 'Bad request on like' }); // Combine 404/409/400 for simplicity
+    if (postId === knownNonExistentIdString) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    // Simulate already liked
+    if (isPostLikedTestState) {
+      return res.status(409).json({ error: 'Post already liked' });
+    }
+    // Simulate basic validation failure
+    if (postId === 'invalid-id') {
+      return res.status(400).json({ error: 'Invalid Post ID for like' });
     }
     // Simulate success
+    isPostLikedTestState = true;
     res.status(200).json({ message: 'Post liked successfully' });
   }
 );
@@ -502,18 +606,27 @@ mockPostsController.likePost.mockImplementation(
 mockPostsController.unlikePost.mockImplementation(
   async (req: Request, res: Response) => {
     console.log(
-      '>>> MOCK PostsController.unlikePost CALLED. req.user:',
+      '>>> MOCK PostsController.unlikePost CALLED. User:',
       req.user
         ? { id: req.user._id, username: req.user.preferredUsername }
         : undefined
     );
     const postId = req.params.id;
+
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    // Simulate not found / not liked / basic validation fail -> 400
-    if (postId === new ObjectId().toString() || postId === 'invalid-id') {
-      return res.status(400).json({ error: 'Bad request on unlike' }); // Combine 404/409/400 for simplicity
+    if (postId === knownNonExistentIdString) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    // Simulate not liked
+    if (!isPostLikedTestState) {
+      return res.status(409).json({ error: 'Post not liked' });
+    }
+    // Simulate basic validation failure
+    if (postId === 'invalid-id') {
+      return res.status(400).json({ error: 'Invalid Post ID for unlike' });
     }
     // Simulate success
+    isPostLikedTestState = false;
     res.status(200).json({ message: 'Post unliked successfully' });
   }
 );
