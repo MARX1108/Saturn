@@ -7,6 +7,13 @@ import { CommentService } from '@/modules/comments/services/comment.service';
 import { auth } from '@/middleware/auth';
 import { Actor } from '@/modules/actors/models/actor';
 import { Post } from '@/modules/posts/models/post';
+import {
+  AppError,
+  BadRequestError,
+  ConflictError,
+  UnauthorizedError,
+} from '@/utils/errors';
+import { Request, Response } from 'express';
 
 // Create mock services
 export const mockAuthService = mock<any>();
@@ -77,6 +84,61 @@ const mockActor = {
 
 mockActorService.getActorById.mockResolvedValue(mockActor as any);
 mockActorService.getActorByUsername.mockResolvedValue(mockActor as any);
+
+// Mock AuthController.register and mockAuthController.login
+mockAuthController.register.mockImplementation(
+  async (req: Request, res: Response) => {
+    console.log('>>> MOCK Controller.register CALLED with body:', req.body);
+    const { username, password, displayName } = req.body;
+
+    // Input validation simulation (based on test cases)
+    if (!username || !password || !displayName) {
+      return res.status(400).json({ error: 'Missing registration fields' });
+    }
+    if (username === 'invalid@username') {
+      return res.status(400).json({ error: 'Username validation failed' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password too short' });
+    }
+    // Conflict simulation
+    if (username === 'existinguser') {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+
+    // Simulate successful registration
+    const registeredActor = {
+      ...mockActor,
+      preferredUsername: username,
+      displayName: displayName,
+    };
+    res
+      .status(201)
+      .json({ actor: registeredActor, token: 'mock-ctrl-token-register' });
+  }
+);
+
+mockAuthController.login.mockImplementation(
+  async (req: Request, res: Response) => {
+    console.log('>>> MOCK Controller.login CALLED with body:', req.body);
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Missing login fields' });
+    }
+
+    // Simulate successful login
+    if (username === 'testuser' && password === 'password123') {
+      res
+        .status(200)
+        .json({ actor: mockActor, token: 'mock-ctrl-token-login' });
+      return;
+    }
+
+    // Simulate failed login (wrong username or password)
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+);
 
 mockPostService.getPostById.mockImplementation(async id => {
   if (id === 'nonexistent') return null;

@@ -18,6 +18,7 @@ const asyncHandler =
 export default function configurePostRoutes(
   container: ServiceContainer
 ): Router {
+  console.log('[[configurePostRoutes]] Function executing...');
   const router = Router();
   // Ensure all required services AND domain are retrieved
   const {

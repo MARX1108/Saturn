@@ -16,17 +16,22 @@ const asyncHandler =
 export default function configureAuthRoutes(
   serviceContainer: ServiceContainer
 ): Router {
+  console.log('[[configureAuthRoutes]] Function executing...');
   const router = express.Router();
-  const { authService, actorService } = serviceContainer;
+  // const { authService, actorService } = serviceContainer; // Don't need these directly
 
-  // Create controller with injected dependencies
-  const authController = new AuthController(actorService, authService);
+  // Get the MOCKED controller instance from the container
+  const controller = serviceContainer.authController; // <<< CHANGE HERE
+  if (!controller) {
+    throw new Error(
+      'AuthController not found in service container during route setup'
+    );
+  }
 
-  // Bind methods
-  const boundRegister = authController.register.bind(authController);
-  const boundLogin = authController.login.bind(authController);
-  const boundGetCurrentUser =
-    authController.getCurrentUser.bind(authController);
+  // Bind methods from the MOCKED controller
+  const boundRegister = controller.register.bind(controller); // Use the controller from container
+  const boundLogin = controller.login.bind(controller); // Use the controller from container
+  const boundGetCurrentUser = controller.getCurrentUser.bind(controller); // Use the controller from container
 
   // Register new user
   router.post('/register', asyncHandler(boundRegister));

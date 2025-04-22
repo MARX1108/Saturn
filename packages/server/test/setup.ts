@@ -1,6 +1,7 @@
 // Global setup for Jest tests
 import { Request, Response, NextFunction } from 'express'; // Add express types for mock
 
+// Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
   // Define the mock middleware implementation once
@@ -118,6 +119,7 @@ beforeAll(async (): Promise<void> => {
     // Make app available globally for tests
     (global as any).testApp = testApp;
     (global as any).request = request;
+    (global as any).mongoDb = mongoDb;
 
     console.log('[TEST SETUP] beforeAll finished successfully.');
   } catch (error) {

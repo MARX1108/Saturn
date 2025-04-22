@@ -8,25 +8,22 @@ import { ServiceContainer } from '../utils/container';
  * Configure and mount all application routes
  */
 export function configureRoutes(serviceContainer: ServiceContainer): Router {
-  console.log('[configureRoutes] Starting...');
+  console.log('[configureRoutes] Starting route configuration...');
   const router = express.Router();
 
-  // Mount auth routes
-  console.log('[configureRoutes] Configuring auth routes...');
+  console.log('[configureRoutes]   - Mounting /auth routes...');
   router.use('/auth', configureAuthRoutes(serviceContainer));
-  console.log('[configureRoutes] Auth routes configured.');
+  console.log('[configureRoutes]   - /auth routes mounted.');
 
-  // Mount posts routes
-  console.log('[configureRoutes] Configuring posts routes...');
+  console.log('[configureRoutes]   - Mounting /posts routes...');
   router.use('/posts', configurePostRoutes(serviceContainer));
-  console.log('[configureRoutes] Posts routes configured.');
+  console.log('[configureRoutes]   - /posts routes mounted.');
 
-  // Mount actor routes
-  console.log('[configureRoutes] Configuring actor routes...');
+  console.log('[configureRoutes]   - Mounting /actors routes...');
   router.use('/actors', configureActorRoutes(serviceContainer));
-  console.log('[configureRoutes] Actor routes configured.');
+  console.log('[configureRoutes]   - /actors routes mounted.');
 
-  console.log('[configureRoutes] Returning router...');
+  console.log('[configureRoutes] Finished configuration, returning router.');
   return router;
 }
 

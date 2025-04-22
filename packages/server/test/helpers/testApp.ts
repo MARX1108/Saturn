@@ -44,8 +44,9 @@ export async function createTestApp(db: Db, domain: string) {
   // --- TEMP: Comment out route configuration ---
   // console.log('[createTestApp] SKIPPING route configuration...');
   console.log('[createTestApp] Mock service container prepared.');
-  console.log('[createTestApp] Calling configureRoutes...');
+  console.log('[createTestApp] >>> About to mount main API router at /api');
   app.use('/api', configureRoutes(mockServiceContainer));
+  console.log('[createTestApp] <<< Main API router mounted.');
   console.log('[createTestApp] configureRoutes completed.');
 
   // Centralized error handling middleware
