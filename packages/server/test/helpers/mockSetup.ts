@@ -85,10 +85,9 @@ const mockActor = {
 mockActorService.getActorById.mockResolvedValue(mockActor as any);
 mockActorService.getActorByUsername.mockResolvedValue(mockActor as any);
 
-// Mock AuthController.register and mockAuthController.login
+// Mock AuthController methods (Remove logs)
 mockAuthController.register.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log('>>> MOCK Controller.register CALLED with body:', req.body);
     const { username, password, displayName } = req.body;
 
     // Input validation simulation (based on test cases)
@@ -120,7 +119,6 @@ mockAuthController.register.mockImplementation(
 
 mockAuthController.login.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log('>>> MOCK Controller.login CALLED with body:', req.body);
     const { username, password } = req.body;
 
     if (!username || !password) {

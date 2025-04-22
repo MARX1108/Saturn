@@ -96,32 +96,22 @@ expect.extend({
 // Setup before all tests
 beforeAll(async (): Promise<void> => {
   try {
-    console.log('[TEST SETUP] beforeAll started...');
-
     // Create MongoDB Memory Server
-    console.log('[TEST SETUP] Creating MongoMemoryServer...');
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
-    console.log('[TEST SETUP] MongoMemoryServer created at:', mongoUri);
 
     // Connect to the in-memory database
-    console.log('[TEST SETUP] Connecting MongoClient...');
     mongoClient = new MongoClient(mongoUri);
     await mongoClient.connect();
     mongoDb = mongoClient.db();
-    console.log('[TEST SETUP] MongoClient connected.');
 
     // Create test app with proper configuration
-    console.log('[TEST SETUP] Calling createTestApp...');
     testApp = await createTestApp(mongoDb, process.env.DOMAIN || 'test.domain');
-    console.log('[TEST SETUP] createTestApp completed.');
 
     // Make app available globally for tests
     (global as any).testApp = testApp;
     (global as any).request = request;
     (global as any).mongoDb = mongoDb;
-
-    console.log('[TEST SETUP] beforeAll finished successfully.');
   } catch (error) {
     console.error('Failed to setup test environment:', error);
     throw error;

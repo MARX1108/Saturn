@@ -124,26 +124,13 @@ export abstract class MongoRepository<T extends Document>
     update: UpdateFilter<T>,
     options?: FindOptions<T>
   ): Promise<WithId<T> | null> {
-    console.log(
-      '>>> BaseRepo.findOneAndUpdate called with filter:',
-      JSON.stringify(filter),
-      'update:',
-      JSON.stringify(update)
-    );
     const result = await this.collection.findOneAndUpdate(filter, update, {
       ...options,
       returnDocument: 'after',
     } as any);
-    console.log(
-      '>>> BaseRepo.findOneAndUpdate raw result:',
-      JSON.stringify(result)
-    );
     if (result) {
       return result as WithId<T>;
     } else {
-      console.log(
-        '>>> BaseRepo.findOneAndUpdate returning null (result was falsy)'
-      );
       return null;
     }
   }
