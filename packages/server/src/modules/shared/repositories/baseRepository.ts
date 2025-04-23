@@ -12,6 +12,7 @@ import {
   WithId,
   CountDocumentsOptions,
   DeleteOptions,
+  FindOneAndUpdateOptions,
 } from 'mongodb';
 
 export interface BaseRepository<T extends Document> {
@@ -27,7 +28,7 @@ export interface BaseRepository<T extends Document> {
   findOneAndUpdate(
     filter: Filter<T>,
     update: UpdateFilter<T>,
-    options?: FindOptions<T>
+    options?: FindOneAndUpdateOptions
   ): Promise<WithId<T> | null>;
   countDocuments(
     filter?: Filter<T>,
@@ -121,13 +122,14 @@ export abstract class MongoRepository<T extends Document>
   async findOneAndUpdate(
     filter: Filter<T>,
     update: UpdateFilter<T>,
-    options?: FindOptions<T>
+    options?: FindOneAndUpdateOptions
   ): Promise<WithId<T> | null> {
-    const result = await this.collection.findOneAndUpdate(filter, update, {
-      ...options,
-      returnDocument: 'after',
-    } as any);
-    return result?.value || null;
+    const result = await this.collection.findOneAndUpdate(
+      filter,
+      update,
+      options
+    );
+    return result as WithId<T> | null;
   }
 
   async deleteById(id: string | ObjectId): Promise<boolean> {
