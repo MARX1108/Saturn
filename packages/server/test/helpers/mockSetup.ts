@@ -140,13 +140,14 @@ mockAuthController.login.mockImplementation((req: Request, res: Response) => {
   return res.status(401).json({ error: 'Invalid credentials' });
 });
 
-mockPostService.getPostById.mockImplementation(async id => {
-  if (id === 'nonexistent') return null;
+mockPostService.getPostById.mockImplementation((id: string) => {
+  if (id === 'nonexistent') return Promise.resolve(null);
   const postObjectId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c3');
   const postUrl = `https://test.domain/posts/${id}`;
   const actorObjectId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c1');
   const actorApId = 'https://test.domain/users/testuser';
-  return {
+
+  const post: Post = {
     _id: postObjectId,
     id: postUrl,
     type: 'Note' as const,
@@ -176,7 +177,9 @@ mockPostService.getPostById.mockImplementation(async id => {
       displayName: 'Test User',
       icon: undefined,
     },
-  } as Post; // Ensure the mock return type matches Post model
+  };
+
+  return Promise.resolve(post);
 });
 
 mockPostService.getFeed.mockResolvedValue({

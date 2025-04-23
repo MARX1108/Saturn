@@ -5,7 +5,8 @@ import { ActorService } from '@/modules/actors/services/actorService';
 import { NotificationService } from '@/modules/notifications/services/notification.service';
 import { AppError, ErrorType } from '@/utils/errors';
 import { ObjectId } from 'mongodb';
-import { Actor } from '@/modules/actors/models/actor';
+import { Actor as _Actor } from '@/modules/actors/models/actor';
+import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 
 // Define DTOs for service method parameters here
 export interface CreatePostData {
@@ -32,7 +33,8 @@ export class PostService {
   constructor(
     private postRepository: PostRepository,
     private actorService: ActorService,
-    private domain: string
+    private domain: string,
+    private actorRepository: ActorRepository
   ) {}
 
   // Setter for NotificationService
@@ -161,22 +163,31 @@ export class PostService {
   }
 
   // Add getPostsByUsername - DEFERRED IMPLEMENTATION
-  getPostsByUsername(
+  async getPostsByUsername(
     username: string,
     options: { limit: number; offset: number }
-  ): Promise<{ posts: Post[]; total: number; limit: number; offset: number }> {
-    // TODO: Implement this correctly. Needs to find actor by username,
-    // then find posts by actorId, potentially requiring ActorRepository injection
-    // or moving logic to PostRepository.
-    console.warn(
-      `PostService.getPostsByUsername called but not fully implemented for: ${username}`
-    );
-    return {
-      posts: [],
-      total: 0,
-      limit: options.limit,
-      offset: options.offset,
-    };
+  ): Promise<{ posts: Post[]; total: number; offset: number }> {
+    try {
+      const actor = await this.actorRepository.findByUsername(username);
+
+      if (!actor) {
+        return { posts: [], total: 0, offset: options.offset };
+      }
+
+      const [posts, total] = await Promise.all([
+        this.postRepository.findByActorId(actor._id.toString(), options),
+        this.postRepository.countByActorId(actor._id.toString()),
+      ]);
+
+      return {
+        posts,
+        total,
+        offset: options.offset,
+      };
+    } catch (error) {
+      console.error(`Error fetching posts for username ${username}:`, error);
+      return { posts: [], total: 0, offset: options.offset };
+    }
   }
 
   // --- Update Post ---

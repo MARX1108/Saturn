@@ -106,7 +106,7 @@ export async function sendFollowRequest(
 
     // Send signed request to their inbox
     const response = await sendSignedRequest(
-      toActor.inbox,
+      String(toActor.inbox),
       followActivity,
       privateKey,
       `${fromActor.id}#main-key`

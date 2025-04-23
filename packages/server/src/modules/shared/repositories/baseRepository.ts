@@ -96,7 +96,9 @@ export abstract class MongoRepository<T extends Document>
   ): Promise<WithId<T>> {
     const objectId = this.toObjectId(id);
     const docToInsert = { ...data, _id: objectId };
-    await this.collection.insertOne(docToInsert as any);
+    await this.collection.insertOne(
+      docToInsert as unknown as OptionalUnlessRequiredId<T>
+    );
     return docToInsert as WithId<T>;
   }
 
@@ -105,16 +107,20 @@ export abstract class MongoRepository<T extends Document>
     data: UpdateFilter<T> | Partial<T>
   ): Promise<boolean> {
     const objectId = this.toObjectId(id);
-    const updateDoc =
-      (data as any).$set ||
-      (data as any).$inc ||
-      (data as any).$addToSet ||
-      (data as any).$pull
-        ? data
-        : { $set: data };
+
+    const isUpdateOperator =
+      '$set' in data ||
+      '$inc' in data ||
+      '$addToSet' in data ||
+      '$pull' in data;
+
+    const updateDoc = isUpdateOperator
+      ? (data as UpdateFilter<T>)
+      : ({ $set: data } as UpdateFilter<T>);
+
     const result = await this.collection.updateOne(
       { _id: objectId } as Filter<T>,
-      updateDoc as any
+      updateDoc
     );
     return result.modifiedCount > 0;
   }

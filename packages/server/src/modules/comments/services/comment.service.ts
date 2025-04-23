@@ -227,8 +227,8 @@ export class CommentService {
     }
   }
 
-  async getComments(postId: string): Promise<Comment[]> {
+  getComments(postId: string): Promise<Comment[]> {
     // Implementation
-    return [];
+    return Promise.resolve([]);
   }
 }

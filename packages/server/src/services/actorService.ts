@@ -58,7 +58,10 @@ export class ActorService {
     };
 
     // Hash the password before saving
-    const hashedPassword = await bcryptjs.hash(actorInputData.password, 10);
+    const hashedPassword = await bcryptjs.hash(
+      String(actorInputData.password),
+      10
+    );
     actor.password = hashedPassword; // Replace the plain password with the hashed one
 
     // Wrap repository call in a try-catch block

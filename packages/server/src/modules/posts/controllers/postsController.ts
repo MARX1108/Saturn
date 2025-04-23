@@ -282,8 +282,7 @@ export class PostsController {
       // Calculate offset from page and limit
       const offset = (page - 1) * limit;
 
-      // TODO: Re-enable when PostService.getPostsByUsername is implemented correctly
-      /*
+      // Call the service method to get posts by username
       const result = await this.postService.getPostsByUsername(username, {
         limit,
         offset,
@@ -292,23 +291,17 @@ export class PostsController {
       // Format posts
       const formattedPosts = await Promise.all(
         result.posts.map((post: Post) =>
-          this.formatPostResponse(post, req.user?.id || undefined)
+          this.formatPostResponse(post, req.user?._id?.toString() || undefined)
         )
       );
 
       // Calculate if there are more posts
-      const hasMore = result.offset + result.posts.length < result.total;
+      const hasMore = offset + formattedPosts.length < result.total;
 
       res.json({
         posts: formattedPosts,
         hasMore,
       });
-      */
-      // Placeholder response until service method is fixed
-      console.warn(
-        `getPostsByUsername called in controller but service method is pending implementation for username: ${username}`
-      );
-      res.json({ posts: [], hasMore: false });
     } catch (error) {
       next(error);
     }

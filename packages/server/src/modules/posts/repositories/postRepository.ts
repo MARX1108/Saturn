@@ -127,4 +127,22 @@ export class PostRepository extends MongoRepository<Post> {
     } as Filter<Post>);
     return result.deletedCount > 0;
   }
+
+  async findByActorId(
+    actorId: string,
+    options: { limit: number; offset: number }
+  ): Promise<Post[]> {
+    const objectId = new ObjectId(actorId);
+    return this.collection
+      .find({ actorId: objectId })
+      .sort({ createdAt: -1 })
+      .skip(options.offset)
+      .limit(options.limit)
+      .toArray();
+  }
+
+  async countByActorId(actorId: string): Promise<number> {
+    const objectId = new ObjectId(actorId);
+    return this.collection.countDocuments({ actorId: objectId });
+  }
 }

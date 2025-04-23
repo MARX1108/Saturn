@@ -69,7 +69,7 @@ export class ActorRepository extends MongoRepository<Actor> {
       return this.collection.findOne({ _id: objectId });
     } catch (error) {
       // Handle invalid ObjectId strings gracefully
-      console.error(`Invalid ObjectId format: ${id}`, error);
+      console.error(`Invalid ObjectId format: ${String(id)}`, error);
       return null;
     }
   }

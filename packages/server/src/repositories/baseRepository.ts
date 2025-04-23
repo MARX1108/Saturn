@@ -34,7 +34,7 @@ export abstract class MongoRepository<T extends Document>
       } as Filter<T>);
       return result ? ({ ...result, _id: undefined } as unknown as T) : null; // Map `WithId<T>` to `T`
     } catch (error) {
-      console.error(`Error finding document by ID: ${error}`);
+      console.error(`Error finding document by ID: ${String(error)}`);
       return null;
     }
   }
