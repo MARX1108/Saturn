@@ -90,11 +90,11 @@ export class PostService {
 
     // Adjust to/cc based on visibility
     if (newPost.visibility === 'followers') {
-      newPost.to = [actor.followers!]; // Send to followers collection
+      newPost.to = [actor.followers]; // Send to followers collection
       newPost.cc = []; // Maybe add mentions later
     } else if (newPost.visibility === 'public') {
       newPost.to = ['https://www.w3.org/ns/activitystreams#Public'];
-      newPost.cc = [actor.followers!]; // Also CC followers
+      newPost.cc = [actor.followers]; // Also CC followers
     } else {
       // Handle 'direct' or 'unlisted' - requires specific recipients
       newPost.to = []; // Requires mentions or specific actor IDs

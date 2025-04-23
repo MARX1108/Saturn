@@ -31,10 +31,11 @@ export class ActorRepository extends MongoRepository<Actor> {
     updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>>
   ): Promise<Actor | null> {
     const objectId = typeof id === 'string' ? new ObjectId(id) : id;
-    // Use findOneAndUpdate to get the updated document
+    // Use findOneAndUpdate to get the updated document, returning the document *after* update
     return this.findOneAndUpdate(
       { _id: objectId } as Filter<Actor>, // Filter by ObjectId
-      { $set: { ...updates, updatedAt: new Date() } }
+      { $set: { ...updates, updatedAt: new Date() } },
+      { returnDocument: 'after' } // Option to return the updated document
     );
   }
 

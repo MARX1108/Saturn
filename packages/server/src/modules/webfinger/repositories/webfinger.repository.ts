@@ -1,8 +1,13 @@
-import { Db } from "mongodb";
-import { MongoRepository } from "../../shared/repositories/baseRepository";
+import { Db } from 'mongodb';
+import { MongoRepository } from '../../shared/repositories/baseRepository';
 
 // Define property value types for Webfinger
-type WebfingerPropertyValue = string | number | boolean | null | WebfingerPropertyObject;
+type WebfingerPropertyValue =
+  | string
+  | number
+  | boolean
+  | null
+  | WebfingerPropertyObject;
 
 interface WebfingerPropertyObject {
   [key: string]: WebfingerPropertyValue | WebfingerPropertyValue[];
@@ -25,7 +30,7 @@ interface WebfingerResource {
 
 export class WebfingerRepository extends MongoRepository<WebfingerResource> {
   constructor(db: Db) {
-    super(db, "webfinger");
+    super(db, 'webfinger');
 
     // Create indexes for common webfinger queries
     this.collection.createIndex({ subject: 1 }, { unique: true });

@@ -207,7 +207,7 @@ export class CommentService {
 
       if (
         mentionedUser &&
-        mentionedUser._id!.toHexString() !==
+        mentionedUser._id.toHexString() !==
           (typeof authorId === 'string' ? authorId : authorId.toHexString())
       ) {
         const commentIdForNotification =
@@ -215,7 +215,7 @@ export class CommentService {
 
         const notificationDto: CreateNotificationDto = {
           type: NotificationType.MENTION,
-          recipientUserId: mentionedUser._id!.toHexString(),
+          recipientUserId: mentionedUser._id.toHexString(),
           actorUserId:
             typeof authorId === 'string' ? authorId : authorId.toHexString(),
           content: `mentioned you in a comment: ${content.substring(0, 50)}...`,

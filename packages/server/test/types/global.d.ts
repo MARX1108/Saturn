@@ -6,6 +6,8 @@ import { UploadService } from '@/modules/media/services/upload.service';
 import { NotificationService } from '@/modules/notifications/services/notification.service';
 import { CommentService } from '@/modules/comments/services/comment.service';
 import { Express } from 'express';
+import { Db } from 'mongodb';
+import request, { SuperTest, Test } from 'supertest';
 
 declare global {
   var testApp: Express;
@@ -15,6 +17,8 @@ declare global {
   var mockUploadService: DeepMockProxy<UploadService>;
   var mockNotificationService: DeepMockProxy<NotificationService>;
   var mockCommentService: DeepMockProxy<CommentService>;
+  var request: typeof request;
+  var mongoDb: Db;
 
   namespace NodeJS {
     interface Global {
@@ -25,6 +29,8 @@ declare global {
       mockUploadService: DeepMockProxy<UploadService>;
       mockNotificationService: DeepMockProxy<NotificationService>;
       mockCommentService: DeepMockProxy<CommentService>;
+      request: typeof request;
+      mongoDb: Db;
     }
   }
 }

@@ -1,6 +1,6 @@
-import multer from "multer";
-import path from "path";
-import fs from "fs/promises"; // Use async promises version
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises'; // Use async promises version
 
 export class UploadService {
   /**
@@ -9,7 +9,7 @@ export class UploadService {
    * @returns Configured multer storage
    */
   private configureStorage(uploadDir?: string): multer.StorageEngine {
-    const defaultDir = path.join(process.cwd(), "uploads");
+    const defaultDir = path.join(process.cwd(), 'uploads');
     const destination = uploadDir || defaultDir;
 
     return multer.diskStorage({
@@ -18,11 +18,11 @@ export class UploadService {
           await fs.mkdir(destination, { recursive: true });
           cb(null, destination);
         } catch (err) {
-          cb(err instanceof Error ? err : new Error(String(err)), "");
+          cb(err instanceof Error ? err : new Error(String(err)), '');
         }
       },
       filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
       },
     });
@@ -43,10 +43,10 @@ export class UploadService {
       storage: this.configureStorage(options?.uploadDir),
       limits: { fileSize: fileSizeLimit },
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith("image/")) {
+        if (file.mimetype.startsWith('image/')) {
           cb(null, true); // Accept file
         } else {
-          cb(new Error("Invalid file type: Only image files are allowed.")); // Reject file
+          cb(new Error('Invalid file type: Only image files are allowed.')); // Reject file
         }
       },
     });
@@ -64,17 +64,17 @@ export class UploadService {
   }): multer.Multer {
     const fileSizeLimit = (options?.fileSizeLimitMB || 10) * 1024 * 1024; // Default 10MB
     const allowedTypes = options?.allowedTypes || [
-      "image/",
-      "video/",
-      "audio/",
+      'image/',
+      'video/',
+      'audio/',
     ];
 
     return multer({
       storage: this.configureStorage(options?.uploadDir),
       limits: { fileSize: fileSizeLimit },
       fileFilter: (req, file, cb) => {
-        const isAllowed = allowedTypes.some((type) =>
-          file.mimetype.startsWith(type),
+        const isAllowed = allowedTypes.some(type =>
+          file.mimetype.startsWith(type)
         );
 
         if (isAllowed) {
@@ -82,8 +82,8 @@ export class UploadService {
         } else {
           cb(
             new Error(
-              `Invalid file type: Only ${allowedTypes.join(", ").replace(/\//g, "")} files are allowed.`,
-            ),
+              `Invalid file type: Only ${allowedTypes.join(', ').replace(/\//g, '')} files are allowed.`
+            )
           ); // Reject file
         }
       },
@@ -100,7 +100,7 @@ export class UploadService {
   public async moveUploadedFile(
     file: Express.Multer.File,
     targetDir: string,
-    customFilename?: string,
+    customFilename?: string
   ): Promise<{
     path: string;
     filename: string;

@@ -41,10 +41,6 @@
   - Briefly check key dependency versions (`express`, `mongodb`, `typescript`) listed in `packages/server/package.json` (Step 9).
   - Are there signs of API documentation generation or deployment scripts (Dockerfile)? (Step 10).
 
-
-
-
-
 **Conclusion:**
 
 The server is currently in a **fragile state** despite the successful Jest refactoring. The immediate next phase must focus entirely on **achieving type safety (fixing all `tsc` errors)**. Only after the codebase compiles cleanly can we reliably address the failing tests, implement missing features (validation, rate limiting), complete module integration, and improve test coverage.
@@ -59,7 +55,6 @@ The server is currently in a **fragile state** despite the successful Jest refac
 6.  **Complete Feature Integration:** Ensure `comments` and `notifications` routes are correctly mounted and functional.
 7.  **Write Missing Tests:** Add unit/integration tests for `comments`, `notifications`, and other uncovered areas.
 
-
 Revised Roadmap V2: packages/server Stabilization & Testing
 Goal: Transform the packages/server codebase into a stable, type-safe, reliably tested, and maintainable foundation ready for further development and eventual production deployment.
 
@@ -70,7 +65,7 @@ Goal: Eliminate all TypeScript compilation errors (tsc --noEmit passes cleanly),
 
 Tasks:
 
-Install Missing @types: Identify any remaining missing @types/* packages flagged by tsc and install them (yarn add --dev ...).
+Install Missing @types: Identify any remaining missing @types/\* packages flagged by tsc and install them (yarn add --dev ...).
 
 Consolidate Core Types:
 
@@ -105,13 +100,13 @@ Goal: Ensure all existing tests pass reliably, test files are correctly located,
 
 Tasks:
 
-Consolidate Test Files: Move all test files (*.test.ts) from src/ subdirectories (like src/tests/, src/modules/posts/services/__tests__/) into the appropriate subdirectories under the top-level packages/server/test/ directory (e.g., test/services, test/repositories, test/routes). Ensure jest.config.js roots is just ['<rootDir>/test'].
+Consolidate Test Files: Move all test files (\*.test.ts) from src/ subdirectories (like src/tests/, src/modules/posts/services/**tests**/) into the appropriate subdirectories under the top-level packages/server/test/ directory (e.g., test/services, test/repositories, test/routes). Ensure jest.config.js roots is just ['<rootDir>/test'].
 
 Standardize Mock Access:
 
 Decide on one method for sharing mocks from test/helpers/mockSetup.ts (either exporting individual mocks OR using global. consistently). Using direct imports/exports is generally cleaner than global.
 
-Refactor mockSetup.ts and all test files (test/routes/*.test.ts, test/services/*.test.ts, etc.) to use the chosen consistent pattern for accessing mocks in beforeEach (mockReset) and within test cases (mockResolvedValue, toHaveBeenCalledWith). Eliminate the mockReset TypeErrors.
+Refactor mockSetup.ts and all test files (test/routes/_.test.ts, test/services/_.test.ts, etc.) to use the chosen consistent pattern for accessing mocks in beforeEach (mockReset) and within test cases (mockResolvedValue, toHaveBeenCalledWith). Eliminate the mockReset TypeErrors.
 
 Fix Mock Authentication (401s): Ensure the chosen mock authentication strategy (likely jest.mock('@/middleware/auth', ...) in setup.ts) is correctly implemented and effectively bypasses auth checks for all necessary test scenarios. Debug why it previously failed for POST /api/auth/login and GET /api/posts.
 

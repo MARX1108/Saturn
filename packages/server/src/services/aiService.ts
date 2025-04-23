@@ -1,4 +1,4 @@
-import { Collection, Db } from "mongodb";
+import { Collection, Db } from 'mongodb';
 
 export interface AIAnalysisResult {
   sentiment: string;
@@ -11,7 +11,7 @@ export class AIService {
   private contentCollection: Collection;
 
   constructor(db: Db) {
-    this.contentCollection = db.collection("aiAnalysis");
+    this.contentCollection = db.collection('aiAnalysis');
 
     // Create indexes
     this.contentCollection.createIndex({ contentId: 1 }, { unique: true });
@@ -26,7 +26,7 @@ export class AIService {
    */
   async analyzeContent(
     content: string,
-    contentId?: string,
+    contentId?: string
   ): Promise<AIAnalysisResult> {
     // In a real implementation, this would call an AI service API
     // For now, we'll use a simple mock implementation
@@ -49,7 +49,7 @@ export class AIService {
             createdAt: new Date(),
           },
         },
-        { upsert: true },
+        { upsert: true }
       );
     }
 
@@ -62,12 +62,17 @@ export class AIService {
    * @returns Previous analysis or null if not found
    */
   async getPreviousAnalysis(
-    contentId: string,
+    contentId: string
   ): Promise<AIAnalysisResult | null> {
     const result = await this.contentCollection.findOne({ contentId });
     if (!result) return null;
 
-    const { _id, content: _content, createdAt: _createdAt, ...analysisData } = result;
+    const {
+      _id,
+      content: _content,
+      createdAt: _createdAt,
+      ...analysisData
+    } = result;
     return analysisData as AIAnalysisResult;
   }
 
@@ -79,31 +84,31 @@ export class AIService {
    */
   async generateRecommendation(
     userPreferences: string[],
-    _context?: string,
+    _context?: string
   ): Promise<string> {
     // In a real implementation, this would call an AI model API
     // For demo purposes, we'll return a simple mock response
     return `Based on your interest in ${userPreferences.join(
-      ", ",
+      ', '
     )}, we recommend exploring content related to ${userPreferences[0]}.`;
   }
 
   // Private helper methods for the mock implementation
   private mockSentimentAnalysis(text: string): string {
-    const positiveWords = ["good", "great", "excellent", "happy", "positive"];
-    const negativeWords = ["bad", "poor", "terrible", "sad", "negative"];
+    const positiveWords = ['good', 'great', 'excellent', 'happy', 'positive'];
+    const negativeWords = ['bad', 'poor', 'terrible', 'sad', 'negative'];
 
     const lowerText = text.toLowerCase();
-    const positiveCount = positiveWords.filter((word) =>
-      lowerText.includes(word),
+    const positiveCount = positiveWords.filter(word =>
+      lowerText.includes(word)
     ).length;
-    const negativeCount = negativeWords.filter((word) =>
-      lowerText.includes(word),
+    const negativeCount = negativeWords.filter(word =>
+      lowerText.includes(word)
     ).length;
 
-    if (positiveCount > negativeCount) return "positive";
-    if (negativeCount > positiveCount) return "negative";
-    return "neutral";
+    if (positiveCount > negativeCount) return 'positive';
+    if (negativeCount > positiveCount) return 'negative';
+    return 'neutral';
   }
 
   private extractTopics(text: string): string[] {
@@ -112,12 +117,12 @@ export class AIService {
     const words = text
       .toLowerCase()
       .split(/\W+/)
-      .filter((w) => w.length > 4);
+      .filter(w => w.length > 4);
 
     // Get unique words that might be topics (simple implementation)
-    words.forEach((word) => {
+    words.forEach(word => {
       if (
-        !["about", "these", "their", "there", "where", "which"].includes(word)
+        !['about', 'these', 'their', 'there', 'where', 'which'].includes(word)
       ) {
         topics.add(word);
       }
@@ -128,11 +133,11 @@ export class AIService {
 
   private calculateToxicity(text: string): number {
     // Simple mock toxicity detection
-    const toxicWords = ["hate", "stupid", "dumb", "idiot", "fool"];
+    const toxicWords = ['hate', 'stupid', 'dumb', 'idiot', 'fool'];
     const lowerText = text.toLowerCase();
 
-    const toxicCount = toxicWords.filter((word) =>
-      lowerText.includes(word),
+    const toxicCount = toxicWords.filter(word =>
+      lowerText.includes(word)
     ).length;
     return Math.min(toxicCount / 5, 1); // Normalize between 0-1
   }

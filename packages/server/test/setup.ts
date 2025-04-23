@@ -1,5 +1,7 @@
 // Global setup for Jest tests
 import { Request, Response, NextFunction } from 'express'; // Add express types for mock
+import { Actor } from '@/modules/actors/models/actor'; // Added import
+import { JwtPayload } from 'jsonwebtoken'; // Added import
 
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
@@ -12,6 +14,7 @@ jest.mock('@/middleware/auth', () => {
   // Define the known user ID from mockSetup for default user
   const knownTestUserIdHex = '60a0f3f1e1b8f1a1a8b4c1c1';
   const knownTestUsername = 'testuser';
+
   const defaultMockUser = {
     _id: knownTestUserIdHex, // Use the hex string
     id: knownTestUserIdHex, // Use the hex string
@@ -22,7 +25,7 @@ jest.mock('@/middleware/auth', () => {
     profile: {
       /* ... */
     },
-  } as any;
+  } as Actor; // Replaced 'any' with 'Actor'
 
   const mockMiddlewareImplementation = (
     req: Request,
@@ -42,13 +45,34 @@ jest.mock('@/middleware/auth', () => {
           token,
           process.env.JWT_SECRET || 'test-jwt-secret-key'
         );
-        // Use the actual decoded ID and username from the token
-        user = {
-          ...defaultMockUser, // Start with defaults
-          _id: (decoded as any).id, // Use ID from token
-          id: (decoded as any).id, // Use ID from token
-          preferredUsername: (decoded as any).username, // Use username from token
-        };
+
+        // Type guard and cast for decoded payload
+        if (
+          typeof decoded === 'object' &&
+          decoded !== null &&
+          'id' in decoded &&
+          'username' in decoded
+        ) {
+          // Use inline type for the cast
+          const payload = decoded as { id: string; username: string };
+          user = {
+            ...defaultMockUser,
+            _id: payload.id, // Use validated payload
+            id: payload.id,
+            preferredUsername: payload.username,
+          };
+        } else {
+          // Handle unexpected token structure (e.g., string or incorrect object)
+          console.error(
+            '>>> Mock authenticate: Unexpected JWT payload structure:',
+            decoded
+          );
+          // Decide how to handle this - fail, fallback, etc. Falling back to default for now.
+          // Consider returning 401? user = undefined;
+          // Setting user explicitly undefined if token is bad/unexpected
+          user = undefined;
+        }
+
         // console.log( // Removed log block
         //   '>>> Mock authenticate MIDDLEWARE - Token VERIFIED, user set from token:',
         //   { id: user._id, username: user.preferredUsername }
@@ -112,7 +136,8 @@ import { MongoClient, Db } from 'mongodb';
 // import { setupTestDb, teardownTestDb } from './helpers/testUtils';
 
 import { createTestApp } from './helpers/testApp';
-import request from 'supertest';
+import request, { SuperTest, Test } from 'supertest'; // Ensured SuperTest, Test are imported
+import { Express } from 'express'; // Ensured Express is imported
 
 // Set environment variables for testing
 process.env.NODE_ENV = 'test';
@@ -129,7 +154,7 @@ jest.setTimeout(30000);
 let mongoServer: MongoMemoryServer;
 let mongoClient: MongoClient;
 let mongoDb: Db;
-let testApp: Express.Application;
+let testApp: Express;
 
 // Configure global Jest matchers
 expect.extend({
@@ -166,10 +191,10 @@ beforeAll(async (): Promise<void> => {
     // Create test app with proper configuration
     testApp = await createTestApp(mongoDb, process.env.DOMAIN || 'test.domain');
 
-    // Make app available globally for tests
-    (global as any).testApp = testApp;
-    (global as any).request = request;
-    (global as any).mongoDb = mongoDb;
+    // Make app available globally for tests (using declarations from global.d.ts)
+    global.testApp = testApp;
+    global.request = request; // Assign the supertest function itself
+    global.mongoDb = mongoDb;
   } catch (error) {
     // console.error('Failed to setup test environment:', error); // Removed log
     throw error;

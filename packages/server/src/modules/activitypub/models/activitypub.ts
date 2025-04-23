@@ -1,6 +1,6 @@
 // ActivityPub models for the activitypub module
 export interface ActivityPubObject {
-  "@context": string | string[];
+  '@context': string | string[];
   id: string;
   type: string;
   [key: string]: any;

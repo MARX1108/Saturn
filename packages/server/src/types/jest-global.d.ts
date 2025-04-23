@@ -1,6 +1,6 @@
 // This file provides better typing support for Jest globals
 
-import "@jest/globals";
+import '@jest/globals';
 
 declare global {
   // Add any additional Jest types you might need

@@ -44,21 +44,21 @@ This project uses Jest for testing. The testing configuration is defined in:
 ```javascript
 // In packages/client/jest.config.js
 module.exports = {
-  preset: "ts-jest",
-  testEnvironment: "jsdom",
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom',
   setupFilesAfterEnv: [
-    "<rootDir>/src/test/setup.ts",
-    "<rootDir>/jest.setup.js",
+    '<rootDir>/src/test/setup.ts',
+    '<rootDir>/jest.setup.js',
   ],
   moduleNameMapper: {
-    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-    "^@/(.*)$": "<rootDir>/src/$1",
-    "^import\\.meta\\.env\\.(.*)$": "<rootDir>/src/test/environment.ts"
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^import\\.meta\\.env\\.(.*)$': '<rootDir>/src/test/environment.ts',
   },
-  testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
+  testMatch: ['<rootDir>/src/**/*.test.{ts,tsx}'],
   transform: {
-    "^.+\\.(ts|tsx)$": [
-      "ts-jest",
+    '^.+\\.(ts|tsx)$': [
+      'ts-jest',
       {
         isolatedModules: true,
         diagnostics: {
@@ -67,15 +67,15 @@ module.exports = {
       },
     ],
   },
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   collectCoverageFrom: [
-    "src/**/*.{ts,tsx}",
-    "!src/**/*.d.ts",
-    "!src/vite-env.d.ts",
-    "!**/node_modules/**",
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/vite-env.d.ts',
+    '!**/node_modules/**',
   ],
   globals: {
-    "ts-jest": {
+    'ts-jest': {
       isolatedModules: true,
     },
   },
@@ -87,14 +87,14 @@ For the server package:
 ```javascript
 // In packages/server/jest.config.js
 module.exports = {
-  preset: "ts-jest",
-  testEnvironment: "node",
-  roots: ["<rootDir>/src", "<rootDir>/test"],
-  testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src', '<rootDir>/test'],
+  testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   globals: {
-    "ts-jest": {
+    'ts-jest': {
       isolatedModules: true,
     },
   },
@@ -104,12 +104,14 @@ module.exports = {
 ### Running Tests
 
 To run tests for the client package:
+
 ```bash
 cd packages/client
 yarn test
 ```
 
 To run tests for the server package:
+
 ```bash
 cd packages/server
 yarn test

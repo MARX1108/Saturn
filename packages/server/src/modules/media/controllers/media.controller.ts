@@ -1,6 +1,6 @@
 // Media controller implementation
-import { Request, Response } from "express";
-import { MediaService } from "../services/media.service";
+import { Request, Response } from 'express';
+import { MediaService } from '../services/media.service';
 
 export class MediaController {
   private service: MediaService;
@@ -13,10 +13,10 @@ export class MediaController {
   async uploadMedia(req: Request, res: Response): Promise<void> {
     try {
       // Implementation would go here
-      res.status(501).json({ message: "Not implemented yet" });
+      res.status(501).json({ message: 'Not implemented yet' });
     } catch (error) {
-      console.error("Error uploading media:", error);
-      res.status(500).json({ error: "Failed to upload media" });
+      console.error('Error uploading media:', error);
+      res.status(500).json({ error: 'Failed to upload media' });
     }
   }
 
@@ -24,10 +24,10 @@ export class MediaController {
   async getMedia(req: Request, res: Response): Promise<void> {
     try {
       // Implementation would go here
-      res.status(501).json({ message: "Not implemented yet" });
+      res.status(501).json({ message: 'Not implemented yet' });
     } catch (error) {
-      console.error("Error retrieving media:", error);
-      res.status(500).json({ error: "Failed to retrieve media" });
+      console.error('Error retrieving media:', error);
+      res.status(500).json({ error: 'Failed to retrieve media' });
     }
   }
 
@@ -35,10 +35,10 @@ export class MediaController {
   async deleteMedia(req: Request, res: Response): Promise<void> {
     try {
       // Implementation would go here
-      res.status(501).json({ message: "Not implemented yet" });
+      res.status(501).json({ message: 'Not implemented yet' });
     } catch (error) {
-      console.error("Error deleting media:", error);
-      res.status(500).json({ error: "Failed to delete media" });
+      console.error('Error deleting media:', error);
+      res.status(500).json({ error: 'Failed to delete media' });
     }
   }
 }

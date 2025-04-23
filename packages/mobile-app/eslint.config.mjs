@@ -11,7 +11,7 @@ import globals from 'globals';
 export default [
   // Base ESLint recommended rules
   eslint.configs.recommended,
-  
+
   // TypeScript configuration
   {
     files: ['**/*.{ts,tsx}'],
@@ -22,9 +22,9 @@ export default [
         ecmaVersion: 'latest',
         sourceType: 'module',
         ecmaFeatures: {
-          jsx: true
+          jsx: true,
         },
-        project: './tsconfig.json'
+        project: './tsconfig.json',
       },
       globals: {
         ...globals.browser,
@@ -33,11 +33,11 @@ export default [
         __DEV__: 'readonly',
         require: 'readonly',
         module: 'writable',
-        __dirname: 'readonly'
-      }
-    }
+        __dirname: 'readonly',
+      },
+    },
   },
-  
+
   // React plugin configuration
   {
     plugins: {
@@ -53,7 +53,7 @@ export default [
       },
     },
   },
-  
+
   // React Hooks plugin configuration
   {
     plugins: {
@@ -61,7 +61,7 @@ export default [
     },
     rules: reactHooksPlugin.configs.recommended.rules,
   },
-  
+
   // React Native plugin configuration
   {
     plugins: {
@@ -73,7 +73,7 @@ export default [
       'react-native/no-color-literals': 'warn',
     },
   },
-  
+
   // JSX A11y plugin configuration
   {
     plugins: {
@@ -84,7 +84,7 @@ export default [
       'jsx-a11y/accessible-emoji': 'off', // Emojis are handled by React Native differently
     },
   },
-  
+
   // Prettier integration
   {
     plugins: {
@@ -95,15 +95,18 @@ export default [
       ...prettierConfig.rules,
     },
   },
-  
+
   // Custom TypeScript rules
   {
     rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/explicit-function-return-type': 'off'
-    }
-  },  
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
+  },
   // Global settings and environment configuration
   {
     languageOptions: {

@@ -34,14 +34,17 @@ export default tseslint.config(
     rules: {
       // Common rules for TypeScript projects
       '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_' 
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
-  
+
   // Configuration for test files
   {
     files: ['**/__tests__/**/*.ts', '**/*.test.ts'],
@@ -56,7 +59,7 @@ export default tseslint.config(
       '@typescript-eslint/explicit-function-return-type': 'off',
     },
   },
-  
+
   // Apply Prettier compatibility
   { ignores: ['dist/**', 'node_modules/**', 'coverage/**'] }
 );

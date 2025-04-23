@@ -1,5 +1,5 @@
 // Media service implementation
-import { MediaRepository } from "../repositories/media.repository";
+import { MediaRepository } from '../repositories/media.repository';
 
 export class MediaService {
   private repository: MediaRepository;

@@ -34,4 +34,7 @@ src/modules/[feature]/
 2. Each test file should focus on testing a single module or component
 3. Use factory functions from `tests/helpers/factories.ts` to create test data
 4. Always clear database between tests using provided helpers
+
+```
+
 ```

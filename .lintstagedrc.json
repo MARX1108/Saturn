@@ -1,16 +1,6 @@
 {
-  "packages/mobile-app/**/*.{js,jsx,ts,tsx}": [
-    "prettier --write"
-  ],
-  "packages/client/**/*.{js,jsx,ts,tsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "packages/server/**/*.{js,ts}": [
-    "prettier --write"
-  ],
-  "packages/shared/**/*.{js,ts,tsx,jsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ]
+  "packages/mobile-app/**/*.{js,jsx,ts,tsx}": ["prettier --write"],
+  "packages/client/**/*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+  "packages/server/**/*.{js,ts}": ["prettier --write"],
+  "packages/shared/**/*.{js,ts,tsx,jsx}": ["eslint --fix", "prettier --write"]
 }

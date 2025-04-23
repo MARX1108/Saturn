@@ -7,7 +7,7 @@ import {
   ObjectId,
   OptionalUnlessRequiredId,
   WithId,
-} from "mongodb";
+} from 'mongodb';
 
 export interface BaseRepository<T extends Document> {
   findById(id: string): Promise<T | null>;
@@ -47,13 +47,13 @@ export abstract class MongoRepository<T extends Document>
   async findAll(filter: Filter<T> = {}): Promise<T[]> {
     const results = await this.collection.find(filter).toArray();
     return results.map(
-      (result) => ({ ...result, _id: undefined }) as unknown as T,
+      result => ({ ...result, _id: undefined }) as unknown as T
     ); // Map `WithId<T>` to `T`
   }
 
   async create(data: OptionalId<T>): Promise<T> {
     const result = await this.collection.insertOne(
-      data as OptionalUnlessRequiredId<T>,
+      data as OptionalUnlessRequiredId<T>
     );
     return { ...data, _id: result.insertedId } as T; // Ensure `_id` is included in the return type
   }
@@ -61,7 +61,7 @@ export abstract class MongoRepository<T extends Document>
   async update(id: string, data: Partial<T>): Promise<boolean> {
     const result = await this.collection.updateOne(
       { _id: new ObjectId(id) } as Filter<T>,
-      { $set: data },
+      { $set: data }
     );
     return result.modifiedCount > 0;
   }
