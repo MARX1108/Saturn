@@ -18,7 +18,7 @@ export interface Attachment {
 export interface Post {
   _id: ObjectId; // Internal MongoDB identifier
   id: string; // ActivityPub ID (URL, unique across the fediverse)
-  type: 'Note' | 'Article' | 'Question' | 'Page' | string; // ActivityPub type (string allows for custom types)
+  type: string; // ActivityPub type (common types include 'Note', 'Article', 'Question', 'Page')
   actorId: ObjectId; // Reference to the internal _id of the Actor who created the post
   content: string; // The main text content of the post (HTML or Markdown, depending on AP settings)
   summary?: string; // Optional summary or content warning, maps to AP summary

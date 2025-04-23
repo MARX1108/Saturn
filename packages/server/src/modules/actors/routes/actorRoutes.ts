@@ -30,31 +30,27 @@ export default function configureActorRoutes(
 
   // Search actors
   router.get('/search', (req: Request, res: Response, next: NextFunction) => {
-    actorsController.searchActors(req, res).catch(next);
+    void actorsController.searchActors(req, res).catch(next);
   });
 
   // Create new actor
   router.post('/', (req: Request, res: Response, next: NextFunction) => {
-    actorsController.createActor(req, res, next).catch(next);
+    void actorsController.createActor(req, res, next);
   });
 
   // Get actor posts
   router.get(
     '/:username/posts',
     (req: Request, res: Response, next: NextFunction) => {
-      actorsController.getActorPosts(req, res, next).catch(next);
+      actorsController.getActorPosts(req, res, next);
     }
   );
 
   // Get actor by username
   router.get(
     '/:username',
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await actorsController.getActorByUsername(req, res);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      void actorsController.getActorByUsername(req, res).catch(next);
     }
   );
 
@@ -62,12 +58,8 @@ export default function configureActorRoutes(
   router.put(
     '/:id',
     auth,
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await actorsController.updateActor(req, res, next);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      void actorsController.updateActor(req, res, next);
     }
   );
 
@@ -75,12 +67,8 @@ export default function configureActorRoutes(
   router.delete(
     '/:id',
     auth,
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        await actorsController.deleteActor(req, res, next);
-      } catch (error) {
-        next(error);
-      }
+    (req: Request, res: Response, next: NextFunction) => {
+      void actorsController.deleteActor(req, res, next);
     }
   );
 

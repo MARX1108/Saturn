@@ -203,7 +203,7 @@ export class NotificationService {
           id:
             notification._id instanceof ObjectId
               ? notification._id.toHexString()
-              : notification._id!,
+              : String(notification._id), // Safely convert _id to string
           recipientUserId: notification.recipientUserId,
           type: notification.type,
           postId: notification.postId,
@@ -337,7 +337,7 @@ export class NotificationService {
       id:
         notification._id instanceof ObjectId
           ? notification._id.toHexString()
-          : notification._id!,
+          : String(notification._id), // Fixed unsafe template expression
       recipientUserId: notification.recipientUserId,
       type: notification.type,
       actor: formattedActor,

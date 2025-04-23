@@ -31,7 +31,7 @@ export function errorHandler(
     return res.status(400).json({
       status: 'error',
       type: ErrorType.VALIDATION,
-      message: `File upload error: ${err.message}`,
+      message: `File upload error: ${String(err.message)}`,
     });
   }
 

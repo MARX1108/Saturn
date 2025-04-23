@@ -35,10 +35,16 @@ export class AuthController {
           ErrorType.VALIDATION
         );
       }
+
+      // Type validation for inputs
+      const usernameStr = String(username);
+      const passwordStr = String(password);
+      const emailStr = email ? String(email) : '';
+
       const result = await this.authService.createUser(
-        username,
-        password,
-        email
+        usernameStr,
+        passwordStr,
+        emailStr
       );
       res.status(201).json(result);
     } catch (error) {
@@ -59,9 +65,14 @@ export class AuthController {
           ErrorType.VALIDATION
         );
       }
+
+      // Type validation for inputs
+      const usernameStr = String(username);
+      const passwordStr = String(password);
+
       const result = await this.authService.authenticateUser(
-        username,
-        password
+        usernameStr,
+        passwordStr
       );
 
       if (!result) {
@@ -80,11 +91,7 @@ export class AuthController {
   /**
    * Get current authenticated user
    */
-  async getCurrentUser(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  getCurrentUser(req: Request, res: Response, next: NextFunction): void {
     try {
       if (!req.user) {
         throw new AppError(

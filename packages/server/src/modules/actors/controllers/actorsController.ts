@@ -157,11 +157,7 @@ export class ActorsController {
   /**
    * Get posts authored by a specific actor
    */
-  async getActorPosts(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  getActorPosts(req: Request, res: Response, next: NextFunction): void {
     try {
       const username = req.params.username; // preferredUsername
       const limit = parseInt(req.query.limit as string) || 10;

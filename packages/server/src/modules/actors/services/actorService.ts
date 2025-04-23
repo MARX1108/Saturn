@@ -231,10 +231,10 @@ export class ActorService {
   }
 
   // --- Fetch Remote Actor (Basic Example) ---
-  async fetchRemoteActor(actorUrl: string): Promise<Actor | null> {
+  fetchRemoteActor(actorUrl: string): Promise<Actor | null> {
     // TODO: Implement proper ActivityPub actor fetching and validation
     console.warn(`Fetching remote actor ${actorUrl} not implemented`);
-    return null;
+    return Promise.resolve(null);
   }
 
   // Call repository method

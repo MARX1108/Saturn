@@ -16,8 +16,8 @@ export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {
     this.domain = domain;
 
     // Create any needed indexes
-    this.collection.createIndex({ id: 1 }, { unique: true });
-    this.collection.createIndex({ type: 1 });
+    void this.collection.createIndex({ id: 1 }, { unique: true });
+    void this.collection.createIndex({ type: 1 });
   }
 
   async findByType(

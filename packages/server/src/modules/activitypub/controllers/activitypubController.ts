@@ -4,6 +4,7 @@ import { ActivityPubService } from '../services/activitypub.service';
 import { PostService } from '@/modules/posts/services/postService';
 import { AppError, ErrorType } from '@/utils/errors';
 import { Actor } from '@/modules/actors/models/actor';
+import { ActivityPubActivity } from '../models/activitypub';
 
 export class ActivityPubController {
   private actorService: ActorService;
@@ -60,9 +61,17 @@ export class ActivityPubController {
    */
   async receiveActivity(req: Request, res: Response): Promise<Response> {
     try {
+      // Validate that req.body has the required ActivityPubActivity properties
+      const activity = req.body as ActivityPubActivity;
+      if (!activity.type || !activity.actor) {
+        return res
+          .status(400)
+          .json({ error: 'Invalid ActivityPub activity format' });
+      }
+
       // Use ActivityPubService to process the incoming activity
       await this.activityPubService.processIncomingActivity(
-        req.body,
+        activity,
         req.params.username
       );
 
@@ -76,7 +85,7 @@ export class ActivityPubController {
   /**
    * Get actor outbox (collection of actor's activities)
    */
-  async getOutbox(req: Request, res: Response): Promise<Response> {
+  getOutbox(req: Request, res: Response): Response {
     try {
       const { username } = req.params;
 
