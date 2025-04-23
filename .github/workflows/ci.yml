@@ -1,35 +1,53 @@
-name: Node.js CI & Quality Checks
+name: Server CI Checks
 
 on:
   push:
-    branches: [main]
+    branches: [main] # Or your primary branch
   pull_request:
-    branches: [main]
+    branches: [main] # Or your primary branch
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
-  build-and-test:
+  lint-types-test:
+    name: Lint, Type Check & Test Server
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    strategy:
+      matrix:
+        node-version: [20.x] # Use your target Node.js version
 
-      - name: Set up Node.js
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ${{ matrix.node-version }}
           cache: 'yarn'
 
-      - name: Enable corepack
-        run: corepack enable
-
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile # Use lockfile for reproducibility
 
-      - name: Run lint check
-        run: yarn lint
+      - name: Run Linter (All Packages)
+        run: yarn lint # Uses the root script
 
-      - name: Run format check
-        run: yarn format:check
+      - name: Run Type Check (Server Package)
+        run: yarn typecheck:server # Focus on server type safety
 
-      - name: Run tests
-        run: yarn test:ci
+      - name: Run Server Tests with Coverage
+        run: yarn test:server:coverage # Run server tests & generate coverage
+        env:
+          CI: true
+          # Ensure any necessary test environment variables are set here
+          # e.g., JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+          # MONGODB_URI: # Usually handled by mongodb-memory-server in setup
+
+    # Optional: Upload Coverage Report (Example using Codecov)
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     token: ${{ secrets.CODECOV_TOKEN }} # Add CODECOV_TOKEN to GitHub secrets
+    #     files: ./packages/server/coverage/lcov.info # Path to coverage file
+    #     flags: server # Flag for Codecov UI
+    #     fail_ci_if_error: true # Optional: fail CI if upload fails

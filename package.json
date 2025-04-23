@@ -6,15 +6,37 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "yarn workspace @saturn/server start",
-    "dev": "yarn workspace @saturn/server dev",
     "test": "jest",
-    "build": "yarn workspace @saturn/server build",
-    "lint": "yarn workspace @saturn/server lint"
+    "test:server": "yarn workspace @saturn/server test",
+    "test:server:coverage": "yarn workspace @saturn/server test --coverage",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "yarn workspaces foreach -pt run tsc --noEmit",
+    "typecheck:server": "yarn workspace @saturn/server tsc --noEmit",
+    "validate": "yarn lint && yarn typecheck && yarn test --passWithNoTests",
+    "prepare": "husky install"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.31.0",
+    "@typescript-eslint/parser": "^8.31.0",
+    "eslint": "^9.25.1",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "prettier": "^3.5.3",
     "typescript": "^5.0.0",
-    "eslint": "^8.0.0",
-    "prettier": "^3.0.0"
+    "typescript-eslint": "^8.31.0"
+  },
+  "lint-staged": {
+    "packages/**/*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{js,jsx,json,md,yaml,yml}": [
+      "prettier --write"
+    ]
   }
 }
