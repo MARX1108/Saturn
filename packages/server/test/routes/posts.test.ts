@@ -9,6 +9,7 @@ import { DeepMockProxy } from 'jest-mock-extended';
 import { PostService } from '@/modules/posts/services/postService';
 
 // Extend Express Request type
+
 declare global {
   namespace Express {
     interface Request {
