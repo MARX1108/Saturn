@@ -9,7 +9,7 @@
     "test": "jest",
     "test:server": "yarn workspace @saturn/server test",
     "test:server:coverage": "yarn workspace @saturn/server test --coverage",
-    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
+    "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
