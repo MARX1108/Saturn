@@ -51,8 +51,6 @@ export async function createTestApp(db: Db, domain: string) {
         .status(err.statusCode)
         .json({ error: err.message || 'An error occurred' });
     } else {
-      console.error('Caught unexpected error, sending 500.');
-      console.error(err?.stack || err);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });

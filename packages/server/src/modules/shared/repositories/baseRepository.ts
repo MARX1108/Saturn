@@ -67,7 +67,6 @@ export abstract class MongoRepository<T extends Document>
       } as Filter<T>);
       return result;
     } catch (error) {
-      console.error(`Error finding document by ID: ${error}`);
       return null;
     }
   }

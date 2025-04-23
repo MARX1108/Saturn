@@ -284,15 +284,10 @@ mockPostsController.createPost.mockImplementation(
   async (req: Request, res: Response) => {
     // CRITICAL: User check MUST be first
     if (!req.user) {
-      console.log('>>> createPost: No user found, returning 401.');
       return res
         .status(401)
         .json({ error: 'Unauthorized - No user found in controller mock' });
     }
-
-    console.log('>>> MOCK PostsController.createPost CALLED. User:');
-    console.log('>>> Body:', req.body);
-    console.log('>>> Files:', req.files);
 
     // Check if this is a multipart/form-data request (used for attachments)
     const isMultipart =
@@ -301,18 +296,6 @@ mockPostsController.createPost.mockImplementation(
       req.headers['content-type'].includes('multipart/form-data');
 
     if (isMultipart) {
-      console.log('>>> createPost: Multipart request detected.');
-
-      // --- SIMPLIFICATION --- //
-      // Removed logic trying to distinguish valid/invalid uploads.
-      // Always return 201 for any multipart request for now.
-      // TODO: Enhance mock/validation to properly reject invalid file types.
-      // --- END SIMPLIFICATION --- //
-
-      console.log(
-        '>>> createPost: Simplified mock logic - Returning 201 for any multipart request.'
-      );
-
       const attachments = [
         {
           type: 'Image',
@@ -339,7 +322,6 @@ mockPostsController.createPost.mockImplementation(
     // Handle regular JSON post (no attachments)
     const content = req.body.content;
     if (!content || String(content).trim() === '') {
-      console.log('>>> createPost: Content is missing. Returning 400.');
       return res.status(400).json({ error: 'Content is required' });
     }
 
@@ -360,29 +342,13 @@ mockPostsController.createPost.mockImplementation(
       actor: { ...mockActor, preferredUsername: req.user.preferredUsername }, // Associate with logged-in user
     };
 
-    console.log(
-      '>>> createPost: Final non-multipart createdPost:',
-      createdPost
-    );
     res.status(201).json(createdPost);
   }
 );
 
 mockPostsController.getPostById.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.getPostById CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
     const postId = req.params.id;
-    console.log(
-      '>>> Request Post ID:',
-      postId,
-      'Known Test Post ID:',
-      knownTestPostIdString
-    );
 
     // --- Basic ID validation ---
     if (postId === 'invalid-id-format')
@@ -399,10 +365,6 @@ mockPostsController.getPostById.mockImplementation(
     const likedByUser = false; // Always return false for now
     // TODO: Fix mock/DI to correctly reflect likedByUser state.
     // Removed complex logic involving global.isPostLikedTestState due to persistent issues.
-    console.log(
-      `>>> getPostById: Simplified mock - User authenticated: ${!!req.user}, Final likedByUser: ${likedByUser}`
-    );
-    // --- END SIMPLIFICATION ---
 
     // Create base post data (assuming the requested ID is the known mock post)
     const postDataBase = {
@@ -419,28 +381,17 @@ mockPostsController.getPostById.mockImplementation(
       likedByUser: likedByUser, // Always false based on simplification
     };
 
-    console.log('>>> getPostById: Final postData being sent:', postData);
     res.status(200).json(postData);
   }
 );
 
 mockPostsController.getFeed.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.getFeed CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
-    console.log('>>> Query Params:', req.query);
     try {
       const user = req.user;
       const username = user?.preferredUsername;
       const checkUsername = knownTestUsername;
       const likedByUserStatus = !!user && username === checkUsername;
-      console.log(
-        `>>> getFeed: User: ${username}, Known: ${checkUsername}, LikedStatus: ${likedByUserStatus}`
-      );
 
       const generatedPosts = Array.from({ length: 15 }).map((_, i) => ({
         ...mockPost,
@@ -472,7 +423,6 @@ mockPostsController.getFeed.mockImplementation(
       };
       res.status(200).json(response);
     } catch (error: any) {
-      console.error('>>> ERROR inside getFeed mock:', error);
       res.status(500).json({ error: 'Internal server error in mock getFeed' });
     }
   }
@@ -480,12 +430,6 @@ mockPostsController.getFeed.mockImplementation(
 
 mockPostsController.getPostsByUsername.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.getPostsByUsername CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
     const username = req.params.username;
     if (username === 'nonexistentuser') {
       return res.status(404).json({ error: 'User not found' });
@@ -507,12 +451,6 @@ mockPostsController.getPostsByUsername.mockImplementation(
 
 mockPostsController.updatePost.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.updatePost CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
     const postId = req.params.id;
     const { content } = req.body;
 
@@ -525,9 +463,6 @@ mockPostsController.updatePost.mockImplementation(
       postId === knownTestPostIdString &&
       req.user.preferredUsername !== mockPost.actor.preferredUsername
     ) {
-      console.log(
-        `>>> Permission check FAIL: User ${req.user.preferredUsername} != Actor ${mockPost.actor.preferredUsername}`
-      );
       return res.status(403).json({ error: 'Forbidden' });
     }
     if (!content || content.trim() === '') {
@@ -541,12 +476,6 @@ mockPostsController.updatePost.mockImplementation(
 
 mockPostsController.deletePost.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.deletePost CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
     const postId = req.params.id;
 
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
@@ -558,9 +487,6 @@ mockPostsController.deletePost.mockImplementation(
       postId === knownTestPostIdString &&
       req.user.preferredUsername !== mockPost.actor.preferredUsername
     ) {
-      console.log(
-        `>>> Permission check FAIL: User ${req.user.preferredUsername} != Actor ${mockPost.actor.preferredUsername}`
-      );
       return res.status(403).json({ error: 'Forbidden' });
     }
     isPostLikedTestState = false;
@@ -570,36 +496,18 @@ mockPostsController.deletePost.mockImplementation(
 
 mockPostsController.likePost.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.likePost CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
     const postId = req.params.id;
-
-    // DEBUG Log state at entry
-    console.log(
-      `>>> likePost: Entering. isPostLikedTestState = ${isPostLikedTestState}`
-    );
 
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
     if (postId === knownNonExistentIdString)
       return res.status(404).json({ error: 'Post not found' });
 
-    // DEBUG Log state before check
-    console.log(
-      `>>> likePost: Checking state. isPostLikedTestState = ${isPostLikedTestState}`
-    );
     if (isPostLikedTestState) {
-      console.log('>>> likePost: Post already liked, returning 409');
       return res.status(409).json({ error: 'Post already liked' });
     }
     if (postId === 'invalid-id')
       return res.status(400).json({ error: 'Invalid Post ID for like' });
 
-    // Simulate success
-    console.log('>>> likePost: Setting state to true');
     isPostLikedTestState = true;
     res.status(200).json({ message: 'Post liked successfully' });
   }
@@ -607,36 +515,18 @@ mockPostsController.likePost.mockImplementation(
 
 mockPostsController.unlikePost.mockImplementation(
   async (req: Request, res: Response) => {
-    console.log(
-      '>>> MOCK PostsController.unlikePost CALLED. User:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
     const postId = req.params.id;
-
-    // DEBUG Log state at entry
-    console.log(
-      `>>> unlikePost: Entering. isPostLikedTestState = ${isPostLikedTestState}`
-    );
 
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
     if (postId === knownNonExistentIdString)
       return res.status(404).json({ error: 'Post not found' });
 
-    // DEBUG Log state before check
-    console.log(
-      `>>> unlikePost: Checking state. isPostLikedTestState = ${isPostLikedTestState}`
-    );
     if (!isPostLikedTestState) {
-      console.log('>>> unlikePost: Post not liked, returning 409');
       return res.status(409).json({ error: 'Post not liked' });
     }
     if (postId === 'invalid-id')
       return res.status(400).json({ error: 'Invalid Post ID for unlike' });
 
-    // Simulate success
-    console.log('>>> unlikePost: Setting state to false');
     isPostLikedTestState = false;
     res.status(200).json({ message: 'Post unliked successfully' });
   }

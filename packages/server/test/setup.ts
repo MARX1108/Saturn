@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express'; // Add express types 
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
-  console.log('>>> jest.mock factory for @/middleware/auth EXECUTING'); // Log factory execution
+  // console.log('>>> jest.mock factory for @/middleware/auth EXECUTING'); // Removed log
 
   // Require jwt *inside* the factory function
   const jwt = require('jsonwebtoken');
@@ -29,9 +29,9 @@ jest.mock('@/middleware/auth', () => {
     res: Response,
     next: NextFunction
   ) => {
-    console.log(
-      `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
-    );
+    // console.log( // Removed log block
+    //   `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
+    // );
     const authHeader = req.headers.authorization;
     let user = undefined;
 
@@ -49,20 +49,20 @@ jest.mock('@/middleware/auth', () => {
           id: (decoded as any).id, // Use ID from token
           preferredUsername: (decoded as any).username, // Use username from token
         };
-        console.log(
-          '>>> Mock authenticate MIDDLEWARE - Token VERIFIED, user set from token:',
-          { id: user._id, username: user.preferredUsername }
-        );
+        // console.log( // Removed log block
+        //   '>>> Mock authenticate MIDDLEWARE - Token VERIFIED, user set from token:',
+        //   { id: user._id, username: user.preferredUsername }
+        // );
       } catch (err) {
         // Handle error type safely
         let errorMessage = 'Unknown token verification error';
         if (err instanceof Error) {
           errorMessage = err.message;
         }
-        console.log(
-          '>>> Mock authenticate MIDDLEWARE - Token VERIFICATION FAILED',
-          errorMessage
-        );
+        // console.log( // Removed log block
+        //   '>>> Mock authenticate MIDDLEWARE - Token VERIFICATION FAILED',
+        //   errorMessage
+        // );
         // For tests, we might still want to allow progression but without a valid user,
         // or fall back to default. Falling back to default for now.
         // user = defaultMockUser;
@@ -72,7 +72,7 @@ jest.mock('@/middleware/auth', () => {
       }
     } else {
       // No token provided
-      console.log('>>> Mock authenticate MIDDLEWARE - No token found');
+      // console.log('>>> Mock authenticate MIDDLEWARE - No token found'); // Removed log
       // If the route requires auth, let the controller/route handler return 401/403.
       // The middleware itself often just calls next() if no token is present,
       // unless it's configured to reject immediately.
@@ -81,12 +81,12 @@ jest.mock('@/middleware/auth', () => {
     }
 
     req.user = user;
-    console.log(
-      '>>> Mock authenticate MIDDLEWARE - req.user set to:',
-      req.user
-        ? { id: req.user._id, username: req.user.preferredUsername }
-        : undefined
-    );
+    // console.log( // Removed log block
+    //   '>>> Mock authenticate MIDDLEWARE - req.user set to:',
+    //   req.user
+    //     ? { id: req.user._id, username: req.user.preferredUsername }
+    //     : undefined
+    // );
     next();
   };
 
@@ -171,7 +171,7 @@ beforeAll(async (): Promise<void> => {
     (global as any).request = request;
     (global as any).mongoDb = mongoDb;
   } catch (error) {
-    console.error('Failed to setup test environment:', error);
+    // console.error('Failed to setup test environment:', error); // Removed log
     throw error;
   }
 });
@@ -189,7 +189,7 @@ afterAll(async (): Promise<void> => {
       await mongoServer.stop();
     }
   } catch (error) {
-    console.error('Failed to cleanup test environment:', error);
+    // console.error('Failed to cleanup test environment:', error); // Removed log
     throw error;
   }
 });

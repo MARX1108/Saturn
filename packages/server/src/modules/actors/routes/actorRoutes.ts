@@ -10,7 +10,6 @@ import multer from 'multer';
 export default function configureActorRoutes(
   serviceContainer: ServiceContainer
 ): Router {
-  console.log('[[configureActorRoutes]] Function executing...');
   const router = express.Router();
   const { actorService, uploadService, postService } = serviceContainer;
   const domain = process.env.DOMAIN || 'localhost:4000';
