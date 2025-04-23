@@ -68,7 +68,7 @@ export function createMockServiceContainer(
 // and Fastify setup might be different. Add back if needed for Fastify testing.
 
 // Existing createTestPost (assuming it's still needed)
-export const createTestPost = async () => {
+export const createTestPost = () => {
   // Consider using OptionalUnlessRequiredId for _id if it comes from DB
   return {
     _id: new ObjectId(), // Added ObjectId

@@ -9,7 +9,7 @@ import { CommentsController } from '@/modules/comments/controllers/comments.cont
 import { mockServiceContainer } from './mockSetup';
 import { AppError } from '@/utils/errors';
 
-export async function createTestApp(db: Db, domain: string) {
+export function createTestApp(db: Db, domain: string) {
   const app = express();
 
   // Add JSON body parser

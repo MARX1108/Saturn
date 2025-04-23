@@ -10,7 +10,7 @@ export class MediaController {
   }
 
   // Handler for uploading media
-  async uploadMedia(req: Request, res: Response): Promise<void> {
+  uploadMedia(req: Request, res: Response): void {
     try {
       // Implementation would go here
       res.status(501).json({ message: 'Not implemented yet' });
@@ -21,7 +21,7 @@ export class MediaController {
   }
 
   // Handler for retrieving media
-  async getMedia(req: Request, res: Response): Promise<void> {
+  getMedia(req: Request, res: Response): void {
     try {
       // Implementation would go here
       res.status(501).json({ message: 'Not implemented yet' });
@@ -32,7 +32,7 @@ export class MediaController {
   }
 
   // Handler for deleting media
-  async deleteMedia(req: Request, res: Response): Promise<void> {
+  deleteMedia(req: Request, res: Response): void {
     try {
       // Implementation would go here
       res.status(501).json({ message: 'Not implemented yet' });

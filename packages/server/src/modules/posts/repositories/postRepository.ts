@@ -18,10 +18,10 @@ export class PostRepository extends MongoRepository<Post> {
     super(db, 'posts');
 
     // Create indexes for common queries
-    this.collection.createIndex({ 'actor.id': 1, createdAt: -1 });
-    this.collection.createIndex({ createdAt: -1 });
-    this.collection.createIndex({ actorId: 1, published: -1 });
-    this.collection.createIndex({ id: 1 }, { unique: true });
+    void this.collection.createIndex({ 'actor.id': 1, createdAt: -1 });
+    void this.collection.createIndex({ createdAt: -1 });
+    void this.collection.createIndex({ actorId: 1, published: -1 });
+    void this.collection.createIndex({ id: 1 }, { unique: true });
   }
 
   async findByUsername(

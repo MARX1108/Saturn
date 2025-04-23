@@ -8,23 +8,11 @@ import { DbUser } from '../../src/modules/auth/models/user';
 import { DeepMockProxy } from 'jest-mock-extended';
 import { PostService } from '@/modules/posts/services/postService';
 
-// Extend Express Request type
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: DbUser | undefined;
-    }
+// Extend Express Request type using module augmentation
+declare module 'express' {
+  interface Request {
+    user?: DbUser | undefined;
   }
-}
-
-declare global {
-  // Add mockPostService to global scope for easier access in tests
-  var mockPostService: DeepMockProxy<PostService>;
-  var testApp: Express.Application;
-  var request: any; // supertest request
-  var mongoDb: Db;
-  var isPostLikedTestState: boolean; // Make state globally accessible for tests
 }
 
 describe('Posts Routes', () => {

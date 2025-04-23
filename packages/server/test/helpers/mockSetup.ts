@@ -93,7 +93,7 @@ mockActorService.getActorByUsername.mockResolvedValue(mockActor as any);
 
 // Mock AuthController methods
 mockAuthController.register.mockImplementation(
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     const { username, password, displayName } = req.body;
 
     // Input validation simulation (based on test cases)
@@ -123,26 +123,22 @@ mockAuthController.register.mockImplementation(
   }
 );
 
-mockAuthController.login.mockImplementation(
-  async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+mockAuthController.login.mockImplementation((req: Request, res: Response) => {
+  const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Missing login fields' });
-    }
-
-    // Simulate successful login
-    if (username === 'testuser' && password === 'password123') {
-      res
-        .status(200)
-        .json({ actor: mockActor, token: 'mock-ctrl-token-login' });
-      return;
-    }
-
-    // Simulate failed login (wrong username or password)
-    return res.status(401).json({ error: 'Invalid credentials' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Missing login fields' });
   }
-);
+
+  // Simulate successful login
+  if (username === 'testuser' && password === 'password123') {
+    res.status(200).json({ actor: mockActor, token: 'mock-ctrl-token-login' });
+    return;
+  }
+
+  // Simulate failed login (wrong username or password)
+  return res.status(401).json({ error: 'Invalid credentials' });
+});
 
 mockPostService.getPostById.mockImplementation(async id => {
   if (id === 'nonexistent') return null;
@@ -353,46 +349,51 @@ mockPostsController.createPost.mockImplementation(
 );
 
 mockPostsController.getPostById.mockImplementation(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     const postId = req.params.id;
 
-    // --- Basic ID validation ---
-    if (postId === 'invalid-id-format')
-      return res.status(400).json({ error: 'Invalid ID format' });
-    if (postId === knownNonExistentIdString)
-      return res.status(404).json({ error: 'Post not found' });
     try {
-      new ObjectId(postId); // Validate format
-    } catch (e) {
-      return res.status(400).json({ error: 'Invalid ObjectId format' });
+      // --- Basic ID validation ---
+      if (postId === 'invalid-id-format')
+        return res.status(400).json({ error: 'Invalid ID format' });
+      if (postId === knownNonExistentIdString)
+        return res.status(404).json({ error: 'Post not found' });
+      try {
+        new ObjectId(postId); // Validate format if needed, though service call might handle it
+      } catch (e) {
+        // Potentially unnecessary if service handles invalid IDs
+        // return res.status(400).json({ error: 'Invalid ObjectId format' });
+      }
+
+      // --- Call the mocked service ---
+      // Note: We now await the *actual* service mock call here.
+      // The service mock itself handles returning null or the post object or throwing.
+      const postData = await global.mockPostService.getPostById(postId);
+
+      if (!postData) {
+        // Handle case where service returns null (post not found)
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      // --- SIMPLIFICATION: Determine likedByUser status ---
+      const likedByUser = false; // Keep simplified logic for now
+      // TODO: This needs proper handling, likely based on req.user._id
+
+      // Create final response
+      const responseData = {
+        ...postData, // Use data returned from the service mock
+        likedByUser: likedByUser,
+      };
+
+      res.status(200).json(responseData);
+    } catch (error) {
+      next(error); // Pass error to Express error handler
     }
-
-    // --- SIMPLIFICATION: Determine likedByUser status ---
-    const likedByUser = false; // Always return false for now
-    // TODO: Fix mock/DI to correctly reflect likedByUser state.
-    // Removed complex logic involving global.isPostLikedTestState due to persistent issues.
-
-    // Create base post data (assuming the requested ID is the known mock post)
-    const postDataBase = {
-      ...mockPost, // Use the predefined mockPost structure
-      _id: knownTestPostObjectId, // Ensure response uses the specific ID requested
-      id: knownTestPostUrl, // Ensure response uses the specific ID requested
-      url: knownTestPostUrl, // Ensure response uses the specific ID requested
-      content: 'This is a test post', // Use content consistent with test setup
-    };
-
-    // Create final response with simplified likedByUser status
-    const postData = {
-      ...postDataBase,
-      likedByUser: likedByUser, // Always false based on simplification
-    };
-
-    res.status(200).json(postData);
   }
 );
 
 mockPostsController.getFeed.mockImplementation(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req.user;
       const username = user?.preferredUsername;

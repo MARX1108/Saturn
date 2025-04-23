@@ -9,7 +9,7 @@ jest.mock('@/middleware/auth', () => {
   // console.log('>>> jest.mock factory for @/middleware/auth EXECUTING'); // Removed log
 
   // Require jwt *inside* the factory function
-  const jwt = require('jsonwebtoken');
+  const jwt = require('jsonwebtoken'); // <-- Put require back
 
   // Define the known user ID from mockSetup for default user
   const knownTestUserIdHex = '60a0f3f1e1b8f1a1a8b4c1c1';
@@ -178,44 +178,34 @@ expect.extend({
 
 // Setup before all tests
 beforeAll(async (): Promise<void> => {
-  try {
-    // Create MongoDB Memory Server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
+  // Create MongoDB Memory Server
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
 
-    // Connect to the in-memory database
-    mongoClient = new MongoClient(mongoUri);
-    await mongoClient.connect();
-    mongoDb = mongoClient.db();
+  // Connect to the in-memory database
+  mongoClient = new MongoClient(mongoUri);
+  await mongoClient.connect();
+  mongoDb = mongoClient.db();
 
-    // Create test app with proper configuration
-    testApp = await createTestApp(mongoDb, process.env.DOMAIN || 'test.domain');
+  // Create test app with proper configuration
+  testApp = createTestApp(mongoDb, process.env.DOMAIN || 'test.domain'); // Removed await as createTestApp is not async
 
-    // Make app available globally for tests (using declarations from global.d.ts)
-    global.testApp = testApp;
-    global.request = request; // Assign the supertest function itself
-    global.mongoDb = mongoDb;
-  } catch (error) {
-    // console.error('Failed to setup test environment:', error); // Removed log
-    throw error;
-  }
+  // Make app available globally for tests (using declarations from global.d.ts)
+  global.testApp = testApp;
+  global.request = request; // Assign the supertest function itself
+  global.mongoDb = mongoDb;
 });
 
 // Cleanup after all tests
 afterAll(async (): Promise<void> => {
-  try {
-    // Disconnect from the database
-    if (mongoClient) {
-      await mongoClient.close();
-    }
+  // Disconnect from the database
+  if (mongoClient) {
+    await mongoClient.close();
+  }
 
-    // Stop the MongoDB Memory Server
-    if (mongoServer) {
-      await mongoServer.stop();
-    }
-  } catch (error) {
-    // console.error('Failed to cleanup test environment:', error); // Removed log
-    throw error;
+  // Stop the MongoDB Memory Server
+  if (mongoServer) {
+    await mongoServer.stop();
   }
 });
 

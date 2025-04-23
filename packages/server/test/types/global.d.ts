@@ -10,15 +10,15 @@ import { Db } from 'mongodb';
 import request, { SuperTest, Test } from 'supertest';
 
 declare global {
-  var testApp: Express;
-  var mockAuthService: DeepMockProxy<AuthService>;
-  var mockActorService: DeepMockProxy<ActorService>;
-  var mockPostService: DeepMockProxy<PostService>;
-  var mockUploadService: DeepMockProxy<UploadService>;
-  var mockNotificationService: DeepMockProxy<NotificationService>;
-  var mockCommentService: DeepMockProxy<CommentService>;
-  var request: typeof request;
-  var mongoDb: Db;
+  let testApp: Express;
+  let mockAuthService: DeepMockProxy<AuthService>;
+  let mockActorService: DeepMockProxy<ActorService>;
+  let mockPostService: DeepMockProxy<PostService>;
+  let mockUploadService: DeepMockProxy<UploadService>;
+  let mockNotificationService: DeepMockProxy<NotificationService>;
+  let mockCommentService: DeepMockProxy<CommentService>;
+  let request: typeof request;
+  let mongoDb: Db;
 
   namespace NodeJS {
     interface Global {

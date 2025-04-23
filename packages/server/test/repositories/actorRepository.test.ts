@@ -2,10 +2,6 @@ import { Db, ObjectId, WithId } from 'mongodb';
 import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 import { Actor } from '@/modules/actors/models/actor';
 
-declare global {
-  var mongoDb: Db;
-}
-
 describe('ActorRepository', () => {
   let db: Db;
   let actorRepository: ActorRepository;

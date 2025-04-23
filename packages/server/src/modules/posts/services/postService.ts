@@ -161,7 +161,7 @@ export class PostService {
   }
 
   // Add getPostsByUsername - DEFERRED IMPLEMENTATION
-  async getPostsByUsername(
+  getPostsByUsername(
     username: string,
     options: { limit: number; offset: number }
   ): Promise<{ posts: Post[]; total: number; limit: number; offset: number }> {

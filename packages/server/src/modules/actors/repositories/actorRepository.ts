@@ -6,10 +6,16 @@ export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {
     super(db, 'actors');
     // Ensure indexes are created
-    this.collection.createIndex({ username: 1 }, { unique: true });
-    this.collection.createIndex({ preferredUsername: 1 }, { unique: true });
-    this.collection.createIndex({ email: 1 }, { unique: true, sparse: true });
-    this.collection.createIndex({ id: 1 }, { unique: true });
+    void this.collection.createIndex({ username: 1 }, { unique: true });
+    void this.collection.createIndex(
+      { preferredUsername: 1 },
+      { unique: true }
+    );
+    void this.collection.createIndex(
+      { email: 1 },
+      { unique: true, sparse: true }
+    );
+    void this.collection.createIndex({ id: 1 }, { unique: true });
   }
 
   // Specific methods needed beyond base repository

@@ -14,8 +14,8 @@ export class AIService {
     this.contentCollection = db.collection('aiAnalysis');
 
     // Create indexes
-    this.contentCollection.createIndex({ contentId: 1 }, { unique: true });
-    this.contentCollection.createIndex({ createdAt: 1 });
+    void this.contentCollection.createIndex({ contentId: 1 }, { unique: true });
+    void this.contentCollection.createIndex({ createdAt: 1 });
   }
 
   /**
@@ -82,15 +82,17 @@ export class AIService {
    * @param context Optional context information
    * @returns Generated recommendation
    */
-  async generateRecommendation(
+  generateRecommendation(
     userPreferences: string[],
     _context?: string
   ): Promise<string> {
     // In a real implementation, this would call an AI model API
     // For demo purposes, we'll return a simple mock response
-    return `Based on your interest in ${userPreferences.join(
-      ', '
-    )}, we recommend exploring content related to ${userPreferences[0]}.`;
+    return Promise.resolve(
+      `Based on your interest in ${userPreferences.join(
+        ', '
+      )}, we recommend exploring content related to ${userPreferences[0]}.`
+    );
   }
 
   // Private helper methods for the mock implementation
