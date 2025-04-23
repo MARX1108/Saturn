@@ -9,9 +9,9 @@ import { Actor } from '@/modules/actors/models/actor';
 import { Post } from '@/modules/posts/models/post';
 import {
   AppError,
-  BadRequestError,
-  ConflictError,
-  UnauthorizedError,
+  // BadRequestError, // Removed unused import
+  // ConflictError, // Removed unused import
+  // UnauthorizedError, // Removed unused import
 } from '@/utils/errors';
 import { Request, Response, NextFunction } from 'express';
 
@@ -234,13 +234,19 @@ jest.mock('multer', () => {
     ),
     // Add other methods if needed (fields, none)
   }));
-  // If you use multer.diskStorage or multer.memoryStorage, mock them too
-  multer.diskStorage = jest.fn(() => ({
-    /* return a dummy storage object if needed */
+
+  // --- FIX: Mock static properties ---
+  // Attach mock static methods directly to the mock function object
+  (multer as any).diskStorage = jest.fn(() => ({
+    _handleFile: jest.fn(),
+    _removeFile: jest.fn(),
   }));
-  multer.memoryStorage = jest.fn(() => ({
-    /* return a dummy storage object if needed */
+  (multer as any).memoryStorage = jest.fn(() => ({
+    _handleFile: jest.fn(),
+    _removeFile: jest.fn(),
   }));
+  // --- END FIX ---
+
   return multer;
 });
 // --- END Multer Mock ---
@@ -461,7 +467,7 @@ mockPostsController.updatePost.mockImplementation(
     // Check permission based on username comparison for mock scenario
     if (
       postId === knownTestPostIdString &&
-      req.user.preferredUsername !== mockPost.actor.preferredUsername
+      req.user.preferredUsername !== mockPost.actor?.preferredUsername
     ) {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -485,7 +491,7 @@ mockPostsController.deletePost.mockImplementation(
     // Check permission based on username comparison for mock scenario
     if (
       postId === knownTestPostIdString &&
-      req.user.preferredUsername !== mockPost.actor.preferredUsername
+      req.user.preferredUsername !== mockPost.actor?.preferredUsername
     ) {
       return res.status(403).json({ error: 'Forbidden' });
     }

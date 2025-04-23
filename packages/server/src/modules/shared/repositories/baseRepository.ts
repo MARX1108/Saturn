@@ -127,11 +127,7 @@ export abstract class MongoRepository<T extends Document>
       ...options,
       returnDocument: 'after',
     } as any);
-    if (result) {
-      return result as WithId<T>;
-    } else {
-      return null;
-    }
+    return result?.value || null;
   }
 
   async deleteById(id: string | ObjectId): Promise<boolean> {

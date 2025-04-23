@@ -1,13 +1,18 @@
 import request from 'supertest';
+import { Db } from 'mongodb';
+import jwt from 'jsonwebtoken';
+import bcryptjs from 'bcryptjs';
+import { ServiceContainer } from '@/utils/container';
+import configureAuthRoutes from '@/modules/auth/routes/authRoutes';
+import { AuthController } from '@/modules/auth/controllers/authController';
+import { mockServiceContainer } from '../helpers/mockSetup';
+import { DbUser } from '@/modules/auth/models/user';
 // Remove local express, MongoClient, Db, MongoMemoryServer imports
 // import express from 'express';
 // import { MongoClient, Db } from 'mongodb';
 // import { MongoMemoryServer } from 'mongodb-memory-server';
 // Keep configureAuthRoutes import for potential future use if needed, but it's not used now
-import configureAuthRoutes from '../../src/modules/auth/routes/authRoutes';
-import bcryptjs from 'bcryptjs'; // Replace bcrypt with bcryptjs
-// Keep jwt import if needed for specific tests, but maybe not for basic routing
-// import jwt from 'jsonwebtoken';
+// import configureAuthRoutes from '../../src/modules/auth/routes/authRoutes';
 // Remove ServiceContainer import, as we use global mocks
 // import { ServiceContainer } from '../../src/utils/container';
 // Remove mockServiceContainer import, as it's implicitly used by global setup
@@ -15,8 +20,11 @@ import bcryptjs from 'bcryptjs'; // Replace bcrypt with bcryptjs
 
 // Access the globally available app and db from setup.ts
 declare global {
+  // eslint-disable-next-line no-var
   var testApp: Express.Application;
-  var request: any; // supertest request bound to testApp
+  // eslint-disable-next-line no-var
+  var request: any; // supertest request
+  // eslint-disable-next-line no-var
   var mongoDb: Db;
 }
 

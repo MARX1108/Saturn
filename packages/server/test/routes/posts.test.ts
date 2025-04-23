@@ -5,7 +5,7 @@ import fs from 'fs';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import configurePostRoutes from '@/modules/posts/routes/postRoutes';
 import { DbUser } from '../../src/modules/auth/models/user';
-import { DeepMockProxy } from 'jest-mock';
+import { DeepMockProxy } from 'jest-mock-extended';
 import { PostService } from '@/modules/posts/services/postService';
 
 // Extend Express Request type
