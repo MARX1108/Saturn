@@ -25,6 +25,7 @@ module.exports = {
     // Adjust if you have multiple tsconfigs needing linting
     tsconfigRootDir: __dirname,
     project: ['./tsconfig.json', './packages/*/tsconfig.json'], // Include root and package tsconfigs
+    // project: ['./packages/server/tsconfig.json'],
   },
   rules: {
     // --- Prettier Integration ---
