@@ -17,8 +17,8 @@ export class AuthRepository extends MongoRepository<DbUser> {
     super(db, 'actors');
 
     // Create indexes for common auth queries
-    this.collection.createIndex({ username: 1 }, { unique: true });
-    this.collection.createIndex({ email: 1 }, { unique: true });
+    void this.collection.createIndex({ username: 1 }, { unique: true });
+    void this.collection.createIndex({ email: 1 }, { unique: true });
   }
 
   async findByUsername(username: string): Promise<DbUser | null> {

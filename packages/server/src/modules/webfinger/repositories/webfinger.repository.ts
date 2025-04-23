@@ -33,7 +33,7 @@ export class WebfingerRepository extends MongoRepository<WebfingerResource> {
     super(db, 'webfinger');
 
     // Create indexes for common webfinger queries
-    this.collection.createIndex({ subject: 1 }, { unique: true });
+    void this.collection.createIndex({ subject: 1 }, { unique: true });
   }
 
   async findBySubject(subject: string): Promise<WebfingerResource | null> {

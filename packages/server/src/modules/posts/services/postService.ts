@@ -75,7 +75,7 @@ export class PostService {
       published: now, // Set published time
       createdAt: now, // Set internal createdAt
       updatedAt: now, // Set internal updatedAt
-      attributedTo: actor.id, // Author's AP ID (URL)
+      attributedTo: `${actor.id}/${String(actorObjectId)}`,
       to: [], // Initialize, will be set based on visibility
       cc: [], // Initialize, will be set based on visibility
       url: postUrl, // Canonical AP URL
@@ -147,7 +147,7 @@ export class PostService {
             post.actor = fetchedActor || undefined;
           } catch (error) {
             console.error(
-              `Failed to populate actor ${post.actorId} for post ${post._id}:`,
+              `Failed to populate actor ${String(post.actorId)} for post ${String(post._id)}:`,
               error
             );
             // Decide how to handle posts with missing actors

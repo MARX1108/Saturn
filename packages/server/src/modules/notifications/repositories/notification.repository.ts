@@ -7,10 +7,10 @@ export class NotificationRepository extends MongoRepository<Notification> {
     super(db, 'notifications');
 
     // Create indexes for common queries
-    this.collection.createIndex({ recipientUserId: 1, createdAt: -1 });
-    this.collection.createIndex({ recipientUserId: 1, read: 1 });
-    this.collection.createIndex({ type: 1 });
-    this.collection.createIndex({ postId: 1 });
+    void this.collection.createIndex({ recipientUserId: 1, createdAt: -1 });
+    void this.collection.createIndex({ recipientUserId: 1, read: 1 });
+    void this.collection.createIndex({ type: 1 });
+    void this.collection.createIndex({ postId: 1 });
   }
 
   /**

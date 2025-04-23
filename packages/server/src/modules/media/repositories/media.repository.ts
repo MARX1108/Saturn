@@ -19,8 +19,8 @@ export class MediaRepository extends MongoRepository<Media> {
     super(db, 'media');
 
     // Create indexes for common media queries
-    this.collection.createIndex({ id: 1 }, { unique: true });
-    this.collection.createIndex({ userId: 1 });
+    void this.collection.createIndex({ id: 1 }, { unique: true });
+    void this.collection.createIndex({ userId: 1 });
   }
 
   async findByUserId(userId: string, page = 1, limit = 20): Promise<Media[]> {

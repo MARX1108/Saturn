@@ -10,8 +10,8 @@ export class PostRepository extends MongoRepository<Post> {
     this.db = db; // Store the `Db` instance
 
     // Create indexes
-    this.collection.createIndex({ createdAt: -1 });
-    this.collection.createIndex({ actorId: 1 });
+    void this.collection.createIndex({ createdAt: -1 });
+    void this.collection.createIndex({ actorId: 1 });
   }
 
   async getPostsByUserId(

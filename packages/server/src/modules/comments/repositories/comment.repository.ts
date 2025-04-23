@@ -7,9 +7,9 @@ export class CommentRepository extends MongoRepository<Comment> {
     super(db, 'comments');
 
     // Create indexes for common queries
-    this.collection.createIndex({ postId: 1, createdAt: 1 });
-    this.collection.createIndex({ authorId: 1 });
-    this.collection.createIndex({ createdAt: -1 });
+    void this.collection.createIndex({ postId: 1, createdAt: 1 });
+    void this.collection.createIndex({ authorId: 1 });
+    void this.collection.createIndex({ createdAt: -1 });
   }
 
   /**

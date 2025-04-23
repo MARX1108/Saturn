@@ -8,8 +8,11 @@ export class ActorRepository extends MongoRepository<Actor> {
     super(db, 'actors');
 
     // Create indexes
-    this.collection.createIndex({ preferredUsername: 1 }, { unique: true });
-    this.collection.createIndex({ id: 1 }, { unique: true });
+    void this.collection.createIndex(
+      { preferredUsername: 1 },
+      { unique: true }
+    );
+    void this.collection.createIndex({ id: 1 }, { unique: true });
   }
 
   async findByUsername(username: string): Promise<Actor | null> {

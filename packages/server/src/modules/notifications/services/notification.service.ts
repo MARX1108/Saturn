@@ -234,7 +234,10 @@ export class NotificationService {
               }
             }
           } catch (error) {
-            console.error('Error fetching actor for notification:', error);
+            console.warn(
+              `Failed to fetch actor ${String(notification.actorUserId)} for notification ${String(notification._id)}:`,
+              error
+            );
             // Continue without actor details rather than failing the entire request
           }
         }
@@ -314,7 +317,7 @@ export class NotificationService {
         actor = await this.actorService.getActorById(notification.actorUserId);
       } catch (error) {
         console.warn(
-          `Failed to fetch actor ${notification.actorUserId} for notification ${notification._id}:`,
+          `Failed to fetch actor ${String(notification.actorUserId)} for notification ${String(notification._id)}:`,
           error
         );
       }
