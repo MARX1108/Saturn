@@ -9,6 +9,7 @@ jest.mock('@/middleware/auth', () => {
   // console.log('>>> jest.mock factory for @/middleware/auth EXECUTING'); // Removed log
 
   // Require jwt *inside* the factory function
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const jwt = require('jsonwebtoken'); // <-- Put require back
 
   // Define the known user ID from mockSetup for default user
@@ -227,3 +228,5 @@ beforeEach(async (): Promise<void> => {
     throw error;
   }
 });
+
+// For tests, we need to mock jsonwebtoken

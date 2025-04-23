@@ -55,7 +55,7 @@ export const mockWebfingerController = mock<any>();
 const globalUploadService = (global as any).mockUploadService;
 if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
   globalUploadService.configureImageUploadMiddleware.mockReturnValue(
-    (req: any, res: any, next: any) => next()
+    (req: any, res: any, next: any): void => next()
   );
 }
 
@@ -88,8 +88,8 @@ const mockActor = {
   updatedAt: mockDate,
 };
 
-mockActorService.getActorById.mockResolvedValue(mockActor as any);
-mockActorService.getActorByUsername.mockResolvedValue(mockActor as any);
+mockActorService.getActorById.mockResolvedValue(mockActor);
+mockActorService.getActorByUsername.mockResolvedValue(mockActor);
 
 // Mock AuthController methods
 mockAuthController.register.mockImplementation(
@@ -283,7 +283,7 @@ export let isPostLikedTestState = false;
 // --- CONTROLLER MOCKS ---
 
 mockPostsController.createPost.mockImplementation(
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     // CRITICAL: User check MUST be first
     if (!req.user) {
       return res
@@ -402,7 +402,7 @@ mockPostsController.getPostById.mockImplementation(
 );
 
 mockPostsController.getFeed.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction) => {
+  (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req.user;
       const username = user?.preferredUsername;
@@ -445,7 +445,7 @@ mockPostsController.getFeed.mockImplementation(
 );
 
 mockPostsController.getPostsByUsername.mockImplementation(
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     const username = req.params.username;
     if (username === 'nonexistentuser') {
       return res.status(404).json({ error: 'User not found' });
@@ -466,7 +466,7 @@ mockPostsController.getPostsByUsername.mockImplementation(
 );
 
 mockPostsController.updatePost.mockImplementation(
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     const postId = req.params.id;
     const { content } = req.body;
 
@@ -491,7 +491,7 @@ mockPostsController.updatePost.mockImplementation(
 );
 
 mockPostsController.deletePost.mockImplementation(
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     const postId = req.params.id;
 
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
@@ -511,7 +511,7 @@ mockPostsController.deletePost.mockImplementation(
 );
 
 mockPostsController.likePost.mockImplementation(
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     const postId = req.params.id;
 
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
@@ -530,7 +530,7 @@ mockPostsController.likePost.mockImplementation(
 );
 
 mockPostsController.unlikePost.mockImplementation(
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     const postId = req.params.id;
 
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });

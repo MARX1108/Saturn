@@ -46,14 +46,15 @@ describe('Actor Routes', () => {
         >
       ).mockResolvedValue([fullMockActor]); // Resolve with Actor[]
 
-      const response = await request((global as any).testApp)
+      const response = await request((global as any).testApp as Express)
         .get('/api/actors/search?q=')
         .set('Authorization', 'Bearer mock-test-token');
 
       expect(response.status).toBe(200);
       expect(response.body).toBeDefined();
       expect(Array.isArray(response.body)).toBe(true);
-      expect(mockActorService.searchActors).toHaveBeenCalledWith('');
+      const { searchActors } = mockActorService;
+      expect(searchActors).toHaveBeenCalledWith('');
     });
   });
 
@@ -83,7 +84,7 @@ describe('Actor Routes', () => {
         >
       ).mockResolvedValue(mockSearchResult.actors); // Assuming signature is (query: string, limit?: number)
 
-      const response = await request((global as any).testApp)
+      const response = await request((global as any).testApp as Express)
         .get('/api/actors/search')
         .query({ q: 'test' })
         .expect(200);
@@ -106,7 +107,8 @@ describe('Actor Routes', () => {
 
       // Expecting an array of actors now
       expect(response.body).toEqual([expectedActor1, expectedActor2]);
-      expect(mockActorService.searchActors).toHaveBeenCalledWith('test');
+      const { searchActors } = mockActorService;
+      expect(searchActors).toHaveBeenCalledWith('test');
     });
   });
 
@@ -119,7 +121,7 @@ describe('Actor Routes', () => {
       };
       mockActorService.getActorByUsername.mockResolvedValue(specificMockActor);
 
-      const response = await request((global as any).testApp)
+      const response = await request((global as any).testApp as Express)
         .get('/api/actors/testactor')
         .expect(200);
 
@@ -131,15 +133,14 @@ describe('Actor Routes', () => {
       };
 
       expect(response.body).toMatchObject(expectedSerializedActor);
-      expect(mockActorService.getActorByUsername).toHaveBeenCalledWith(
-        'testactor'
-      );
+      const { getActorByUsername } = mockActorService;
+      expect(getActorByUsername).toHaveBeenCalledWith('testactor');
     });
 
     it('should return 404 if actor not found', async () => {
       mockActorService.getActorByUsername.mockResolvedValue(null);
 
-      await request((global as any).testApp)
+      await request((global as any).testApp as Express)
         .get('/api/actors/nonexistent')
         .expect(404);
     });

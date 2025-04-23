@@ -1,12 +1,20 @@
-import express from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
+import { json } from 'body-parser';
+import supertest from 'supertest';
+import { mockServiceContainer } from './mockSetup';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import { serializeError } from 'serialize-error';
+import cors from 'cors';
+import path from 'path';
+// Setup environment variables before other imports
+import './setupEnvironment';
 import { Db } from 'mongodb';
-import { Request, Response, NextFunction } from 'express';
 import { configureRoutes } from '@/routes';
 import { AuthController } from '@/modules/auth/controllers/authController';
 import { ActorsController } from '@/modules/actors/controllers/actorsController';
 import { PostsController } from '@/modules/posts/controllers/postsController';
 import { CommentsController } from '@/modules/comments/controllers/comments.controller';
-import { mockServiceContainer } from './mockSetup';
 import { AppError } from '@/utils/errors';
 
 export function createTestApp(db: Db, domain: string) {
@@ -14,7 +22,7 @@ export function createTestApp(db: Db, domain: string) {
 
   // Add JSON body parser
   app.use(express.json());
-  app.use(require('cors')());
+  app.use(cors());
 
   // Instantiate controllers (assuming this is correct now)
   const postsController = new PostsController(
@@ -48,7 +56,7 @@ export function createTestApp(db: Db, domain: string) {
         .json({ error: err.message || 'An error occurred' });
     } else if (err && typeof err.statusCode === 'number') {
       res
-        .status(err.statusCode)
+        .status(Number(err.statusCode))
         .json({ error: err.message || 'An error occurred' });
     } else {
       res.status(500).json({ error: 'Internal Server Error' });

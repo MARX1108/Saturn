@@ -29,7 +29,7 @@ describe('ActorRepository', () => {
     const actorId = data._id || new ObjectId();
     const username =
       data.preferredUsername || `testuser-${actorId.toHexString()}`;
-    const actorData: Actor = {
+    const actorData: Partial<Actor> = {
       _id: actorId,
       id: data.id || `https://${testDomain}/users/${username}`,
       type: 'Person',
@@ -51,7 +51,7 @@ describe('ActorRepository', () => {
     };
     const result = await db
       .collection<Actor>('actors')
-      .insertOne(actorData as any);
+      .insertOne(actorData as Actor);
     return { ...actorData, _id: result.insertedId };
   };
 

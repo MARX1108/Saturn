@@ -22,10 +22,7 @@ import { CommentService } from '@/modules/comments/services/comment.service';
 import { Actor } from '@/modules/actors/models/actor';
 
 // Define a simple logger interface or import a proper logger
-interface Logger {
-  // ... existing code ...
-  // type OptionalUnlessRequiredId<T> = MongoOptionalId<T>; // Removed local declaration
-}
+type Logger = object;
 
 export class NotificationService {
   private notificationRepository?: NotificationRepository;

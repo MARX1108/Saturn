@@ -293,7 +293,7 @@ describe('Posts Routes', () => {
           actorId: new ObjectId(testUserId),
           createdAt: new Date(Date.now() - 10000),
           type: 'Note',
-          id: `https://test.domain/posts/${new ObjectId()}`,
+          id: `https://test.domain/posts/${new ObjectId().toHexString()}`,
           attributedTo: `https://test.domain/users/testuser`,
         },
         {
@@ -301,7 +301,7 @@ describe('Posts Routes', () => {
           actorId: new ObjectId(testUserId),
           createdAt: new Date(Date.now() - 20000),
           type: 'Note',
-          id: `https://test.domain/posts/${new ObjectId()}`,
+          id: `https://test.domain/posts/${new ObjectId().toHexString()}`,
           attributedTo: `https://test.domain/users/testuser`,
         },
       ]);
@@ -323,7 +323,7 @@ describe('Posts Routes', () => {
           actorId: new ObjectId(testUserId),
           createdAt: new Date(Date.now() - i * 1000),
           type: 'Note',
-          id: `https://test.domain/posts/${new ObjectId()}`,
+          id: `https://test.domain/posts/${new ObjectId().toHexString()}`,
           attributedTo: `https://test.domain/users/testuser`,
         });
       }
@@ -354,8 +354,8 @@ describe('Posts Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.posts.length).toBeGreaterThan(1);
 
-      const firstPostDate = new Date(response.body.posts[0].createdAt);
-      const secondPostDate = new Date(response.body.posts[1].createdAt);
+      const firstPostDate = new Date(String(response.body.posts[0].createdAt));
+      const secondPostDate = new Date(String(response.body.posts[1].createdAt));
       expect(firstPostDate.getTime()).toBeGreaterThanOrEqual(
         secondPostDate.getTime()
       );
@@ -376,7 +376,7 @@ describe('Posts Routes', () => {
         actorId: otherUserId,
         createdAt: new Date(),
         type: 'Note',
-        id: `https://test.domain/posts/${new ObjectId()}`,
+        id: `https://test.domain/posts/${new ObjectId().toHexString()}`,
         attributedTo: `https://test.domain/users/otheruser`,
       });
 
