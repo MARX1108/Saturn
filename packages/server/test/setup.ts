@@ -1,16 +1,13 @@
 // Global setup for Jest tests
 import { Request, Response, NextFunction } from 'express'; // Add express types for mock
 import { Actor } from '@/modules/actors/models/actor'; // Added import
-import { JwtPayload } from 'jsonwebtoken'; // Added import
 
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
-  // console.log('>>> jest.mock factory for @/middleware/auth EXECUTING'); // Removed log
-
-  // Require jwt *inside* the factory function
+  // Require jwt *inside* the factory function to fix the reference error
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const jwt = require('jsonwebtoken'); // <-- Put require back
+  const jwt = require('jsonwebtoken');
 
   // Define the known user ID from mockSetup for default user
   const knownTestUserIdHex = '60a0f3f1e1b8f1a1a8b4c1c1';
@@ -37,11 +34,12 @@ jest.mock('@/middleware/auth', () => {
     //   `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
     // );
     const authHeader = req.headers.authorization;
-    let user = undefined;
+    let user: Actor | undefined = undefined;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       try {
+        // Use jwt from the required module within the mock factory
         const decoded = jwt.verify(
           token,
           process.env.JWT_SECRET || 'test-jwt-secret-key'
@@ -73,31 +71,12 @@ jest.mock('@/middleware/auth', () => {
           // Setting user explicitly undefined if token is bad/unexpected
           user = undefined;
         }
-
-        // console.log( // Removed log block
-        //   '>>> Mock authenticate MIDDLEWARE - Token VERIFIED, user set from token:',
-        //   { id: user._id, username: user.preferredUsername }
-        // );
       } catch (err) {
-        // Handle error type safely
-        let errorMessage = 'Unknown token verification error';
-        if (err instanceof Error) {
-          errorMessage = err.message;
-        }
-        // console.log( // Removed log block
-        //   '>>> Mock authenticate MIDDLEWARE - Token VERIFICATION FAILED',
-        //   errorMessage
-        // );
-        // For tests, we might still want to allow progression but without a valid user,
-        // or fall back to default. Falling back to default for now.
-        // user = defaultMockUser;
-        // OR treat as unauthorized explicitly if token is bad?
-        // Let's return 401 for bad tokens
+        // Handle error type safely - no need to keep a reference to err
         return res.status(401).json({ error: 'Unauthorized - Invalid Token' });
       }
     } else {
       // No token provided
-      // console.log('>>> Mock authenticate MIDDLEWARE - No token found'); // Removed log
       // If the route requires auth, let the controller/route handler return 401/403.
       // The middleware itself often just calls next() if no token is present,
       // unless it's configured to reject immediately.
@@ -137,7 +116,7 @@ import { MongoClient, Db } from 'mongodb';
 // import { setupTestDb, teardownTestDb } from './helpers/testUtils';
 
 import { createTestApp } from './helpers/testApp';
-import request, { SuperTest, Test } from 'supertest'; // Ensured SuperTest, Test are imported
+import request from 'supertest'; // Remove unused SuperTest and Test types
 import { Express } from 'express'; // Ensured Express is imported
 
 // Set environment variables for testing

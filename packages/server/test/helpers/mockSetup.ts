@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { mock } from 'jest-mock-extended';
+import { mock, DeepMockProxy } from 'jest-mock-extended';
 import { ObjectId } from 'mongodb';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { PostService } from '@/modules/posts/services/postService';
@@ -18,58 +18,110 @@ import { Request, Response, NextFunction } from 'express';
 import { createTestApp } from './testApp';
 import { Comment } from '@/modules/comments/models/comment';
 import { jest } from '@jest/globals';
+import { AuthService } from '@/modules/auth/services/auth.service';
+import { MediaService } from '@/modules/media/services/media.service';
+import { UploadService } from '@/modules/media/services/upload.service';
+import { NotificationService } from '@/modules/notifications/services/notification.service';
+import { ActivityPubService } from '@/modules/activitypub/services/activitypub.service';
+import { WebfingerService } from '@/modules/webfinger/services/webfinger.service';
+import { PostsController } from '@/modules/posts/controllers/postsController';
+import { CommentsController } from '@/modules/comments/controllers/comments.controller';
+import { AuthController } from '@/modules/auth/controllers/authController';
+import { ActorsController } from '@/modules/actors/controllers/actorsController';
+import { MediaController } from '@/modules/media/controllers/media.controller';
+import { ActivityPubController } from '@/modules/activitypub/controllers/activitypubController';
+import { WebfingerController } from '@/modules/webfinger/controllers/webfingerController';
 
 // Type definition for middleware functions
-type MiddlewareFunction = (req: any, res: any, next: any) => void;
+type MiddlewareFunction = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void;
 
 // Type for mock implementations
 interface MockService {
   [key: string]: jest.Mock;
 }
 
-// Create mock services
-export const mockAuthService = mock<any>();
-export const mockActorService = mock<ActorService>();
-export const mockPostService = mock<PostService>();
-export const mockUploadService = mock<MockService>();
-export const mockNotificationService = mock<any>();
-export const mockCommentService = mock<any>();
-export const mockMediaService = mock<any>();
-export const mockActivityPubService = mock<any>();
-export const mockWebfingerService = mock<any>();
-export const mockPostsController = mock<any>();
-export const mockCommentsController = mock<any>();
-export const mockAuthController = mock<any>();
-export const mockActorsController = mock<any>();
-export const mockMediaController = mock<any>();
-export const mockActivityPubController = mock<any>();
-export const mockWebfingerController = mock<any>();
+// Create mock services with proper types
+export const mockAuthService: DeepMockProxy<AuthService> = mock<AuthService>();
+export const mockActorService: DeepMockProxy<ActorService> =
+  mock<ActorService>();
+export const mockPostService: DeepMockProxy<PostService> = mock<PostService>();
+export const mockUploadService: DeepMockProxy<UploadService & MockService> =
+  mock<UploadService & MockService>();
+export const mockNotificationService: DeepMockProxy<NotificationService> =
+  mock<NotificationService>();
+export const mockCommentService: DeepMockProxy<CommentService> =
+  mock<CommentService>();
+export const mockMediaService: DeepMockProxy<MediaService> =
+  mock<MediaService>();
+export const mockActivityPubService: DeepMockProxy<ActivityPubService> =
+  mock<ActivityPubService>();
+export const mockWebfingerService: DeepMockProxy<WebfingerService> =
+  mock<WebfingerService>();
+export const mockPostsController: DeepMockProxy<PostsController> =
+  mock<PostsController>();
+export const mockCommentsController: DeepMockProxy<CommentsController> =
+  mock<CommentsController>();
+export const mockAuthController: DeepMockProxy<AuthController> =
+  mock<AuthController>();
+export const mockActorsController: DeepMockProxy<ActorsController> =
+  mock<ActorsController>();
+export const mockMediaController: DeepMockProxy<MediaController> =
+  mock<MediaController>();
+export const mockActivityPubController: DeepMockProxy<ActivityPubController> =
+  mock<ActivityPubController>();
+export const mockWebfingerController: DeepMockProxy<WebfingerController> =
+  mock<WebfingerController>();
 
-// Attach to global scope
-(global as any).mockAuthService = mockAuthService;
-(global as any).mockActorService = mockActorService;
-(global as any).mockPostService = mockPostService;
-(global as any).mockUploadService = mockUploadService;
-(global as any).mockNotificationService = mockNotificationService;
-(global as any).mockCommentService = mockCommentService;
-(global as any).mockMediaService = mockMediaService;
-(global as any).mockActivityPubService = mockActivityPubService;
-(global as any).mockWebfingerService = mockWebfingerService;
-(global as any).mockPostsController = mockPostsController;
-(global as any).mockCommentsController = mockCommentsController;
-(global as any).mockAuthController = mockAuthController;
-(global as any).mockActorsController = mockActorsController;
-(global as any).mockMediaController = mockMediaController;
-(global as any).mockActivityPubController = mockActivityPubController;
-(global as any).mockWebfingerController = mockWebfingerController;
+// Define a type for the global scope to avoid 'any'
+interface TestGlobals {
+  mockAuthService: DeepMockProxy<AuthService>;
+  mockActorService: DeepMockProxy<ActorService>;
+  mockPostService: DeepMockProxy<PostService>;
+  mockUploadService: DeepMockProxy<UploadService & MockService>;
+  mockNotificationService: DeepMockProxy<NotificationService>;
+  mockCommentService: DeepMockProxy<CommentService>;
+  mockMediaService: DeepMockProxy<MediaService>;
+  mockActivityPubService: DeepMockProxy<ActivityPubService>;
+  mockWebfingerService: DeepMockProxy<WebfingerService>;
+  mockPostsController: DeepMockProxy<PostsController>;
+  mockCommentsController: DeepMockProxy<CommentsController>;
+  mockAuthController: DeepMockProxy<AuthController>;
+  mockActorsController: DeepMockProxy<ActorsController>;
+  mockMediaController: DeepMockProxy<MediaController>;
+  mockActivityPubController: DeepMockProxy<ActivityPubController>;
+  mockWebfingerController: DeepMockProxy<WebfingerController>;
+}
+
+// Attach to global scope with proper typing
+const globalWithMocks = global as unknown as TestGlobals;
+globalWithMocks.mockAuthService = mockAuthService;
+globalWithMocks.mockActorService = mockActorService;
+globalWithMocks.mockPostService = mockPostService;
+globalWithMocks.mockUploadService = mockUploadService;
+globalWithMocks.mockNotificationService = mockNotificationService;
+globalWithMocks.mockCommentService = mockCommentService;
+globalWithMocks.mockMediaService = mockMediaService;
+globalWithMocks.mockActivityPubService = mockActivityPubService;
+globalWithMocks.mockWebfingerService = mockWebfingerService;
+globalWithMocks.mockPostsController = mockPostsController;
+globalWithMocks.mockCommentsController = mockCommentsController;
+globalWithMocks.mockAuthController = mockAuthController;
+globalWithMocks.mockActorsController = mockActorsController;
+globalWithMocks.mockMediaController = mockMediaController;
+globalWithMocks.mockActivityPubController = mockActivityPubController;
+globalWithMocks.mockWebfingerController = mockWebfingerController;
 
 // Ensure configureImageUploadMiddleware is still mocked if needed by controller setup
-const globalUploadService = (global as any).mockUploadService as MockService;
+const globalUploadService = globalWithMocks.mockUploadService;
 if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
   const middlewareFn: MiddlewareFunction = (
-    req: any,
-    res: any,
-    next: any
+    req: Request,
+    res: Response,
+    next: NextFunction
   ): void => next();
   globalUploadService.configureImageUploadMiddleware.mockReturnValue(
     middlewareFn
@@ -78,9 +130,9 @@ if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
   globalUploadService.configureImageUploadMiddleware = jest.fn();
 
   const middlewareFn: MiddlewareFunction = (
-    req: any,
-    res: any,
-    next: any
+    req: Request,
+    res: Response,
+    next: NextFunction
   ): void => next();
 
   globalUploadService.configureImageUploadMiddleware.mockReturnValue(
@@ -100,7 +152,7 @@ const knownTestPostUrl = `https://test.domain/posts/${knownTestPostIdString}`;
 const knownNonExistentObjectId = new ObjectId('ffffffffffffffffffffffff');
 const knownNonExistentIdString = knownNonExistentObjectId.toHexString();
 
-const mockActor = {
+const mockActor: Actor = {
   _id: knownTestUserId, // Use the ObjectId instance
   id: `https://test.domain/users/${knownTestUsername}`,
   username: `${knownTestUsername}@test.domain`,
@@ -263,24 +315,24 @@ jest.mock('multer', () => {
     // Add other methods if needed (fields, none)
   }));
 
-  // --- FIX: Mock static properties ---
-  // Attach mock static methods directly to the mock function object
-  (multer as any).diskStorage = jest.fn(() => ({
+  // Create a properly typed diskStorage mock
+  (multer as jest.Mock).diskStorage = jest.fn(() => ({
     _handleFile: jest.fn(),
     _removeFile: jest.fn(),
   }));
-  (multer as any).memoryStorage = jest.fn(() => ({
+
+  // Create a properly typed memoryStorage mock
+  (multer as jest.Mock).memoryStorage = jest.fn(() => ({
     _handleFile: jest.fn(),
     _removeFile: jest.fn(),
   }));
-  // --- END FIX ---
 
   return multer;
 });
 // --- END Multer Mock ---
 
 // --- Helper Data & Mocks ---
-const mockPost = {
+const mockPost: Post = {
   _id: knownTestPostObjectId,
   id: knownTestPostUrl,
   type: 'Note' as const,
@@ -308,11 +360,31 @@ const mockPost = {
     id: `https://test.domain/users/${knownTestUsername}`,
     preferredUsername: knownTestUsername,
   },
-} as Post;
+};
 
 export let isPostLikedTestState = false;
 
 // --- CONTROLLER MOCKS ---
+
+// Type for attachment in response
+interface AttachmentResponse {
+  type: string;
+  mediaType: string;
+  url: string;
+  name: string;
+}
+
+// Type for post response
+interface PostResponse {
+  _id: string | ObjectId;
+  id: string;
+  content: string;
+  attachments: AttachmentResponse[];
+  actor: {
+    preferredUsername: string;
+    displayName: string;
+  };
+}
 
 mockPostsController.createPost.mockImplementation(
   (req: Request, res: Response) => {
@@ -327,10 +399,11 @@ mockPostsController.createPost.mockImplementation(
     const isMultipart =
       req.headers &&
       req.headers['content-type'] &&
+      typeof req.headers['content-type'] === 'string' &&
       req.headers['content-type'].includes('multipart/form-data');
 
     if (isMultipart) {
-      const attachments = [
+      const attachments: AttachmentResponse[] = [
         {
           type: 'Image',
           mediaType: 'image/png', // Default to png for valid mock
@@ -339,7 +412,7 @@ mockPostsController.createPost.mockImplementation(
         },
       ];
 
-      const createdPost = {
+      const createdPost: PostResponse = {
         _id: new ObjectId(),
         id: `https://test.domain/posts/${new ObjectId().toHexString()}`,
         content: req.body?.content || 'Post with attachment', // Use provided content
@@ -581,12 +654,11 @@ mockPostsController.unlikePost.mockImplementation(
 );
 
 // Create and export the container using these mocks
-// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
 export const mockServiceContainer: ServiceContainer = {
   authService: mockAuthService,
   actorService: mockActorService,
   postService: mockPostService,
-  uploadService: mockUploadService as any, // Type assertion to bypass missing properties error
+  uploadService: mockUploadService as unknown as UploadService, // Cast to UploadService
   notificationService: mockNotificationService,
   commentService: mockCommentService,
   mediaService: mockMediaService,
@@ -600,16 +672,15 @@ export const mockServiceContainer: ServiceContainer = {
   webfingerController: mockWebfingerController,
   mediaController: mockMediaController,
   domain: 'test.domain',
+  // Properly type the getService method
   getService: jest
     .fn()
     .mockImplementation(<T>(name: keyof ServiceContainer): T | null => {
       if (Object.prototype.hasOwnProperty.call(mockServiceContainer, name)) {
         // Type-safe approach to return service
-        const service = mockServiceContainer[name];
-        // Only cast to T if the service exists
-        if (service) {
-          return service as T;
-        }
+        const service = mockServiceContainer[name] as unknown;
+        // Return service as T
+        return service as T;
       }
       return null;
     }),
