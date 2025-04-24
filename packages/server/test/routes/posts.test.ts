@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request, { Response } from 'supertest';
 import { Db, ObjectId } from 'mongodb';
 import path from 'path';
 import fs from 'fs';
@@ -7,6 +7,43 @@ import configurePostRoutes from '@/modules/posts/routes/postRoutes';
 import { DbUser } from '../../src/modules/auth/models/user';
 import { DeepMockProxy } from 'jest-mock-extended';
 import { PostService } from '@/modules/posts/services/postService';
+
+// Define an interface for the expected response body
+interface CreatedPostResponse {
+  content: string;
+  actor: {
+    preferredUsername: string;
+    // Add other expected actor properties if known/needed
+  };
+  // Add other expected post properties if known/needed
+  sensitive?: boolean;
+  contentWarning?: string;
+  attachments?: Attachment[];
+}
+
+// Define Attachment interface
+interface Attachment {
+  url: string;
+  mediaType: string;
+  // Add other expected attachment properties if known/needed
+}
+
+// Define an interface for the expected error response body
+interface ErrorResponse {
+  error: string;
+  // Add other potential error properties if applicable
+}
+
+// Add PostResponse interface
+interface PostResponse {
+  _id: string;
+  content: string;
+  id: string;
+  // Add other expected properties like actor, createdAt, sensitive, etc.
+  // Based on the test, it seems 'actor' might not be populated here?
+  // Let's add likedByUser based on later tests
+  likedByUser?: boolean;
+}
 
 // Extend Express Request type using module augmentation
 declare module 'express' {
@@ -80,46 +117,63 @@ describe('Posts Routes', () => {
 
   describe('POST /api/posts', () => {
     it('should create a new post', async () => {
-      const response = await global
+      // Explicitly type the response
+      const response: Response = await global
         .request(global.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ content: 'This is a new post' });
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('content', 'This is a new post');
-      expect(response.body).toHaveProperty(
-        'actor.preferredUsername',
+
+      // Now cast response.body to the specific interface
+      const responseBody = response.body as CreatedPostResponse;
+
+      expect(responseBody).toHaveProperty('content', 'This is a new post');
+      expect(responseBody.actor).toHaveProperty(
+        'preferredUsername',
         'testuser'
       );
     });
 
     it('should return 401 if not authenticated', async () => {
-      const response = await global
+      // Explicitly type the response
+      const response: Response = await global
         .request(global.testApp)
         .post('/api/posts')
         .send({ content: 'This should fail' });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty(
+
+      // Cast response.body to the specific error interface
+      const responseBody = response.body as ErrorResponse;
+
+      expect(responseBody).toHaveProperty(
         'error',
         'Unauthorized - No user found in controller mock'
       );
     });
 
     it('should return 400 if content is missing', async () => {
-      const response = await global
+      // Explicitly type the response
+      const response: Response = await global
         .request(global.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({});
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+
+      // Reuse the ErrorResponse interface
+      const responseBody = response.body as ErrorResponse;
+
+      // Check if the error property exists
+      expect(responseBody).toHaveProperty('error');
     });
 
     it('should create a post with sensitive content', async () => {
-      const response = await global
+      // Explicitly type the response
+      const response: Response = await global
         .request(global.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
@@ -130,12 +184,16 @@ describe('Posts Routes', () => {
         });
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty(
+
+      // Reuse and cast
+      const responseBody = response.body as CreatedPostResponse;
+
+      expect(responseBody).toHaveProperty(
         'content',
         'This is sensitive content'
       );
-      expect(response.body).toHaveProperty('sensitive', true);
-      expect(response.body).toHaveProperty('contentWarning', 'Sensitive topic');
+      expect(responseBody).toHaveProperty('sensitive', true);
+      expect(responseBody).toHaveProperty('contentWarning', 'Sensitive topic');
     });
 
     it('should create a post with attachments', async () => {
@@ -160,11 +218,15 @@ describe('Posts Routes', () => {
       }
 
       expect(response?.status).toBe(201);
-      expect(response?.body).toHaveProperty('attachments');
-      expect(response?.body.attachments).toBeInstanceOf(Array);
-      expect(response?.body.attachments.length).toBe(1);
-      expect(response?.body.attachments[0]).toHaveProperty('url');
-      expect(response?.body.attachments[0]).toHaveProperty(
+      // Assert type after checking status (response must be defined here)
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      const responseBody = response!.body as CreatedPostResponse;
+
+      expect(responseBody).toHaveProperty('attachments');
+      expect(responseBody.attachments).toBeInstanceOf(Array);
+      expect(responseBody.attachments?.length).toBe(1);
+      expect(responseBody.attachments?.[0]).toHaveProperty('url');
+      expect(responseBody.attachments?.[0]).toHaveProperty(
         'mediaType',
         'image/png'
       );
@@ -195,13 +257,17 @@ describe('Posts Routes', () => {
         new Error('DB error')
       );
 
-      const response = await global
+      // Explicitly type the response
+      const response: Response = await global
         .request(global.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ content: 'This should trigger a server error' });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(201); // NOTE: This expectation seems odd for an error case
+      // Assert type even if body isn't checked yet
+      const responseBody = response.body as ErrorResponse;
+      // Add assertions on responseBody.error here if desired later
     });
 
     // Add more tests: post length validation, rate limiting, etc.
@@ -210,14 +276,17 @@ describe('Posts Routes', () => {
   describe('GET /api/posts/:postId', () => {
     it('should retrieve a specific post', async () => {
       // Use the known testPostId
-      const response = await global
+      const response: Response = await global
         .request(global.testApp)
         .get(`/api/posts/${testPostId}`);
       expect(response.status).toBe(200);
+
+      const responseBody = response.body as PostResponse;
+
       // Assert against the data returned by the refined mock
-      expect(response.body).toHaveProperty('_id', testPostId);
-      expect(response.body).toHaveProperty('content', 'This is a test post'); // Mock now returns this
-      expect(response.body).toHaveProperty(
+      expect(responseBody).toHaveProperty('_id', testPostId);
+      expect(responseBody).toHaveProperty('content', 'This is a test post'); // Mock now returns this
+      expect(responseBody).toHaveProperty(
         'id',
         `https://test.domain/posts/${testPostId}`
       );
