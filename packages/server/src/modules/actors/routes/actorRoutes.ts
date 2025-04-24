@@ -3,7 +3,6 @@ import express, { Request, Response, Router, NextFunction } from 'express';
 import { ActorsController } from '../controllers/actorsController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
-import multer from 'multer';
 import { wrapAsync } from '../../../utils/routeHandler';
 
 /**
@@ -63,7 +62,6 @@ export default function configureActorRoutes(
   router.put(
     '/:id',
     auth,
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     wrapAsync(actorsController.updateActor.bind(actorsController))
   );
 
@@ -71,7 +69,6 @@ export default function configureActorRoutes(
   router.delete(
     '/:id',
     auth,
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     wrapAsync(actorsController.deleteActor.bind(actorsController))
   );
 

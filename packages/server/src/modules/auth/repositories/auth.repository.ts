@@ -2,16 +2,6 @@ import { Db } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
 import { DbUser } from '../models/user';
 
-// Define basic Auth types - expand as needed
-interface User {
-  id: string;
-  username: string;
-  password: string; // This should be hashed
-  email: string;
-  createdAt: Date;
-  [key: string]: any;
-}
-
 export class AuthRepository extends MongoRepository<DbUser> {
   constructor(db: Db) {
     super(db, 'actors');

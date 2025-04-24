@@ -1,14 +1,10 @@
-import { ObjectId, Db } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
 import bcryptjs from 'bcryptjs';
 import { Actor } from '@/modules/actors/models/actor';
 import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 import { NotificationService } from '@/modules/notifications/services/notification.service';
-import { NotificationType } from '@/modules/notifications/models/notification';
 import { AppError, ErrorType } from '@/utils/errors';
-import { Filter } from 'mongodb';
-import { Request, Response, NextFunction } from 'express';
-import { UploadService } from '@/modules/media/services/upload.service';
 
 // Define CreateActorData interface and export it
 export interface CreateActorData {

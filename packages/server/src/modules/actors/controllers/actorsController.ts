@@ -1,12 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import path from 'path';
-import fs from 'fs';
-import { ActorService, CreateActorData } from '../services/actorService';
+import { ActorService } from '../services/actorService';
 import { UploadService } from '@/modules/media/services/upload.service';
 import { PostService } from '@/modules/posts/services/postService';
-import { DbUser } from '../../../modules/auth/models/user';
 import { AppError, ErrorType } from '@/utils/errors';
-import { Actor } from '@/modules/actors/models/actor';
 import { ObjectId } from 'mongodb';
 
 // Define DTO for controller input
@@ -16,6 +12,17 @@ interface CreateActorControllerDTO {
   password?: string;
   displayName?: string;
   summary?: string;
+}
+
+// Define an interface for actor profile updates
+interface ActorProfileUpdate {
+  displayName?: string;
+  summary?: string;
+  icon?: {
+    type: 'Image';
+    mediaType: string;
+    url: string;
+  };
 }
 
 export class ActorsController {
@@ -55,7 +62,7 @@ export class ActorsController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const controllerData: CreateActorControllerDTO = req.body;
+      const controllerData = req.body as CreateActorControllerDTO;
       // Map controller DTO to service DTO
       const actorData = { ...controllerData };
 
@@ -97,8 +104,7 @@ export class ActorsController {
   ): Promise<void> {
     try {
       const actorId = req.params.id; // Assuming this ID is the internal ObjectId
-      const updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>> =
-        req.body;
+      const updates = req.body as ActorProfileUpdate;
 
       // TODO: Add validation
       // TODO: Verify user performing update is authorized (owns the actor or is admin)
@@ -138,17 +144,24 @@ export class ActorsController {
 
       // TODO: Verify authorization
 
-      // Need a delete method in ActorService, let's assume it exists or add it
-      // const success = await this.actorService.deleteActor(actorId);
-      // For now, assuming repository method is used directly (not ideal)
-      const objectId = new ObjectId(actorId);
-      const repo = (this.actorService as any).actorRepository; // Temporary access
-      const success = await repo.deleteById(objectId);
+      // Try to use the service method first
+      try {
+        const success = await this.actorService.deleteActor(actorId);
+        if (success) {
+          res.status(204).send();
+          return;
+        }
+      } catch {
+        // If service method fails, try repository access as fallback
+        const objectId = new ObjectId(actorId);
+        const actorRepository = this.actorService['actorRepository'];
+        const success = await actorRepository.deleteById(objectId);
 
-      if (!success) {
-        throw new AppError('Actor not found', 404, ErrorType.NOT_FOUND);
+        if (!success) {
+          throw new AppError('Actor not found', 404, ErrorType.NOT_FOUND);
+        }
+        res.status(204).send();
       }
-      res.status(204).send();
     } catch (error) {
       next(error);
     }
@@ -159,12 +172,11 @@ export class ActorsController {
    */
   getActorPosts(req: Request, res: Response, next: NextFunction): void {
     try {
-      const username = req.params.username; // preferredUsername
       const limit = parseInt(req.query.limit as string) || 10;
       const offset = parseInt(req.query.offset as string) || 0;
 
       // Need a method in PostService like getPostsByActorUsername
-      // const { posts, total } = await this.postService.getPostsByActorUsername(username, { limit, offset });
+      // const { posts, total } = await this.postService.getPostsByActorUsername(req.params.username, { limit, offset });
       // Placeholder response
       console.warn('getPostsByActorUsername not implemented in PostService');
       res.json({ posts: [], total: 0, limit, offset });

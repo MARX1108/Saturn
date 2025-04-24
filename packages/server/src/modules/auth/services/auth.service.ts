@@ -1,9 +1,7 @@
 // Auth service implementation
-import { Db as _Db } from 'mongodb';
 import bcryptjs from 'bcryptjs';
 import { AuthRepository } from '../repositories/auth.repository';
 import { DbUser } from '../models/user';
-import { AppError, ErrorType } from '../../../utils/errors';
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 
@@ -74,7 +72,8 @@ export class AuthService {
     }
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
 
     // Generate token
     const token = this.generateToken(user);
@@ -108,7 +107,8 @@ export class AuthService {
     await this.repository.create(user);
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
 
     // Generate token
     const token = this.generateToken(user);
@@ -133,7 +133,7 @@ export class AuthService {
       if (!user) return null;
 
       return user;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import _bcryptjs from 'bcryptjs';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { AuthService } from '../services/auth.service';
-import { generateToken } from '../../../middleware/auth';
-import { DbUser } from '../models/user';
 import { AppError, ErrorType } from '../../../utils/errors';
+import { RegisterRequest, LoginRequest } from '../types/auth';
 
 /**
  * Controller for handling authentication operations
@@ -27,7 +25,7 @@ export class AuthController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { username, password, email } = req.body;
+      const { username, password, email } = req.body as RegisterRequest;
       if (!username || !password) {
         throw new AppError(
           'Username and password are required',
@@ -57,7 +55,7 @@ export class AuthController {
    */
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { username, password } = req.body;
+      const { username, password } = req.body as LoginRequest;
       if (!username || !password) {
         throw new AppError(
           'Username and password are required',

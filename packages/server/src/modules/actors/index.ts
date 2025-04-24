@@ -4,7 +4,6 @@
  * This module handles the creation, retrieval, updating, and deletion of actors (users).
  */
 
-import { Router } from 'express';
 import { ActorService } from './services/actorService';
 import { ActorRepository } from './repositories/actorRepository';
 import configureActorRoutes from './routes/actorRoutes';
