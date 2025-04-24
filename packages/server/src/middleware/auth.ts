@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { DbUser } from '../modules/auth/models/user';
 import { AuthService } from '../modules/auth/services/auth.service';
+import { Db } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -42,11 +44,21 @@ export const auth = async (
     };
 
     // Get database from app locals
-    const db = req.app.locals.db;
+    const db = req.app.locals.db as Db;
+
+    if (!db) {
+      console.error('Database not found in app.locals');
+      return res
+        .status(500)
+        .json({ error: 'Internal server configuration error' });
+    }
 
     // Find user in database
-    const user = await db.collection('actors').findOne({
-      $or: [{ _id: decoded.id }, { preferredUsername: decoded.username }],
+    const user = await db.collection<DbUser>('actors').findOne({
+      $or: [
+        { _id: new ObjectId(decoded.id) },
+        { preferredUsername: decoded.username },
+      ],
     });
 
     if (!user) {
@@ -57,8 +69,8 @@ export const auth = async (
     req.user = user;
 
     next();
-  } catch (error) {
-    console.error('Auth middleware error:', error);
+  } catch (_error) {
+    console.error('Auth middleware error:', _error);
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -95,7 +107,7 @@ export const authenticateToken = (
     ) as DbUser;
     req.user = decoded;
     next();
-  } catch (error) {
+  } catch (_error) {
     return res.status(403).json({ message: 'Invalid token' });
   }
 };
