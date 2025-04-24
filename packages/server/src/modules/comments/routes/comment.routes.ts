@@ -15,7 +15,7 @@ export default function configureCommentRoutes(
 
   // Public routes
   router.get('/:postId', (req, res, next) => {
-    commentsController.getComments(req, res).catch(next);
+    void commentsController.getComments(req, res).catch(next);
   });
 
   // Protected routes
@@ -23,7 +23,7 @@ export default function configureCommentRoutes(
     '/',
     authenticate(container.authService),
     (req: Request, res: Response, next: NextFunction) => {
-      commentsController.createComment(req, res, next).catch(next);
+      void commentsController.createComment(req, res, next).catch(next);
     }
   );
 
@@ -31,7 +31,7 @@ export default function configureCommentRoutes(
     '/:commentId',
     authenticate(container.authService),
     (req, res, next) => {
-      commentsController.deleteComment(req, res).catch(next);
+      void commentsController.deleteComment(req, res).catch(next);
     }
   );
 

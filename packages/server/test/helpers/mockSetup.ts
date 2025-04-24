@@ -14,12 +14,23 @@ import {
   // UnauthorizedError, // Removed unused import
 } from '@/utils/errors';
 import { Request, Response, NextFunction } from 'express';
+import { TestApp } from './testApp';
+import { Comment } from '@/modules/comments/models/comment';
+import { jest } from '@jest/globals';
+
+// Type definition for middleware functions
+type MiddlewareFunction = (req: any, res: any, next: any) => void;
+
+// Type for mock implementations
+interface MockService {
+  [key: string]: jest.Mock;
+}
 
 // Create mock services
 export const mockAuthService = mock<any>();
 export const mockActorService = mock<ActorService>();
 export const mockPostService = mock<PostService>();
-export const mockUploadService = mock<any>();
+export const mockUploadService = mock<MockService>();
 export const mockNotificationService = mock<any>();
 export const mockCommentService = mock<any>();
 export const mockMediaService = mock<any>();
@@ -52,10 +63,27 @@ export const mockWebfingerController = mock<any>();
 (global as any).mockWebfingerController = mockWebfingerController;
 
 // Ensure configureImageUploadMiddleware is still mocked if needed by controller setup
-const globalUploadService = (global as any).mockUploadService;
+const globalUploadService = (global as any).mockUploadService as MockService;
 if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
+  const middlewareFn: MiddlewareFunction = (
+    req: any,
+    res: any,
+    next: any
+  ): void => next();
   globalUploadService.configureImageUploadMiddleware.mockReturnValue(
-    (req: any, res: any, next: any): void => next()
+    middlewareFn
+  );
+} else {
+  globalUploadService.configureImageUploadMiddleware = jest.fn();
+
+  const middlewareFn: MiddlewareFunction = (
+    req: any,
+    res: any,
+    next: any
+  ): void => next();
+
+  globalUploadService.configureImageUploadMiddleware.mockReturnValue(
+    middlewareFn
   );
 }
 
@@ -575,7 +603,9 @@ export const mockServiceContainer: ServiceContainer = {
     if (
       Object.prototype.hasOwnProperty.call(mockServiceContainer, serviceName)
     ) {
-      return mockServiceContainer[serviceName] as T;
+      // Cast to unknown first, then to T, to avoid unsafe return
+      const service = mockServiceContainer[serviceName];
+      return service as unknown as T;
     }
     return null;
   }),

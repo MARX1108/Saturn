@@ -42,7 +42,7 @@ export default function configureActorRoutes(
   router.get(
     '/:username/posts',
     (req: Request, res: Response, next: NextFunction) => {
-      actorsController.getActorPosts(req, res, next);
+      void actorsController.getActorPosts(req, res, next);
     }
   );
 
