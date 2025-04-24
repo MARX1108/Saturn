@@ -13,13 +13,17 @@ export class UploadService {
     const destination = uploadDir || defaultDir;
 
     return multer.diskStorage({
-      destination: async (req, file, cb) => {
-        try {
-          await fs.mkdir(destination, { recursive: true });
-          cb(null, destination);
-        } catch (err) {
-          cb(err instanceof Error ? err : new Error(String(err)), '');
-        }
+      destination: (req, file, cb) => {
+        // Instead of awaiting the promise directly, which causes the linting error,
+        // we'll handle it with a .then() chain to keep the callback synchronous
+        void fs
+          .mkdir(destination, { recursive: true })
+          .then(() => {
+            cb(null, destination);
+          })
+          .catch(err => {
+            cb(err instanceof Error ? err : new Error(String(err)), '');
+          });
       },
       filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);

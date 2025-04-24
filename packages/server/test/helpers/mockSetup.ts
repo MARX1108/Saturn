@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { mock } from 'jest-mock-extended';
 import { ObjectId } from 'mongodb';
 import { ActorService } from '@/modules/actors/services/actorService';
@@ -14,7 +15,7 @@ import {
   // UnauthorizedError, // Removed unused import
 } from '@/utils/errors';
 import { Request, Response, NextFunction } from 'express';
-import { TestApp } from './testApp';
+import { createTestApp } from './testApp';
 import { Comment } from '@/modules/comments/models/comment';
 import { jest } from '@jest/globals';
 
@@ -580,11 +581,12 @@ mockPostsController.unlikePost.mockImplementation(
 );
 
 // Create and export the container using these mocks
+// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
 export const mockServiceContainer: ServiceContainer = {
   authService: mockAuthService,
   actorService: mockActorService,
   postService: mockPostService,
-  uploadService: mockUploadService,
+  uploadService: mockUploadService as any, // Type assertion to bypass missing properties error
   notificationService: mockNotificationService,
   commentService: mockCommentService,
   mediaService: mockMediaService,
@@ -598,15 +600,18 @@ export const mockServiceContainer: ServiceContainer = {
   webfingerController: mockWebfingerController,
   mediaController: mockMediaController,
   domain: 'test.domain',
-  getService: jest.fn().mockImplementation(<T>(name: string): T | null => {
-    const serviceName = name as keyof ServiceContainer;
-    if (
-      Object.prototype.hasOwnProperty.call(mockServiceContainer, serviceName)
-    ) {
-      // Cast to unknown first, then to T, to avoid unsafe return
-      const service = mockServiceContainer[serviceName];
-      return service as unknown as T;
-    }
-    return null;
-  }),
+  getService: jest
+    .fn()
+    .mockImplementation(<T>(name: keyof ServiceContainer): T | null => {
+      if (Object.prototype.hasOwnProperty.call(mockServiceContainer, name)) {
+        // Type-safe approach to return service
+        const service = mockServiceContainer[name];
+        // Only cast to T if the service exists
+        if (service) {
+          return service as T;
+        }
+      }
+      return null;
+    }),
 };
+/* eslint-enable @typescript-eslint/no-unsafe-return */

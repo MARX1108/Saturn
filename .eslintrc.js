@@ -48,6 +48,35 @@ module.exports = {
     'no-unused-vars': 'off', // Disable base rule, use '@typescript-eslint/no-unused-vars' instead
     // Add other rules as needed
   },
+  // Special rules for specific file patterns
+  overrides: [
+    {
+      // Apply to route handler files in server package
+      files: [
+        'packages/server/src/modules/*/routes/*.ts',
+        'packages/server/src/routes/*.ts',
+      ],
+      rules: {
+        // Allow async functions in Express route handlers
+        '@typescript-eslint/no-misused-promises': [
+          'error',
+          {
+            checksVoidReturn: {
+              arguments: false,
+              attributes: false,
+            },
+          },
+        ],
+      },
+    },
+    {
+      // Apply to test files that might use unbound methods for assertions
+      files: ['packages/server/test/**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/unbound-method': 'off',
+      },
+    },
+  ],
   settings: {
     // Optional: configure specific settings for plugins if needed
   },

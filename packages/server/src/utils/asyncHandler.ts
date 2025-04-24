@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 
-type AsyncHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => Promise<void | Response>;
-
+/**
+ * Utility for safely wrapping async Express route handlers
+ * This wrapper ensures proper Promise handling and error propagation
+ */
 export const asyncHandler =
-  (fn: AsyncHandler) =>
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
   (req: Request, res: Response, next: NextFunction): void => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+    void Promise.resolve(fn(req, res, next)).catch(next);
   };

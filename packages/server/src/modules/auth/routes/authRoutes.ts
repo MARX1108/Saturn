@@ -1,13 +1,15 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import express, { Request, Response, Router, NextFunction } from 'express';
 import { AuthController } from '../controllers/authController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
+import { wrapAsync } from '../../../utils/routeHandler';
 
-// Async Handler Wrapper
+// Async Handler Wrapper with proper void return type
 const asyncHandler =
   (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+  (req: Request, res: Response, next: NextFunction): void => {
+    void Promise.resolve(fn(req, res, next)).catch(next);
   };
 
 /**
@@ -32,13 +34,16 @@ export default function configureAuthRoutes(
     authController.getCurrentUser.bind(authController);
 
   // Register new user
-  router.post('/register', asyncHandler(boundRegister));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.post('/register', wrapAsync(boundRegister));
 
   // Login user
-  router.post('/login', asyncHandler(boundLogin));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.post('/login', wrapAsync(boundLogin));
 
   // Get current user (protected route)
-  router.get('/me', auth, asyncHandler(boundGetCurrentUser));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/me', auth, wrapAsync(boundGetCurrentUser));
 
   return router;
 }

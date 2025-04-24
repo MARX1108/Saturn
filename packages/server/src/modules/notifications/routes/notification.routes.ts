@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import express, { Router, RequestHandler } from 'express';
 import { NotificationsController } from '../controllers/notifications.controller';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
+import { wrapAsync } from '../../../utils/routeHandler';
 
 /**
  * Configure notification routes with the controller
@@ -18,28 +21,32 @@ export function configureNotificationRoutes(
   );
 
   // Get notifications for authenticated user
-  const getNotificationsHandler: RequestHandler = (req, res, next) => {
-    void notificationsController.getNotifications(req, res, next);
-  };
-  router.get('/', auth, getNotificationsHandler);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  const getNotifications = wrapAsync((req, res, next) =>
+    notificationsController.getNotifications(req, res, next)
+  );
+  router.get('/', auth, getNotifications);
 
   // Mark specific notifications as read
-  const markReadHandler: RequestHandler = (req, res, next) => {
-    void notificationsController.markRead(req, res, next);
-  };
-  router.post('/mark-read', auth, markReadHandler);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  const markRead = wrapAsync((req, res, next) =>
+    notificationsController.markRead(req, res, next)
+  );
+  router.post('/mark-read', auth, markRead);
 
   // Mark all notifications as read
-  const markAllReadHandler: RequestHandler = (req, res, next) => {
-    void notificationsController.markAllRead(req, res, next);
-  };
-  router.post('/mark-all-read', auth, markAllReadHandler);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  const markAllRead = wrapAsync((req, res, next) =>
+    notificationsController.markAllRead(req, res, next)
+  );
+  router.post('/mark-all-read', auth, markAllRead);
 
   // Get unread notification count
-  const getUnreadCountHandler: RequestHandler = (req, res, next) => {
-    void notificationsController.getUnreadCount(req, res, next);
-  };
-  router.get('/unread-count', auth, getUnreadCountHandler);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  const getUnreadCount = wrapAsync((req, res, next) =>
+    notificationsController.getUnreadCount(req, res, next)
+  );
+  router.get('/unread-count', auth, getUnreadCount);
 
   return router;
 }

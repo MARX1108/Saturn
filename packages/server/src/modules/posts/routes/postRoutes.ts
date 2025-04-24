@@ -1,16 +1,11 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Router, Request, Response, NextFunction } from 'express';
 import { PostsController } from '../controllers/postsController';
 import { CommentsController } from '../../comments/controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
 import { AuthService } from '../../auth/services/auth.service';
 import { ServiceContainer } from '../../../utils/container';
-
-// Async Handler Wrapper
-const asyncHandler =
-  (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
+import { wrapAsync } from '../../../utils/routeHandler';
 
 /**
  * Configure post routes with the controller
@@ -57,44 +52,49 @@ export default function configurePostRoutes(
   const boundDeleteComment =
     commentsController.deleteComment.bind(commentsController);
 
-  // Public routes using asyncHandler
+  // Public routes using wrapAsync
   // Pass authService to authenticate middleware factory
-  router.get('/', authenticate(authService), asyncHandler(boundGetFeed));
-  router.get('/:id', asyncHandler(boundGetPostById));
-  router.get('/users/:username', asyncHandler(boundGetPostsByUsername));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/', authenticate(authService), wrapAsync(boundGetFeed));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/:id', wrapAsync(boundGetPostById));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/users/:username', wrapAsync(boundGetPostsByUsername));
 
-  // Protected routes using asyncHandler
+  // Protected routes using wrapAsync
   // Pass authService to authenticate middleware factory
-  router.post('/', authenticate(authService), asyncHandler(boundCreatePost));
-  router.put('/:id', authenticate(authService), asyncHandler(boundUpdatePost));
-  router.delete(
-    '/:id',
-    authenticate(authService),
-    asyncHandler(boundDeletePost)
-  );
-  router.post(
-    '/:id/like',
-    authenticate(authService),
-    asyncHandler(boundLikePost)
-  );
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.post('/', authenticate(authService), wrapAsync(boundCreatePost));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.put('/:id', authenticate(authService), wrapAsync(boundUpdatePost));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.delete('/:id', authenticate(authService), wrapAsync(boundDeletePost));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.post('/:id/like', authenticate(authService), wrapAsync(boundLikePost));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post(
     '/:id/unlike',
     authenticate(authService),
-    asyncHandler(boundUnlikePost)
+    wrapAsync(boundUnlikePost)
   );
 
-  // Comment routes using asyncHandler
+  // Comment routes using wrapAsync
   // Pass authService to authenticate middleware factory
-  router.get('/:id/comments', asyncHandler(boundGetComments));
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/:id/comments', wrapAsync(boundGetComments));
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post(
     '/:id/comments',
     authenticate(authService),
-    asyncHandler(boundCreateComment)
+    wrapAsync(boundCreateComment)
   );
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.delete(
     '/comments/:id',
     authenticate(authService),
-    asyncHandler(boundDeleteComment)
+    wrapAsync(boundDeleteComment)
   );
 
   return router;

@@ -55,8 +55,8 @@ describe('Actor Routes', () => {
       expect(response.body).toBeDefined();
       expect(Array.isArray(response.body)).toBe(true);
 
-      // Fix unbound method issue
-      expect(mockActorService.searchActors).toHaveBeenCalledTimes(1);
+      // Fix unbound method issue by getting mockActorService.searchActors.mock
+      expect(mockActorService.searchActors.mock.calls.length).toBe(1);
     });
   });
 
@@ -110,8 +110,8 @@ describe('Actor Routes', () => {
       // Expecting an array of actors now
       expect(response.body).toEqual([expectedActor1, expectedActor2]);
 
-      // Fix unbound method issue
-      expect(mockActorService.searchActors).toHaveBeenCalledTimes(1);
+      // Fix unbound method issue by getting mockActorService.searchActors.mock
+      expect(mockActorService.searchActors.mock.calls.length).toBe(1);
     });
   });
 
@@ -137,8 +137,8 @@ describe('Actor Routes', () => {
 
       expect(response.body).toMatchObject(expectedSerializedActor);
 
-      // Fix unbound method issue
-      expect(mockActorService.getActorByUsername).toHaveBeenCalledTimes(1);
+      // Fix unbound method issue by getting mockActorService.getActorByUsername.mock
+      expect(mockActorService.getActorByUsername.mock.calls.length).toBe(1);
     });
 
     it('should return 404 if actor not found', async () => {
