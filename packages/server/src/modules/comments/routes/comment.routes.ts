@@ -21,7 +21,7 @@ export default function configureCommentRoutes(
   });
 
   // Protected routes
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.post(
     '/',
     authenticate(container.authService),
@@ -30,7 +30,6 @@ export default function configureCommentRoutes(
     )
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.delete(
     '/:commentId',
     authenticate(container.authService),

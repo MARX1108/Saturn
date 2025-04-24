@@ -2,6 +2,8 @@
 import { Db } from 'mongodb';
 import { Express } from 'express';
 import { SuperTest, Test } from 'supertest';
+import { DeepMockProxy } from 'jest-mock-extended';
+import { PostService } from '@/modules/posts/services/postService';
 
 // Use 'var' or namespace augmentation for true global properties
 declare global {
@@ -16,7 +18,7 @@ declare global {
   // eslint-disable-next-line no-var
   var mockActorService: any; // Target later
   // eslint-disable-next-line no-var
-  var mockPostService: any; // Target later
+  var mockPostService: DeepMockProxy<PostService>;
   // eslint-disable-next-line no-var
   var mockUploadService: any; // Target later
   // eslint-disable-next-line no-var

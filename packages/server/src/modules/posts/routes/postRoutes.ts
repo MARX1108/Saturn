@@ -54,24 +54,24 @@ export default function configurePostRoutes(
 
   // Public routes using wrapAsync
   // Pass authService to authenticate middleware factory
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.get('/', authenticate(authService), wrapAsync(boundGetFeed));
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.get('/:id', wrapAsync(boundGetPostById));
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.get('/users/:username', wrapAsync(boundGetPostsByUsername));
 
   // Protected routes using wrapAsync
   // Pass authService to authenticate middleware factory
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.post('/', authenticate(authService), wrapAsync(boundCreatePost));
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.put('/:id', authenticate(authService), wrapAsync(boundUpdatePost));
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.delete('/:id', authenticate(authService), wrapAsync(boundDeletePost));
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.post('/:id/like', authenticate(authService), wrapAsync(boundLikePost));
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.post(
     '/:id/unlike',
     authenticate(authService),
@@ -80,17 +80,15 @@ export default function configurePostRoutes(
 
   // Comment routes using wrapAsync
   // Pass authService to authenticate middleware factory
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
   router.get('/:id/comments', wrapAsync(boundGetComments));
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post(
     '/:id/comments',
     authenticate(authService),
     wrapAsync(boundCreateComment)
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.delete(
     '/comments/:id',
     authenticate(authService),

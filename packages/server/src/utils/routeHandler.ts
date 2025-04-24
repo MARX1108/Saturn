@@ -8,7 +8,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
  * @returns A void function safe to use in Express routes
  */
 // Using a special typing to make ESLint happy with this function
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-object-type
+
 export function wrapAsync<
   P = Record<string, unknown>,
   ResBody = any,
