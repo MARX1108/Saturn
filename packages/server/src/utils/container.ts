@@ -1,5 +1,4 @@
-import { Db, MongoClient } from 'mongodb';
-import config from '../config';
+import { Db } from 'mongodb';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { ActorRepository } from '../modules/actors/repositories/actorRepository';
 import { PostService } from '@/modules/posts/services/postService';
@@ -179,9 +178,12 @@ export function createServiceContainer(
     mediaController,
     domain,
     getService: <T>(name: keyof ServiceContainer): T | null => {
-      // Ensure the service exists before trying to access it
-      const service = (serviceContainer as any)[name] as T | undefined;
-      return service || null;
+      // Type-safe access using constrained key
+      if (name in serviceContainer && name !== 'getService') {
+        // Cast to T only after confirming existence and ensuring it's not the method itself
+        return serviceContainer[name] as T;
+      }
+      return null;
     },
   };
 

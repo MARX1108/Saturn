@@ -1,12 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import path from 'path';
-import fs from 'fs';
 import { PostService } from '@/modules/posts/services/postService';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { UploadService } from '@/modules/media/services/upload.service';
-import { DbUser } from '../../auth/models/user';
-import { CommentService } from '../../comments/services/comment.service';
-import { Comment } from '../../comments/models/comment';
 import { AppError, ErrorType } from '@/utils/errors';
 import { Post, Attachment } from '@/modules/posts/models/post';
 import { Actor } from '@/modules/actors/models/actor';
@@ -20,22 +15,8 @@ import {
 // Define outside the class
 
 // DTO for creating a post
-interface CreatePostDTO {
-  content: string;
-  visibility?: 'public' | 'followers' | 'unlisted' | 'direct';
-  sensitive?: boolean;
-  summary?: string; // Use summary instead of contentWarning
-  attachments?: any[]; // Placeholder for attachment IDs/data
-}
 
 // DTO for updating a post (adjust properties as needed)
-interface UpdatePostDTO {
-  content?: string;
-  visibility?: 'public' | 'followers' | 'unlisted' | 'direct';
-  sensitive?: boolean;
-  summary?: string;
-  attachments?: any[];
-}
 
 // Define response DTO (can be refined further)
 interface PostResponseDTO {
@@ -51,7 +32,7 @@ interface PostResponseDTO {
   published: string;
   sensitive: boolean;
   summary?: string;
-  attachments?: any[];
+  attachments?: Attachment[];
   likes: number;
   likedByUser: boolean;
   shares: number;
@@ -169,26 +150,50 @@ export class PostsController {
         );
       }
       const actorId = req.user._id;
-      const { content, visibility, sensitive, summary } = req.body;
-      const attachmentsFromBody: Attachment[] | undefined =
-        req.body.attachments;
-      // Use imported CreatePostData type
-      const postData: CreatePostData = {
-        content,
-        visibility,
-        sensitive,
-        summary,
-        attachments: attachmentsFromBody,
-        actorId,
-      };
 
-      if (!postData.content) {
+      // --- Safely extract and validate data from req.body ---
+      const body = req.body as Record<string, unknown>; // Assert body as Record<string, unknown> first
+
+      // Validate required content
+      if (typeof body.content !== 'string' || body.content.trim() === '') {
         throw new AppError(
-          'Post content cannot be empty',
+          'Post content must be a non-empty string',
           400,
           ErrorType.BAD_REQUEST
         );
       }
+      const content: string = body.content;
+
+      // Validate optional fields if they exist
+      const visibility =
+        typeof body.visibility === 'string'
+          ? (body.visibility as CreatePostData['visibility'])
+          : undefined;
+      const sensitive =
+        typeof body.sensitive === 'boolean' ? body.sensitive : undefined;
+      const summary =
+        typeof body.summary === 'string' ? body.summary : undefined;
+
+      // Basic validation for attachments (ensure it's an array if present)
+      // More specific validation (checking each element's structure) might be needed
+      const attachmentsFromBody: Attachment[] | undefined = Array.isArray(
+        body.attachments
+      )
+        ? (body.attachments as Attachment[])
+        : undefined;
+
+      // --- Construct postData with validated types ---
+      const postData: CreatePostData = {
+        content, // Now guaranteed to be a string
+        visibility, // Typed or undefined
+        sensitive, // Typed or undefined
+        summary, // Typed or undefined
+        attachments: attachmentsFromBody, // Typed array or undefined
+        actorId,
+      };
+
+      // Original content check is now handled above
+      // if (!postData.content) { ... }
 
       const newPost = await this.postService.createPost(postData);
       const formattedPost = await this.formatPostResponse(
@@ -325,7 +330,41 @@ export class PostsController {
       }
       const actorId = req.user._id;
       const postId = req.params.id;
-      const { content, visibility, sensitive, summary, attachments } = req.body;
+
+      // --- Safely extract and validate data from req.body ---
+      const body = req.body as Record<string, unknown>; // Assert body as Record<string, unknown> first
+
+      // Validate optional fields if they exist
+      // Note: For update, even content is optional
+      const content =
+        typeof body.content === 'string' ? body.content : undefined;
+      const visibility =
+        typeof body.visibility === 'string'
+          ? (body.visibility as UpdatePostData['visibility'])
+          : undefined;
+      const sensitive =
+        typeof body.sensitive === 'boolean' ? body.sensitive : undefined;
+      const summary =
+        typeof body.summary === 'string' ? body.summary : undefined;
+      const attachments = Array.isArray(body.attachments)
+        ? (body.attachments as Attachment[])
+        : undefined;
+
+      // Check if at least one field is provided for update
+      if (
+        content === undefined &&
+        visibility === undefined &&
+        sensitive === undefined &&
+        summary === undefined &&
+        attachments === undefined
+      ) {
+        throw new AppError(
+          'No update data provided',
+          400,
+          ErrorType.BAD_REQUEST
+        );
+      }
+
       // Use imported UpdatePostData type
       const updateData: UpdatePostData = {
         content,

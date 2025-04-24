@@ -4,6 +4,13 @@ import { Actor } from '@/modules/actors/models/actor';
 import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 import bcryptjs from 'bcryptjs'; // Replace bcrypt with bcryptjs
 
+// Define interface for actor creation data
+interface CreateActorData {
+  username: string;
+  password?: string; // Made optional here, but checked in createActor
+  displayName?: string;
+}
+
 export class ActorService {
   private repository: ActorRepository;
   private domain: string;
@@ -14,7 +21,7 @@ export class ActorService {
   }
 
   async createActor(
-    actorInputData: /* CreateActorRequest */ any, // Rename param, use any temporarily
+    actorInputData: CreateActorData, // Use defined interface instead of any
     iconInfo?: { url: string; mediaType: string }
   ): Promise<Actor> {
     // Validate required fields
