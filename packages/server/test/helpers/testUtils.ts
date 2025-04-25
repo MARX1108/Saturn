@@ -55,9 +55,8 @@ export function createMockServiceContainer(
   if (overrides) {
     for (const key in overrides) {
       if (Object.prototype.hasOwnProperty.call(overrides, key)) {
-        mockContainer[key as keyof ServiceContainer] = overrides[
-          key as keyof ServiceContainer
-        ] as any; // Use 'as any' carefully or improve typing
+        mockContainer[key as keyof ServiceContainer] =
+          overrides[key as keyof ServiceContainer];
       }
     }
   }

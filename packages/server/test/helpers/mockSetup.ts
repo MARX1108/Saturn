@@ -600,8 +600,21 @@ mockPostsController.getPostsByUsername.mockImplementation(
       // Return empty for other users unless specifically handled
       return res.status(200).json({ posts: [], total: 0 });
     }
+
+    // Define type for individual posts in the response
+    // Based on mockPost structure + nested actor modification
+    type PostInResponse = typeof mockPost & {
+      actor: typeof mockActor & { preferredUsername: string };
+    };
+
+    // Define type for the overall response object
+    type GetPostsResponse = {
+      posts: PostInResponse[];
+      total: number;
+    };
+
     // Simulate success for known test user
-    const response = {
+    const response: GetPostsResponse = {
       posts: [
         { ...mockPost, actor: { ...mockActor, preferredUsername: username } },
       ],
@@ -614,7 +627,8 @@ mockPostsController.getPostsByUsername.mockImplementation(
 mockPostsController.updatePost.mockImplementation(
   (req: Request, res: Response) => {
     const postId = req.params.id;
-    const { content } = req.body;
+    // Type req.body and content
+    const { content } = req.body as { content?: string };
 
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
     if (postId === knownNonExistentIdString) {
@@ -627,12 +641,24 @@ mockPostsController.updatePost.mockImplementation(
     ) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    if (!content || content.trim() === '') {
+    // Add type check before trim()
+    if (!content || typeof content !== 'string' || content.trim() === '') {
       return res.status(400).json({ error: 'Content is required' });
     }
-    res
-      .status(200)
-      .json({ ...mockPost, _id: new ObjectId(postId), content: content });
+
+    // Define an inline type for the response structure matching mockPost + changes
+    type UpdatePostResponse = typeof mockPost & {
+      _id: ObjectId;
+      content: string;
+    };
+
+    const responseData: UpdatePostResponse = {
+      ...mockPost,
+      _id: new ObjectId(postId),
+      content: content, // content is now known to be a string
+    };
+
+    res.status(200).json(responseData);
   }
 );
 
