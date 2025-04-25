@@ -5,13 +5,16 @@ var __importDefault =
     return mod && mod.__esModule ? mod : { default: mod };
   };
 Object.defineProperty(exports, '__esModule', { value: true });
-const mongodb_1 = require('mongodb');
 // import jwt from 'jsonwebtoken'; // Remove top-level import
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
   // Restore require inside the factory function
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const jwt = require('jsonwebtoken');
+  // Also require mongodb specifically for ObjectId within this scope
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ObjectId: MockObjectId } = require('mongodb'); // Use alias to avoid conflict if needed
   // Define the known user ID from mockSetup for default user
   const knownTestUserIdHex = '60a0f3f1e1b8f1a1a8b4c1c1';
   const knownTestUsername = 'testuser';
@@ -65,7 +68,7 @@ jest.mock('@/middleware/auth', () => {
           ) {
             user = {
               ...defaultMockUser,
-              _id: new mongodb_1.ObjectId(typedDecoded.id),
+              _id: new MockObjectId(typedDecoded.id),
               id: typedDecoded.id,
               preferredUsername: typedDecoded.username,
             };
@@ -126,7 +129,7 @@ jest.mock('@/middleware/auth', () => {
   };
 });
 const mongodb_memory_server_1 = require('mongodb-memory-server');
-const mongodb_2 = require('mongodb');
+const mongodb_1 = require('mongodb');
 // Removed dbHelper import
 // import {
 //   connectDB,
@@ -176,7 +179,7 @@ beforeAll(async () => {
   mongoServer = await mongodb_memory_server_1.MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
   // Connect to the in-memory database
-  mongoClient = new mongodb_2.MongoClient(mongoUri);
+  mongoClient = new mongodb_1.MongoClient(mongoUri);
   await mongoClient.connect();
   mongoDb = mongoClient.db();
   // Create test app with proper configuration

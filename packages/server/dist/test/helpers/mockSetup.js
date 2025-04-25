@@ -60,9 +60,12 @@ globalWithMocks.mockWebfingerController = exports.mockWebfingerController;
 // Ensure configureImageUploadMiddleware is still mocked if needed by controller setup
 const globalUploadService = globalWithMocks.mockUploadService;
 // Create a mock multer middleware function that satisfies both the MiddlewareFunction interface and Multer interface
-const multerMiddleware = (req, res, next) => next(); // Use the new interface
+const multerMiddleware = (req, res, next) => {
+  // Defer calling next to allow stream operations potentially more time
+  process.nextTick(() => next());
+}; // Keep 'as any' as previously discussed for stability
 // Add necessary properties to make it compatible with Multer interface
-multerMiddleware.array = globals_1.jest.fn(() => multerMiddleware); // Now type-safe
+multerMiddleware.array = globals_1.jest.fn(() => multerMiddleware); // Returns the modified base function
 multerMiddleware.single = globals_1.jest.fn(() => multerMiddleware); // Now type-safe
 multerMiddleware.fields = globals_1.jest.fn(() => multerMiddleware); // Now type-safe
 multerMiddleware.none = globals_1.jest.fn(() => multerMiddleware); // Now type-safe
@@ -81,7 +84,7 @@ function getServiceImpl(name) {
   }
   return null;
 }
-const mockGetService = globals_1.jest.fn(getServiceImpl);
+const mockGetService = globals_1.jest.fn(getServiceImpl); // Use the defined type
 // Configure default mock implementations
 const mockDate = new Date();
 // Use a valid 24-char hex string for the mock user ID
@@ -345,7 +348,7 @@ exports.mockPostsController.createPost.mockImplementation(
           id: `https://test.domain/users/${user.preferredUsername}`,
           username: `${user.preferredUsername}@test.domain`,
           preferredUsername: user.preferredUsername,
-          displayName: user.displayName || 'Test User',
+          displayName: user.preferredUsername || 'Test User',
         },
       };
       res.status(201).json(newPost);
@@ -376,7 +379,7 @@ exports.mockPostsController.createPost.mockImplementation(
         id: `https://test.domain/users/${user.preferredUsername}`,
         username: `${user.preferredUsername}@test.domain`,
         preferredUsername: user.preferredUsername,
-        displayName: user.displayName || 'Test User',
+        displayName: user.preferredUsername || 'Test User',
       },
     };
     res.status(201).json(newPost);

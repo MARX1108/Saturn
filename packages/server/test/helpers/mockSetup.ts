@@ -132,10 +132,13 @@ const multerMiddleware = ((
   req: Request,
   res: Response,
   next: NextFunction
-): void => next()) as MockMulterMiddleware; // Use the new interface
+): void => {
+  // Defer calling next to allow stream operations potentially more time
+  process.nextTick(() => next());
+}) as any; // Keep 'as any' as previously discussed for stability
 
 // Add necessary properties to make it compatible with Multer interface
-multerMiddleware.array = jest.fn(() => multerMiddleware); // Now type-safe
+multerMiddleware.array = jest.fn(() => multerMiddleware); // Returns the modified base function
 multerMiddleware.single = jest.fn(() => multerMiddleware); // Now type-safe
 multerMiddleware.fields = jest.fn(() => multerMiddleware); // Now type-safe
 multerMiddleware.none = jest.fn(() => multerMiddleware); // Now type-safe
@@ -155,9 +158,10 @@ function getServiceImpl(name: string) {
   return null;
 }
 
-const mockGetService = jest.fn(getServiceImpl) as <T>(
-  name: keyof ServiceContainer
-) => T | null;
+// Define type for the getService function
+type GetServiceType = <T>(name: keyof ServiceContainer) => T | null;
+
+const mockGetService = jest.fn(getServiceImpl) as GetServiceType; // Use the defined type
 
 // Configure default mock implementations
 const mockDate = new Date();
@@ -593,7 +597,7 @@ mockPostsController.getPostById.mockImplementation(
 mockPostsController.getFeed.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Authenticate user (access the user object attached by auth middleware)
-    const user = req.user as any;
+    const user = req.user as DbUser;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -743,7 +747,7 @@ mockPostsController.likePost.mockImplementation(
 mockPostsController.unlikePost.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as any;
+    const user = req.user as DbUser;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
