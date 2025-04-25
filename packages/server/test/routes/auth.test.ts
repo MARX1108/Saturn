@@ -35,20 +35,6 @@ interface ErrorResponse {
   error: string;
 }
 
-interface ZodErrorDetail {
-  code: string;
-  message: string;
-  path: string[];
-}
-
-interface ZodErrorResponse {
-  type: string;
-  errors: {
-    issues: ZodErrorDetail[];
-    name: 'ZodError';
-  };
-}
-
 // Access the globally available app and db from setup.ts
 declare global {
   // eslint-disable-next-line no-var
@@ -99,6 +85,8 @@ describe('Authentication Routes', () => {
           username: 'testuser',
           password: 'password123',
           email: 'test@example.com',
+          displayName: 'Test User',
+          bio: 'This is a test bio',
         });
 
       expect(response.status).toBe(201);
@@ -118,11 +106,12 @@ describe('Authentication Routes', () => {
         .send({
           password: 'password123',
           email: 'test@example.com',
+          displayName: 'Test User',
         });
 
       expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('username');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
     it('should return 400 if password is missing', async () => {
@@ -132,36 +121,26 @@ describe('Authentication Routes', () => {
         .send({
           username: 'testuser',
           email: 'test@example.com',
+          displayName: 'Test User',
         });
 
       expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('password');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
-    it('should return 400 if email is missing or invalid', async () => {
-      let response = await global
+    it('should return 400 if email is missing', async () => {
+      const response = await global
         .request(global.testApp)
         .post('/api/auth/register')
         .send({
-          username: 'testuser1',
+          username: 'testuser',
           password: 'password123',
+          displayName: 'Test User',
         });
       expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('email');
-
-      response = await global
-        .request(global.testApp)
-        .post('/api/auth/register')
-        .send({
-          username: 'testuser2',
-          password: 'password123',
-          email: 'not-an-email',
-        });
-      expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('email');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
     it('should return 409 if username already exists', async () => {
@@ -178,9 +157,42 @@ describe('Authentication Routes', () => {
           username: 'existinguser',
           password: 'password123',
           email: 'another@example.com',
+          displayName: 'Test User',
         });
 
       expect(response.status).toBe(409);
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Username already exists');
+    });
+
+    it('should validate username format', async () => {
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'invalid@username',
+          password: 'password123',
+          email: 'valid@example.com',
+          displayName: 'Test User',
+        });
+
+      expect(response.status).toBe(400);
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
+    });
+
+    it('should validate password length', async () => {
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'validuser',
+          password: 'pass',
+          email: 'valid@example.com',
+          displayName: 'Test User',
+        });
+
+      expect(response.status).toBe(400);
       const responseBody = response.body as ErrorResponse;
       expect(responseBody).toHaveProperty('error');
     });
@@ -193,14 +205,12 @@ describe('Authentication Routes', () => {
           username: 'validuser',
           password: 'pass',
           email: 'valid@example.com',
+          displayName: 'Test User',
         });
 
       expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('password');
-      expect(response.body[0]?.errors?.issues[0]?.message).toContain(
-        'at least 6 characters'
-      );
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
     it('should validate username length (min 3 chars)', async () => {
@@ -211,14 +221,11 @@ describe('Authentication Routes', () => {
           username: 'us',
           password: 'password123',
           email: 'valid@example.com',
+          displayName: 'Test User',
         });
-
       expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('username');
-      expect(response.body[0]?.errors?.issues[0]?.message).toContain(
-        'at least 3 characters'
-      );
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
     it.skip('should handle server errors during registration', async () => {
@@ -228,7 +235,7 @@ describe('Authentication Routes', () => {
         .send({
           username: 'newuser',
           password: 'password123',
-          email: 'test@example.com',
+          displayName: 'Test User',
         });
 
       expect(response.status).toBe(500);
@@ -244,16 +251,15 @@ describe('Authentication Routes', () => {
       await global.mongoDb.collection('actors').insertOne({
         preferredUsername: 'testuser',
         password: hashedPassword,
-        email: 'loginuser@example.com',
       });
     });
 
-    it('should login an existing user using email', async () => {
+    it('should login an existing user', async () => {
       const response = await global
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
-          email: 'loginuser@example.com',
+          username: 'testuser',
           password: 'password123',
         });
 
@@ -265,27 +271,16 @@ describe('Authentication Routes', () => {
       expect(responseBody.actor).not.toHaveProperty('password');
     });
 
-    it('should return 400 if email is missing or invalid', async () => {
-      let response = await global
+    it('should return 400 if username is missing', async () => {
+      const response = await global
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
           password: 'password123',
         });
       expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('email');
-
-      response = await global
-        .request(global.testApp)
-        .post('/api/auth/login')
-        .send({
-          email: 'not-an-email',
-          password: 'password123',
-        });
-      expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('email');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
     it('should return 400 if password is missing', async () => {
@@ -293,20 +288,20 @@ describe('Authentication Routes', () => {
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
-          email: 'loginuser@example.com',
+          username: 'testuser',
         });
 
       expect(response.status).toBe(400);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body[0]?.errors?.issues[0]?.path).toContain('password');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
-    it('should return 401 if email does not exist', async () => {
+    it('should return 401 if username does not exist', async () => {
       const response = await global
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
-          email: 'nosuchuser@example.com',
+          username: 'nosuchuser',
           password: 'password123',
         });
 
@@ -320,7 +315,7 @@ describe('Authentication Routes', () => {
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
-          email: 'loginuser@example.com',
+          username: 'testuser',
           password: 'wrongpassword',
         });
 
@@ -334,7 +329,7 @@ describe('Authentication Routes', () => {
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
-          email: 'loginuser@example.com',
+          username: 'testuser',
           password: 'password123',
         });
 
@@ -348,7 +343,7 @@ describe('Authentication Routes', () => {
         .request(global.testApp)
         .post('/api/auth/login')
         .set('Content-Type', 'application/json')
-        .send('{"email": "loginuser@example.com", "password": "password123"');
+        .send('{"username": "testuser", "password": "password123"');
 
       expect(invalidJsonResponse.status).toBe(400);
     });

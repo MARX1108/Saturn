@@ -3,9 +3,8 @@ import { AuthController } from '../controllers/authController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
-import { processRequestBody } from 'zod-express-middleware';
-import { loginSchema } from '../schemas/auth.schema';
-import { z } from 'zod';
+import { validateRequestBody } from '../../../middleware/validateRequest';
+import { registerBodySchema, loginBodySchema } from '../schemas/auth.schema';
 
 /**
  * Configure authentication routes with the controller
@@ -39,20 +38,14 @@ export default function configureAuthRoutes(
   // Register new user
   router.post(
     '/register',
-    processRequestBody(
-      z.object({
-        username: z.string().min(3),
-        email: z.string().email(),
-        password: z.string().min(6),
-      })
-    ),
+    validateRequestBody(registerBodySchema),
     wrapAsync(boundRegister)
   );
 
   // Login user
   router.post(
     '/login',
-    processRequestBody(loginSchema.shape.body),
+    validateRequestBody(loginBodySchema),
     wrapAsync(boundLogin)
   );
 

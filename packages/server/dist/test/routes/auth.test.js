@@ -33,13 +33,13 @@ describe('Authentication Routes', () => {
   // Keep the describe blocks for tests
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
-      // Use global request agent and target the correct API path
       const response = await global
         .request(global.testApp)
         .post('/api/auth/register')
         .send({
           username: 'testuser',
           password: 'password123',
+          email: 'test@example.com',
           displayName: 'Test User',
           bio: 'This is a test bio',
         });
@@ -48,8 +48,6 @@ describe('Authentication Routes', () => {
       expect(responseBody).toHaveProperty('actor');
       expect(responseBody).toHaveProperty('token');
       expect(responseBody.actor.preferredUsername).toBe('testuser');
-      // expect(response.body.actor.name).toBe('Test User'); // name might not be part of response
-      // expect(response.body.actor.summary).toBe('This is a test bio'); // summary might not be part of response
       expect(responseBody.actor).not.toHaveProperty('password');
     });
     it('should return 400 if username is missing', async () => {
@@ -58,11 +56,12 @@ describe('Authentication Routes', () => {
         .post('/api/auth/register')
         .send({
           password: 'password123',
+          email: 'test@example.com',
           displayName: 'Test User',
         });
-      expect(response.status).toBe(400); // Expecting 400 (Bad Request)
+      expect(response.status).toBe(400);
       const responseBody = response.body;
-      expect(responseBody).toHaveProperty('error');
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
     it('should return 400 if password is missing', async () => {
       const response = await global
@@ -70,18 +69,31 @@ describe('Authentication Routes', () => {
         .post('/api/auth/register')
         .send({
           username: 'testuser',
+          email: 'test@example.com',
           displayName: 'Test User',
         });
-      expect(response.status).toBe(400); // Expecting 400 (Bad Request)
+      expect(response.status).toBe(400);
       const responseBody = response.body;
-      expect(responseBody).toHaveProperty('error');
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
+    });
+    it('should return 400 if email is missing', async () => {
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'testuser',
+          password: 'password123',
+          displayName: 'Test User',
+        });
+      expect(response.status).toBe(400);
+      const responseBody = response.body;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
     it('should return 409 if username already exists', async () => {
-      // Use global mongoDb
       await global.mongoDb.collection('actors').insertOne({
         preferredUsername: 'existinguser',
         password: await bcryptjs_1.default.hash('password123', 10),
-        // name: 'Existing User',
+        email: 'existing@example.com',
       });
       const response = await global
         .request(global.testApp)
@@ -89,11 +101,12 @@ describe('Authentication Routes', () => {
         .send({
           username: 'existinguser',
           password: 'password123',
+          email: 'another@example.com',
           displayName: 'Test User',
         });
-      expect(response.status).toBe(409); // Expecting 409 (Conflict)
+      expect(response.status).toBe(409);
       const responseBody = response.body;
-      expect(responseBody).toHaveProperty('error');
+      expect(responseBody).toHaveProperty('error', 'Username already exists');
     });
     it('should validate username format', async () => {
       const response = await global
@@ -102,12 +115,12 @@ describe('Authentication Routes', () => {
         .send({
           username: 'invalid@username',
           password: 'password123',
+          email: 'valid@example.com',
           displayName: 'Test User',
         });
       expect(response.status).toBe(400);
       const responseBody = response.body;
       expect(responseBody).toHaveProperty('error');
-      // expect(response.body.error).toContain('Username can only contain'); // Validation specifics might change
     });
     it('should validate password length', async () => {
       const response = await global
@@ -115,22 +128,43 @@ describe('Authentication Routes', () => {
         .post('/api/auth/register')
         .send({
           username: 'validuser',
-          password: 'pass', // Too short
+          password: 'pass',
+          email: 'valid@example.com',
           displayName: 'Test User',
         });
       expect(response.status).toBe(400);
       const responseBody = response.body;
       expect(responseBody).toHaveProperty('error');
-      // expect(response.body.error).toContain('Password must be'); // Validation specifics might change
     });
-    // This test needs adjustment as direct DB manipulation is complex with global setup
-    // Consider mocking service layer instead for error testing
+    it('should validate password length (min 6 chars)', async () => {
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'validuser',
+          password: 'pass',
+          email: 'valid@example.com',
+          displayName: 'Test User',
+        });
+      expect(response.status).toBe(400);
+      const responseBody = response.body;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
+    });
+    it('should validate username length (min 3 chars)', async () => {
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'us',
+          password: 'password123',
+          email: 'valid@example.com',
+          displayName: 'Test User',
+        });
+      expect(response.status).toBe(400);
+      const responseBody = response.body;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
+    });
     it.skip('should handle server errors during registration', async () => {
-      // Mocking the service or controller would be better here
-      // const originalCollection = global.mongoDb.collection;
-      // global.mongoDb.collection = jest.fn().mockImplementationOnce(() => {
-      //   throw new Error('Database error');
-      // });
       const response = await global
         .request(global.testApp)
         .post('/api/auth/register')
@@ -139,7 +173,6 @@ describe('Authentication Routes', () => {
           password: 'password123',
           displayName: 'Test User',
         });
-      // global.mongoDb.collection = originalCollection;
       expect(response.status).toBe(500);
       const responseBody = response.body;
       expect(responseBody).toHaveProperty('error');
@@ -147,14 +180,11 @@ describe('Authentication Routes', () => {
   });
   describe('POST /api/auth/login', () => {
     beforeEach(async () => {
-      // Clear and setup user using global DB connection
       await global.mongoDb.collection('actors').deleteMany({});
       const hashedPassword = await bcryptjs_1.default.hash('password123', 10);
       await global.mongoDb.collection('actors').insertOne({
         preferredUsername: 'testuser',
         password: hashedPassword,
-        // name: 'Test User',
-        // summary: 'Test bio',
       });
     });
     it('should login an existing user', async () => {
@@ -165,7 +195,6 @@ describe('Authentication Routes', () => {
           username: 'testuser',
           password: 'password123',
         });
-      // With mock auth, this should pass and give mock user details
       expect(response.status).toBe(200);
       const responseBody = response.body;
       expect(responseBody).toHaveProperty('actor');
@@ -182,7 +211,7 @@ describe('Authentication Routes', () => {
         });
       expect(response.status).toBe(400);
       const responseBody = response.body;
-      expect(responseBody).toHaveProperty('error');
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
     it('should return 400 if password is missing', async () => {
       const response = await global
@@ -193,21 +222,19 @@ describe('Authentication Routes', () => {
         });
       expect(response.status).toBe(400);
       const responseBody = response.body;
-      expect(responseBody).toHaveProperty('error');
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
     it('should return 401 if username does not exist', async () => {
       const response = await global
         .request(global.testApp)
         .post('/api/auth/login')
         .send({
-          username: 'nonexistentuser',
+          username: 'nosuchuser',
           password: 'password123',
         });
-      // Auth service mock might bypass actual user check, depends on mock implementation
-      // Let's expect 401 as per the original test intent
       expect(response.status).toBe(401);
       const responseBody = response.body;
-      expect(responseBody).toHaveProperty('error');
+      expect(responseBody).toHaveProperty('error', 'Invalid credentials');
     });
     it('should return 401 if password is incorrect', async () => {
       const response = await global
@@ -217,19 +244,11 @@ describe('Authentication Routes', () => {
           username: 'testuser',
           password: 'wrongpassword',
         });
-      // Auth service mock might bypass actual password check
-      // Expecting 401 as per original test intent
       expect(response.status).toBe(401);
       const responseBody = response.body;
-      expect(responseBody).toHaveProperty('error');
+      expect(responseBody).toHaveProperty('error', 'Invalid credentials');
     });
-    // This test needs adjustment like the registration error test
     it.skip('should handle server errors during login', async () => {
-      // Mocking the service or controller would be better here
-      // const originalFindOne = global.mongoDb.collection('actors').findOne;
-      // global.mongoDb.collection('actors').findOne = jest.fn().mockImplementationOnce(() => {
-      //   throw new Error('Database error');
-      // });
       const response = await global
         .request(global.testApp)
         .post('/api/auth/login')
@@ -237,18 +256,16 @@ describe('Authentication Routes', () => {
           username: 'testuser',
           password: 'password123',
         });
-      // global.mongoDb.collection('actors').findOne = originalFindOne;
       expect(response.status).toBe(500);
       const responseBody = response.body;
       expect(responseBody).toHaveProperty('error');
     });
-    // This test might still fail if body-parser isn't correctly set up or if route isn't hit
     it('should handle invalid JSON in the request body', async () => {
       const invalidJsonResponse = await global
         .request(global.testApp)
         .post('/api/auth/login')
         .set('Content-Type', 'application/json')
-        .send('{"username": "testuser", "password": "password123"'); // Malformed JSON
+        .send('{"username": "testuser", "password": "password123"');
       expect(invalidJsonResponse.status).toBe(400);
     });
   });

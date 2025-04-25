@@ -15,15 +15,9 @@ class AuthController {
    */
   async register(req, res, next) {
     try {
+      // Validation now handled by middleware
+      // Use original types and casting logic expected by service
       const { username, password, email } = req.body;
-      if (!username || !password) {
-        throw new errors_1.AppError(
-          'Username and password are required',
-          400,
-          errors_1.ErrorType.VALIDATION
-        );
-      }
-      // Type validation for inputs
       const usernameStr = String(username);
       const passwordStr = String(password);
       const emailStr = email ? String(email) : '';
@@ -42,15 +36,9 @@ class AuthController {
    */
   async login(req, res, next) {
     try {
+      // Validation now handled by middleware
+      // Use original types and casting logic expected by service
       const { username, password } = req.body;
-      if (!username || !password) {
-        throw new errors_1.AppError(
-          'Username and password are required',
-          400,
-          errors_1.ErrorType.VALIDATION
-        );
-      }
-      // Type validation for inputs
       const usernameStr = String(username);
       const passwordStr = String(password);
       const result = await this.authService.authenticateUser(

@@ -9,6 +9,8 @@ exports.default = configureAuthRoutes;
 const express_1 = __importDefault(require('express'));
 const auth_1 = require('../../../middleware/auth');
 const routeHandler_1 = require('../../../utils/routeHandler');
+const validateRequest_1 = require('../../../middleware/validateRequest');
+const auth_schema_1 = require('../schemas/auth.schema');
 /**
  * Configure authentication routes with the controller
  */
@@ -29,9 +31,19 @@ function configureAuthRoutes(serviceContainer) {
     return Promise.resolve();
   };
   // Register new user
-  router.post('/register', (0, routeHandler_1.wrapAsync)(boundRegister));
+  router.post(
+    '/register',
+    (0, validateRequest_1.validateRequestBody)(
+      auth_schema_1.registerBodySchema
+    ),
+    (0, routeHandler_1.wrapAsync)(boundRegister)
+  );
   // Login user
-  router.post('/login', (0, routeHandler_1.wrapAsync)(boundLogin));
+  router.post(
+    '/login',
+    (0, validateRequest_1.validateRequestBody)(auth_schema_1.loginBodySchema),
+    (0, routeHandler_1.wrapAsync)(boundLogin)
+  );
   // Get current user (protected route)
   router.get(
     '/me',

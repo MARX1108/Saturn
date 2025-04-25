@@ -156,6 +156,15 @@ import { MongoClient, Db } from 'mongodb';
 import { createTestApp } from './helpers/testApp';
 import request from 'supertest'; // Remove unused SuperTest and Test types
 import { Express } from 'express'; // Ensured Express is imported
+// Remove mock/error imports
+// import {
+//   mockAuthService,
+//   mockActor,
+//   mockActorService,
+// } from './helpers/mockSetup';
+// import { AppError, ErrorType } from '@/utils/errors';
+// import bcryptjs from 'bcryptjs';
+// import { DbUser } from '@/modules/auth/models/user';
 
 // Set environment variables for testing
 process.env.NODE_ENV = 'test';
@@ -206,17 +215,31 @@ beforeAll(async (): Promise<void> => {
   mongoDb = mongoClient.db();
 
   // Create test app with proper configuration
-  testApp = createTestApp(mongoDb, process.env.DOMAIN || 'test.domain'); // Removed await as createTestApp is not async
+  testApp = createTestApp(mongoDb, process.env.DOMAIN || 'test.domain');
 
   // Make app available globally for tests (using declarations from global.d.ts)
   global.testApp = testApp;
-
-  // Using a type assertion to match the expected type
   global.request = request as unknown as (
     app: Express
   ) => import('supertest').SuperTest<import('supertest').Test>;
-
   global.mongoDb = mongoDb;
+
+  // Remove AuthService mock implementations
+  /*
+  // --- Explicitly configure mockAuthService behavior --- BEGIN
+  mockAuthService.createUser.mockImplementation(
+    async (username, password, email) => {
+      // ... removed implementation ...
+    }
+  );
+
+  mockAuthService.authenticateUser.mockImplementation(
+    async (email, password) => {
+      // ... removed implementation ...
+    }
+  );
+  // --- Explicitly configure mockAuthService behavior --- END
+  */
 });
 
 // Cleanup after all tests

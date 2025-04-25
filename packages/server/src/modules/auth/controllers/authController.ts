@@ -25,13 +25,17 @@ export class AuthController {
     next: NextFunction
   ): Promise<void> {
     try {
-      // Validation is now handled by middleware
-      const { username, password, email } = req.body; // Use validated body
+      // Validation now handled by middleware
+      // Use original types and casting logic expected by service
+      const { username, password, email } = req.body as RegisterRequest;
+      const usernameStr = String(username);
+      const passwordStr = String(password);
+      const emailStr = email ? String(email) : '';
 
       const result = await this.authService.createUser(
-        username, // Use directly from validated body
-        password,
-        email || '' // Handle optional email
+        usernameStr,
+        passwordStr,
+        emailStr
       );
       res.status(201).json(result);
     } catch (error) {
@@ -44,12 +48,15 @@ export class AuthController {
    */
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      // Validation is now handled by middleware
-      const { email, password } = req.body; // Use validated body (using email now)
+      // Validation now handled by middleware
+      // Use original types and casting logic expected by service
+      const { username, password } = req.body as LoginRequest;
+      const usernameStr = String(username);
+      const passwordStr = String(password);
 
       const result = await this.authService.authenticateUser(
-        email, // Use email from validated body
-        password
+        usernameStr,
+        passwordStr
       );
 
       if (!result) {
