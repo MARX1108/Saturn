@@ -3,6 +3,9 @@ import { AuthController } from '../controllers/authController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
+import { processRequestBody } from 'zod-express-middleware';
+import { loginSchema } from '../schemas/auth.schema';
+import { z } from 'zod';
 
 /**
  * Configure authentication routes with the controller
@@ -34,10 +37,24 @@ export default function configureAuthRoutes(
   };
 
   // Register new user
-  router.post('/register', wrapAsync(boundRegister));
+  router.post(
+    '/register',
+    processRequestBody(
+      z.object({
+        username: z.string().min(3),
+        email: z.string().email(),
+        password: z.string().min(6),
+      })
+    ),
+    wrapAsync(boundRegister)
+  );
 
   // Login user
-  router.post('/login', wrapAsync(boundLogin));
+  router.post(
+    '/login',
+    processRequestBody(loginSchema.shape.body),
+    wrapAsync(boundLogin)
+  );
 
   // Get current user (protected route)
   router.get('/me', auth, wrapAsync(wrappedGetCurrentUser));

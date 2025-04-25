@@ -25,24 +25,13 @@ export class AuthController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { username, password, email } = req.body as RegisterRequest;
-      if (!username || !password) {
-        throw new AppError(
-          'Username and password are required',
-          400,
-          ErrorType.VALIDATION
-        );
-      }
-
-      // Type validation for inputs
-      const usernameStr = String(username);
-      const passwordStr = String(password);
-      const emailStr = email ? String(email) : '';
+      // Validation is now handled by middleware
+      const { username, password, email } = req.body; // Use validated body
 
       const result = await this.authService.createUser(
-        usernameStr,
-        passwordStr,
-        emailStr
+        username, // Use directly from validated body
+        password,
+        email || '' // Handle optional email
       );
       res.status(201).json(result);
     } catch (error) {
@@ -55,22 +44,12 @@ export class AuthController {
    */
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { username, password } = req.body as LoginRequest;
-      if (!username || !password) {
-        throw new AppError(
-          'Username and password are required',
-          400,
-          ErrorType.VALIDATION
-        );
-      }
-
-      // Type validation for inputs
-      const usernameStr = String(username);
-      const passwordStr = String(password);
+      // Validation is now handled by middleware
+      const { email, password } = req.body; // Use validated body (using email now)
 
       const result = await this.authService.authenticateUser(
-        usernameStr,
-        passwordStr
+        email, // Use email from validated body
+        password
       );
 
       if (!result) {

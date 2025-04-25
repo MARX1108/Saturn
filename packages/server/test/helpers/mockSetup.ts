@@ -196,85 +196,21 @@ mockActorService.getActorById.mockResolvedValue(mockActor);
 mockActorService.getActorByUsername.mockResolvedValue(mockActor);
 
 // Mock AuthController methods
+// Remove incorrect mock implementations for AuthController methods
+// These bypass the actual controller logic and middleware we want to test
+/*
 mockAuthController.register.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // Destructure with expected types, provide defaults if appropriate
-    const {
-      username,
-      password,
-      displayName,
-      // Add other potential fields if needed by the logic
-    } = req.body as {
-      username?: string;
-      password?: string;
-      displayName?: string;
-    };
-
-    // Input validation simulation (based on test cases)
-    if (!username || !password || !displayName) {
-      res.status(400).json({ error: 'Missing registration fields' });
-      return;
-    }
-    if (username === 'invalid@username') {
-      res.status(400).json({ error: 'Username validation failed' });
-      return;
-    }
-    // Use safe access for length check
-    if (!password || password.length < 8) {
-      res.status(400).json({ error: 'Password too short' });
-      return;
-    }
-    // Conflict simulation
-    if (username === 'existinguser') {
-      res.status(409).json({ error: 'Username already exists' });
-      return;
-    }
-
-    // Simulate successful registration
-    const registeredActor = {
-      ...mockActor,
-      preferredUsername: username,
-      displayName: displayName,
-    };
-    res
-      .status(201)
-      .json({ actor: registeredActor, token: 'mock-ctrl-token-register' });
+     // ... removed implementation ...
   }
 );
 
 mockAuthController.login.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { username, password } = req.body as {
-      username?: string;
-      password?: string;
-    };
-
-    if (!username || !password) {
-      res.status(400).json({ error: 'Missing login fields' });
-      return;
-    }
-
-    // Simulate successful login
-    if (username === 'testuser' && password === 'password123') {
-      // Type the response object before sending it
-      type LoginResponse = {
-        actor: typeof mockActor;
-        token: string;
-      };
-
-      const response: LoginResponse = {
-        actor: mockActor,
-        token: 'mock-ctrl-token-login',
-      };
-
-      res.status(200).json(response);
-      return;
-    }
-
-    // Simulate failed login (wrong username or password)
-    res.status(401).json({ error: 'Invalid credentials' });
+     // ... removed implementation ...
   }
 );
+*/
 
 mockPostService.getPostById.mockImplementation((id: string) => {
   if (id === 'nonexistent') return Promise.resolve(null);

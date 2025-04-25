@@ -71,7 +71,7 @@ class ActivityPubController {
   /**
    * Get actor outbox (collection of actor's activities)
    */
-  getOutbox(req, res) {
+  async getOutbox(req, res) {
     try {
       const { username } = req.params;
       // For now, return an empty collection

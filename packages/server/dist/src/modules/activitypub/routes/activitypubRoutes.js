@@ -42,7 +42,7 @@ function configureActivityPubRoutes(serviceContainer) {
   router.get(
     '/users/:username/outbox',
     (0, routeHandler_1.wrapAsync)(async (req, res, next) => {
-      return activityPubController.getOutbox(req, res);
+      return await activityPubController.getOutbox(req, res);
     })
   );
   return router;

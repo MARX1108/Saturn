@@ -51,6 +51,8 @@ export default tseslint.config(
     languageOptions: {
       globals: {
         ...globals.jest,
+        // Removed explicit Jest globals
+        // Keep node globals if needed for specific test setups
         ...globals.node,
       },
     },
@@ -61,5 +63,13 @@ export default tseslint.config(
   },
 
   // Apply Prettier compatibility
-  { ignores: ['dist/**', 'node_modules/**', 'coverage/**'] }
+  {
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      'build/**',
+      '.turbo/**',
+    ],
+  }
 );
