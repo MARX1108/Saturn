@@ -5,7 +5,7 @@ import { Actor } from '@/modules/actors/models/actor'; // Added import
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
-  // Require jwt *inside* the factory function to fix the reference error
+  // Remove the explicit type definition - Jest doesn't allow types in factory functions
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const jwt = require('jsonwebtoken');
 
@@ -29,7 +29,7 @@ jest.mock('@/middleware/auth', () => {
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ): void => {
     // console.log( // Removed log block
     //   `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
     // );
@@ -39,27 +39,33 @@ jest.mock('@/middleware/auth', () => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       try {
-        // Use jwt from the required module within the mock factory
+        // Use simple object type and handle in a type-safe way
         const decoded = jwt.verify(
           token,
           process.env.JWT_SECRET || 'test-jwt-secret-key'
         );
 
-        // Type guard and cast for decoded payload
+        // Use type guard pattern without unsafe access
         if (
+          decoded &&
           typeof decoded === 'object' &&
-          decoded !== null &&
           'id' in decoded &&
           'username' in decoded
         ) {
-          // Use inline type for the cast
-          const payload = decoded as { id: string; username: string };
-          user = {
-            ...defaultMockUser,
-            _id: payload.id, // Use validated payload
-            id: payload.id,
-            preferredUsername: payload.username,
-          };
+          // Type assertion after validation
+          const typedDecoded = decoded as { id: string; username: string };
+
+          if (
+            typeof typedDecoded.id === 'string' &&
+            typeof typedDecoded.username === 'string'
+          ) {
+            user = {
+              ...defaultMockUser,
+              _id: typedDecoded.id,
+              id: typedDecoded.id,
+              preferredUsername: typedDecoded.username,
+            };
+          }
         } else {
           // Handle unexpected token structure (e.g., string or incorrect object)
           console.error(
@@ -71,7 +77,7 @@ jest.mock('@/middleware/auth', () => {
           // Setting user explicitly undefined if token is bad/unexpected
           user = undefined;
         }
-      } catch (err) {
+      } catch (_) {
         // Handle error type safely - no need to keep a reference to err
         return res.status(401).json({ error: 'Unauthorized - Invalid Token' });
       }

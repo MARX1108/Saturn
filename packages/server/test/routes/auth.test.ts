@@ -19,6 +19,22 @@ import { Express } from 'express';
 // Remove mockServiceContainer import, as it's implicitly used by global setup
 // import { mockServiceContainer } from '../helpers/mockSetup';
 
+// Define response types
+interface AuthResponse {
+  actor: {
+    preferredUsername: string;
+    displayName?: string;
+    name?: string;
+    summary?: string;
+    password?: string;
+  };
+  token: string;
+}
+
+interface ErrorResponse {
+  error: string;
+}
+
 // Access the globally available app and db from setup.ts
 declare global {
   // eslint-disable-next-line no-var
@@ -74,12 +90,15 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('actor');
-      expect(response.body).toHaveProperty('token');
-      expect(response.body.actor.preferredUsername).toBe('testuser');
+
+      const responseBody = response.body as AuthResponse;
+
+      expect(responseBody).toHaveProperty('actor');
+      expect(responseBody).toHaveProperty('token');
+      expect(responseBody.actor.preferredUsername).toBe('testuser');
       // expect(response.body.actor.name).toBe('Test User'); // name might not be part of response
       // expect(response.body.actor.summary).toBe('This is a test bio'); // summary might not be part of response
-      expect(response.body.actor).not.toHaveProperty('password');
+      expect(responseBody.actor).not.toHaveProperty('password');
     });
 
     it('should return 400 if username is missing', async () => {
@@ -92,7 +111,8 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(400); // Expecting 400 (Bad Request)
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     it('should return 400 if password is missing', async () => {
@@ -105,7 +125,8 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(400); // Expecting 400 (Bad Request)
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     it('should return 409 if username already exists', async () => {
@@ -126,7 +147,8 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(409); // Expecting 409 (Conflict)
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     it('should validate username format', async () => {
@@ -140,7 +162,8 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
       // expect(response.body.error).toContain('Username can only contain'); // Validation specifics might change
     });
 
@@ -155,7 +178,8 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
       // expect(response.body.error).toContain('Password must be'); // Validation specifics might change
     });
 
@@ -180,7 +204,8 @@ describe('Authentication Routes', () => {
       // global.mongoDb.collection = originalCollection;
 
       expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
   });
 
@@ -208,10 +233,13 @@ describe('Authentication Routes', () => {
 
       // With mock auth, this should pass and give mock user details
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('actor');
-      expect(response.body).toHaveProperty('token');
-      expect(response.body.actor.preferredUsername).toBe('testuser');
-      expect(response.body.actor).not.toHaveProperty('password');
+
+      const responseBody = response.body as AuthResponse;
+
+      expect(responseBody).toHaveProperty('actor');
+      expect(responseBody).toHaveProperty('token');
+      expect(responseBody.actor.preferredUsername).toBe('testuser');
+      expect(responseBody.actor).not.toHaveProperty('password');
     });
 
     it('should return 400 if username is missing', async () => {
@@ -223,7 +251,8 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     it('should return 400 if password is missing', async () => {
@@ -235,7 +264,8 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     it('should return 401 if username does not exist', async () => {
@@ -250,7 +280,8 @@ describe('Authentication Routes', () => {
       // Auth service mock might bypass actual user check, depends on mock implementation
       // Let's expect 401 as per the original test intent
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     it('should return 401 if password is incorrect', async () => {
@@ -264,7 +295,8 @@ describe('Authentication Routes', () => {
       // Auth service mock might bypass actual password check
       // Expecting 401 as per original test intent
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     // This test needs adjustment like the registration error test
@@ -286,7 +318,8 @@ describe('Authentication Routes', () => {
       // global.mongoDb.collection('actors').findOne = originalFindOne;
 
       expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('error');
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
     });
 
     // This test might still fail if body-parser isn't correctly set up or if route isn't hit

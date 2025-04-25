@@ -55,6 +55,25 @@ interface PostsListResponse {
   total: number;
 }
 
+// Define interface for GlobalWithMocks
+interface GlobalWithMocks {
+  // Properties from testSetup declarations
+  testApp: Express;
+  request: (
+    app: Express
+  ) => import('supertest').SuperTest<import('supertest').Test>;
+  mongoDb: Db;
+  // Mock services (we're explicitly adding the ones used in this file)
+  mockPostService: DeepMockProxy<PostService> & {
+    createPost: jest.Mock;
+    getPostById: jest.Mock;
+    getFeed: jest.Mock;
+    likePost: jest.Mock;
+    unlikePost: jest.Mock;
+  };
+  isPostLikedTestState: boolean;
+}
+
 // Extend Express Request type using module augmentation
 declare module 'express' {
   interface Request {
@@ -70,8 +89,11 @@ describe('Posts Routes', () => {
   const knownNonExistentIdString = 'ffffffffffffffffffffffff'; // Non-existent ID
   const jwtSecret = process.env.JWT_SECRET || 'test-secret-key';
 
+  // Cast the global object to include our mock services
+  const typedGlobal = globalThis as unknown as GlobalWithMocks;
+
   beforeEach(async () => {
-    const db = globalThis.mongoDb; // Use globalThis db instance
+    const db = typedGlobal.mongoDb; // Use typed global
     if (!db) {
       throw new Error('Global mongoDb not initialized');
     }
@@ -81,7 +103,7 @@ describe('Posts Routes', () => {
     await db.collection('likes').deleteMany({});
 
     // Reset mock state before each test
-    globalThis.isPostLikedTestState = false;
+    typedGlobal.isPostLikedTestState = false;
     jest.clearAllMocks(); // Clear mocks too
 
     // Create a test user using global db
@@ -127,24 +149,27 @@ describe('Posts Routes', () => {
 
   describe('POST /api/posts', () => {
     it('should create a new post', async () => {
-      const response = await globalThis
-        .request(globalThis.testApp)
+      const response = await typedGlobal
+        .request(typedGlobal.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ content: 'This is a test post' });
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('_id');
-      expect(response.body).toHaveProperty('content', 'This is a test post');
+
+      const responseBody = response.body as CreatedPostResponse;
+
+      expect(responseBody).toHaveProperty('_id');
+      expect(responseBody).toHaveProperty('content', 'This is a test post');
 
       // Assuming createPost was mocked properly and a post was "created"
-      testPostId = response.body._id;
+      testPostId = responseBody._id as string;
     });
 
     it('should return 401 if not authenticated', async () => {
       // Explicitly type the response
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .post('/api/posts')
         .send({ content: 'This should fail' });
 
@@ -161,8 +186,8 @@ describe('Posts Routes', () => {
 
     it('should return 400 if content is missing', async () => {
       // Explicitly type the response
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({});
@@ -178,8 +203,8 @@ describe('Posts Routes', () => {
 
     it('should create a post with sensitive content', async () => {
       // Explicitly type the response
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({
@@ -210,8 +235,8 @@ describe('Posts Routes', () => {
       let response: request.Response | undefined;
       try {
         fs.writeFileSync(imagePath, imageBuffer);
-        response = await globalThis
-          .request(globalThis.testApp)
+        response = await typedGlobal
+          .request(typedGlobal.testApp)
           .post('/api/posts')
           .set('Authorization', `Bearer ${testUserToken}`)
           .field('content', 'Post with attachment')
@@ -242,8 +267,8 @@ describe('Posts Routes', () => {
       let response: request.Response | undefined;
       try {
         fs.writeFileSync(filePath, 'This is an invalid file type');
-        response = await globalThis
-          .request(globalThis.testApp)
+        response = await typedGlobal
+          .request(typedGlobal.testApp)
           .post('/api/posts')
           .set('Authorization', `Bearer ${testUserToken}`)
           .attach('attachments', filePath);
@@ -258,13 +283,13 @@ describe('Posts Routes', () => {
     });
 
     it('should handle server errors during post creation', async () => {
-      (
-        globalThis.mockPostService.createPost as jest.Mock
-      ).mockRejectedValueOnce(new Error('DB error'));
+      typedGlobal.mockPostService.createPost.mockRejectedValueOnce(
+        new Error('DB error')
+      );
 
       // Explicitly type the response
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .post('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ content: 'This should trigger a server error' });
@@ -281,8 +306,8 @@ describe('Posts Routes', () => {
   describe('GET /api/posts/:postId', () => {
     it('should retrieve a specific post', async () => {
       // Use the known testPostId
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get(`/api/posts/${testPostId}`);
       expect(response.status).toBe(200);
 
@@ -299,8 +324,8 @@ describe('Posts Routes', () => {
 
     it('should return 404 if post is not found', async () => {
       // Use the known non-existent ID
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get(`/api/posts/${knownNonExistentIdString}`);
       expect(response.status).toBe(404);
 
@@ -311,8 +336,8 @@ describe('Posts Routes', () => {
 
     it('should return 400 for an invalid post ID format', async () => {
       const invalidFormatId = 'invalid-id-format';
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get(`/api/posts/${invalidFormatId}`);
       expect(response.status).toBe(400);
 
@@ -322,9 +347,9 @@ describe('Posts Routes', () => {
     });
 
     it('should retrieve a post with likedByUser status if authenticated', async () => {
-      globalThis.isPostLikedTestState = true;
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      typedGlobal.isPostLikedTestState = true;
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get(`/api/posts/${testPostId}`)
         .set('Authorization', `Bearer ${testUserToken}`);
       expect(response.status).toBe(200);
@@ -337,8 +362,8 @@ describe('Posts Routes', () => {
     });
 
     it('should retrieve a post without likedByUser status if not liked', async () => {
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get(`/api/posts/${testPostId}`)
         .set('Authorization', `Bearer ${testUserToken}`);
 
@@ -350,8 +375,8 @@ describe('Posts Routes', () => {
     });
 
     it('should retrieve a post without likedByUser status if not authenticated', async () => {
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get(`/api/posts/${testPostId}`);
 
       expect(response.status).toBe(200);
@@ -362,12 +387,12 @@ describe('Posts Routes', () => {
     });
 
     it('should handle server errors during post retrieval', async () => {
-      globalThis.mockPostService.getPostById.mockRejectedValueOnce(
+      typedGlobal.mockPostService.getPostById.mockRejectedValueOnce(
         new Error('DB error')
       );
 
-      const response: Response = await globalThis // Use globalThis
-        .request(globalThis.testApp) // Use globalThis
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get(`/api/posts/${testPostId}`)
         .set('Authorization', `Bearer ${testUserToken}`);
 
@@ -383,7 +408,7 @@ describe('Posts Routes', () => {
   describe('GET /api/posts', () => {
     it('should retrieve a list of posts', async () => {
       // Create a few more posts
-      await globalThis.mongoDb.collection('posts').insertMany([
+      await typedGlobal.mongoDb.collection('posts').insertMany([
         {
           content: 'Post 2',
           actorId: new ObjectId(testUserId),
@@ -402,8 +427,8 @@ describe('Posts Routes', () => {
         },
       ]);
 
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts');
 
       expect(response.status).toBe(200);
@@ -423,7 +448,7 @@ describe('Posts Routes', () => {
     it('should retrieve posts with pagination (limit and offset)', async () => {
       // Create more posts to test pagination
       for (let i = 0; i < 15; i++) {
-        await globalThis.mongoDb.collection('posts').insertOne({
+        await typedGlobal.mongoDb.collection('posts').insertOne({
           content: `Paginated Post ${i + 1}`,
           actorId: new ObjectId(testUserId),
           createdAt: new Date(Date.now() - i * 1000),
@@ -434,16 +459,16 @@ describe('Posts Routes', () => {
       }
 
       // Test limit
-      const responseLimit: Response = await globalThis
-        .request(globalThis.testApp)
+      const responseLimit: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts?limit=5');
       expect(responseLimit.status).toBe(200);
       const bodyLimit = responseLimit.body as PostsListResponse;
       expect(bodyLimit.posts.length).toBe(5);
 
       // Test offset
-      const responseOffset: Response = await globalThis
-        .request(globalThis.testApp)
+      const responseOffset: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts?limit=5&offset=5');
       expect(responseOffset.status).toBe(200);
       const bodyOffset = responseOffset.body as PostsListResponse;
@@ -453,8 +478,8 @@ describe('Posts Routes', () => {
     });
 
     it('should retrieve posts sorted by createdAt descending by default', async () => {
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts?limit=5');
       expect(response.status).toBe(200);
       const responseBody = response.body as PostsListResponse;
@@ -469,7 +494,7 @@ describe('Posts Routes', () => {
 
     it('should retrieve posts filtered by username', async () => {
       // Create posts by another user
-      const otherUser = await globalThis.mongoDb
+      const otherUser = await typedGlobal.mongoDb
         .collection('actors')
         .insertOne({
           preferredUsername: 'otheruser',
@@ -479,7 +504,7 @@ describe('Posts Routes', () => {
           outbox: 'https://test.domain/users/otheruser/outbox',
         });
       const otherUserId = otherUser.insertedId;
-      await globalThis.mongoDb.collection('posts').insertOne({
+      await typedGlobal.mongoDb.collection('posts').insertOne({
         content: 'Post by other user',
         actorId: otherUserId,
         createdAt: new Date(),
@@ -488,8 +513,8 @@ describe('Posts Routes', () => {
         attributedTo: `https://test.domain/users/otheruser`,
       });
 
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts?username=testuser');
       expect(response.status).toBe(200);
       const responseBody = response.body as PostsListResponse;
@@ -499,8 +524,8 @@ describe('Posts Routes', () => {
         expect(post.author?.preferredUsername).toBe('testuser');
       });
 
-      const otherUserResponse: Response = await globalThis
-        .request(globalThis.testApp)
+      const otherUserResponse: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts?username=otheruser');
       expect(otherUserResponse.status).toBe(200);
       const otherUserBody = otherUserResponse.body as PostsListResponse;
@@ -511,9 +536,9 @@ describe('Posts Routes', () => {
     });
 
     it('should retrieve posts with likedByUser status for authenticated user', async () => {
-      globalThis.isPostLikedTestState = true;
-      const authResponse: Response = await globalThis
-        .request(globalThis.testApp)
+      typedGlobal.isPostLikedTestState = true;
+      const authResponse: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts?limit=1')
         .set('Authorization', `Bearer ${testUserToken}`);
 
@@ -524,11 +549,11 @@ describe('Posts Routes', () => {
     });
 
     it('should handle server errors during post list retrieval', async () => {
-      (globalThis as any).mockPostService.getFeed.mockRejectedValueOnce(
+      typedGlobal.mockPostService.getFeed.mockRejectedValueOnce(
         new Error('DB error')
       );
-      const response: Response = await globalThis // Use globalThis
-        .request(globalThis.testApp) // Use globalThis
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .get('/api/posts')
         .set('Authorization', `Bearer ${testUserToken}`);
       // Reverting expectation: Service error mock doesn't seem to trigger 500 correctly yet
@@ -542,8 +567,8 @@ describe('Posts Routes', () => {
   describe('PUT /api/posts/:postId', () => {
     it('should update an existing post', async () => {
       const newContent = 'Updated post content';
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .put(`/api/posts/${testPostId}`) // Use known ID
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ content: newContent });
@@ -555,8 +580,8 @@ describe('Posts Routes', () => {
     });
 
     it('should return 401 if not authenticated', async () => {
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .put(`/api/posts/${testPostId}`)
         .send({ content: 'This should fail' });
 
@@ -566,15 +591,15 @@ describe('Posts Routes', () => {
     });
 
     it('should return 403 if user is not the author', async () => {
-      const otherUserActor = await globalThis.mongoDb
+      const otherUserActor = await typedGlobal.mongoDb
         .collection('actors')
         .insertOne({ preferredUsername: 'otheruser' });
       const otherUserToken = jwt.sign(
         { id: otherUserActor.insertedId.toString(), username: 'otheruser' },
         jwtSecret
       );
-      const response: Response = await globalThis // Use globalThis
-        .request(globalThis.testApp) // Use globalThis
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .put(`/api/posts/${testPostId}`) // Use known ID
         .set('Authorization', `Bearer ${otherUserToken}`)
         .send({ content: 'Trying to update someone elses post' });
@@ -585,8 +610,8 @@ describe('Posts Routes', () => {
     });
 
     it('should return 404 if post not found', async () => {
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .put(`/api/posts/${knownNonExistentIdString}`)
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({ content: 'Updating non-existent post' });
@@ -596,8 +621,8 @@ describe('Posts Routes', () => {
     });
 
     it('should return 400 if content is missing', async () => {
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .put(`/api/posts/${testPostId}`)
         .set('Authorization', `Bearer ${testUserToken}`)
         .send({});
@@ -613,7 +638,7 @@ describe('Posts Routes', () => {
   // Test the final route of this test file
   describe('DELETE /api/posts/:postId/like', () => {
     it('should unlike a post', async () => {
-      globalThis.isPostLikedTestState = true; // Start with "liked" state
+      typedGlobal.isPostLikedTestState = true; // Start with "liked" state
 
       const postToUnlike = {
         _id: new ObjectId(),
@@ -626,13 +651,13 @@ describe('Posts Routes', () => {
       };
 
       // Store the post in the database
-      await globalThis.mongoDb.collection('posts').insertOne(postToUnlike);
+      await typedGlobal.mongoDb.collection('posts').insertOne(postToUnlike);
 
       // Convert ObjectId to string for the URL
       const postIdToUnlike = postToUnlike._id.toHexString();
 
-      const response: Response = await globalThis
-        .request(globalThis.testApp)
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
         .delete(`/api/posts/${postIdToUnlike}/like`)
         .set('Authorization', `Bearer ${testUserToken}`);
 
@@ -641,7 +666,7 @@ describe('Posts Routes', () => {
       const responseBody = response.body as { message: string };
 
       expect(responseBody.message).toBe('Post unliked successfully');
-      expect(globalThis.mockPostService.unlikePost.mock.calls.length).toBe(1);
+      expect(typedGlobal.mockPostService.unlikePost.mock.calls.length).toBe(1);
     });
   });
   */

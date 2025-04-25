@@ -117,7 +117,10 @@ globalWithMocks.mockWebfingerController = mockWebfingerController;
 
 // Ensure configureImageUploadMiddleware is still mocked if needed by controller setup
 const globalUploadService = globalWithMocks.mockUploadService;
-if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
+if (
+  globalUploadService &&
+  typeof globalUploadService.configureImageUploadMiddleware === 'function'
+) {
   const middlewareFn: MiddlewareFunction = (
     req: Request,
     res: Response,
@@ -127,17 +130,13 @@ if (globalUploadService && globalUploadService.configureImageUploadMiddleware) {
     middlewareFn
   );
 } else {
-  globalUploadService.configureImageUploadMiddleware = jest.fn();
+  const mockFn = jest
+    .fn()
+    .mockReturnValue((req: Request, res: Response, next: NextFunction): void =>
+      next()
+    );
 
-  const middlewareFn: MiddlewareFunction = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => next();
-
-  globalUploadService.configureImageUploadMiddleware.mockReturnValue(
-    middlewareFn
-  );
+  globalUploadService.configureImageUploadMiddleware = mockFn;
 }
 
 // Configure default mock implementations
@@ -234,9 +233,18 @@ mockAuthController.login.mockImplementation(
 
     // Simulate successful login
     if (username === 'testuser' && password === 'password123') {
-      res
-        .status(200)
-        .json({ actor: mockActor, token: 'mock-ctrl-token-login' });
+      // Type the response object before sending it
+      type LoginResponse = {
+        actor: typeof mockActor;
+        token: string;
+      };
+
+      const response: LoginResponse = {
+        actor: mockActor,
+        token: 'mock-ctrl-token-login',
+      };
+
+      res.status(200).json(response);
       return;
     }
 
@@ -725,7 +733,7 @@ export const mockServiceContainer: ServiceContainer = {
   authService: mockAuthService,
   actorService: mockActorService,
   postService: mockPostService,
-  uploadService: mockUploadService as unknown as UploadService, // Cast to UploadService
+  uploadService: mockUploadService as UploadService, // Use direct cast without unknown
   notificationService: mockNotificationService,
   commentService: mockCommentService,
   mediaService: mockMediaService,
@@ -745,9 +753,7 @@ export const mockServiceContainer: ServiceContainer = {
     .mockImplementation(<T>(name: keyof ServiceContainer): T | null => {
       if (Object.prototype.hasOwnProperty.call(mockServiceContainer, name)) {
         // Type-safe approach to return service
-        const service = mockServiceContainer[name] as unknown;
-        // Return service as T
-        return service as T;
+        return mockServiceContainer[name] as unknown as T;
       }
       return null;
     }),
