@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { mock, DeepMockProxy } from 'jest-mock-extended';
 import { ObjectId } from 'mongodb';
 import { ActorService } from '@/modules/actors/services/actorService';
@@ -31,6 +30,7 @@ import { ActorsController } from '@/modules/actors/controllers/actorsController'
 import { MediaController } from '@/modules/media/controllers/media.controller';
 import { ActivityPubController } from '@/modules/activitypub/controllers/activitypubController';
 import { WebFingerController } from '@/modules/webfinger/controllers/webfingerController';
+import { DbUser } from '@/modules/auth/models/user';
 
 // Type definition for middleware functions
 type MiddlewareFunction = (
@@ -38,6 +38,15 @@ type MiddlewareFunction = (
   res: Response,
   next: NextFunction
 ) => void;
+
+// --- START: Define interface for mock multer ---
+interface MockMulterMiddleware extends MiddlewareFunction {
+  array: jest.Mock<MiddlewareFunction>;
+  single: jest.Mock<MiddlewareFunction>;
+  fields: jest.Mock<MiddlewareFunction>;
+  none: jest.Mock<MiddlewareFunction>;
+}
+// --- END: Define interface for mock multer ---
 
 // Type for mock implementations
 interface MockService {
@@ -123,16 +132,19 @@ const multerMiddleware = ((
   req: Request,
   res: Response,
   next: NextFunction
-): void => next()) as any;
-// Add necessary properties to make it compatible with Multer interface
-multerMiddleware.array = jest.fn(() => multerMiddleware);
-multerMiddleware.single = jest.fn(() => multerMiddleware);
-multerMiddleware.fields = jest.fn(() => multerMiddleware);
-multerMiddleware.none = jest.fn(() => multerMiddleware);
+): void => next()) as MockMulterMiddleware; // Use the new interface
 
-// Configure image upload middleware mock
+// Add necessary properties to make it compatible with Multer interface
+multerMiddleware.array = jest.fn(() => multerMiddleware); // Now type-safe
+multerMiddleware.single = jest.fn(() => multerMiddleware); // Now type-safe
+multerMiddleware.fields = jest.fn(() => multerMiddleware); // Now type-safe
+multerMiddleware.none = jest.fn(() => multerMiddleware); // Now type-safe
+
+// Configure image upload middleware mock (uses the reverted simple mock)
+// Explicitly type the mock return value as any to satisfy the assignment
+// while acknowledging our custom mock doesn't fully match the Multer type.
 globalUploadService.configureImageUploadMiddleware.mockReturnValue(
-  multerMiddleware
+  multerMiddleware as any
 );
 
 // Mock implementation for the getService method
@@ -416,7 +428,7 @@ const mockPost: Post = {
   },
 };
 
-export let isPostLikedTestState = false;
+export const isPostLikedTestState = false;
 
 // --- CONTROLLER MOCKS ---
 
@@ -443,7 +455,7 @@ interface PostResponse {
 mockPostsController.createPost.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as any;
+    const user = req.user as DbUser;
     if (!user) {
       res
         .status(401)
@@ -482,7 +494,7 @@ mockPostsController.createPost.mockImplementation(
           id: `https://test.domain/users/${user.preferredUsername}`,
           username: `${user.preferredUsername}@test.domain`,
           preferredUsername: user.preferredUsername,
-          displayName: user.displayName || 'Test User',
+          displayName: user.preferredUsername || 'Test User',
         },
       };
 
@@ -517,7 +529,7 @@ mockPostsController.createPost.mockImplementation(
         id: `https://test.domain/users/${user.preferredUsername}`,
         username: `${user.preferredUsername}@test.domain`,
         preferredUsername: user.preferredUsername,
-        displayName: user.displayName || 'Test User',
+        displayName: user.preferredUsername || 'Test User',
       },
     };
 
@@ -639,7 +651,7 @@ mockPostsController.getPostsByUsername.mockImplementation(
 mockPostsController.updatePost.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as any;
+    const user = req.user as DbUser;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -674,7 +686,7 @@ mockPostsController.updatePost.mockImplementation(
 mockPostsController.deletePost.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as any;
+    const user = req.user as DbUser;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -700,7 +712,7 @@ let postUnliked = false;
 mockPostsController.likePost.mockImplementation(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as any;
+    const user = req.user as DbUser;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -783,4 +795,3 @@ export const mockServiceContainer: ServiceContainer = {
   // Properly type the getService method
   getService: mockGetService,
 };
-/* eslint-enable @typescript-eslint/no-unsafe-return */

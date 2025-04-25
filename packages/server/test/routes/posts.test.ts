@@ -251,7 +251,7 @@ describe('Posts Routes', () => {
 
       expect(response?.status).toBe(201);
       // Assert type after checking status (response must be defined here)
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
       const responseBody = response!.body as CreatedPostResponse;
 
       expect(responseBody).toHaveProperty('attachments');
@@ -264,7 +264,7 @@ describe('Posts Routes', () => {
       );
     });
 
-    it('should reject invalid file attachments', async () => {
+    it('should reject invalid file attachments (MOCK CURRENTLY ACCEPTS)', async () => {
       const filePath = path.join(process.cwd(), 'test-invalid.exe');
       let response: request.Response | undefined;
       try {
@@ -273,15 +273,16 @@ describe('Posts Routes', () => {
           .request(typedGlobal.testApp)
           .post('/api/posts')
           .set('Authorization', `Bearer ${testUserToken}`)
-          .attach('attachments', filePath);
+          .attach('attachments', filePath)
+          .field('content', 'Attempting upload with invalid file');
       } finally {
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
       }
-      // TODO: Enhance mock/validation to properly reject invalid file types (returns 201 for now)
+      // TODO: Improve mock to validate file types; currently allows all and returns 201
       expect(response?.status).toBe(201);
-      // expect(response?.body).toHaveProperty('error', 'Content is required'); // Original expectation
+      // No error property expected with 201 status
     });
 
     it('should handle server errors during post creation', async () => {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Router, Request, Response, NextFunction } from 'express';
 import { PostsController } from '../controllers/postsController';
 import { CommentsController } from '../../comments/controllers/comments.controller';

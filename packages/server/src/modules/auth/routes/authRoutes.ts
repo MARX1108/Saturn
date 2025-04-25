@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import express, { Router, NextFunction, Request, Response } from 'express';
 import { AuthController } from '../controllers/authController';
 import { auth } from '../../../middleware/auth';

@@ -2,13 +2,17 @@
 import { Request, Response, NextFunction } from 'express'; // Add express types for mock
 import { Actor } from '@/modules/actors/models/actor'; // Added import
 import { ObjectId } from 'mongodb';
+// import jwt from 'jsonwebtoken'; // Remove top-level import
 
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
 jest.mock('@/middleware/auth', () => {
-  // Remove the explicit type definition - Jest doesn't allow types in factory functions
+  // Restore require inside the factory function
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const jwt = require('jsonwebtoken');
+  // Also require mongodb specifically for ObjectId within this scope
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ObjectId: MockObjectId } = require('mongodb'); // Use alias to avoid conflict if needed
 
   // Define the known user ID from mockSetup for default user
   const knownTestUserIdHex = '60a0f3f1e1b8f1a1a8b4c1c1';
@@ -40,8 +44,7 @@ jest.mock('@/middleware/auth', () => {
     res: Response,
     next: NextFunction
   ): void => {
-    // Import ObjectId here to avoid jest.mock() errors
-    const { ObjectId } = require('mongodb');
+    // ObjectId is imported at top level, no require needed here
 
     // console.log( // Removed log block
     //   `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
@@ -74,7 +77,7 @@ jest.mock('@/middleware/auth', () => {
           ) {
             user = {
               ...defaultMockUser,
-              _id: new ObjectId(typedDecoded.id),
+              _id: new MockObjectId(typedDecoded.id),
               id: typedDecoded.id,
               preferredUsername: typedDecoded.username,
             };

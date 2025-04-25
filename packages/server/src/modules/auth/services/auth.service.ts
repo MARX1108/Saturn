@@ -72,7 +72,7 @@ export class AuthService {
     }
 
     // Remove password from response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { password: _password, ...userWithoutPassword } = user;
 
     // Generate token
@@ -107,7 +107,7 @@ export class AuthService {
     await this.repository.create(user);
 
     // Remove password from response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { password: _password, ...userWithoutPassword } = user;
 
     // Generate token
