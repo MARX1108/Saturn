@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import express, { Router } from 'express';
+import express, { Router, NextFunction, Request, Response } from 'express';
 import { AuthController } from '../controllers/authController';
 import { auth } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
@@ -23,8 +23,16 @@ export default function configureAuthRoutes(
   // Bind methods from the MOCKED controller
   const boundRegister = authController.register.bind(authController);
   const boundLogin = authController.login.bind(authController);
-  const boundGetCurrentUser =
-    authController.getCurrentUser.bind(authController);
+
+  // Wrap the getCurrentUser method to make it async
+  const wrappedGetCurrentUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    authController.getCurrentUser(req, res, next);
+    return Promise.resolve();
+  };
 
   // Register new user
   router.post('/register', wrapAsync(boundRegister));
@@ -33,7 +41,7 @@ export default function configureAuthRoutes(
   router.post('/login', wrapAsync(boundLogin));
 
   // Get current user (protected route)
-  router.get('/me', auth, wrapAsync(boundGetCurrentUser));
+  router.get('/me', auth, wrapAsync(wrappedGetCurrentUser));
 
   return router;
 }

@@ -18,7 +18,7 @@ export function configureMediaRoutes(
   // Upload media
   router.post(
     '/upload',
-    wrapAsync((req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
       return mediaController.uploadMedia(req, res);
     })
   );
@@ -26,7 +26,7 @@ export function configureMediaRoutes(
   // Get media by ID
   router.get(
     '/:id',
-    wrapAsync((req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
       return mediaController.getMedia(req, res);
     })
   );
@@ -34,7 +34,7 @@ export function configureMediaRoutes(
   // Delete media
   router.delete(
     '/:id',
-    wrapAsync((req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
       return mediaController.deleteMedia(req, res);
     })
   );

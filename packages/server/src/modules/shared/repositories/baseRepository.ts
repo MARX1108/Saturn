@@ -133,7 +133,7 @@ export abstract class MongoRepository<T extends Document>
     const result = await this.collection.findOneAndUpdate(
       filter,
       update,
-      options
+      options || {}
     );
     return result as WithId<T> | null;
   }

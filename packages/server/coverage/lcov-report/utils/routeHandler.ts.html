@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for routes/index.ts</title>
+    <title>Code coverage report for utils/routeHandler.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -19,13 +19,13 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">routes</a> index.ts</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">utils</a> routeHandler.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -85,7 +85,12 @@
 <a name='L20'></a><a href='#L20'>20</a>
 <a name='L21'></a><a href='#L21'>21</a>
 <a name='L22'></a><a href='#L22'>22</a>
-<a name='L23'></a><a href='#L23'>23</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -95,40 +100,50 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import express, { Router } from 'express';
-import configureAuthRoutes from '../modules/auth/routes/authRoutes';
-import configurePostRoutes from '../modules/posts/routes/postRoutes';
-import configureActorRoutes from '../modules/actors/routes/actorRoutes';
-import { ServiceContainer } from '../utils/container';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64x</span>
+<span class="cline-any cline-yes">38x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response, NextFunction, RequestHandler } from 'express';
 &nbsp;
 /**
- * Configure and mount all application routes
+ * Safely wraps an async controller method for use in Express route handlers
+ * Addresses the ESLint no-misused-promises error by properly handling Promise returns
+ *
+ * @param fn The async controller function to wrap
+ * @returns A void function safe to use in Express routes
  */
-export function configureRoutes(serviceContainer: ServiceContainer): Router {
-  const router = express.Router();
+// Using a special typing to make ESLint happy with this function
 &nbsp;
-  router.use('/auth', configureAuthRoutes(serviceContainer));
-&nbsp;
-  router.use('/posts', configurePostRoutes(serviceContainer));
-&nbsp;
-  router.use('/actors', configureActorRoutes(serviceContainer));
-&nbsp;
-  return router;
+export function wrapAsync&lt;
+  P = Record&lt;string, unknown&gt;,
+  ResBody = unknown,
+  ReqBody = unknown,
+  ReqQuery = Record&lt;string, unknown&gt;,
+&gt;(
+  handler: (
+    req: Request&lt;P, ResBody, ReqBody, ReqQuery&gt;,
+    res: Response&lt;ResBody&gt;,
+    next: NextFunction
+  ) =&gt; Promise&lt;void&gt;
+): RequestHandler&lt;P, ResBody, ReqBody, ReqQuery&gt; {
+  return (req, res, next): void =&gt; {
+    Promise.resolve(handler(req, res, next)).catch(next);
+  };
 }
-&nbsp;
-export default configureRoutes;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->

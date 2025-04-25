@@ -55,10 +55,7 @@ export const auth = async (
 
     // Find user in database
     const user = await db.collection<DbUser>('actors').findOne({
-      $or: [
-        { _id: new ObjectId(decoded.id) },
-        { preferredUsername: decoded.username },
-      ],
+      $or: [{ _id: decoded.id }, { preferredUsername: decoded.username }],
     });
 
     if (!user) {

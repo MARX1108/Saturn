@@ -1,6 +1,7 @@
 // Global setup for Jest tests
 import { Request, Response, NextFunction } from 'express'; // Add express types for mock
 import { Actor } from '@/modules/actors/models/actor'; // Added import
+import { ObjectId } from 'mongodb';
 
 // Temporarily comment out the global mock to test its effect on routing
 // Mock the actual authentication middleware module
@@ -23,13 +24,25 @@ jest.mock('@/middleware/auth', () => {
     profile: {
       /* ... */
     },
-  } as Actor; // Replaced 'any' with 'Actor'
+    // Add required Actor properties
+    type: 'Person',
+    username: knownTestUsername,
+    inbox: `https://test.domain/users/${knownTestUsername}/inbox`,
+    outbox: `https://test.domain/users/${knownTestUsername}/outbox`,
+    followers: `https://test.domain/users/${knownTestUsername}/followers`,
+    following: `https://test.domain/users/${knownTestUsername}/following`,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as unknown as Actor; // First convert to unknown, then to Actor
 
   const mockMiddlewareImplementation = (
     req: Request,
     res: Response,
     next: NextFunction
   ): void => {
+    // Import ObjectId here to avoid jest.mock() errors
+    const { ObjectId } = require('mongodb');
+
     // console.log( // Removed log block
     //   `>>> Mock authenticate MIDDLEWARE executing for path: ${req.path}`
     // );
@@ -61,7 +74,7 @@ jest.mock('@/middleware/auth', () => {
           ) {
             user = {
               ...defaultMockUser,
-              _id: typedDecoded.id,
+              _id: new ObjectId(typedDecoded.id),
               id: typedDecoded.id,
               preferredUsername: typedDecoded.username,
             };
@@ -79,7 +92,8 @@ jest.mock('@/middleware/auth', () => {
         }
       } catch (_) {
         // Handle error type safely - no need to keep a reference to err
-        return res.status(401).json({ error: 'Unauthorized - Invalid Token' });
+        res.status(401).json({ error: 'Unauthorized - Invalid Token' });
+        return; // End function execution here
       }
     } else {
       // No token provided
@@ -90,7 +104,22 @@ jest.mock('@/middleware/auth', () => {
       user = undefined;
     }
 
-    req.user = user;
+    // Convert Actor to DbUser for req.user
+    req.user = user
+      ? {
+          _id: user._id.toString(),
+          id: user.id,
+          username: user.username,
+          preferredUsername: user.preferredUsername,
+          password: '', // Mock password (empty string is safe for tests)
+          followers: [],
+          following: [],
+          email: user.email || 'mock@example.com',
+          createdAt: user.createdAt || new Date(),
+          updatedAt: user.updatedAt || new Date(),
+        }
+      : undefined;
+
     // console.log( // Removed log block
     //   '>>> Mock authenticate MIDDLEWARE - req.user set to:',
     //   req.user
@@ -178,7 +207,12 @@ beforeAll(async (): Promise<void> => {
 
   // Make app available globally for tests (using declarations from global.d.ts)
   global.testApp = testApp;
-  global.request = request; // Assign the supertest function itself
+
+  // Using a type assertion to match the expected type
+  global.request = request as unknown as (
+    app: Express
+  ) => import('supertest').SuperTest<import('supertest').Test>;
+
   global.mongoDb = mongoDb;
 });
 

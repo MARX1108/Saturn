@@ -55,7 +55,7 @@ export function createMockServiceContainer(
   if (overrides) {
     for (const key in overrides) {
       if (Object.prototype.hasOwnProperty.call(overrides, key)) {
-        mockContainer[key as keyof ServiceContainer] =
+        (mockContainer as unknown as Record<string, unknown>)[key] =
           overrides[key as keyof ServiceContainer];
       }
     }

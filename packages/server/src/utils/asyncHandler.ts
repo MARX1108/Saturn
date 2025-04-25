@@ -5,7 +5,13 @@ import { Request, Response, NextFunction } from 'express';
  * This wrapper ensures proper Promise handling and error propagation
  */
 export const asyncHandler =
-  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
+  (
+    fn: (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ) => Promise<void | Response<any, Record<string, any>>>
+  ) =>
   (req: Request, res: Response, next: NextFunction): void => {
     void Promise.resolve(fn(req, res, next)).catch(next);
   };

@@ -19,7 +19,7 @@ export function wrapAsync<
     req: Request<P, ResBody, ReqBody, ReqQuery>,
     res: Response<ResBody>,
     next: NextFunction
-  ) => Promise<void>
+  ) => Promise<void | Response<any, Record<string, any>>>
 ): RequestHandler<P, ResBody, ReqBody, ReqQuery> {
   return (req, res, next): void => {
     Promise.resolve(handler(req, res, next)).catch(next);

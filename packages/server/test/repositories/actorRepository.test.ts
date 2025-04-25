@@ -26,33 +26,34 @@ describe('ActorRepository', () => {
   });
 
   const createActor = async (data: Partial<Actor>): Promise<Actor> => {
-    const actorId = data._id || new ObjectId();
-    const username =
-      data.preferredUsername || `testuser-${actorId.toHexString()}`;
-    const actorData: Partial<Actor> = {
-      _id: actorId,
+    const username = data.preferredUsername || `user_${Date.now()}`;
+    const actorData = {
       id: data.id || `https://${testDomain}/users/${username}`,
-      type: 'Person',
+      type: data.type || 'Person',
       username: data.username || `${username}@${testDomain}`,
       preferredUsername: username,
-      name: data.name || 'Test User',
-      displayName: data.displayName || data.name || 'Test User',
+      displayName: data.displayName || `${username} Display Name`,
       summary: data.summary || '',
       inbox: data.inbox || `https://${testDomain}/users/${username}/inbox`,
       outbox: data.outbox || `https://${testDomain}/users/${username}/outbox`,
       followers:
         data.followers || `https://${testDomain}/users/${username}/followers`,
+      following: data.following || [],
       createdAt: data.createdAt || new Date(),
       updatedAt: data.updatedAt || new Date(),
       publicKey: data.publicKey || { id: '', owner: '', publicKeyPem: '' },
       password: data.password || 'hashedPassword',
-      following: data.following || [],
       ...data,
     };
     const result = await db
       .collection<Actor>('actors')
       .insertOne(actorData as Actor);
-    return { ...actorData, _id: result.insertedId };
+
+    // Ensure the result object has all the required fields from Actor
+    return {
+      ...actorData,
+      _id: result.insertedId,
+    } as Actor; // Use a proper type assertion here
   };
 
   describe('create', () => {

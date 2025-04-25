@@ -118,7 +118,12 @@ export function createServiceContainer(
 
   // Instantiate services involved in circular dependencies with corrected constructors
   const actorService = new ActorService(actorRepository, domain);
-  const postService = new PostService(postRepository, actorService, domain);
+  const postService = new PostService(
+    postRepository,
+    actorService,
+    domain,
+    actorRepository
+  );
   const notificationService = new NotificationService(db, actorService);
   const commentService = new CommentService(commentRepository);
 
