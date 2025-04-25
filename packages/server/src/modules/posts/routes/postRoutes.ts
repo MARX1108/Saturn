@@ -5,6 +5,8 @@ import { authenticate } from '../../../middleware/auth';
 import { AuthService } from '../../auth/services/auth.service';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
+import { validateRequestBody } from '../../../middleware/validateRequest';
+import { createPostSchema, updatePostSchema } from '../schemas/post.schema';
 
 /**
  * Configure post routes with the controller
@@ -63,9 +65,19 @@ export default function configurePostRoutes(
   // Protected routes using wrapAsync
   // Pass authService to authenticate middleware factory
 
-  router.post('/', authenticate(authService), wrapAsync(boundCreatePost));
+  router.post(
+    '/',
+    authenticate(authService),
+    validateRequestBody(createPostSchema),
+    wrapAsync(boundCreatePost)
+  );
 
-  router.put('/:id', authenticate(authService), wrapAsync(boundUpdatePost));
+  router.put(
+    '/:id',
+    authenticate(authService),
+    validateRequestBody(updatePostSchema),
+    wrapAsync(boundUpdatePost)
+  );
 
   router.delete('/:id', authenticate(authService), wrapAsync(boundDeletePost));
 

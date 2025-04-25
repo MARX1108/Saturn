@@ -10,6 +10,10 @@ import {
   CreatePostData,
   UpdatePostData,
 } from '@/modules/posts/services/postService';
+import {
+  createPostSchema,
+  updatePostSchema,
+} from '@/modules/posts/schemas/post.schema';
 
 // --- Define DTOs for Request Validation ---
 // Define outside the class
@@ -151,49 +155,15 @@ export class PostsController {
       }
       const actorId = req.user._id;
 
-      // --- Safely extract and validate data from req.body ---
-      const body = req.body as Record<string, unknown>; // Assert body as Record<string, unknown> first
+      // Data has already been validated by the Zod schema middleware
+      // We can safely typecast here
+      const validatedData = req.body;
 
-      // Validate required content
-      if (typeof body.content !== 'string' || body.content.trim() === '') {
-        throw new AppError(
-          'Post content must be a non-empty string',
-          400,
-          ErrorType.BAD_REQUEST
-        );
-      }
-      const content: string = body.content;
-
-      // Validate optional fields if they exist
-      const visibility =
-        typeof body.visibility === 'string'
-          ? (body.visibility as CreatePostData['visibility'])
-          : undefined;
-      const sensitive =
-        typeof body.sensitive === 'boolean' ? body.sensitive : undefined;
-      const summary =
-        typeof body.summary === 'string' ? body.summary : undefined;
-
-      // Basic validation for attachments (ensure it's an array if present)
-      // More specific validation (checking each element's structure) might be needed
-      const attachmentsFromBody: Attachment[] | undefined = Array.isArray(
-        body.attachments
-      )
-        ? (body.attachments as Attachment[])
-        : undefined;
-
-      // --- Construct postData with validated types ---
+      // Construct postData with validated data
       const postData: CreatePostData = {
-        content, // Now guaranteed to be a string
-        visibility, // Typed or undefined
-        sensitive, // Typed or undefined
-        summary, // Typed or undefined
-        attachments: attachmentsFromBody, // Typed array or undefined
+        ...validatedData,
         actorId,
       };
-
-      // Original content check is now handled above
-      // if (!postData.content) { ... }
 
       const newPost = await this.postService.createPost(postData);
       const formattedPost = await this.formatPostResponse(
@@ -331,48 +301,11 @@ export class PostsController {
       const actorId = req.user._id;
       const postId = req.params.id;
 
-      // --- Safely extract and validate data from req.body ---
-      const body = req.body as Record<string, unknown>; // Assert body as Record<string, unknown> first
-
-      // Validate optional fields if they exist
-      // Note: For update, even content is optional
-      const content =
-        typeof body.content === 'string' ? body.content : undefined;
-      const visibility =
-        typeof body.visibility === 'string'
-          ? (body.visibility as UpdatePostData['visibility'])
-          : undefined;
-      const sensitive =
-        typeof body.sensitive === 'boolean' ? body.sensitive : undefined;
-      const summary =
-        typeof body.summary === 'string' ? body.summary : undefined;
-      const attachments = Array.isArray(body.attachments)
-        ? (body.attachments as Attachment[])
-        : undefined;
-
-      // Check if at least one field is provided for update
-      if (
-        content === undefined &&
-        visibility === undefined &&
-        sensitive === undefined &&
-        summary === undefined &&
-        attachments === undefined
-      ) {
-        throw new AppError(
-          'No update data provided',
-          400,
-          ErrorType.BAD_REQUEST
-        );
-      }
+      // Data has already been validated by the Zod schema middleware
+      const validatedData = req.body;
 
       // Use imported UpdatePostData type
-      const updateData: UpdatePostData = {
-        content,
-        visibility,
-        sensitive,
-        summary,
-        attachments,
-      };
+      const updateData: UpdatePostData = validatedData;
 
       const updatedPost = await this.postService.updatePost(
         postId,

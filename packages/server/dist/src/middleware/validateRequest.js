@@ -12,6 +12,17 @@ const errors_1 = require('../utils/errors');
 const validateRequestBody = schema => {
   return (req, res, next) => {
     console.log(`[Validator] Validating ${req.method} ${req.path} body...`);
+    // Skip validation for multipart/form-data requests (used for file uploads)
+    const isMultipart =
+      req.headers &&
+      req.headers['content-type'] &&
+      typeof req.headers['content-type'] === 'string' &&
+      req.headers['content-type'].includes('multipart/form-data');
+    if (isMultipart) {
+      console.log(`[Validator] Skipping validation for multipart form data`);
+      next();
+      return;
+    }
     try {
       // Attempt to parse the request body
       schema.parse(req.body);

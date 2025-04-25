@@ -331,7 +331,7 @@ exports.mockPostsController.createPost.mockImplementation(
         createdAt: new Date(),
         updatedAt: new Date(),
         sensitive: req.body.sensitive === 'true',
-        contentWarning: req.body.contentWarning || undefined,
+        summary: req.body.summary || undefined,
         attachments: [
           {
             type: 'Image',
@@ -358,8 +358,8 @@ exports.mockPostsController.createPost.mockImplementation(
     // Process sensitive flag and content warning
     const isSensitive =
       req.body.sensitive === 'true' || req.body.sensitive === true;
-    const contentWarning = isSensitive
-      ? req.body.contentWarning || 'Sensitive topic'
+    const summary = isSensitive
+      ? req.body.summary || 'Sensitive topic'
       : undefined;
     // Create a regular post without attachments
     const newPost = {
@@ -369,7 +369,7 @@ exports.mockPostsController.createPost.mockImplementation(
       createdAt: new Date(),
       updatedAt: new Date(),
       sensitive: isSensitive,
-      contentWarning: contentWarning,
+      summary: summary,
       attachments: [],
       actor: {
         id: `https://test.domain/users/${user.preferredUsername}`,

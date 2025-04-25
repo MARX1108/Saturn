@@ -4,6 +4,8 @@ exports.default = configurePostRoutes;
 const express_1 = require('express');
 const auth_1 = require('../../../middleware/auth');
 const routeHandler_1 = require('../../../utils/routeHandler');
+const validateRequest_1 = require('../../../middleware/validateRequest');
+const post_schema_1 = require('../schemas/post.schema');
 /**
  * Configure post routes with the controller
  */
@@ -60,11 +62,13 @@ function configurePostRoutes(container) {
   router.post(
     '/',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestBody)(post_schema_1.createPostSchema),
     (0, routeHandler_1.wrapAsync)(boundCreatePost)
   );
   router.put(
     '/:id',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestBody)(post_schema_1.updatePostSchema),
     (0, routeHandler_1.wrapAsync)(boundUpdatePost)
   );
   router.delete(
