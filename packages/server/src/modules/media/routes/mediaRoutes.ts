@@ -1,12 +1,7 @@
-import express, {
-  Request,
-  Response,
-  Router,
-  NextFunction,
-  RequestHandler,
-} from 'express';
+import express, { Request, Response, Router, NextFunction } from 'express';
 import { MediaController } from '../controllers/media.controller';
 import { ServiceContainer } from '../../../utils/container';
+import { wrapAsync } from '../../../utils/routeHandler';
 
 /**
  * Configure media routes with dependency injection
@@ -21,19 +16,28 @@ export function configureMediaRoutes(
   const mediaController = new MediaController(mediaService);
 
   // Upload media
-  router.post('/upload', (req: Request, res: Response, next: NextFunction) => {
-    mediaController.uploadMedia(req, res).catch(next);
-  });
+  router.post(
+    '/upload',
+    wrapAsync((req: Request, res: Response, next: NextFunction) => {
+      return mediaController.uploadMedia(req, res);
+    })
+  );
 
   // Get media by ID
-  router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
-    mediaController.getMedia(req, res).catch(next);
-  });
+  router.get(
+    '/:id',
+    wrapAsync((req: Request, res: Response, next: NextFunction) => {
+      return mediaController.getMedia(req, res);
+    })
+  );
 
   // Delete media
-  router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
-    mediaController.deleteMedia(req, res).catch(next);
-  });
+  router.delete(
+    '/:id',
+    wrapAsync((req: Request, res: Response, next: NextFunction) => {
+      return mediaController.deleteMedia(req, res);
+    })
+  );
 
   return router;
 }

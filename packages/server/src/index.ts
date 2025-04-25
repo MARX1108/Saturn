@@ -42,8 +42,8 @@ app.get('/', (req, res) => {
 export async function startServer(): Promise<{
   app: express.Application;
   client: MongoClient;
-  server?: any;
-  db: any;
+  server?: ReturnType<express.Application['listen']>;
+  db: ReturnType<MongoClient['db']>;
 }> {
   try {
     const client = new MongoClient(MONGO_URI);

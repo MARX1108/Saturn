@@ -47,7 +47,7 @@ describe('Actor Routes', () => {
         >
       ).mockResolvedValue([fullMockActor]); // Resolve with Actor[]
 
-      const response = await request((global as any).testApp as Express)
+      const response = await request(global.testApp)
         .get('/api/actors/search?q=')
         .set('Authorization', 'Bearer mock-test-token');
 
@@ -86,7 +86,7 @@ describe('Actor Routes', () => {
         >
       ).mockResolvedValue(mockSearchResult.actors); // Assuming signature is (query: string, limit?: number)
 
-      const response = await request((global as any).testApp as Express)
+      const response = await request(global.testApp)
         .get('/api/actors/search')
         .query({ q: 'test' })
         .expect(200);
@@ -124,7 +124,7 @@ describe('Actor Routes', () => {
       };
       mockActorService.getActorByUsername.mockResolvedValue(specificMockActor);
 
-      const response = await request((global as any).testApp as Express)
+      const response = await request(global.testApp)
         .get('/api/actors/testactor')
         .expect(200);
 
@@ -144,9 +144,7 @@ describe('Actor Routes', () => {
     it('should return 404 if actor not found', async () => {
       mockActorService.getActorByUsername.mockResolvedValue(null);
 
-      await request((global as any).testApp as Express)
-        .get('/api/actors/nonexistent')
-        .expect(404);
+      await request(global.testApp).get('/api/actors/nonexistent').expect(404);
     });
   });
 });

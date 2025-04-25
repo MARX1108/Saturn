@@ -7,6 +7,7 @@ import configureAuthRoutes from '@/modules/auth/routes/authRoutes';
 import { AuthController } from '@/modules/auth/controllers/authController';
 import { mockServiceContainer } from '../helpers/mockSetup';
 import { DbUser } from '@/modules/auth/models/user';
+import { Express } from 'express';
 // Remove local express, MongoClient, Db, MongoMemoryServer imports
 // import express from 'express';
 // import { MongoClient, Db } from 'mongodb';
@@ -21,9 +22,11 @@ import { DbUser } from '@/modules/auth/models/user';
 // Access the globally available app and db from setup.ts
 declare global {
   // eslint-disable-next-line no-var
-  var testApp: Express.Application;
+  var testApp: Express;
   // eslint-disable-next-line no-var
-  var request: any; // supertest request
+  var request: (
+    app: Express
+  ) => import('supertest').SuperTest<import('supertest').Test>;
   // eslint-disable-next-line no-var
   var mongoDb: Db;
 }

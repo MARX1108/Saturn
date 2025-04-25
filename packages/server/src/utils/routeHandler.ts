@@ -11,9 +11,9 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 
 export function wrapAsync<
   P = Record<string, unknown>,
-  ResBody = any,
-  ReqBody = any,
-  ReqQuery = any,
+  ResBody = unknown,
+  ReqBody = unknown,
+  ReqQuery = Record<string, unknown>,
 >(
   handler: (
     req: Request<P, ResBody, ReqBody, ReqQuery>,

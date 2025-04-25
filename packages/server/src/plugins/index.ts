@@ -2,7 +2,7 @@ import { Application } from 'express';
 import { Post } from '../modules/posts/models/post';
 
 export interface HookData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ServerPlugin {
