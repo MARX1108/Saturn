@@ -122,7 +122,7 @@ exports.mockActorService.getActorByUsername.mockResolvedValue(mockActor);
 // Mock AuthController methods
 // Restore original mock implementations for AuthController methods
 exports.mockAuthController.register.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     // Restore original implementation (may need adjustment based on original state)
     const { username, password, displayName } = req.body;
     if (!username || !password) {
@@ -154,7 +154,7 @@ exports.mockAuthController.register.mockImplementation(
       .json({ actor: registeredActor, token: 'mock-ctrl-token-register' });
   }
 );
-exports.mockAuthController.login.mockImplementation(async (req, res, next) => {
+exports.mockAuthController.login.mockImplementation(async (req, res, _next) => {
   // Restore original implementation
   const { username, password } = req.body;
   if (!username || !password) {
@@ -305,7 +305,7 @@ const mockPost = {
 };
 exports.isPostLikedTestState = false;
 exports.mockPostsController.createPost.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     // Authenticate user
     const user = req.user;
     if (!user) {
@@ -397,7 +397,7 @@ exports.mockPostsController.getPostById.mockImplementation(
       // Validate ObjectId format before calling the service
       try {
         new mongodb_1.ObjectId(postId);
-      } catch (e) {
+      } catch (_e) {
         // Invalid ObjectId format - return 400 error
         res.status(400).json({ error: 'Invalid post ID format' });
         return;
@@ -442,7 +442,7 @@ exports.mockPostsController.getFeed.mockImplementation(
   }
 );
 exports.mockPostsController.getPostsByUsername.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     const username = req.params.username;
     if (username === 'nonexistentuser') {
       res.status(404).json({ error: 'User not found' });
@@ -471,7 +471,7 @@ exports.mockPostsController.getPostsByUsername.mockImplementation(
   }
 );
 exports.mockPostsController.updatePost.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     // Authenticate user
     const user = req.user;
     if (!user) {
@@ -500,7 +500,7 @@ exports.mockPostsController.updatePost.mockImplementation(
   }
 );
 exports.mockPostsController.deletePost.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     // Authenticate user
     const user = req.user;
     if (!user) {
@@ -518,10 +518,10 @@ exports.mockPostsController.deletePost.mockImplementation(
   }
 );
 // Global state to track if a post was liked/unliked for testing
-let postLiked = false;
-let postUnliked = false;
+let _postLiked = false;
+let _postUnliked = false;
 exports.mockPostsController.likePost.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     // Authenticate user
     const user = req.user;
     if (!user) {
@@ -535,7 +535,7 @@ exports.mockPostsController.likePost.mockImplementation(
       return;
     }
     // Set global state for testing
-    postLiked = true;
+    _postLiked = true;
     // Return the post with updated like status
     const likedPost = {
       ...mockPost,
@@ -546,7 +546,7 @@ exports.mockPostsController.likePost.mockImplementation(
   }
 );
 exports.mockPostsController.unlikePost.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     // Authenticate user
     const user = req.user;
     if (!user) {
@@ -560,7 +560,7 @@ exports.mockPostsController.unlikePost.mockImplementation(
       return;
     }
     // Set global state for testing
-    postUnliked = true;
+    _postUnliked = true;
     // Return the post with updated like status
     const unlikedPost = {
       ...mockPost,
@@ -598,6 +598,6 @@ exports.mockServiceContainer = {
 globals_1.jest.mock('express-rate-limit', () => {
   return function mockRateLimit() {
     // This returns a middleware function that just calls next()
-    return (req, res, next) => next();
+    return (_req, _res, next) => next();
   };
 });

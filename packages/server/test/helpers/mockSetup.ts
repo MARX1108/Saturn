@@ -4,18 +4,18 @@ import { ActorService } from '@/modules/actors/services/actorService';
 import { PostService } from '@/modules/posts/services/postService';
 import { ServiceContainer } from '@/utils/container';
 import { CommentService } from '@/modules/comments/services/comment.service';
-import { auth } from '@/middleware/auth';
+import { _auth } from '@/middleware/auth';
 import { Actor } from '@/modules/actors/models/actor';
 import { Post } from '@/modules/posts/models/post';
 import {
-  AppError,
+  _AppError,
   // BadRequestError, // Removed unused import
   // ConflictError, // Removed unused import
   // UnauthorizedError, // Removed unused import
 } from '@/utils/errors';
 import { Request, Response, NextFunction } from 'express';
-import { createTestApp } from './testApp';
-import { Comment } from '@/modules/comments/models/comment';
+import { _createTestApp } from './testApp';
+import { _Comment } from '@/modules/comments/models/comment';
 import { jest } from '@jest/globals';
 import { AuthService } from '@/modules/auth/services/auth.service';
 import { MediaService } from '@/modules/media/services/media.service';
@@ -40,7 +40,7 @@ type MiddlewareFunction = (
 ) => void;
 
 // --- START: Define interface for mock multer ---
-interface MockMulterMiddleware extends MiddlewareFunction {
+interface _MockMulterMiddleware extends MiddlewareFunction {
   array: jest.Mock<MiddlewareFunction>;
   single: jest.Mock<MiddlewareFunction>;
   fields: jest.Mock<MiddlewareFunction>;
@@ -135,7 +135,13 @@ const multerMiddleware = ((
 ): void => {
   // Defer calling next to allow stream operations potentially more time
   process.nextTick(() => next());
-}) as any; // Keep 'as any' as previously discussed for stability
+}) as unknown as {
+  (req: Request, res: Response, next: NextFunction): void;
+  array: jest.Mock<MiddlewareFunction>;
+  single: jest.Mock<MiddlewareFunction>;
+  fields: jest.Mock<MiddlewareFunction>;
+  none: jest.Mock<MiddlewareFunction>;
+}; // Replace 'as any' with proper typing
 
 // Add necessary properties to make it compatible with Multer interface
 multerMiddleware.array = jest.fn(() => multerMiddleware); // Returns the modified base function
@@ -144,10 +150,11 @@ multerMiddleware.fields = jest.fn(() => multerMiddleware); // Now type-safe
 multerMiddleware.none = jest.fn(() => multerMiddleware); // Now type-safe
 
 // Configure image upload middleware mock (uses the reverted simple mock)
-// Explicitly type the mock return value as any to satisfy the assignment
-// while acknowledging our custom mock doesn't fully match the Multer type.
+// Use a proper type instead of 'as any'
 globalUploadService.configureImageUploadMiddleware.mockReturnValue(
-  multerMiddleware as any
+  multerMiddleware as unknown as ReturnType<
+    typeof globalUploadService.configureImageUploadMiddleware
+  >
 );
 
 // Mock implementation for the getService method
@@ -200,7 +207,7 @@ mockActorService.getActorByUsername.mockResolvedValue(mockActor);
 // Restore original mock implementations for AuthController methods
 
 mockAuthController.register.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Restore original implementation (may need adjustment based on original state)
     const { username, password, displayName } = req.body as {
       username?: string;
@@ -240,7 +247,7 @@ mockAuthController.register.mockImplementation(
 );
 
 mockAuthController.login.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Restore original implementation
     const { username, password } = req.body as {
       username?: string;
@@ -439,7 +446,7 @@ interface AttachmentResponse {
 }
 
 // Type for post response
-interface PostResponse {
+interface _PostResponse {
   _id: string | ObjectId;
   id: string;
   content: string;
@@ -453,7 +460,7 @@ interface PostResponse {
 }
 
 mockPostsController.createPost.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
     const user = req.user as DbUser;
     if (!user) {
@@ -555,7 +562,7 @@ mockPostsController.getPostById.mockImplementation(
       // Validate ObjectId format before calling the service
       try {
         new ObjectId(postId);
-      } catch (e) {
+      } catch {
         // Invalid ObjectId format - return 400 error
         res.status(400).json({ error: 'Invalid post ID format' });
         return;
@@ -593,7 +600,7 @@ mockPostsController.getPostById.mockImplementation(
 );
 
 mockPostsController.getFeed.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user (access the user object attached by auth middleware)
     const user = req.user as DbUser;
     if (!user) {
@@ -608,7 +615,7 @@ mockPostsController.getFeed.mockImplementation(
 );
 
 mockPostsController.getPostsByUsername.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     const username = req.params.username;
     if (username === 'nonexistentuser') {
       res.status(404).json({ error: 'User not found' });
@@ -651,7 +658,7 @@ mockPostsController.getPostsByUsername.mockImplementation(
 );
 
 mockPostsController.updatePost.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
     const user = req.user as DbUser;
     if (!user) {
@@ -686,7 +693,7 @@ mockPostsController.updatePost.mockImplementation(
 );
 
 mockPostsController.deletePost.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
     const user = req.user as DbUser;
     if (!user) {
@@ -708,11 +715,11 @@ mockPostsController.deletePost.mockImplementation(
 );
 
 // Global state to track if a post was liked/unliked for testing
-let postLiked = false;
-let postUnliked = false;
+let _postLiked = false;
+let _postUnliked = false;
 
 mockPostsController.likePost.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
     const user = req.user as DbUser;
     if (!user) {
@@ -729,7 +736,7 @@ mockPostsController.likePost.mockImplementation(
     }
 
     // Set global state for testing
-    postLiked = true;
+    _postLiked = true;
 
     // Return the post with updated like status
     const likedPost = {
@@ -743,7 +750,7 @@ mockPostsController.likePost.mockImplementation(
 );
 
 mockPostsController.unlikePost.mockImplementation(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
     const user = req.user as DbUser;
     if (!user) {
@@ -760,7 +767,7 @@ mockPostsController.unlikePost.mockImplementation(
     }
 
     // Set global state for testing
-    postUnliked = true;
+    _postUnliked = true;
 
     // Return the post with updated like status
     const unlikedPost = {
@@ -802,6 +809,6 @@ export const mockServiceContainer: ServiceContainer = {
 jest.mock('express-rate-limit', () => {
   return function mockRateLimit() {
     // This returns a middleware function that just calls next()
-    return (req: any, res: any, next: any) => next();
+    return (_req: Request, _res: Response, next: NextFunction) => next();
   };
 });
