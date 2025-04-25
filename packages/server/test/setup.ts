@@ -93,7 +93,7 @@ jest.mock('@/middleware/auth', () => {
           // Setting user explicitly undefined if token is bad/unexpected
           user = undefined;
         }
-      } catch (_) {
+      } catch {
         // Handle error type safely - no need to keep a reference to err
         res.status(401).json({ error: 'Unauthorized - Invalid Token' });
         return; // End function execution here

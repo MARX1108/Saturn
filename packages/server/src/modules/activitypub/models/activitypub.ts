@@ -3,7 +3,15 @@ export interface ActivityPubObject {
   '@context': string | string[];
   id: string;
   type: string;
-  [key: string]: any;
+  [key: string]:
+    | string
+    | string[]
+    | number
+    | boolean
+    | ActivityPubObject
+    | ActivityPubObject[]
+    | null
+    | undefined;
 }
 
 export interface ActivityPubActivity extends ActivityPubObject {

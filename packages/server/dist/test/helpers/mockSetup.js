@@ -63,15 +63,14 @@ const globalUploadService = globalWithMocks.mockUploadService;
 const multerMiddleware = (req, res, next) => {
   // Defer calling next to allow stream operations potentially more time
   process.nextTick(() => next());
-}; // Keep 'as any' as previously discussed for stability
+}; // Replace 'as any' with proper typing
 // Add necessary properties to make it compatible with Multer interface
 multerMiddleware.array = globals_1.jest.fn(() => multerMiddleware); // Returns the modified base function
 multerMiddleware.single = globals_1.jest.fn(() => multerMiddleware); // Now type-safe
 multerMiddleware.fields = globals_1.jest.fn(() => multerMiddleware); // Now type-safe
 multerMiddleware.none = globals_1.jest.fn(() => multerMiddleware); // Now type-safe
 // Configure image upload middleware mock (uses the reverted simple mock)
-// Explicitly type the mock return value as any to satisfy the assignment
-// while acknowledging our custom mock doesn't fully match the Multer type.
+// Use a proper type instead of 'as any'
 globalUploadService.configureImageUploadMiddleware.mockReturnValue(
   multerMiddleware
 );
@@ -397,7 +396,7 @@ exports.mockPostsController.getPostById.mockImplementation(
       // Validate ObjectId format before calling the service
       try {
         new mongodb_1.ObjectId(postId);
-      } catch (_e) {
+      } catch {
         // Invalid ObjectId format - return 400 error
         res.status(400).json({ error: 'Invalid post ID format' });
         return;
@@ -429,7 +428,7 @@ exports.mockPostsController.getPostById.mockImplementation(
   }
 );
 exports.mockPostsController.getFeed.mockImplementation(
-  async (req, res, next) => {
+  async (req, res, _next) => {
     // Authenticate user (access the user object attached by auth middleware)
     const user = req.user;
     if (!user) {

@@ -5,7 +5,6 @@ import { ActorService } from '@/modules/actors/services/actorService';
 import { NotificationService } from '@/modules/notifications/services/notification.service';
 import { AppError, ErrorType } from '@/utils/errors';
 import { ObjectId } from 'mongodb';
-import { Actor as _Actor } from '@/modules/actors/models/actor';
 import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 
 // Define DTOs for service method parameters here

@@ -1,6 +1,16 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises'; // Use async promises version
+import { moveUploadedFile } from '../../../utils/fileUpload';
+
+// Define File interface locally to remove dependency
+interface File {
+  filename: string;
+  originalname: string;
+  mimetype: string;
+  size: number;
+  path: string;
+}
 
 export class UploadService {
   /**
@@ -131,6 +141,37 @@ export class UploadService {
       originalName: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
+    };
+  }
+
+  /**
+   * Alternative moveUploadedFile method that uses a subdirectory approach
+   * @param file The uploaded file from multer
+   * @param subDirectory Optional subdirectory within uploads
+   * @returns File information
+   */
+  async moveUploadedFileToSubdir(
+    file: Express.Multer.File,
+    subDirectory?: string
+  ): Promise<File> {
+    const destinationDir = path.join(
+      process.cwd(),
+      'uploads',
+      subDirectory || 'media'
+    );
+
+    // Move file from temp to permanent location
+    const filePath = moveUploadedFile(file.path, destinationDir, file.filename);
+
+    // Get the relative path from cwd
+    const relativePath = path.relative(process.cwd(), filePath);
+
+    return {
+      filename: file.filename,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: relativePath,
     };
   }
 }

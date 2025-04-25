@@ -50,7 +50,7 @@ describe('Posts Routes', () => {
     );
     // Use the KNOWN ID for the main test post for consistency with mocks
     testPostId = knownTestPostIdString;
-    const post = await db.collection('posts').insertOne({
+    const _post = await db.collection('posts').insertOne({
       _id: new mongodb_1.ObjectId(testPostId), // Use the known ID
       content: 'This is a test post',
       actorId: new mongodb_1.ObjectId(testUserId),
@@ -249,7 +249,7 @@ describe('Posts Routes', () => {
         .send({ content: 'This should trigger a server error' });
       expect(response.status).toBe(201); // NOTE: This expectation seems odd for an error case
       // Assert type even if body isn't checked yet
-      const responseBody = response.body;
+      const _responseBody = response.body;
       // Add assertions on responseBody.error here if desired later
     });
     // Add more tests: post length validation, rate limiting, etc.
@@ -287,6 +287,16 @@ describe('Posts Routes', () => {
       expect(response.status).toBe(400);
       const responseBody = response.body;
       expect(responseBody).toHaveProperty('error', 'Invalid post ID format');
+    });
+    it('should return 404 if post is not found by id', async () => {
+      // This test uses POST_ID which doesn't exist - now checking the response status
+      typedGlobal.mockPostService.getPostById.mockResolvedValueOnce(null);
+      const response = await typedGlobal
+        .request(typedGlobal.testApp)
+        .get(`/api/posts/nonexistentpost`);
+      expect(response.status).toBe(404);
+      const _responseBody = response.body;
+      // We already check status above, no need to check responseBody further
     });
   });
 });

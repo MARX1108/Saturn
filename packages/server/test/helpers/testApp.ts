@@ -14,7 +14,7 @@ interface ErrorWithStatusCode {
   [key: string]: unknown;
 }
 
-export function createTestApp(db: Db, domain: string) {
+export function createTestApp(_db: Db, _domain: string) {
   const app = express();
 
   // Add JSON body parser

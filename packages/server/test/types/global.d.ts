@@ -7,9 +7,9 @@ import { NotificationService } from '@/modules/notifications/services/notificati
 import { CommentService } from '@/modules/comments/services/comment.service';
 import { Express } from 'express';
 import { Db } from 'mongodb';
-import { Application } from 'express';
-import { SuperAgentTest } from 'supertest';
-import { ServiceContainer } from '@/utils/container';
+import { _Application } from 'express';
+import { _SuperAgentTest } from 'supertest';
+import { _ServiceContainer } from '@/utils/container';
 
 declare global {
   let testApp: Express;

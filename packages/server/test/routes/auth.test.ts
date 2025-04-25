@@ -2,6 +2,7 @@ import { Db, ObjectId } from 'mongodb';
 import bcryptjs from 'bcryptjs';
 import { Express } from 'express';
 import { DeepMockProxy } from 'jest-mock-extended';
+import _supertest from 'supertest';
 // Remove local express, MongoClient, Db, MongoMemoryServer imports
 // import express from 'express';
 // import { MongoClient, Db } from 'mongodb';

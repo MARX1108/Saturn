@@ -281,7 +281,7 @@ describe('ActorRepository', () => {
         expect(followersList).toHaveLength(0);
       });
       it('should return an empty list if the actor does not exist', async () => {
-        const nonExistentId = new mongodb_1.ObjectId();
+        const _nonExistentId = new mongodb_1.ObjectId();
         const nonExistentApId = `https://${testDomain}/users/nonexistent`;
         const followersList =
           await actorRepository.findFollowers(nonExistentApId);

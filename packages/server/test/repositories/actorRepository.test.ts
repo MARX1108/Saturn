@@ -337,7 +337,7 @@ describe('ActorRepository', () => {
       });
 
       it('should return an empty list if the actor does not exist', async () => {
-        const nonExistentId = new ObjectId();
+        const _nonExistentId = new ObjectId();
         const nonExistentApId = `https://${testDomain}/users/nonexistent`;
         const followersList =
           await actorRepository.findFollowers(nonExistentApId);

@@ -13,7 +13,7 @@ const cors_1 = __importDefault(require('cors'));
 require('./setupEnvironment');
 const routes_1 = require('@/routes');
 const errors_1 = require('@/utils/errors');
-function createTestApp(db, domain) {
+function createTestApp(_db, _domain) {
   const app = (0, express_1.default)();
   // Add JSON body parser
   app.use(express_1.default.json());

@@ -5,7 +5,7 @@ import { MongoRepository } from '../../shared/repositories/baseRepository';
 interface ActivityPubObject {
   id: string;
   type: string;
-  [key: string]: any; // Allow for flexible ActivityPub objects
+  [key: string]: string | number | boolean | Date | object | null | undefined; // More specific types for ActivityPub objects
 }
 
 export class ActivityPubRepository extends MongoRepository<ActivityPubObject> {

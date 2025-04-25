@@ -4,18 +4,18 @@ import { ActorService } from '@/modules/actors/services/actorService';
 import { PostService } from '@/modules/posts/services/postService';
 import { ServiceContainer } from '@/utils/container';
 import { CommentService } from '@/modules/comments/services/comment.service';
-import { _auth } from '@/middleware/auth';
+import { auth } from '@/middleware/auth';
 import { Actor } from '@/modules/actors/models/actor';
 import { Post } from '@/modules/posts/models/post';
 import {
-  _AppError,
+  AppError,
   // BadRequestError, // Removed unused import
   // ConflictError, // Removed unused import
   // UnauthorizedError, // Removed unused import
 } from '@/utils/errors';
 import { Request, Response, NextFunction } from 'express';
-import { _createTestApp } from './testApp';
-import { _Comment } from '@/modules/comments/models/comment';
+import { createTestApp } from './testApp';
+import { Comment } from '@/modules/comments/models/comment';
 import { jest } from '@jest/globals';
 import { AuthService } from '@/modules/auth/services/auth.service';
 import { MediaService } from '@/modules/media/services/media.service';

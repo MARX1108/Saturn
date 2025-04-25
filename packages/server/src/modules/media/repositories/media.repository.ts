@@ -11,7 +11,7 @@ interface Media {
   path: string;
   userId: string;
   uploadedAt: Date;
-  [key: string]: any;
+  [key: string]: string | number | boolean | Date | null | undefined;
 }
 
 export class MediaRepository extends MongoRepository<Media> {
