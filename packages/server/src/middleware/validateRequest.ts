@@ -3,6 +3,16 @@ import { AnyZodObject, ZodError, ZodType } from 'zod';
 import { AppError, ErrorType } from '../utils/errors';
 
 /**
+ * Helper function to conditionally log messages only when not in test mode
+ */
+const log = (message: string): void => {
+  // Skip logging in test mode
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(message);
+  }
+};
+
+/**
  * Creates an Express middleware function to validate the request body against a Zod schema.
  *
  * @param schema The Zod schema to validate against.
@@ -12,7 +22,7 @@ export const validateRequestBody = (
   schema: ZodType<any, any, any>
 ): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log(`[Validator] Validating ${req.method} ${req.path} body...`);
+    log(`[Validator] Validating ${req.method} ${req.path} body...`);
 
     // Skip validation for multipart/form-data requests (used for file uploads)
     const isMultipart =
@@ -22,7 +32,7 @@ export const validateRequestBody = (
       req.headers['content-type'].includes('multipart/form-data');
 
     if (isMultipart) {
-      console.log(`[Validator] Skipping validation for multipart form data`);
+      log(`[Validator] Skipping validation for multipart form data`);
       next();
       return;
     }
@@ -30,16 +40,14 @@ export const validateRequestBody = (
     try {
       // Attempt to parse the request body
       schema.parse(req.body);
-      console.log(
-        `[Validator] Validation SUCCESS for ${req.path}. Calling next().`
-      );
+      log(`[Validator] Validation SUCCESS for ${req.path}. Calling next().`);
       // If parsing succeeds, move to the next middleware/handler
       next();
     } catch (error) {
-      console.log(`[Validator] Validation FAILED for ${req.path}.`);
+      log(`[Validator] Validation FAILED for ${req.path}.`);
       // Check if the error is a ZodError
       if (error instanceof ZodError) {
-        console.log(`[Validator] ZodError: ${JSON.stringify(error.errors)}`);
+        log(`[Validator] ZodError: ${JSON.stringify(error.errors)}`);
         // Format the Zod error into a more user-friendly structure
         // Pass a structured error to the global error handler
         const validationError = new AppError(
@@ -47,19 +55,17 @@ export const validateRequestBody = (
           400,
           ErrorType.VALIDATION
         );
-        console.log(`[Validator] Calling next(AppError) for ${req.path}.`);
+        log(`[Validator] Calling next(AppError) for ${req.path}.`);
         next(validationError);
       } else {
-        console.log(`[Validator] Non-Zod Error: ${error}`);
+        log(`[Validator] Non-Zod Error: ${error}`);
         // If it's not a ZodError, pass it to the global error handler as an internal error
         const internalError = new AppError(
           'Internal Server Error during validation',
           500,
           ErrorType.INTERNAL_SERVER_ERROR
         );
-        console.log(
-          `[Validator] Calling next(InternalServerError) for ${req.path}.`
-        );
+        log(`[Validator] Calling next(InternalServerError) for ${req.path}.`);
         next(internalError);
       }
     }
