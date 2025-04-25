@@ -541,13 +541,8 @@ mockPostsController.getPostById.mockImplementation(
     } catch (error: unknown) {
       // Handle potential errors more robustly
       console.error('Error in getPostById mock:', error);
-      // Fallback response - Reverting to 200 to match existing test expectation
-      const defaultErrorResponse = {
-        ...mockPost,
-        content: 'Error fallback content',
-        likedByUser: false,
-      };
-      res.status(200).json(defaultErrorResponse); // Reverted to 200
+      // Pass the error to the next middleware (Express error handler)
+      next(error);
     }
   }
 );

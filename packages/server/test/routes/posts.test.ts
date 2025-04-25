@@ -264,7 +264,7 @@ describe('Posts Routes', () => {
 
     it('should handle server errors during post creation', async () => {
       (
-        globalThis.mockPostService.createPost as jest.Mock
+        (globalThis as any).mockPostService.createPost as jest.Mock
       ).mockRejectedValueOnce(new Error('DB error'));
 
       // Explicitly type the response
@@ -367,7 +367,7 @@ describe('Posts Routes', () => {
     });
 
     it('should handle server errors during post retrieval', async () => {
-      globalThis.mockPostService.getPostById.mockRejectedValueOnce(
+      (globalThis as any).mockPostService.getPostById.mockRejectedValueOnce(
         new Error('DB error')
       );
 
@@ -377,7 +377,7 @@ describe('Posts Routes', () => {
         .set('Authorization', `Bearer ${testUserToken}`);
 
       // Reverting expectation: Service error mock doesn't seem to trigger 500 correctly yet
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(500); // Expect 500 for server error
       // Assuming the error handler returns a standard error structure
       const responseBody = response.body as ErrorResponse;
       // Keep this check? It might fail if the body isn't an error structure on 200
@@ -529,7 +529,7 @@ describe('Posts Routes', () => {
     });
 
     it('should handle server errors during post list retrieval', async () => {
-      globalThis.mockPostService.getFeed.mockRejectedValueOnce(
+      (globalThis as any).mockPostService.getFeed.mockRejectedValueOnce(
         new Error('DB error')
       );
       const response: Response = await globalThis // Use globalThis
