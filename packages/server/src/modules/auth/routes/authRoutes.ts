@@ -5,6 +5,7 @@ import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 import { validateRequestBody } from '../../../middleware/validateRequest';
 import { registerBodySchema, loginBodySchema } from '../schemas/auth.schema';
+import { authRateLimiter } from '../../../middleware/rateLimiter';
 
 /**
  * Configure authentication routes with the controller
@@ -38,6 +39,7 @@ export default function configureAuthRoutes(
   // Register new user
   router.post(
     '/register',
+    authRateLimiter,
     validateRequestBody(registerBodySchema),
     wrapAsync(boundRegister)
   );
@@ -45,6 +47,7 @@ export default function configureAuthRoutes(
   // Login user
   router.post(
     '/login',
+    authRateLimiter,
     validateRequestBody(loginBodySchema),
     wrapAsync(boundLogin)
   );

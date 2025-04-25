@@ -14,6 +14,7 @@ const errorHandler_1 = require('./middleware/errorHandler');
 const container_1 = require('./utils/container');
 const serviceMiddleware_1 = require('./middleware/serviceMiddleware');
 const compatibilityMiddleware_1 = require('./middleware/compatibilityMiddleware');
+const rateLimiter_1 = require('./middleware/rateLimiter');
 const plugins_1 = require('./plugins');
 const config_1 = __importDefault(require('./config'));
 // Import route configurations from modules
@@ -43,7 +44,18 @@ const DOMAIN = config_1.default.domain;
 // Middleware
 app.use((0, cors_1.default)(config_1.default.cors));
 app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.static('public'));
+// Apply global rate limiting unless disabled in config or environment
+if (
+  process.env.NODE_ENV !== 'test' &&
+  process.env.DISABLE_RATE_LIMITS !== 'true'
+) {
+  app.use(rateLimiter_1.defaultRateLimiter);
+  console.log('✅ Global rate limiting enabled');
+} else {
+  console.log('⚠️ Rate limiting disabled for testing');
+}
 // Root route handler
 app.get('/', (req, res) => {
   res.json({

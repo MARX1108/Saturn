@@ -6,6 +6,7 @@ const auth_1 = require('../../../middleware/auth');
 const routeHandler_1 = require('../../../utils/routeHandler');
 const validateRequest_1 = require('../../../middleware/validateRequest');
 const post_schema_1 = require('../schemas/post.schema');
+const rateLimiter_1 = require('../../../middleware/rateLimiter');
 /**
  * Configure post routes with the controller
  */
@@ -45,6 +46,8 @@ function configurePostRoutes(container) {
     commentsController.createComment.bind(commentsController);
   const boundDeleteComment =
     commentsController.deleteComment.bind(commentsController);
+  // Apply default rate limiter to all routes
+  router.use(rateLimiter_1.defaultRateLimiter);
   // Public routes using wrapAsync
   // Pass authService to authenticate middleware factory
   router.get(
@@ -57,11 +60,12 @@ function configurePostRoutes(container) {
     '/users/:username',
     (0, routeHandler_1.wrapAsync)(boundGetPostsByUsername)
   );
-  // Protected routes using wrapAsync
+  // Protected routes using wrapAsync with rate limiting
   // Pass authService to authenticate middleware factory
   router.post(
     '/',
     (0, auth_1.authenticate)(authService),
+    rateLimiter_1.createPostRateLimiter, // Apply stricter rate limiting for post creation
     (0, validateRequest_1.validateRequestBody)(post_schema_1.createPostSchema),
     (0, routeHandler_1.wrapAsync)(boundCreatePost)
   );
@@ -76,14 +80,17 @@ function configurePostRoutes(container) {
     (0, auth_1.authenticate)(authService),
     (0, routeHandler_1.wrapAsync)(boundDeletePost)
   );
+  // Apply engagement rate limiting to like/unlike routes
   router.post(
     '/:id/like',
     (0, auth_1.authenticate)(authService),
+    rateLimiter_1.engagementRateLimiter,
     (0, routeHandler_1.wrapAsync)(boundLikePost)
   );
   router.post(
     '/:id/unlike',
     (0, auth_1.authenticate)(authService),
+    rateLimiter_1.engagementRateLimiter,
     (0, routeHandler_1.wrapAsync)(boundUnlikePost)
   );
   // Comment routes using wrapAsync
@@ -92,6 +99,7 @@ function configurePostRoutes(container) {
   router.post(
     '/:id/comments',
     (0, auth_1.authenticate)(authService),
+    rateLimiter_1.engagementRateLimiter, // Apply rate limiting to comment creation
     (0, routeHandler_1.wrapAsync)(boundCreateComment)
   );
   router.delete(

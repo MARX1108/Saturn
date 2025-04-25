@@ -593,3 +593,10 @@ exports.mockServiceContainer = {
   // Properly type the getService method
   getService: mockGetService,
 };
+// Mock the express-rate-limit module to avoid rate limiting in tests
+globals_1.jest.mock('express-rate-limit', () => {
+  return function mockRateLimit() {
+    // This returns a middleware function that just calls next()
+    return (req, res, next) => next();
+  };
+});

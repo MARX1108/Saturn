@@ -7,6 +7,11 @@ import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 import { validateRequestBody } from '../../../middleware/validateRequest';
 import { createPostSchema, updatePostSchema } from '../schemas/post.schema';
+import {
+  createPostRateLimiter,
+  engagementRateLimiter,
+  defaultRateLimiter,
+} from '../../../middleware/rateLimiter';
 
 /**
  * Configure post routes with the controller
@@ -53,6 +58,9 @@ export default function configurePostRoutes(
   const boundDeleteComment =
     commentsController.deleteComment.bind(commentsController);
 
+  // Apply default rate limiter to all routes
+  router.use(defaultRateLimiter);
+
   // Public routes using wrapAsync
   // Pass authService to authenticate middleware factory
 
@@ -62,12 +70,13 @@ export default function configurePostRoutes(
 
   router.get('/users/:username', wrapAsync(boundGetPostsByUsername));
 
-  // Protected routes using wrapAsync
+  // Protected routes using wrapAsync with rate limiting
   // Pass authService to authenticate middleware factory
 
   router.post(
     '/',
     authenticate(authService),
+    createPostRateLimiter, // Apply stricter rate limiting for post creation
     validateRequestBody(createPostSchema),
     wrapAsync(boundCreatePost)
   );
@@ -81,11 +90,18 @@ export default function configurePostRoutes(
 
   router.delete('/:id', authenticate(authService), wrapAsync(boundDeletePost));
 
-  router.post('/:id/like', authenticate(authService), wrapAsync(boundLikePost));
+  // Apply engagement rate limiting to like/unlike routes
+  router.post(
+    '/:id/like',
+    authenticate(authService),
+    engagementRateLimiter,
+    wrapAsync(boundLikePost)
+  );
 
   router.post(
     '/:id/unlike',
     authenticate(authService),
+    engagementRateLimiter,
     wrapAsync(boundUnlikePost)
   );
 
@@ -97,6 +113,7 @@ export default function configurePostRoutes(
   router.post(
     '/:id/comments',
     authenticate(authService),
+    engagementRateLimiter, // Apply rate limiting to comment creation
     wrapAsync(boundCreateComment)
   );
 

@@ -2,6 +2,8 @@ import express, { Request, Response, Router, NextFunction } from 'express';
 import { MediaController } from '../controllers/media.controller';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
+import { mediaUploadRateLimiter } from '../../../middleware/rateLimiter';
+import { authenticate } from '../../../middleware/auth';
 
 /**
  * Configure media routes with dependency injection
@@ -10,14 +12,20 @@ export function configureMediaRoutes(
   serviceContainer: ServiceContainer
 ): Router {
   const router = express.Router();
-  const { mediaService, uploadService: _uploadService } = serviceContainer;
+  const {
+    mediaService,
+    uploadService: _uploadService,
+    authService,
+  } = serviceContainer;
 
   // Create controller with injected service
   const mediaController = new MediaController(mediaService);
 
-  // Upload media
+  // Upload media - apply rate limiting to prevent abuse
   router.post(
     '/upload',
+    authenticate(authService), // Ensure users are authenticated
+    mediaUploadRateLimiter, // Apply rate limiting to uploads
     wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
       return mediaController.uploadMedia(req, res);
     })
@@ -34,6 +42,7 @@ export function configureMediaRoutes(
   // Delete media
   router.delete(
     '/:id',
+    authenticate(authService), // Ensure users are authenticated
     wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
       return mediaController.deleteMedia(req, res);
     })

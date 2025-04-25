@@ -14,6 +14,7 @@ var ErrorType;
   ErrorType['FORBIDDEN'] = 'FORBIDDEN';
   ErrorType['CONFLICT'] = 'CONFLICT';
   ErrorType['INTERNAL_SERVER_ERROR'] = 'INTERNAL_SERVER_ERROR';
+  ErrorType['RATE_LIMIT'] = 'RATE_LIMIT';
 })(ErrorType || (exports.ErrorType = ErrorType = {}));
 // Custom error class for application-specific errors
 class AppError extends Error {

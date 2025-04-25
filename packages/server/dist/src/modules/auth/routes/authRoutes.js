@@ -11,6 +11,7 @@ const auth_1 = require('../../../middleware/auth');
 const routeHandler_1 = require('../../../utils/routeHandler');
 const validateRequest_1 = require('../../../middleware/validateRequest');
 const auth_schema_1 = require('../schemas/auth.schema');
+const rateLimiter_1 = require('../../../middleware/rateLimiter');
 /**
  * Configure authentication routes with the controller
  */
@@ -33,6 +34,7 @@ function configureAuthRoutes(serviceContainer) {
   // Register new user
   router.post(
     '/register',
+    rateLimiter_1.authRateLimiter,
     (0, validateRequest_1.validateRequestBody)(
       auth_schema_1.registerBodySchema
     ),
@@ -41,6 +43,7 @@ function configureAuthRoutes(serviceContainer) {
   // Login user
   router.post(
     '/login',
+    rateLimiter_1.authRateLimiter,
     (0, validateRequest_1.validateRequestBody)(auth_schema_1.loginBodySchema),
     (0, routeHandler_1.wrapAsync)(boundLogin)
   );

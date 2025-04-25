@@ -11,6 +11,7 @@ export enum ErrorType {
   FORBIDDEN = 'FORBIDDEN',
   CONFLICT = 'CONFLICT',
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+  RATE_LIMIT = 'RATE_LIMIT',
 }
 
 // Custom error class for application-specific errors
