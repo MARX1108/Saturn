@@ -12,36 +12,12 @@ const cors_1 = __importDefault(require('cors'));
 // Setup environment variables before other imports
 require('./setupEnvironment');
 const routes_1 = require('@/routes');
-const authController_1 = require('@/modules/auth/controllers/authController');
-const actorsController_1 = require('@/modules/actors/controllers/actorsController');
-const postsController_1 = require('@/modules/posts/controllers/postsController');
-const comments_controller_1 = require('@/modules/comments/controllers/comments.controller');
 const errors_1 = require('@/utils/errors');
 function createTestApp(db, domain) {
   const app = (0, express_1.default)();
   // Add JSON body parser
   app.use(express_1.default.json());
   app.use((0, cors_1.default)());
-  // Instantiate controllers (assuming this is correct now)
-  const postsController = new postsController_1.PostsController(
-    mockSetup_1.mockServiceContainer.postService,
-    mockSetup_1.mockServiceContainer.actorService,
-    mockSetup_1.mockServiceContainer.uploadService,
-    domain
-  );
-  const commentsController = new comments_controller_1.CommentsController(
-    mockSetup_1.mockServiceContainer.commentService
-  );
-  const authController = new authController_1.AuthController(
-    mockSetup_1.mockServiceContainer.actorService,
-    mockSetup_1.mockServiceContainer.authService
-  );
-  const actorsController = new actorsController_1.ActorsController(
-    mockSetup_1.mockServiceContainer.actorService,
-    mockSetup_1.mockServiceContainer.uploadService,
-    mockSetup_1.mockServiceContainer.postService,
-    domain
-  );
   // Configure routes
   app.use(
     '/api',

@@ -2,8 +2,7 @@ import request, { Response } from 'supertest';
 import { Db, ObjectId } from 'mongodb';
 import path from 'path';
 import fs from 'fs';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import configurePostRoutes from '@/modules/posts/routes/postRoutes';
+import jwt from 'jsonwebtoken';
 import { DbUser } from '../../src/modules/auth/models/user';
 import { DeepMockProxy } from 'jest-mock-extended';
 import { PostService } from '@/modules/posts/services/postService';
@@ -49,12 +48,6 @@ interface PostResponse {
   author?: { preferredUsername: string };
   // Add createdAt based on sorting test
   createdAt?: string | Date; // Allow both based on tests
-}
-
-// Add PostsListResponse interface
-interface PostsListResponse {
-  posts: PostResponse[]; // Use the previously defined PostResponse
-  total: number;
 }
 
 // Define interface for GlobalWithMocks
@@ -146,7 +139,7 @@ describe('Posts Routes', () => {
       id: `https://test.domain/posts/${testPostId}`,
       attributedTo: `https://test.domain/users/testuser`,
     });
-    // testPostId is already assigned the known string ID
+    // REMOVED: testPostId = post.insertedId.toString(); - No need to reassign, using known ID
   });
 
   describe('POST /api/posts', () => {

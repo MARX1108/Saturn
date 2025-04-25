@@ -1,20 +1,10 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
-import { json } from 'body-parser';
-import supertest from 'supertest';
+import express, { Request, Response, NextFunction } from 'express';
 import { mockServiceContainer } from './mockSetup';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import { serializeError } from 'serialize-error';
 import cors from 'cors';
-import path from 'path';
 // Setup environment variables before other imports
 import './setupEnvironment';
 import { Db } from 'mongodb';
 import { configureRoutes } from '@/routes';
-import { AuthController } from '@/modules/auth/controllers/authController';
-import { ActorsController } from '@/modules/actors/controllers/actorsController';
-import { PostsController } from '@/modules/posts/controllers/postsController';
-import { CommentsController } from '@/modules/comments/controllers/comments.controller';
 import { AppError } from '@/utils/errors';
 
 // Define an interface for error objects with status code
@@ -30,27 +20,6 @@ export function createTestApp(db: Db, domain: string) {
   // Add JSON body parser
   app.use(express.json());
   app.use(cors());
-
-  // Instantiate controllers (assuming this is correct now)
-  const postsController = new PostsController(
-    mockServiceContainer.postService,
-    mockServiceContainer.actorService,
-    mockServiceContainer.uploadService,
-    domain
-  );
-  const commentsController = new CommentsController(
-    mockServiceContainer.commentService
-  );
-  const authController = new AuthController(
-    mockServiceContainer.actorService,
-    mockServiceContainer.authService
-  );
-  const actorsController = new ActorsController(
-    mockServiceContainer.actorService,
-    mockServiceContainer.uploadService,
-    mockServiceContainer.postService,
-    domain
-  );
 
   // Configure routes
   app.use('/api', configureRoutes(mockServiceContainer));

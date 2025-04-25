@@ -119,8 +119,8 @@ describe('ActorRepository', () => {
     });
 
     it('should return null when ID not found', async () => {
-      const nonExistentId = new ObjectId();
-      const result = await actorRepository.findById(nonExistentId);
+      const nonExistentIdString = '507f1f77bcf86cd799439011'; // Example non-existent ID
+      const result = await actorRepository.findById(nonExistentIdString);
       expect(result).toBeNull();
     });
 

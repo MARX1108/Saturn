@@ -65,7 +65,7 @@ describe('Posts Routes', () => {
       id: `https://test.domain/posts/${testPostId}`,
       attributedTo: `https://test.domain/users/testuser`,
     });
-    // testPostId is already assigned the known string ID
+    // REMOVED: testPostId = post.insertedId.toString(); - No need to reassign, using known ID
   });
   describe('POST /api/posts', () => {
     it('should create a new post', async () => {

@@ -143,12 +143,7 @@ jest.mock('@/middleware/auth', () => {
 
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient, Db } from 'mongodb';
-// Removed dbHelper import
-// import {
-//   connectDB,
-//   disconnectDB,
-//   clearDatabase,
-// } from '../tests/helpers/dbHelper';
+// Removed unused import: mongoose
 
 // Use testUtils instead
 // import { setupTestDb, teardownTestDb } from './helpers/testUtils';

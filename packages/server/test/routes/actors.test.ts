@@ -2,8 +2,7 @@ import request from 'supertest';
 import { jest } from '@jest/globals';
 import { mockActorService } from '../helpers/mockSetup';
 import { Actor } from '@/modules/actors/models/actor';
-import { ObjectId } from 'mongodb';
-import { Express } from 'express';
+import { ObjectId, Db } from 'mongodb';
 
 // Remove SearchActorsResult type if searchActors returns Actor[]
 // type SearchActorsResult = { actors: Actor[]; hasMore: boolean };

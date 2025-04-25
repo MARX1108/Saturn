@@ -129,12 +129,7 @@ jest.mock('@/middleware/auth', () => {
 });
 const mongodb_memory_server_1 = require('mongodb-memory-server');
 const mongodb_1 = require('mongodb');
-// Removed dbHelper import
-// import {
-//   connectDB,
-//   disconnectDB,
-//   clearDatabase,
-// } from '../tests/helpers/dbHelper';
+// Removed unused import: mongoose
 // Use testUtils instead
 // import { setupTestDb, teardownTestDb } from './helpers/testUtils';
 const testApp_1 = require('./helpers/testApp');

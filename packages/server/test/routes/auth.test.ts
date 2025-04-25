@@ -1,13 +1,7 @@
-import request from 'supertest';
-import { Db } from 'mongodb';
-import jwt from 'jsonwebtoken';
+import { Db, ObjectId } from 'mongodb';
 import bcryptjs from 'bcryptjs';
-import { ServiceContainer } from '@/utils/container';
-import configureAuthRoutes from '@/modules/auth/routes/authRoutes';
-import { AuthController } from '@/modules/auth/controllers/authController';
-import { mockServiceContainer } from '../helpers/mockSetup';
-import { DbUser } from '@/modules/auth/models/user';
 import { Express } from 'express';
+import { DeepMockProxy } from 'jest-mock-extended';
 // Remove local express, MongoClient, Db, MongoMemoryServer imports
 // import express from 'express';
 // import { MongoClient, Db } from 'mongodb';

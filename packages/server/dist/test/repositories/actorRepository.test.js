@@ -98,8 +98,8 @@ describe('ActorRepository', () => {
       expect(result?._id).toEqual(createdActor._id);
     });
     it('should return null when ID not found', async () => {
-      const nonExistentId = new mongodb_1.ObjectId();
-      const result = await actorRepository.findById(nonExistentId);
+      const nonExistentIdString = '507f1f77bcf86cd799439011'; // Example non-existent ID
+      const result = await actorRepository.findById(nonExistentIdString);
       expect(result).toBeNull();
     });
     it('should return null for invalid ID format', async () => {
