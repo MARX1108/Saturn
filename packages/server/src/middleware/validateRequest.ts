@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { AnyZodObject as _AnyZodObject, ZodError, ZodType } from 'zod';
+import { AnyZodObject as _AnyZodObject, ZodType } from 'zod';
 import { AppError, ErrorType } from '../utils/errors';
 
 /**
@@ -18,10 +18,8 @@ const log = (message: string): void => {
  * @param schema The Zod schema to validate against.
  * @returns An Express RequestHandler.
  */
-export function validateRequestBody<T>(
-  schema: ZodType<T>
-): (req: Request, res: Response, next: NextFunction) => void {
-  return (req: Request, res: Response, next: NextFunction): void => {
+export function validateRequestBody<T>(schema: ZodType<T>): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction): void | Response => {
     log(`[Validator] Validating ${req.method} ${req.path} body...`);
 
     // Skip validation for multipart/form-data requests (used for file uploads)
