@@ -584,7 +584,7 @@ mockPostsController.getFeed.mockImplementation(
         total: allMockPosts.length,
       };
       res.status(200).json(response);
-    } catch (error: any) {
+    } catch (_error: unknown) {
       res.status(500).json({ error: 'Internal server error in mock getFeed' });
     }
   }

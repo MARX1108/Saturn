@@ -14,8 +14,14 @@ export class MediaController {
     try {
       // Implementation would go here
       res.status(501).json({ message: 'Not implemented yet' });
-    } catch (error) {
-      console.error('Error uploading media:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error uploading media:', error.message, {
+          stack: error.stack,
+        });
+      } else {
+        console.error('Unknown error uploading media:', error);
+      }
       res.status(500).json({ error: 'Failed to upload media' });
     }
   }
@@ -25,8 +31,14 @@ export class MediaController {
     try {
       // Implementation would go here
       res.status(501).json({ message: 'Not implemented yet' });
-    } catch (error) {
-      console.error('Error retrieving media:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error retrieving media:', error.message, {
+          stack: error.stack,
+        });
+      } else {
+        console.error('Unknown error retrieving media:', error);
+      }
       res.status(500).json({ error: 'Failed to retrieve media' });
     }
   }
@@ -36,8 +48,14 @@ export class MediaController {
     try {
       // Implementation would go here
       res.status(501).json({ message: 'Not implemented yet' });
-    } catch (error) {
-      console.error('Error deleting media:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error deleting media:', error.message, {
+          stack: error.stack,
+        });
+      } else {
+        console.error('Unknown error deleting media:', error);
+      }
       res.status(500).json({ error: 'Failed to delete media' });
     }
   }

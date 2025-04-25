@@ -76,8 +76,15 @@ export class ActivityPubController {
       );
 
       return res.status(202).json({ message: 'Activity accepted' });
-    } catch (error) {
-      console.error('Error processing activity:', error);
+    } catch (error: unknown) {
+      // Type guard for logging
+      if (error instanceof Error) {
+        console.error('Error processing activity:', error.message, {
+          stack: error.stack,
+        });
+      } else {
+        console.error('Unknown error processing activity:', error);
+      }
       return res.status(500).json({ error: 'Failed to process activity' });
     }
   }
@@ -100,8 +107,15 @@ export class ActivityPubController {
       };
 
       return res.json(outbox);
-    } catch (error) {
-      console.error('Error fetching outbox:', error);
+    } catch (error: unknown) {
+      // Type guard for logging
+      if (error instanceof Error) {
+        console.error('Error fetching outbox:', error.message, {
+          stack: error.stack,
+        });
+      } else {
+        console.error('Unknown error fetching outbox:', error);
+      }
       return res.status(500).json({ error: 'Failed to fetch outbox' });
     }
   }

@@ -49,7 +49,7 @@ export function createTestApp(db: Db, domain: string) {
   app.use('/api', configureRoutes(mockServiceContainer));
 
   // Centralized error handling middleware
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof AppError) {
       res
         .status(err.statusCode)
