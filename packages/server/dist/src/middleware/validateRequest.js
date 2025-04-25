@@ -1,17 +1,25 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
-exports.validateRequestBody = void 0;
-const zod_1 = require('zod');
+exports.validateRequestBody = validateRequestBody;
 const errors_1 = require('../utils/errors');
+/**
+ * Helper function to conditionally log messages only when not in test mode
+ */
+const log = message => {
+  // Skip logging in test mode
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(message);
+  }
+};
 /**
  * Creates an Express middleware function to validate the request body against a Zod schema.
  *
  * @param schema The Zod schema to validate against.
  * @returns An Express RequestHandler.
  */
-const validateRequestBody = schema => {
+function validateRequestBody(schema) {
   return (req, res, next) => {
-    console.log(`[Validator] Validating ${req.method} ${req.path} body...`);
+    log(`[Validator] Validating ${req.method} ${req.path} body...`);
     // Skip validation for multipart/form-data requests (used for file uploads)
     const isMultipart =
       req.headers &&
@@ -19,47 +27,38 @@ const validateRequestBody = schema => {
       typeof req.headers['content-type'] === 'string' &&
       req.headers['content-type'].includes('multipart/form-data');
     if (isMultipart) {
-      console.log(`[Validator] Skipping validation for multipart form data`);
+      log(`[Validator] Skipping validation for multipart form data`);
       next();
       return;
     }
     try {
-      // Attempt to parse the request body
-      schema.parse(req.body);
-      console.log(
-        `[Validator] Validation SUCCESS for ${req.path}. Calling next().`
-      );
-      // If parsing succeeds, move to the next middleware/handler
+      // Try to parse and validate the request body
+      const parseResult = schema.safeParse(req.body);
+      if (!parseResult.success) {
+        // If validation fails, create a 400 Bad Request error
+        log(
+          `[Validator] Validation failed: ${JSON.stringify(parseResult.error)}`
+        );
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: parseResult.error.format(),
+        });
+      }
+      // If validation succeeds, update req.body with the parsed data
+      req.body = parseResult.data;
+      log(`[Validator] Validation SUCCESS for ${req.path}. Calling next().`);
       next();
     } catch (error) {
-      console.log(`[Validator] Validation FAILED for ${req.path}.`);
-      // Check if the error is a ZodError
-      if (error instanceof zod_1.ZodError) {
-        console.log(`[Validator] ZodError: ${JSON.stringify(error.errors)}`);
-        // Format the Zod error into a more user-friendly structure
-        // Pass a structured error to the global error handler
-        const validationError = new errors_1.AppError(
-          'Validation failed',
-          400,
-          errors_1.ErrorType.VALIDATION
-        );
-        console.log(`[Validator] Calling next(AppError) for ${req.path}.`);
-        next(validationError);
-      } else {
-        console.log(`[Validator] Non-Zod Error: ${error}`);
-        // If it's not a ZodError, pass it to the global error handler as an internal error
-        const internalError = new errors_1.AppError(
+      // This should rarely happen, as safeParse should handle most errors
+      log(`[Validator] Unexpected error during validation: ${error}`);
+      next(
+        new errors_1.AppError(
           'Internal Server Error during validation',
           500,
           errors_1.ErrorType.INTERNAL_SERVER_ERROR
-        );
-        console.log(
-          `[Validator] Calling next(InternalServerError) for ${req.path}.`
-        );
-        next(internalError);
-      }
+        )
+      );
     }
   };
-};
-exports.validateRequestBody = validateRequestBody;
+}
 // Potential extensions: validateRequestQuery, validateRequestParams

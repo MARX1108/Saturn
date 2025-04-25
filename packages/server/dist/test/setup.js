@@ -75,12 +75,11 @@ jest.mock('@/middleware/auth', () => {
           }
         } else {
           // Handle unexpected token structure (e.g., string or incorrect object)
-          console.error(
-            '>>> Mock authenticate: Unexpected JWT payload structure:',
-            decoded
-          );
-          // Decide how to handle this - fail, fallback, etc. Falling back to default for now.
-          // Consider returning 401? user = undefined;
+          // No need to log this in tests - it just creates noise
+          // console.error(
+          //   '>>> Mock authenticate: Unexpected JWT payload structure:',
+          //   decoded
+          // );
           // Setting user explicitly undefined if token is bad/unexpected
           user = undefined;
         }

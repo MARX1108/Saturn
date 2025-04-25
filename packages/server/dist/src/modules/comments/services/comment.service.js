@@ -176,7 +176,7 @@ class CommentService {
       }
     }
   }
-  getComments(postId) {
+  getComments(_postId) {
     // Implementation
     return Promise.resolve([]);
   }

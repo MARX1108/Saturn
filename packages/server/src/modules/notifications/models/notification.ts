@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
-import { Actor } from '@/modules/actors/models/actor';
-import { Post } from '@/modules/posts/models/post';
-import { Comment } from '@/modules/comments/models/comment';
+import { Actor as _Actor } from '@/modules/actors/models/actor';
+import { Post as _Post } from '@/modules/posts/models/post';
+import { Comment as _Comment } from '@/modules/comments/models/comment';
 
 /**
  * Notification types supported by the system

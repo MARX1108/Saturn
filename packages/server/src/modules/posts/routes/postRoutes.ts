@@ -1,8 +1,13 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { PostsController } from '../controllers/postsController';
-import { CommentsController } from '../../comments/controllers/comments.controller';
+import {
+  Router,
+  Request as _Request,
+  Response as _Response,
+  NextFunction as _NextFunction,
+} from 'express';
+import { PostsController as _PostsController } from '../controllers/postsController';
+import { CommentsController as _CommentsController } from '../../comments/controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
-import { AuthService } from '../../auth/services/auth.service';
+import { AuthService as _AuthService } from '../../auth/services/auth.service';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 import { validateRequestBody } from '../../../middleware/validateRequest';

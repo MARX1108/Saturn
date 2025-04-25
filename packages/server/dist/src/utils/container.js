@@ -45,7 +45,7 @@ function createServiceContainer(db, domain) {
   const postRepository = new postRepository_1.PostRepository(db);
   const authRepository = new auth_repository_1.AuthRepository(db);
   const commentRepository = new comment_repository_1.CommentRepository(db);
-  const notificationRepository =
+  const _notificationRepository =
     new notification_repository_1.NotificationRepository(db);
   const activityPubRepository =
     new activitypub_repository_1.ActivityPubRepository(db, domain);

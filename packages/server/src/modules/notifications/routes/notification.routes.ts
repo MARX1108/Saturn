@@ -1,9 +1,9 @@
 import express, {
   Router,
-  RequestHandler,
+  RequestHandler as _RequestHandler,
   Request as ExpressRequest,
-  Response,
-  NextFunction,
+  Response as _Response,
+  NextFunction as _NextFunction,
 } from 'express';
 import { NotificationsController } from '../controllers/notifications.controller';
 import { auth } from '../../../middleware/auth';

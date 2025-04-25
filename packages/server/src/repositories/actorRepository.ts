@@ -1,7 +1,7 @@
-import { Collection, Db, ObjectId } from 'mongodb';
+import { Collection as _Collection, Db, ObjectId } from 'mongodb';
 import { Actor } from '@/modules/actors/models/actor';
 import { MongoRepository } from './baseRepository';
-import { BaseRepository } from '@/repositories/baseRepository'; // Assuming base class
+import { BaseRepository as _BaseRepository } from '@/repositories/baseRepository'; // Assuming base class
 
 export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {

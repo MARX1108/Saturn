@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { DbUser } from '../modules/auth/models/user';
 import { AuthService } from '../modules/auth/services/auth.service';
 import { Db } from 'mongodb';
-import { ObjectId } from 'mongodb';
+import { ObjectId as _ObjectId } from 'mongodb';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -66,13 +66,17 @@ export const auth = async (
     req.user = user;
 
     next();
-  } catch (_error) {
-    console.error('Auth middleware error:', _error);
+  } catch (__error) {
+    console.error('Auth middleware error:', JSON.stringify(__error));
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
 
-export const authorize = () => {
+export const authorize = (): ((
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void | Response) => {
   return (req: Request, res: Response, next: NextFunction): void | Response => {
     // Implementation depends on your role system
     next();
@@ -89,7 +93,7 @@ export const authenticateToken = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void | Response => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -105,12 +109,23 @@ export const authenticateToken = (
     req.user = decoded;
     next();
   } catch (_error) {
+    console.error('Token verification failed:', JSON.stringify(_error));
     return res.status(403).json({ message: 'Invalid token' });
   }
 };
 
-export const authenticate = (authService: AuthService) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = (
+  authService: AuthService
+): ((
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => Promise<void | Response>) => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void | Response> => {
     try {
       const token = req.headers.authorization?.split(' ')[1];
       if (!token) {
@@ -124,8 +139,8 @@ export const authenticate = (authService: AuthService) => {
 
       req.user = user;
       next();
-    } catch (error) {
-      next(error);
+    } catch (_error) {
+      next(_error);
     }
   };
 };
@@ -134,7 +149,7 @@ export const requireAuth = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void | Response => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }

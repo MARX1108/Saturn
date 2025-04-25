@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorType } from '../utils/errors';
+import { ZodError } from 'zod';
 
 // Update errorHandler to use type guards for better type inference
 
@@ -16,7 +17,17 @@ export function errorHandler(
     return res.status(err.statusCode).json({
       status: 'error',
       type: err.type,
-      message: err.message,
+      error: err.message,
+    });
+  }
+
+  // Handle Zod validation errors
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      status: 'error',
+      type: ErrorType.VALIDATION,
+      error: 'Validation failed',
+      details: err.errors,
     });
   }
 
@@ -31,7 +42,7 @@ export function errorHandler(
     return res.status(400).json({
       status: 'error',
       type: ErrorType.VALIDATION,
-      message: `File upload error: ${String(err.message)}`,
+      error: `File upload error: ${String(err.message)}`,
     });
   }
 
@@ -39,7 +50,7 @@ export function errorHandler(
   return res.status(500).json({
     status: 'error',
     type: ErrorType.SERVER_ERROR,
-    message:
+    error:
       process.env.NODE_ENV === 'production'
         ? 'Internal server error'
         : err instanceof Error

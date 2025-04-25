@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import { AppError, ErrorType } from '../utils/errors';
+import { AppError as _AppError, ErrorType } from '../utils/errors';
 
 /**
  * Creates a rate limiter middleware for different API endpoints

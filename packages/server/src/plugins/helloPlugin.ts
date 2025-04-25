@@ -1,5 +1,5 @@
 import { Request, Response, Application } from 'express';
-import { ServerPlugin, HookData } from './index';
+import { ServerPlugin, HookData as _HookData } from './index';
 import { Post } from '@/modules/posts/models/post';
 
 const helloPlugin: ServerPlugin = {

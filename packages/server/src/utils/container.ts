@@ -102,7 +102,7 @@ export function createServiceContainer(
   const postRepository = new PostRepository(db);
   const authRepository = new AuthRepository(db);
   const commentRepository = new CommentRepository(db);
-  const notificationRepository = new NotificationRepository(db);
+  const _notificationRepository = new NotificationRepository(db);
   const activityPubRepository = new ActivityPubRepository(db, domain);
   const webfingerRepository = new WebfingerRepository(db);
   const mediaRepository = new MediaRepository(db);

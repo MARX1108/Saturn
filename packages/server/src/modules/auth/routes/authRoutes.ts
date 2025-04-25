@@ -31,7 +31,7 @@ export default function configureAuthRoutes(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ): Promise<void> => {
     authController.getCurrentUser(req, res, next);
     return Promise.resolve();
   };

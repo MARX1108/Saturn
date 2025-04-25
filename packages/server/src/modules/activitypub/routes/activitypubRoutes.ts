@@ -23,7 +23,7 @@ export function configureActivityPubRoutes(
   // Get ActivityPub actor profile (federated)
   router.get(
     '/users/:username',
-    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
       return activityPubController.getActor(req, res);
     })
   );
@@ -32,7 +32,7 @@ export function configureActivityPubRoutes(
   router.post(
     '/users/:username/inbox',
     express.json(),
-    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
       return activityPubController.receiveActivity(req, res);
     })
   );
@@ -40,7 +40,7 @@ export function configureActivityPubRoutes(
   // Actor outbox - collection of activities by this user
   router.get(
     '/users/:username/outbox',
-    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
       return activityPubController.getOutbox(req, res);
     })
   );

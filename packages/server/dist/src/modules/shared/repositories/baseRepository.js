@@ -11,6 +11,7 @@ class MongoRepository {
       try {
         return new mongodb_1.ObjectId(id);
       } catch (error) {
+        console.error(`Invalid ObjectId format: ${id}`, error);
         throw new Error(`Invalid ID format: ${id}`);
       }
     } else if (id instanceof mongodb_1.ObjectId) {
@@ -27,6 +28,7 @@ class MongoRepository {
       });
       return result;
     } catch (error) {
+      console.error(`Error finding document by ID: ${String(error)}`);
       return null;
     }
   }
@@ -49,18 +51,23 @@ class MongoRepository {
     return docToInsert;
   }
   async updateById(id, data) {
-    const objectId = this.toObjectId(id);
-    const isUpdateOperator =
-      '$set' in data ||
-      '$inc' in data ||
-      '$addToSet' in data ||
-      '$pull' in data;
-    const updateDoc = isUpdateOperator ? data : { $set: data };
-    const result = await this.collection.updateOne(
-      { _id: objectId },
-      updateDoc
-    );
-    return result.modifiedCount > 0;
+    try {
+      const objectId = this.toObjectId(id);
+      const isUpdateOperator =
+        '$set' in data ||
+        '$inc' in data ||
+        '$addToSet' in data ||
+        '$pull' in data;
+      const updateDoc = isUpdateOperator ? data : { $set: data };
+      const result = await this.collection.updateOne(
+        { _id: objectId },
+        updateDoc
+      );
+      return result.modifiedCount > 0;
+    } catch (error) {
+      console.error(`Error updating document by ID: ${String(error)}`);
+      return false;
+    }
   }
   async findOneAndUpdate(filter, update, options) {
     const result = await this.collection.findOneAndUpdate(
@@ -78,8 +85,13 @@ class MongoRepository {
     return result.deletedCount > 0;
   }
   async deleteOne(filter, options) {
-    const result = await this.collection.deleteOne(filter, options);
-    return result.deletedCount > 0;
+    try {
+      const result = await this.collection.deleteOne(filter, options);
+      return result.deletedCount > 0;
+    } catch (error) {
+      console.error(`Error deleting document: ${String(error)}`);
+      return false;
+    }
   }
   async countDocuments(filter = {}, options) {
     return this.collection.countDocuments(filter, options);

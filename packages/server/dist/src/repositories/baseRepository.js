@@ -12,8 +12,8 @@ class MongoRepository {
         _id: new mongodb_1.ObjectId(id),
       });
       return result ? { ...result, _id: undefined } : null; // Map `WithId<T>` to `T`
-    } catch (error) {
-      console.error(`Error finding document by ID: ${String(error)}`);
+    } catch (_error) {
+      console.error(`Error finding document by ID: ${String(_error)}`);
       return null;
     }
   }

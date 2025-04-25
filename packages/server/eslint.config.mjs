@@ -35,7 +35,7 @@ export default tseslint.config(
       // Common rules for TypeScript projects
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/no-unused-vars': [
-        'warn',
+        'error',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
@@ -47,7 +47,7 @@ export default tseslint.config(
 
   // Configuration for test files
   {
-    files: ['**/__tests__/**/*.ts', '**/*.test.ts'],
+    files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/test/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.jest,
@@ -59,6 +59,7 @@ export default tseslint.config(
     rules: {
       // Relaxed rules for test files
       '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
 

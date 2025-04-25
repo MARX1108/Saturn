@@ -28,14 +28,14 @@ function configureMediaRoutes(serviceContainer) {
     '/upload',
     (0, auth_1.authenticate)(authService), // Ensure users are authenticated
     rateLimiter_1.mediaUploadRateLimiter, // Apply rate limiting to uploads
-    (0, routeHandler_1.wrapAsync)(async (req, res, next) => {
+    (0, routeHandler_1.wrapAsync)(async (req, res, _next) => {
       return mediaController.uploadMedia(req, res);
     })
   );
   // Get media by ID
   router.get(
     '/:id',
-    (0, routeHandler_1.wrapAsync)(async (req, res, next) => {
+    (0, routeHandler_1.wrapAsync)(async (req, res, _next) => {
       return mediaController.getMedia(req, res);
     })
   );
@@ -43,7 +43,7 @@ function configureMediaRoutes(serviceContainer) {
   router.delete(
     '/:id',
     (0, auth_1.authenticate)(authService), // Ensure users are authenticated
-    (0, routeHandler_1.wrapAsync)(async (req, res, next) => {
+    (0, routeHandler_1.wrapAsync)(async (req, res, _next) => {
       return mediaController.deleteMedia(req, res);
     })
   );

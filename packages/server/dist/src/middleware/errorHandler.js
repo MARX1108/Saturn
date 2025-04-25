@@ -2,6 +2,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.errorHandler = errorHandler;
 const errors_1 = require('../utils/errors');
+const zod_1 = require('zod');
 // Update errorHandler to use type guards for better type inference
 function errorHandler(err, req, res, _next) {
   console.error('Error:', err);
@@ -10,7 +11,16 @@ function errorHandler(err, req, res, _next) {
     return res.status(err.statusCode).json({
       status: 'error',
       type: err.type,
-      message: err.message,
+      error: err.message,
+    });
+  }
+  // Handle Zod validation errors
+  if (err instanceof zod_1.ZodError) {
+    return res.status(400).json({
+      status: 'error',
+      type: errors_1.ErrorType.VALIDATION,
+      error: 'Validation failed',
+      details: err.errors,
     });
   }
   // Type guard to check if err is a Multer error
@@ -24,14 +34,14 @@ function errorHandler(err, req, res, _next) {
     return res.status(400).json({
       status: 'error',
       type: errors_1.ErrorType.VALIDATION,
-      message: `File upload error: ${String(err.message)}`,
+      error: `File upload error: ${String(err.message)}`,
     });
   }
   // Handle unknown errors
   return res.status(500).json({
     status: 'error',
     type: errors_1.ErrorType.SERVER_ERROR,
-    message:
+    error:
       process.env.NODE_ENV === 'production'
         ? 'Internal server error'
         : err instanceof Error

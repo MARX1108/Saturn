@@ -2,18 +2,21 @@ import {
   Notification,
   CreateNotificationDto,
   FormattedNotification,
-  NotificationType,
+  NotificationType as _NotificationType,
 } from '../models/notification';
 import { NotificationRepository } from '@/modules/notifications/repositories/notification.repository';
 import { ActorService } from '@/modules/actors/services/actorService';
-import { AppError, ErrorType } from '../../../utils/errors';
+import {
+  AppError as _AppError,
+  ErrorType as _ErrorType,
+} from '../../../utils/errors';
 import {
   Db,
   ObjectId,
   Filter,
-  UpdateFilter,
+  UpdateFilter as _UpdateFilter,
   UpdateResult,
-  DeleteResult,
+  DeleteResult as _DeleteResult,
   Collection,
   OptionalUnlessRequiredId,
 } from 'mongodb';
@@ -22,7 +25,7 @@ import { CommentService } from '@/modules/comments/services/comment.service';
 import { Actor } from '@/modules/actors/models/actor';
 
 // Define a simple logger interface or import a proper logger
-type Logger = object;
+type _Logger = object;
 
 export class NotificationService {
   private notificationRepository?: NotificationRepository;
@@ -52,7 +55,7 @@ export class NotificationService {
   }
 
   // Keep existing setActorService if it's used elsewhere, though not for the cycle
-  setActorService(actorService: ActorService) {
+  setActorService(actorService: ActorService): void {
     this.actorService = actorService;
   }
 

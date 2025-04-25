@@ -1,4 +1,4 @@
-import { Filter, Db, ObjectId } from 'mongodb';
+import { Filter as _Filter, Db, ObjectId } from 'mongodb';
 import { Post } from '@/modules/posts/models/post';
 import { MongoRepository } from './baseRepository';
 

@@ -18,14 +18,14 @@ function configureCommentRoutes(container) {
   router.post(
     '/',
     (0, auth_1.authenticate)(container.authService),
-    (0, routeHandler_1.wrapAsync)((req, res, next) =>
-      commentsController.createComment(req, res, next)
+    (0, routeHandler_1.wrapAsync)((req, res, _next) =>
+      commentsController.createComment(req, res, _next)
     )
   );
   router.delete(
     '/:commentId',
     (0, auth_1.authenticate)(container.authService),
-    (0, routeHandler_1.wrapAsync)((req, res, next) =>
+    (0, routeHandler_1.wrapAsync)((req, res, _next) =>
       commentsController.deleteComment(req, res)
     )
   );

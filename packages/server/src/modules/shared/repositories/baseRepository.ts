@@ -3,8 +3,8 @@ import {
   Db,
   Filter,
   FindOptions,
-  ModifyResult,
-  OptionalId,
+  ModifyResult as _ModifyResult,
+  OptionalId as _OptionalId,
   Document,
   ObjectId,
   OptionalUnlessRequiredId,
@@ -51,6 +51,7 @@ export abstract class MongoRepository<T extends Document>
       try {
         return new ObjectId(id);
       } catch (error) {
+        console.error(`Invalid ObjectId format: ${id}`, error);
         throw new Error(`Invalid ID format: ${id}`);
       }
     } else if (id instanceof ObjectId) {
@@ -68,6 +69,7 @@ export abstract class MongoRepository<T extends Document>
       } as Filter<T>);
       return result;
     } catch (error) {
+      console.error(`Error finding document by ID: ${String(error)}`);
       return null;
     }
   }
@@ -106,23 +108,28 @@ export abstract class MongoRepository<T extends Document>
     id: string | ObjectId,
     data: UpdateFilter<T> | Partial<T>
   ): Promise<boolean> {
-    const objectId = this.toObjectId(id);
+    try {
+      const objectId = this.toObjectId(id);
 
-    const isUpdateOperator =
-      '$set' in data ||
-      '$inc' in data ||
-      '$addToSet' in data ||
-      '$pull' in data;
+      const isUpdateOperator =
+        '$set' in data ||
+        '$inc' in data ||
+        '$addToSet' in data ||
+        '$pull' in data;
 
-    const updateDoc = isUpdateOperator
-      ? (data as UpdateFilter<T>)
-      : ({ $set: data } as UpdateFilter<T>);
+      const updateDoc = isUpdateOperator
+        ? (data as UpdateFilter<T>)
+        : ({ $set: data } as UpdateFilter<T>);
 
-    const result = await this.collection.updateOne(
-      { _id: objectId } as Filter<T>,
-      updateDoc
-    );
-    return result.modifiedCount > 0;
+      const result = await this.collection.updateOne(
+        { _id: objectId } as Filter<T>,
+        updateDoc
+      );
+      return result.modifiedCount > 0;
+    } catch (error) {
+      console.error(`Error updating document by ID: ${String(error)}`);
+      return false;
+    }
   }
 
   async findOneAndUpdate(
@@ -150,8 +157,13 @@ export abstract class MongoRepository<T extends Document>
     filter: Filter<T>,
     options?: DeleteOptions
   ): Promise<boolean> {
-    const result = await this.collection.deleteOne(filter, options);
-    return result.deletedCount > 0;
+    try {
+      const result = await this.collection.deleteOne(filter, options);
+      return result.deletedCount > 0;
+    } catch (error) {
+      console.error(`Error deleting document: ${String(error)}`);
+      return false;
+    }
   }
 
   async countDocuments(

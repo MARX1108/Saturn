@@ -11,8 +11,8 @@ import {
   UpdatePostData,
 } from '@/modules/posts/services/postService';
 import {
-  createPostSchema,
-  updatePostSchema,
+  createPostSchema as _createPostSchema,
+  updatePostSchema as _updatePostSchema,
 } from '@/modules/posts/schemas/post.schema';
 
 // --- Define DTOs for Request Validation ---

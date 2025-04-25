@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { ActorService } from '../../actors/services/actorService';
 import { ActivityPubService } from '../services/activitypub.service';
-import { PostService } from '@/modules/posts/services/postService';
-import { AppError, ErrorType } from '@/utils/errors';
-import { Actor } from '@/modules/actors/models/actor';
+import { PostService as _PostService } from '@/modules/posts/services/postService';
+import { AppError as _AppError, ErrorType as _ErrorType } from '@/utils/errors';
+import { Actor as _Actor } from '@/modules/actors/models/actor';
 import { ActivityPubActivity } from '../models/activitypub';
 
 export class ActivityPubController {

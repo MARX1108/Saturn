@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { ServiceContainer } from '../utils/container';
-import { ActorService } from '@/modules/actors/services/actorService';
+import { ServiceContainer as _ServiceContainer } from '../utils/container';
+import { ActorService as _ActorService } from '@/modules/actors/services/actorService';
 
 /**
  * Middleware to inject services into request object for backward compatibility

@@ -6,7 +6,7 @@ import {
   Document,
   ObjectId,
   OptionalUnlessRequiredId,
-  WithId,
+  WithId as _WithId,
 } from 'mongodb';
 
 export interface BaseRepository<T extends Document> {
@@ -33,8 +33,8 @@ export abstract class MongoRepository<T extends Document>
         _id: new ObjectId(id),
       } as Filter<T>);
       return result ? ({ ...result, _id: undefined } as unknown as T) : null; // Map `WithId<T>` to `T`
-    } catch (error) {
-      console.error(`Error finding document by ID: ${String(error)}`);
+    } catch (_error) {
+      console.error(`Error finding document by ID: ${String(_error)}`);
       return null;
     }
   }

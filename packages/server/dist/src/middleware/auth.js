@@ -56,8 +56,8 @@ const auth = async (req, res, next) => {
     // Add user to request object
     req.user = user;
     next();
-  } catch (_error) {
-    console.error('Auth middleware error:', _error);
+  } catch (__error) {
+    console.error('Auth middleware error:', JSON.stringify(__error));
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -83,6 +83,7 @@ const authenticateToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (_error) {
+    console.error('Token verification failed:', JSON.stringify(_error));
     return res.status(403).json({ message: 'Invalid token' });
   }
 };
@@ -100,8 +101,8 @@ const authenticate = authService => {
       }
       req.user = user;
       next();
-    } catch (error) {
-      next(error);
+    } catch (_error) {
+      next(_error);
     }
   };
 };

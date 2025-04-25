@@ -394,12 +394,13 @@ exports.mockPostsController.getPostById.mockImplementation(
         res.status(404).json({ error: 'Post not found' });
         return;
       }
+      // Validate ObjectId format before calling the service
       try {
-        new mongodb_1.ObjectId(postId); // Validate format if needed, though service call might handle it
+        new mongodb_1.ObjectId(postId);
       } catch (e) {
-        // Potentially unnecessary if service handles invalid IDs
-        // res.status(400).json({ error: 'Invalid ObjectId format' });
-        // return;
+        // Invalid ObjectId format - return 400 error
+        res.status(400).json({ error: 'Invalid post ID format' });
+        return;
       }
       // --- Call the mocked service ---
       // Access mock service safely via globalWithMocks
@@ -420,7 +421,7 @@ exports.mockPostsController.getPostById.mockImplementation(
       };
       res.status(200).json(responseData);
     } catch (error) {
-      // Handle potential errors more robustly
+      // Only log error if it's not an invalid ObjectId error
       console.error('Error in getPostById mock:', error);
       // Pass the error to the next middleware (Express error handler)
       next(error);

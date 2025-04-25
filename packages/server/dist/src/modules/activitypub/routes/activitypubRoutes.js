@@ -26,7 +26,7 @@ function configureActivityPubRoutes(serviceContainer) {
   // Get ActivityPub actor profile (federated)
   router.get(
     '/users/:username',
-    (0, routeHandler_1.wrapAsync)(async (req, res, next) => {
+    (0, routeHandler_1.wrapAsync)(async (req, res, _next) => {
       return activityPubController.getActor(req, res);
     })
   );
@@ -34,14 +34,14 @@ function configureActivityPubRoutes(serviceContainer) {
   router.post(
     '/users/:username/inbox',
     express_1.default.json(),
-    (0, routeHandler_1.wrapAsync)(async (req, res, next) => {
+    (0, routeHandler_1.wrapAsync)(async (req, res, _next) => {
       return activityPubController.receiveActivity(req, res);
     })
   );
   // Actor outbox - collection of activities by this user
   router.get(
     '/users/:username/outbox',
-    (0, routeHandler_1.wrapAsync)(async (req, res, next) => {
+    (0, routeHandler_1.wrapAsync)(async (req, res, _next) => {
       return activityPubController.getOutbox(req, res);
     })
   );

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { AnyZodObject, ZodError, ZodType } from 'zod';
+import { AnyZodObject as _AnyZodObject, ZodError, ZodType } from 'zod';
 import { AppError, ErrorType } from '../utils/errors';
 
 /**
@@ -18,10 +18,10 @@ const log = (message: string): void => {
  * @param schema The Zod schema to validate against.
  * @returns An Express RequestHandler.
  */
-export const validateRequestBody = (
-  schema: ZodType<any, any, any>
-): RequestHandler => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export function validateRequestBody<T>(
+  schema: ZodType<T>
+): (req: Request, res: Response, next: NextFunction) => void {
+  return (req: Request, res: Response, next: NextFunction): void => {
     log(`[Validator] Validating ${req.method} ${req.path} body...`);
 
     // Skip validation for multipart/form-data requests (used for file uploads)
@@ -38,38 +38,36 @@ export const validateRequestBody = (
     }
 
     try {
-      // Attempt to parse the request body
-      schema.parse(req.body);
+      // Try to parse and validate the request body
+      const parseResult = schema.safeParse(req.body);
+
+      if (!parseResult.success) {
+        // If validation fails, create a 400 Bad Request error
+        log(
+          `[Validator] Validation failed: ${JSON.stringify(parseResult.error)}`
+        );
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: parseResult.error.format(),
+        });
+      }
+
+      // If validation succeeds, update req.body with the parsed data
+      req.body = parseResult.data;
       log(`[Validator] Validation SUCCESS for ${req.path}. Calling next().`);
-      // If parsing succeeds, move to the next middleware/handler
       next();
     } catch (error) {
-      log(`[Validator] Validation FAILED for ${req.path}.`);
-      // Check if the error is a ZodError
-      if (error instanceof ZodError) {
-        log(`[Validator] ZodError: ${JSON.stringify(error.errors)}`);
-        // Format the Zod error into a more user-friendly structure
-        // Pass a structured error to the global error handler
-        const validationError = new AppError(
-          'Validation failed',
-          400,
-          ErrorType.VALIDATION
-        );
-        log(`[Validator] Calling next(AppError) for ${req.path}.`);
-        next(validationError);
-      } else {
-        log(`[Validator] Non-Zod Error: ${error}`);
-        // If it's not a ZodError, pass it to the global error handler as an internal error
-        const internalError = new AppError(
+      // This should rarely happen, as safeParse should handle most errors
+      log(`[Validator] Unexpected error during validation: ${error}`);
+      next(
+        new AppError(
           'Internal Server Error during validation',
           500,
           ErrorType.INTERNAL_SERVER_ERROR
-        );
-        log(`[Validator] Calling next(InternalServerError) for ${req.path}.`);
-        next(internalError);
-      }
+        )
+      );
     }
   };
-};
+}
 
 // Potential extensions: validateRequestQuery, validateRequestParams

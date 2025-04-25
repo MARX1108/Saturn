@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ServiceContainer } from '../../../utils/container';
-import { CommentsController } from '../controllers/comments.controller';
+import { CommentsController as _CommentsController } from '../controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
 import { Request, Response, NextFunction } from 'express';
 import { wrapAsync } from '../../../utils/routeHandler';
@@ -24,15 +24,15 @@ export default function configureCommentRoutes(
   router.post(
     '/',
     authenticate(container.authService),
-    wrapAsync((req: Request, res: Response, next: NextFunction) =>
-      commentsController.createComment(req, res, next)
+    wrapAsync((req: Request, res: Response, _next: NextFunction) =>
+      commentsController.createComment(req, res, _next)
     )
   );
 
   router.delete(
     '/:commentId',
     authenticate(container.authService),
-    wrapAsync((req, res, next) => commentsController.deleteComment(req, res))
+    wrapAsync((req, res, _next) => commentsController.deleteComment(req, res))
   );
 
   return router;

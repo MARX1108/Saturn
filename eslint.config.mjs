@@ -47,7 +47,7 @@ export default tseslint.config(
       // --- Our custom TS rules ---
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
-        'warn',
+        'error',
         { argsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/no-floating-promises': 'error',

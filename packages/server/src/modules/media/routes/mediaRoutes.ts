@@ -26,7 +26,7 @@ export function configureMediaRoutes(
     '/upload',
     authenticate(authService), // Ensure users are authenticated
     mediaUploadRateLimiter, // Apply rate limiting to uploads
-    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
       return mediaController.uploadMedia(req, res);
     })
   );
@@ -34,7 +34,7 @@ export function configureMediaRoutes(
   // Get media by ID
   router.get(
     '/:id',
-    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
       return mediaController.getMedia(req, res);
     })
   );
@@ -43,7 +43,7 @@ export function configureMediaRoutes(
   router.delete(
     '/:id',
     authenticate(authService), // Ensure users are authenticated
-    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
       return mediaController.deleteMedia(req, res);
     })
   );
