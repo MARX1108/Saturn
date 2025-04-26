@@ -133,14 +133,9 @@ describe('PostService', () => {
     jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
 
     // Mock Date.now() since ObjectId uses it
-    Date.now = jest.fn().mockReturnValue(mockTimestamp);
-
-    // Mock ObjectId constructor used in the PostService
-    jest.spyOn(ObjectId.prototype, 'constructor').mockImplementation(function (
-      this: ObjectId
-    ) {
-      return objectIdForTest();
-    } as any);
+    Date.now = jest
+      .fn()
+      .mockReturnValue(mockTimestamp) as unknown as () => number;
   });
 
   afterEach(() => {
