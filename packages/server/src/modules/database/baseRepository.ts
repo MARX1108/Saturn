@@ -1,12 +1,12 @@
 import {
   Model,
   FindOptions,
-  DestroyOptions as _DestroyOptions,
-  UpdateOptions as _UpdateOptions,
   ModelStatic,
+  WhereOptions,
+  CreationAttributes,
 } from 'sequelize';
 
-export type FilterArgs<T> = Partial<T> | Record<string, any>;
+export type FilterArgs<T> = Partial<T> | Record<string, unknown>;
 export type UpdateAttributes<T> = Partial<T>;
 
 export class BaseRepository<T extends Model> {
@@ -22,7 +22,7 @@ export class BaseRepository<T extends Model> {
     const model = this.modelConstructor;
     try {
       const result = await model.destroy({
-        where: filter as any,
+        where: filter as WhereOptions<T>,
       });
       return result;
     } catch (_error) {
@@ -38,7 +38,7 @@ export class BaseRepository<T extends Model> {
     const model = this.modelConstructor;
     try {
       const results = await model.findAll(options);
-      return results as T[];
+      return results;
     } catch (_error) {
       console.error(
         `Error finding all ${this.modelName}:`,
@@ -55,7 +55,7 @@ export class BaseRepository<T extends Model> {
     const model = this.modelConstructor;
     try {
       const result = await model.findByPk(id, options);
-      return result as T | null;
+      return result;
     } catch (_error) {
       console.error(
         `Error finding ${this.modelName} by ID:`,
@@ -69,7 +69,7 @@ export class BaseRepository<T extends Model> {
     const model = this.modelConstructor;
     try {
       const result = await model.findOne(options);
-      return result as T | null;
+      return result;
     } catch (_error) {
       console.error(
         `Error finding one ${this.modelName}:`,
@@ -85,8 +85,8 @@ export class BaseRepository<T extends Model> {
   ): Promise<[number, T[]]> {
     const model = this.modelConstructor;
     try {
-      const result = await model.update(update as any, {
-        where: filter as any,
+      const result = await model.update(update as CreationAttributes<T>, {
+        where: filter as WhereOptions<T>,
         returning: true,
       });
       return result as unknown as [number, T[]];
