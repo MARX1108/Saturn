@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for modules/auth/routes/authRoutes.ts</title>
+    <title>Code coverage report for middleware/validateRequest.ts</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="../../../prettify.css" />
-    <link rel="stylesheet" href="../../../base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(../../../sort-arrow-sprite.png);
+            background-image: url(../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../index.html">All files</a> / <a href="index.html">modules/auth/routes</a> authRoutes.ts</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">middleware</a> validateRequest.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.92% </span>
+                <span class="strong">10% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>10/13</span>
+                <span class='fraction'>2/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">33.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>1/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.92% </span>
+                <span class="strong">10% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>10/13</span>
+                <span class='fraction'>2/20</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -122,15 +122,19 @@
 <a name='L57'></a><a href='#L57'>57</a>
 <a name='L58'></a><a href='#L58'>58</a>
 <a name='L59'></a><a href='#L59'>59</a>
-<a name='L60'></a><a href='#L60'>60</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -138,30 +142,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -169,7 +155,45 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -177,69 +201,81 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import express, { Router, NextFunction, Request, Response } from 'express';
-import { AuthController } from '../controllers/authController';
-import { auth } from '../../../middleware/auth';
-import { ServiceContainer } from '../../../utils/container';
-import { wrapAsync } from '../../../utils/routeHandler';
-import { validateRequestBody } from '../../../middleware/validateRequest';
-import { registerBodySchema, loginBodySchema } from '../schemas/auth.schema';
-import { authRateLimiter } from '../../../middleware/rateLimiter';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { AnyZodObject as _AnyZodObject, ZodType } from 'zod';
+import { AppError, ErrorType } from '../utils/errors';
 &nbsp;
 /**
- * Configure authentication routes with the controller
+ * Helper function to conditionally log messages only when not in test mode
  */
-export default function configureAuthRoutes(
-  serviceContainer: ServiceContainer
-): Router {
-  const router = express.Router();
-  const authController =
-    serviceContainer.getService&lt;AuthController&gt;('authController');
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!authController) {
-<span class="cstat-no" title="statement not covered" >    throw new Error(</span>
-      'AuthController not found in service container during route setup'
-    );
+const log = <span class="fstat-no" title="function not covered" >(m</span>essage: string): void =&gt; {
+  // Skip logging in test mode
+<span class="cstat-no" title="statement not covered" >  if (process.env.NODE_ENV !== 'test') {</span>
+<span class="cstat-no" title="statement not covered" >    console.log(message);</span>
   }
+};
 &nbsp;
-  // Bind methods from the MOCKED controller
-  const boundRegister = authController.register.bind(authController);
-  const boundLogin = authController.login.bind(authController);
+/**
+ * Creates an Express middleware function to validate the request body against a Zod schema.
+ *
+ * @param schema The Zod schema to validate against.
+ * @returns An Express RequestHandler.
+ */
+export function validateRequestBody&lt;T&gt;(schema: ZodType&lt;T&gt;): RequestHandler {
+  return <span class="fstat-no" title="function not covered" >(r</span>eq: Request, res: Response, next: NextFunction): void | Response =&gt; {
+<span class="cstat-no" title="statement not covered" >    log(`[Validator] Validating ${req.method} ${req.path} body...`);</span>
 &nbsp;
-  // Wrap the getCurrentUser method to make it async
-  const wrappedGetCurrentUser = <span class="fstat-no" title="function not covered" >as</span>ync (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise&lt;void&gt; =&gt; {
-<span class="cstat-no" title="statement not covered" >    authController.getCurrentUser(req, res, next);</span>
-<span class="cstat-no" title="statement not covered" >    return Promise.resolve();</span>
+    // Skip validation for multipart/form-data requests (used for file uploads)
+    const isMultipart =
+<span class="cstat-no" title="statement not covered" >      req.headers &amp;&amp;</span>
+      req.headers['content-type'] &amp;&amp;
+      typeof req.headers['content-type'] === 'string' &amp;&amp;
+      req.headers['content-type'].includes('multipart/form-data');
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    if (isMultipart) {</span>
+<span class="cstat-no" title="statement not covered" >      log(`[Validator] Skipping validation for multipart form data`);</span>
+<span class="cstat-no" title="statement not covered" >      next();</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    try {</span>
+      // Try to parse and validate the request body
+      const parseResult = <span class="cstat-no" title="statement not covered" >schema.safeParse(req.body);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (!parseResult.success) {</span>
+        // If validation fails, create a 400 Bad Request error
+<span class="cstat-no" title="statement not covered" >        log(</span>
+          `[Validator] Validation failed: ${JSON.stringify(parseResult.error)}`
+        );
+<span class="cstat-no" title="statement not covered" >        return res.status(400).json({</span>
+          error: 'Validation failed',
+          details: parseResult.error.format(),
+        });
+      }
+&nbsp;
+      // If validation succeeds, update req.body with the parsed data
+<span class="cstat-no" title="statement not covered" >      req.body = parseResult.data;</span>
+<span class="cstat-no" title="statement not covered" >      log(`[Validator] Validation SUCCESS for ${req.path}. Calling next().`);</span>
+<span class="cstat-no" title="statement not covered" >      next();</span>
+    } catch (error) {
+      // This should rarely happen, as safeParse should handle most errors
+<span class="cstat-no" title="statement not covered" >      log(`[Validator] Unexpected error during validation: ${error}`);</span>
+<span class="cstat-no" title="statement not covered" >      next(</span>
+        new AppError(
+          'Internal Server Error during validation',
+          500,
+          ErrorType.INTERNAL_SERVER_ERROR
+        )
+      );
+    }
   };
-&nbsp;
-  // Register new user
-  router.post(
-    '/register',
-    authRateLimiter,
-    validateRequestBody(registerBodySchema),
-    wrapAsync(boundRegister)
-  );
-&nbsp;
-  // Login user
-  router.post(
-    '/login',
-    authRateLimiter,
-    validateRequestBody(loginBodySchema),
-    wrapAsync(boundLogin)
-  );
-&nbsp;
-  // Get current user (protected route)
-  router.get('/me', auth, wrapAsync(wrappedGetCurrentUser));
-&nbsp;
-  return router;
 }
+&nbsp;
+// Potential extensions: validateRequestQuery, validateRequestParams
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -249,14 +285,14 @@ export default function configureAuthRoutes(
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
                 at 2025-04-27T22:32:22.683Z
             </div>
-        <script src="../../../prettify.js"></script>
+        <script src="../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="../../../sorter.js"></script>
-        <script src="../../../block-navigation.js"></script>
+        <script src="../sorter.js"></script>
+        <script src="../block-navigation.js"></script>
     </body>
 </html>
     
