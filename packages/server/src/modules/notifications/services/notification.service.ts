@@ -147,8 +147,8 @@ export class NotificationService {
    * @param recipientUserId - User ID (for security, to ensure notifications belong to this user)
    */
   async markNotificationsAsRead(
-    userId: string | ObjectId,
-    notificationIds?: string[]
+    notificationIds: string[],
+    userId: string | ObjectId
   ): Promise<UpdateResult | { acknowledged: boolean; modifiedCount: number }> {
     const userObjectId =
       typeof userId === 'string' ? new ObjectId(userId) : userId;
@@ -175,10 +175,11 @@ export class NotificationService {
    * Mark all notifications for a user as read
    * @param recipientUserId - User ID
    */
-  async markAllNotificationsAsRead(recipientUserId: string): Promise<boolean> {
-    const { modifiedCount } =
-      await this.repository.markAllAsRead(recipientUserId);
-    return modifiedCount > 0;
+  async markAllNotificationsAsRead(
+    recipientUserId: string
+  ): Promise<{ modifiedCount: number }> {
+    const result = await this.repository.markAllAsRead(recipientUserId);
+    return result;
   }
 
   /**
@@ -266,11 +267,11 @@ export class NotificationService {
   }
 
   async markRead(id: string, userId: string): Promise<void> {
-    await this.repository.markAsRead([id], userId);
+    await this.markNotificationsAsRead([id], userId);
   }
 
   async markAllRead(userId: string): Promise<void> {
-    await this.repository.markAllAsRead(userId);
+    await this.markAllNotificationsAsRead(userId);
   }
 
   async getUnreadCount(recipientUserId: string): Promise<number> {
