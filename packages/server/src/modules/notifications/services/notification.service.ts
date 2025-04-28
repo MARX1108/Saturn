@@ -4,8 +4,8 @@ import {
   FormattedNotification,
   NotificationType as _NotificationType,
 } from '../models/notification';
-import { NotificationRepository } from '@/modules/notifications/repositories/notification.repository';
-import { ActorService } from '@/modules/actors/services/actorService';
+import { NotificationRepository } from '../../../modules/notifications/repositories/notification.repository';
+import { ActorService } from '../../../modules/actors/services/actorService';
 import {
   AppError as _AppError,
   ErrorType as _ErrorType,
@@ -20,9 +20,9 @@ import {
   Collection,
   OptionalUnlessRequiredId,
 } from 'mongodb';
-import { PostService } from '@/modules/posts/services/postService';
-import { CommentService } from '@/modules/comments/services/comment.service';
-import { Actor } from '@/modules/actors/models/actor';
+import { PostService } from '../../../modules/posts/services/postService';
+import { CommentService } from '../../../modules/comments/services/comment.service';
+import { Actor } from '../../../modules/actors/models/actor';
 
 // Define a simple logger interface or import a proper logger
 type _Logger = object;

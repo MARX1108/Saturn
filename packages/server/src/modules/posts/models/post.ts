@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { Actor } from '@/modules/actors/models/actor'; // Import canonical Actor
+import { Actor } from '../../../modules/actors/models/actor'; // Import canonical Actor
 
 // Definition for media attachments within a post
 export interface Attachment {

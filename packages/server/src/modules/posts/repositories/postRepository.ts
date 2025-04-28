@@ -10,8 +10,8 @@ import {
   FindOptions,
 } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { Post, Attachment as _Attachment } from '@/modules/posts/models/post';
-import { Actor as _Actor } from '@/modules/actors/models/actor';
+import { Post, Attachment as _Attachment } from '../models/post';
+import { Actor as _Actor } from '../../../modules/actors/models/actor';
 
 export class PostRepository extends MongoRepository<Post> {
   constructor(db: Db) {

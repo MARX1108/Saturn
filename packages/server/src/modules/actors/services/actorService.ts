@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb';
-import crypto from 'crypto';
-import bcryptjs from 'bcryptjs';
-import { Actor } from '@/modules/actors/models/actor';
-import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
-import { NotificationService } from '@/modules/notifications/services/notification.service';
-import { AppError, ErrorType } from '@/utils/errors';
+import * as crypto from 'crypto';
+import * as bcryptjs from 'bcryptjs';
+import { Actor } from '../../../modules/actors/models/actor';
+import { ActorRepository } from '../../../modules/actors/repositories/actorRepository';
+import { NotificationService } from '../../../modules/notifications/services/notification.service';
+import { AppError, ErrorType } from '../../../utils/errors';
 
 // Define CreateActorData interface and export it
 export interface CreateActorData {

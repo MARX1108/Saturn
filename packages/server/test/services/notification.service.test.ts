@@ -10,11 +10,12 @@ import {
   WithId,
   OptionalId,
   UpdateResult,
+  OptionalUnlessRequiredId,
 } from 'mongodb';
 import { NotificationService } from '@/modules/notifications/services/notification.service';
 import { NotificationRepository } from '@/modules/notifications/repositories/notification.repository';
-import { ActorService } from '@/modules/actors/services/actorService';
-import { PostService } from '@/modules/posts/services/postService';
+import { ActorService } from '@/modules/actors/services/actor.service';
+import { PostService } from '@/modules/posts/services/post.service';
 import { CommentService } from '@/modules/comments/services/comment.service';
 import {
   Notification,
@@ -26,24 +27,21 @@ import { Actor } from '@/modules/actors/models/actor';
 import { Post } from '@/modules/posts/models/post';
 import { Comment } from '@/modules/comments/models/comment';
 
-// Set up simplified mock types to avoid typescript errors
-type MockDb = {
-  collection: jest.Mock;
-};
-
-type MockActorService = {
+// Define simple mocks with 'any' that we'll cast when used
+interface MockActorService {
   getActorById: jest.Mock;
-};
+}
 
-type MockPostService = {
+interface MockPostService {
   getPostById: jest.Mock;
-};
+}
 
-type MockCommentService = {
+interface MockCommentService {
+  getComments: jest.Mock;
   getCommentById: jest.Mock;
-};
+}
 
-type MockNotificationRepository = {
+interface MockNotificationRepository {
   create: jest.Mock;
   findOne: jest.Mock;
   find: jest.Mock;
@@ -54,9 +52,15 @@ type MockNotificationRepository = {
   update: jest.Mock;
   delete: jest.Mock;
   countDocuments: jest.Mock;
-};
+}
 
-type MockCollection = {
+// Basic mock db
+interface MockDb {
+  collection: jest.Mock;
+}
+
+// Basic mock collection
+interface MockCollection {
   find: jest.Mock;
   findOne: jest.Mock;
   insertOne: jest.Mock;
@@ -66,7 +70,7 @@ type MockCollection = {
   deleteMany: jest.Mock;
   countDocuments: jest.Mock;
   createIndex: jest.Mock;
-};
+}
 
 // Mock the repositories and services
 jest.mock('@/modules/notifications/repositories/notification.repository');
@@ -130,7 +134,10 @@ describe('NotificationService', () => {
   };
 
   // Creating a mock success response for markAsRead and markAllAsRead
-  const mockModifiedResponse = { modifiedCount: 1 };
+  const mockModifiedResponse = {
+    acknowledged: true,
+    modifiedCount: 1,
+  };
 
   const mockDbError = new Error('Database error');
 
@@ -143,32 +150,39 @@ describe('NotificationService', () => {
       findOne: jest.fn(),
       insertOne: jest.fn(),
       updateOne: jest.fn(),
-      updateMany: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({
+        acknowledged: true,
+        modifiedCount: 1,
+        upsertedId: null,
+        upsertedCount: 0,
+        matchedCount: 1,
+      }),
       deleteOne: jest.fn(),
       deleteMany: jest.fn(),
       countDocuments: jest.fn(),
       createIndex: jest.fn(),
-    };
+    } as MockCollection;
 
     // Set up mock DB
     mockDb = {
       collection: jest.fn().mockReturnValue(mockCollection),
-    };
+    } as MockDb;
 
-    // Set up mock services
+    // Set up mock services with type assertions
     actorService = {
       getActorById: jest.fn().mockResolvedValue(mockActor),
-    };
+    } as unknown as ActorService;
 
     postService = {
       getPostById: jest.fn().mockResolvedValue(null),
-    };
+    } as unknown as PostService;
 
     commentService = {
+      getComments: jest.fn(),
       getCommentById: jest.fn().mockResolvedValue(null),
-    };
+    } as unknown as CommentService;
 
-    // Set up mock repository
+    // Set up mock repository with type assertions
     notificationRepository = {
       create: jest.fn().mockResolvedValue(mockDbNotification),
       findOne: jest.fn().mockResolvedValue(null),
@@ -183,12 +197,12 @@ describe('NotificationService', () => {
       update: jest.fn(),
       delete: jest.fn(),
       countDocuments: jest.fn().mockResolvedValue(1),
-    };
+    } as unknown as NotificationRepository;
 
     // Create notification service with mocked dependencies
     notificationService = new NotificationService(
       mockDb as unknown as Db,
-      actorService as unknown as any
+      actorService as unknown as ActorService
     );
 
     // Add repository getter mock
@@ -197,24 +211,36 @@ describe('NotificationService', () => {
     });
 
     // Set additional services
-    notificationService.setPostService(postService as unknown as any);
-    notificationService.setCommentService(commentService as unknown as any);
+    notificationService.setPostService(postService as unknown as PostService);
+    notificationService.setCommentService(
+      commentService as unknown as CommentService
+    );
 
     // Create a mock implementation for markNotificationsAsRead to use for testing
     jest
       .spyOn(notificationService, 'markNotificationsAsRead')
       .mockImplementation(
-        (notificationIds: string[], userId: string | ObjectId) => {
-          return Promise.resolve(mockModifiedResponse);
+        (
+          notificationIds: string[],
+          userId: string | ObjectId
+        ): Promise<{ acknowledged: boolean; modifiedCount: number }> => {
+          return Promise.resolve({
+            acknowledged: true,
+            modifiedCount: mockModifiedResponse.modifiedCount,
+          });
         }
       );
 
     // Create a mock implementation for markAllNotificationsAsRead to use for testing
     jest
       .spyOn(notificationService, 'markAllNotificationsAsRead')
-      .mockImplementation((userId: string) => {
-        return Promise.resolve(mockModifiedResponse);
-      });
+      .mockImplementation(
+        (userId: string): Promise<{ modifiedCount: number }> => {
+          return Promise.resolve({
+            modifiedCount: mockModifiedResponse.modifiedCount,
+          });
+        }
+      );
   });
 
   describe('createNotification', () => {
@@ -399,10 +425,12 @@ describe('NotificationService', () => {
       const notificationIds: string[] = [];
 
       // Mock result for empty array case
-      // @ts-expect-error - TypeScript errors for jest mocking
-      notificationService.markNotificationsAsRead.mockResolvedValueOnce({
-        modifiedCount: 0,
-      });
+      jest
+        .spyOn(notificationService, 'markNotificationsAsRead')
+        .mockResolvedValueOnce({
+          acknowledged: true,
+          modifiedCount: 0,
+        });
 
       // Act
       const result = await notificationService.markNotificationsAsRead(
@@ -420,10 +448,9 @@ describe('NotificationService', () => {
       const notificationIds = [mockNotificationId.toHexString()];
 
       // Mock error for this test
-      // @ts-expect-error - TypeScript errors for jest mocking
-      notificationService.markNotificationsAsRead.mockRejectedValueOnce(
-        mockDbError
-      );
+      jest
+        .spyOn(notificationService, 'markNotificationsAsRead')
+        .mockRejectedValueOnce(mockDbError);
 
       // Act & Assert
       await expect(
@@ -438,10 +465,11 @@ describe('NotificationService', () => {
       const userId = mockUserId.toHexString();
 
       // Configure mocked response with modifiedCount = 3
-      // @ts-expect-error - TypeScript errors for jest mocking
-      notificationService.markAllNotificationsAsRead.mockResolvedValueOnce({
-        modifiedCount: 3,
-      });
+      jest
+        .spyOn(notificationService, 'markAllNotificationsAsRead')
+        .mockResolvedValueOnce({
+          modifiedCount: 3,
+        });
 
       // Act
       const result =
@@ -456,10 +484,11 @@ describe('NotificationService', () => {
       const userId = mockUserId.toHexString();
 
       // Mock repository to return 0 modified
-      // @ts-expect-error - TypeScript errors for jest mocking
-      notificationService.markAllNotificationsAsRead.mockResolvedValueOnce({
-        modifiedCount: 0,
-      });
+      jest
+        .spyOn(notificationService, 'markAllNotificationsAsRead')
+        .mockResolvedValueOnce({
+          modifiedCount: 0,
+        });
 
       // Act
       const result =
@@ -474,10 +503,9 @@ describe('NotificationService', () => {
       const userId = mockUserId.toHexString();
 
       // Mock error for this test
-      // @ts-expect-error - TypeScript errors for jest mocking
-      notificationService.markAllNotificationsAsRead.mockRejectedValueOnce(
-        mockDbError
-      );
+      jest
+        .spyOn(notificationService, 'markAllNotificationsAsRead')
+        .mockRejectedValueOnce(mockDbError);
 
       // Act & Assert
       await expect(

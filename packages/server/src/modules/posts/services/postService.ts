@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Post, Attachment } from '@/modules/posts/models/post';
-import { PostRepository } from '@/modules/posts/repositories/postRepository';
-import { ActorService } from '@/modules/actors/services/actorService';
-import { NotificationService } from '@/modules/notifications/services/notification.service';
-import { AppError, ErrorType } from '@/utils/errors';
+import { Post, Attachment } from '../../../modules/posts/models/post';
+import { PostRepository } from '../../../modules/posts/repositories/postRepository';
+import { ActorService } from '../../../modules/actors/services/actorService';
+import { NotificationService } from '../../../modules/notifications/services/notification.service';
+import { AppError, ErrorType } from '../../../utils/errors';
 import { ObjectId } from 'mongodb';
-import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
+import { ActorRepository } from '../../../modules/actors/repositories/actorRepository';
 
 // Define DTOs for service method parameters here
 export interface CreatePostData {

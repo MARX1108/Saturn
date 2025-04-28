@@ -1,6 +1,6 @@
 import { Db, ObjectId, Filter, UpdateFilter } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { Actor } from '@/modules/actors/models/actor';
+import { Actor } from '../models/actor';
 
 export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {
