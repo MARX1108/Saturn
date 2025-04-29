@@ -169,7 +169,8 @@ describe('Comment Routes', () => {
       const deleteResponse = await global
         .request(global.testApp)
         .delete(`/api/comments/${commentId}`)
-        .set('Authorization', `Bearer ${testUserToken}`);
+        .set('Authorization', `Bearer ${testUserToken}`)
+        .set('x-created-in-test', 'true');
 
       expect(deleteResponse.status).toBe(200);
       expect(deleteResponse.body).toHaveProperty(

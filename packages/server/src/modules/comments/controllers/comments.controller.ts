@@ -6,6 +6,7 @@ import { AppError, ErrorType } from '@/utils/errors';
 // Define DTO locally if needed for input shape, but use Model DTO for service call
 interface CreateCommentInput {
   content: string;
+  postId: string;
 }
 
 export class CommentsController {
@@ -17,8 +18,7 @@ export class CommentsController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const postId = req.params.postId;
-      const { content } = req.body as CreateCommentInput;
+      const { content, postId } = req.body as CreateCommentInput;
       const actorId = req.user?.id;
 
       if (!actorId) {
@@ -35,17 +35,20 @@ export class CommentsController {
           ErrorType.BAD_REQUEST
         );
       }
+      if (!postId) {
+        throw new AppError('Post ID is required', 400, ErrorType.BAD_REQUEST);
+      }
 
       // Pass the full CreateCommentDto required by the service method's type signature
       const commentData: CommentModelDto = {
-        postId: postId, // Include postId
-        authorId: actorId, // Include authorId
-        content: content, // Include content
+        postId: postId,
+        authorId: actorId,
+        content: content,
       };
       const comment = await this.commentService.createComment(
         postId,
         actorId,
-        commentData // Pass the complete DTO object
+        commentData
       );
       res.status(201).json(comment);
     } catch (error) {
@@ -55,19 +58,47 @@ export class CommentsController {
 
   async getComments(req: Request, res: Response): Promise<Response> {
     const { postId } = req.params;
-    const comments = await this.commentService.getComments(postId);
-    return res.json(comments);
+
+    try {
+      // Get pagination parameters with defaults
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const commentsResult = await this.commentService.getCommentsForPost(
+        postId,
+        { limit, offset }
+      );
+      return res.status(200).json(commentsResult);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
+      return res.status(500).json({ error: 'Failed to retrieve comments' });
+    }
   }
 
   async deleteComment(req: Request, res: Response): Promise<Response> {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-    const { id } = req.params;
-    const deleted = await this.commentService.deleteComment(id, req.user.id);
-    if (!deleted) {
+    const { commentId } = req.params;
+
+    try {
+      const deleted = await this.commentService.deleteComment(
+        commentId,
+        req.user.id
+      );
+      if (deleted) {
+        return res
+          .status(200)
+          .json({ message: 'Comment deleted successfully' });
+      }
       return res.status(404).json({ error: 'Comment not found' });
+    } catch (error) {
+      if (error instanceof AppError) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
+      return res.status(500).json({ error: 'Failed to delete comment' });
     }
-    return res.status(204).end();
   }
 }

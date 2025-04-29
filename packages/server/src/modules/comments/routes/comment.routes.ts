@@ -15,24 +15,28 @@ export default function configureCommentRoutes(
   const commentsController = container.commentsController;
 
   // Public routes
-  router.get('/:postId', (req, res, next): void => {
-    void commentsController.getComments(req, res).catch(next);
-  });
+  router.get(
+    '/:postId',
+    wrapAsync((req: Request, res: Response, next: NextFunction) =>
+      commentsController.getComments(req, res)
+    )
+  );
 
   // Protected routes
-
   router.post(
     '/',
     authenticate(container.authService),
-    wrapAsync((req: Request, res: Response, _next: NextFunction) =>
-      commentsController.createComment(req, res, _next)
+    wrapAsync((req: Request, res: Response, next: NextFunction) =>
+      commentsController.createComment(req, res, next)
     )
   );
 
   router.delete(
     '/:commentId',
     authenticate(container.authService),
-    wrapAsync((req, res, _next) => commentsController.deleteComment(req, res))
+    wrapAsync((req: Request, res: Response) =>
+      commentsController.deleteComment(req, res)
+    )
   );
 
   return router;

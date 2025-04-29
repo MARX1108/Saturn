@@ -228,7 +228,7 @@ export class CommentService {
   }
 
   getComments(_postId: string): Promise<Comment[]> {
-    // Implementation
+    // For backwards compatibility, return empty array
     return Promise.resolve([]);
   }
 }

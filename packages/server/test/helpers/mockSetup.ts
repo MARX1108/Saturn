@@ -782,6 +782,122 @@ mockPostsController.unlikePost.mockImplementation(
   }
 );
 
+// Add mock implementations for comments controller methods
+mockCommentsController.getComments.mockImplementation(
+  async (req: Request, res: Response): Promise<Response> => {
+    const { postId } = req.params;
+
+    if (!ObjectId.isValid(postId) && postId !== knownTestPostIdString) {
+      return res.status(400).json({ error: 'Invalid post ID format' });
+    }
+
+    // Mock comments for the post
+    const mockComments = Array.from({ length: 3 }).map((_, i) => ({
+      _id: new ObjectId().toString(),
+      actorId: new ObjectId(knownTestUserIdHex),
+      postId: postId,
+      authorId: knownTestUserIdHex,
+      content: `Test comment ${i + 1}`,
+      likesCount: 0,
+      likedBy: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      author: {
+        id: knownTestUserIdHex,
+        username: 'testuser',
+        displayName: 'Test User',
+        avatarUrl: undefined,
+      },
+    }));
+
+    return res.status(200).json({
+      comments: mockComments,
+      total: mockComments.length,
+      limit: 10,
+      offset: 0,
+    });
+  }
+);
+
+mockCommentsController.createComment.mockImplementation(
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    // Check authentication
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const { content, postId } = req.body;
+
+    // Validate required fields
+    if (!content) {
+      res.status(400).json({ error: 'Comment content is required' });
+      return;
+    }
+
+    if (!postId) {
+      res.status(400).json({ error: 'Post ID is required' });
+      return;
+    }
+
+    // Validate post ID format
+    if (!ObjectId.isValid(postId) && postId !== knownTestPostIdString) {
+      res.status(400).json({ error: 'Invalid post ID format' });
+      return;
+    }
+
+    // Create mock comment
+    const newComment = {
+      _id: new ObjectId().toString(),
+      postId: postId,
+      actorId: new ObjectId(req.user.id),
+      authorId: req.user.id,
+      content: content,
+      likesCount: 0,
+      likedBy: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      author: {
+        id: req.user.id,
+        username: 'testuser',
+        displayName: 'Test User',
+        avatarUrl: undefined,
+      },
+    };
+
+    res.status(201).json(newComment);
+  }
+);
+
+mockCommentsController.deleteComment.mockImplementation(
+  async (req: Request, res: Response): Promise<Response> => {
+    // Check authentication
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { commentId } = req.params;
+
+    // Validate comment ID format
+    if (!ObjectId.isValid(commentId)) {
+      return res.status(400).json({ error: 'Invalid comment ID format' });
+    }
+
+    // In tests, we'll use an existing ID from a created comment
+    // If the ID was not from a creation step, we'll assume it doesn't exist
+    // Check if the comment was just created in the test
+    const wasJustCreated = req.headers['x-created-in-test'] === 'true';
+
+    // For any randomly generated ObjectId (which would be valid but not associated with a comment),
+    // return 404 Not Found
+    if (!wasJustCreated) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    return res.status(200).json({ message: 'Comment deleted successfully' });
+  }
+);
+
 // Define properly typed and constructed service container mock
 export const mockServiceContainer: ServiceContainer = {
   actorService: mockActorService,

@@ -179,6 +179,18 @@ describe('Posts Routes', () => {
       );
     });
 
+    it('should return 401 if authorization header is missing', async () => {
+      // Test without setting any Authorization header
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
+        .post('/api/posts')
+        .send({ content: 'This should fail due to missing auth header' });
+
+      expect(response.status).toBe(401);
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
+    });
+
     it('should return 400 if content is missing', async () => {
       // Explicitly type the response
       const response: Response = await typedGlobal
@@ -393,6 +405,17 @@ describe('Posts Routes', () => {
       expect(response.status).toBe(400);
       const _responseBody = response.body as ErrorResponse;
       // We already check status above, no need to check responseBody further
+    });
+  });
+
+  describe('POST /api/posts/like/:id', () => {
+    it('should return 404 for an invalid post ID format in like endpoint', async () => {
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
+        .post('/api/posts/like/invalid-post-id')
+        .set('Authorization', `Bearer ${testUserToken}`);
+
+      expect(response.status).toBe(404);
     });
   });
 });
