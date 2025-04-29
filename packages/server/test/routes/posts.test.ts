@@ -196,6 +196,22 @@ describe('Posts Routes', () => {
       expect(responseBody).toHaveProperty('error');
     });
 
+    it('should return 400 if sensitive flag is not a boolean', async () => {
+      const response: Response = await typedGlobal
+        .request(typedGlobal.testApp)
+        .post('/api/posts')
+        .set('Authorization', `Bearer ${testUserToken}`)
+        .send({
+          content: 'Valid content',
+          sensitive: 'not-a-boolean', // Should be a boolean, not a string
+        });
+
+      expect(response.status).toBe(400);
+
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error');
+    });
+
     it('should create a post with sensitive content', async () => {
       // Explicitly type the response
       const response: Response = await typedGlobal

@@ -223,6 +223,53 @@ describe('Authentication Routes', () => {
       expect(responseBody).toHaveProperty('error', 'Validation failed');
     });
 
+    it('should validate email format', async () => {
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'validuser',
+          password: 'password123',
+          email: 'invalid-email-format',
+          displayName: 'Test User',
+        });
+      expect(response.status).toBe(400);
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
+    });
+
+    it('should validate maximum username length', async () => {
+      const veryLongUsername = 'a'.repeat(51); // Assuming max length is 50
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: veryLongUsername,
+          password: 'password123',
+          email: 'valid@example.com',
+          displayName: 'Test User',
+        });
+      expect(response.status).toBe(400);
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
+    });
+
+    it('should validate maximum password length', async () => {
+      const veryLongPassword = 'a'.repeat(101); // Assuming max length is 100
+      const response = await global
+        .request(global.testApp)
+        .post('/api/auth/register')
+        .send({
+          username: 'validuser',
+          password: veryLongPassword,
+          email: 'valid@example.com',
+          displayName: 'Test User',
+        });
+      expect(response.status).toBe(400);
+      const responseBody = response.body as ErrorResponse;
+      expect(responseBody).toHaveProperty('error', 'Validation failed');
+    });
+
     it.skip('should handle server errors during registration', async () => {
       const response = await global
         .request(global.testApp)
