@@ -1,6 +1,6 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import { ActorsController } from '../controllers/actorsController';
-import { auth } from '../../../middleware/auth';
+import { authenticate } from '../../../middleware/auth';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 
@@ -11,7 +11,15 @@ export default function configureActorRoutes(
   serviceContainer: ServiceContainer
 ): Router {
   const router = express.Router();
-  const { actorService, uploadService, postService } = serviceContainer;
+  const { actorService, uploadService, postService, authService } =
+    serviceContainer;
+
+  if (!authService) {
+    throw new Error(
+      'AuthService not found in service container during actor route setup'
+    );
+  }
+
   const domain = process.env.DOMAIN || 'localhost:4000';
 
   // Create controller with injected dependencies
@@ -60,14 +68,14 @@ export default function configureActorRoutes(
   // Update actor
   router.put(
     '/:id',
-    auth,
+    authenticate(authService),
     wrapAsync(actorsController.updateActor.bind(actorsController))
   );
 
   // Delete actor
   router.delete(
     '/:id',
-    auth,
+    authenticate(authService),
     wrapAsync(actorsController.deleteActor.bind(actorsController))
   );
 

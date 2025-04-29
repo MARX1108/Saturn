@@ -31,6 +31,7 @@ import { MediaController } from '@/modules/media/controllers/media.controller';
 import { ActivityPubController } from '@/modules/activitypub/controllers/activitypubController';
 import { WebFingerController } from '@/modules/webfinger/controllers/webfingerController';
 import { DbUser } from '@/modules/auth/models/user';
+import { NotificationType } from '@/modules/notifications/models/notification';
 
 // Type definition for middleware functions
 type MiddlewareFunction = (
@@ -203,6 +204,41 @@ const mockActor: Actor = {
 mockActorService.getActorById.mockResolvedValue(mockActor);
 mockActorService.getActorByUsername.mockResolvedValue(mockActor);
 
+// Configure mock responses for notification service
+mockNotificationService.getNotificationsForUser.mockResolvedValue({
+  notifications: [
+    {
+      id: new ObjectId('60a0f3f1e1b8f1a1a8b4c1c5').toString(),
+      recipientUserId: knownTestUserIdHex,
+      type: NotificationType.LIKE,
+      postId: knownTestPostIdString,
+      read: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      actor: {
+        id: knownTestUserIdHex,
+        username: 'testuser',
+        displayName: 'Test User',
+        avatarUrl: undefined,
+      },
+    },
+  ],
+  total: 1,
+  limit: 10,
+  offset: 0,
+});
+
+mockNotificationService.getUnreadCount.mockResolvedValue(5);
+
+mockNotificationService.markNotificationsAsRead.mockResolvedValue({
+  acknowledged: true,
+  modifiedCount: 1,
+});
+
+mockNotificationService.markAllNotificationsAsRead.mockResolvedValue({
+  modifiedCount: 3,
+});
+
 // Mock AuthController methods
 // Restore original mock implementations for AuthController methods
 
@@ -231,7 +267,16 @@ mockAuthController.register.mockImplementation(
     }
     if (!password || password.length < 6) {
       // Align with original test password length?
-      res.status(400).json({ error: 'Password too short' });
+      res.status(400).json({ error: 'Validation failed' });
+      return;
+    }
+    // Add maximum length validation
+    if (username && username.length > 30) {
+      res.status(400).json({ error: 'Validation failed' });
+      return;
+    }
+    if (password && password.length > 100) {
+      res.status(400).json({ error: 'Validation failed' });
       return;
     }
 

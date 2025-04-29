@@ -660,7 +660,9 @@ describe('ActorService', () => {
     it('should handle fetching remote actors (placeholder implementation)', async () => {
       // Arrange
       const actorUrl = 'https://remote.domain/users/remote';
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
 
       // Act
       const result = await actorService.fetchRemoteActor(actorUrl);

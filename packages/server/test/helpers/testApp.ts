@@ -6,6 +6,7 @@ import './setupEnvironment';
 import { Db } from 'mongodb';
 import { configureRoutes } from '@/routes';
 import { AppError } from '@/utils/errors';
+import logger from '../../src/utils/logger';
 
 // Define an interface for error objects with status code
 interface ErrorWithStatusCode {
@@ -26,7 +27,8 @@ export function createTestApp(_db: Db, _domain: string) {
 
   // Centralized error handling middleware
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    console.error('Test app error handler caught:', err);
+    // Use structured logging
+    logger.error({ err }, 'Test app error handler caught an error');
 
     if (err instanceof AppError) {
       return res

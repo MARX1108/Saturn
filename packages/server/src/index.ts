@@ -8,6 +8,8 @@ import { compatibilityMiddleware } from './middleware/compatibilityMiddleware';
 import { defaultRateLimiter } from './middleware/rateLimiter';
 import { initPlugins } from './plugins';
 import config from './config';
+import helmet from 'helmet';
+import logger from './utils/logger';
 
 // Import route configurations from modules
 import configureActorRoutes from './modules/actors/routes/actorRoutes';
@@ -24,6 +26,12 @@ const PORT = config.port || 4000;
 const MONGO_URI = config.mongo.uri;
 const DOMAIN = config.domain;
 
+// Set trust proxy for use behind reverse proxies
+app.set('trust proxy', 1);
+
+// Security: Add helmet middleware for secure HTTP headers
+app.use(helmet());
+
 // Middleware
 app.use(cors(config.cors));
 app.use(express.json());
@@ -36,9 +44,9 @@ if (
   process.env.DISABLE_RATE_LIMITS !== 'true'
 ) {
   app.use(defaultRateLimiter);
-  console.log('✅ Global rate limiting enabled');
+  logger.info('Global rate limiting enabled');
 } else {
-  console.log('⚠️ Rate limiting disabled for testing');
+  logger.warn('Rate limiting disabled for testing');
 }
 
 // Root route handler
@@ -59,9 +67,16 @@ export async function startServer(): Promise<{
   db: ReturnType<MongoClient['db']>;
 }> {
   try {
+    // Check that JWT_SECRET is defined and not empty
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
+      throw new Error(
+        'JWT_SECRET environment variable is not defined or empty. This is required for secure operation.'
+      );
+    }
+
     const client = new MongoClient(MONGO_URI);
     await client.connect();
-    console.log('✅ Connected to MongoDB');
+    logger.info('Connected to MongoDB');
 
     const db = client.db();
 
@@ -70,13 +85,13 @@ export async function startServer(): Promise<{
 
     // Store services in app for middleware access
     app.set('services', services);
-    console.log('ServiceContainer initialized:', services);
+    logger.debug('ServiceContainer initialized');
 
     // Legacy support - these will be deprecated in future
     app.set('db', db);
     app.set('domain', DOMAIN);
 
-    console.log('Initializing server...');
+    logger.info('Initializing server...');
 
     // Initialize plugins
     initPlugins(app);
@@ -118,19 +133,84 @@ export async function startServer(): Promise<{
     let server;
     if (process.env.NODE_ENV !== 'test') {
       server = app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        logger.info(`Server running on http://localhost:${PORT}`);
       });
+
+      // Implement graceful shutdown
+      setupGracefulShutdown(server, client);
     }
 
     return { app, client, server, db };
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error({ err: error }, 'Failed to start server');
     if (process.env.NODE_ENV !== 'test') {
       process.exit(1);
     } else {
       throw error;
     }
   }
+}
+
+/**
+ * Set up graceful shutdown handlers for the server
+ */
+function setupGracefulShutdown(
+  server: ReturnType<express.Application['listen']>,
+  mongoClient: MongoClient
+): void {
+  // Handle SIGTERM signal (e.g. from kubernetes, heroku, etc)
+  process.on('SIGTERM', () => {
+    logger.info('SIGTERM received. Shutting down gracefully...');
+    gracefullyShutdown(server, mongoClient);
+  });
+
+  // Handle SIGINT signal (e.g. from Ctrl+C)
+  process.on('SIGINT', () => {
+    logger.info('SIGINT received. Shutting down gracefully...');
+    gracefullyShutdown(server, mongoClient);
+  });
+
+  // Handle uncaught exceptions - log but still initiate graceful shutdown
+  process.on('uncaughtException', error => {
+    logger.fatal({ err: error }, 'UNCAUGHT EXCEPTION');
+    gracefullyShutdown(server, mongoClient);
+  });
+}
+
+/**
+ * Perform graceful shutdown of server and database connection
+ */
+function gracefullyShutdown(
+  server: ReturnType<express.Application['listen']>,
+  mongoClient: MongoClient
+): void {
+  // First close the server to stop accepting new connections
+  server.close(err => {
+    if (err) {
+      logger.error({ err }, 'Error closing server');
+      process.exit(1);
+    }
+
+    logger.info('Server closed successfully');
+
+    // Then close the MongoDB connection
+    mongoClient
+      .close()
+      .then(() => {
+        logger.info('MongoDB connection closed successfully');
+        process.exit(0);
+      })
+      .catch(err => {
+        logger.error({ err }, 'Error closing MongoDB connection');
+        process.exit(1);
+      });
+  });
+
+  // Force exit if graceful shutdown takes too long (10 seconds)
+  setTimeout(() => {
+    logger.warn('Graceful shutdown timeout. Forcing exit.');
+    process.exit(1);
+  }, 10000);
 }
 
 // For testing purposes, we export the promise

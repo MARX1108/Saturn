@@ -17,7 +17,7 @@ export default function configureCommentRoutes(
   // Public routes
   router.get(
     '/:postId',
-    wrapAsync((req: Request, res: Response, next: NextFunction) =>
+    wrapAsync((req: Request, res: Response) =>
       commentsController.getComments(req, res)
     )
   );

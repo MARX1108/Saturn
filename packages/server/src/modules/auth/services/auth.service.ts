@@ -4,6 +4,7 @@ import { AuthRepository } from '../repositories/auth.repository';
 import { DbUser } from '../models/user';
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
+import logger from '../../../utils/logger';
 
 export class AuthService {
   private repository: AuthRepository;
@@ -16,11 +17,15 @@ export class AuthService {
    * Generate a JWT token for a user
    */
   private generateToken(user: DbUser): string {
-    return jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not defined');
+    }
+
+    return jwt.sign({ id: user._id, username: user.username }, jwtSecret, {
+      expiresIn: '24h',
+      algorithm: 'HS256',
+    });
   }
 
   /**
@@ -34,45 +39,33 @@ export class AuthService {
     const user = await this.repository.findByUsername(username);
 
     // Detailed logging to debug user retrieval
-    console.log('AUTH DEBUG - Login attempt for username:', username);
-    console.log(
-      'AUTH DEBUG - User object found:',
-      user ? 'User found' : 'User NOT found'
-    );
-    console.dir(user, { depth: 3, colors: true });
+    logger.debug({ username, userFound: !!user }, 'Login attempt');
 
     if (!user) {
+      logger.debug({ username }, 'User not found during login');
       return null;
     }
 
     // Password field verification logging
-    console.log('AUTH DEBUG - Password verification:');
-    console.log('AUTH DEBUG - typeof user.password:', typeof user.password);
-    console.log(
-      'AUTH DEBUG - user.password exists:',
-      user.password ? 'Yes' : 'No'
+    logger.debug(
+      {
+        username,
+        passwordExists: !!user.password,
+        passwordType: typeof user.password,
+        passwordLength: user.password ? user.password.length : 0,
+      },
+      'Password verification'
     );
-    console.log(
-      'AUTH DEBUG - user.password length:',
-      user.password ? user.password.length : 0
-    );
-    // Only log first few chars of hash for security reasons if it exists
-    if (user.password) {
-      console.log(
-        'AUTH DEBUG - password hash preview:',
-        `${user.password.substring(0, 10)}...`
-      );
-    }
 
     // Check password
     const isMatch = await bcryptjs.compare(password, user.password);
 
     if (!isMatch) {
+      logger.debug({ username }, 'Invalid password during login');
       return null;
     }
 
     // Remove password from response
-
     const { password: _password, ...userWithoutPassword } = user;
 
     // Generate token
@@ -107,11 +100,12 @@ export class AuthService {
     await this.repository.create(user);
 
     // Remove password from response
-
     const { password: _password, ...userWithoutPassword } = user;
 
     // Generate token
     const token = this.generateToken(user);
+
+    logger.info({ username }, 'User created successfully');
 
     return {
       actor: userWithoutPassword,
@@ -121,19 +115,31 @@ export class AuthService {
 
   async verifyToken(token: string): Promise<DbUser | null> {
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || 'your-secret-key'
-      ) as {
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        logger.error('JWT_SECRET environment variable is not defined');
+        return null;
+      }
+
+      const decoded = jwt.verify(token, jwtSecret, {
+        algorithms: ['HS256'],
+      }) as {
         id: string;
         username: string;
       };
 
       const user = await this.repository.findById(decoded.id);
-      if (!user) return null;
+      if (!user) {
+        logger.debug(
+          { userId: decoded.id },
+          'User not found during token verification'
+        );
+        return null;
+      }
 
       return user;
-    } catch {
+    } catch (error) {
+      logger.error({ err: error }, 'Token verification failed');
       return null;
     }
   }

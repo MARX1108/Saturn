@@ -23,6 +23,7 @@ import {
 import { PostService } from '../../../modules/posts/services/postService';
 import { CommentService } from '../../../modules/comments/services/comment.service';
 import { Actor } from '../../../modules/actors/models/actor';
+import logger from '../../../utils/logger';
 
 // Define a simple logger interface or import a proper logger
 type _Logger = object;
@@ -68,7 +69,7 @@ export class NotificationService {
   ): Promise<Notification | null> {
     // Prevent self-notification
     if (data.actorUserId && data.recipientUserId === data.actorUserId) {
-      console.log('Skipping self-notification');
+      logger.debug('Skipping self-notification');
       return null;
     }
 
@@ -234,13 +235,17 @@ export class NotificationService {
                   avatarUrl: actor.icon?.url,
                 };
               } else {
-                console.error('Actor found but actor._id is undefined');
+                logger.error('Actor found but actor._id is undefined');
               }
             }
           } catch (error) {
-            console.warn(
-              `Failed to fetch actor ${String(notification.actorUserId)} for notification ${String(notification._id)}:`,
-              error
+            logger.warn(
+              {
+                actorId: notification.actorUserId,
+                notificationId: notification._id,
+                err: error,
+              },
+              'Failed to fetch actor for notification'
             );
             // Continue without actor details rather than failing the entire request
           }
@@ -320,9 +325,13 @@ export class NotificationService {
         // Use findById which expects string | ObjectId
         actor = await this.actorService.getActorById(notification.actorUserId);
       } catch (error) {
-        console.warn(
-          `Failed to fetch actor ${String(notification.actorUserId)} for notification ${String(notification._id)}:`,
-          error
+        logger.warn(
+          {
+            actorId: notification.actorUserId,
+            notificationId: notification._id,
+            err: error,
+          },
+          'Failed to fetch actor for notification'
         );
       }
     }

@@ -14,8 +14,8 @@ import {
 } from 'mongodb';
 import { NotificationService } from '@/modules/notifications/services/notification.service';
 import { NotificationRepository } from '@/modules/notifications/repositories/notification.repository';
-import { ActorService } from '@/modules/actors/services/actor.service';
-import { PostService } from '@/modules/posts/services/post.service';
+import { ActorService } from '@/modules/actors/services/actorService';
+import { PostService } from '@/modules/posts/services/postService';
 import { CommentService } from '@/modules/comments/services/comment.service';
 import {
   Notification,
@@ -168,21 +168,21 @@ describe('NotificationService', () => {
       collection: jest.fn().mockReturnValue(mockCollection),
     } as MockDb;
 
-    // Set up mock services with type assertions
+    // Set up mock services
     actorService = {
       getActorById: jest.fn().mockResolvedValue(mockActor),
-    } as unknown as ActorService;
+    } as MockActorService;
 
     postService = {
       getPostById: jest.fn().mockResolvedValue(null),
-    } as unknown as PostService;
+    } as MockPostService;
 
     commentService = {
       getComments: jest.fn(),
       getCommentById: jest.fn().mockResolvedValue(null),
-    } as unknown as CommentService;
+    } as MockCommentService;
 
-    // Set up mock repository with type assertions
+    // Set up mock repository
     notificationRepository = {
       create: jest.fn().mockResolvedValue(mockDbNotification),
       findOne: jest.fn().mockResolvedValue(null),
@@ -197,7 +197,7 @@ describe('NotificationService', () => {
       update: jest.fn(),
       delete: jest.fn(),
       countDocuments: jest.fn().mockResolvedValue(1),
-    } as unknown as NotificationRepository;
+    } as MockNotificationRepository;
 
     // Create notification service with mocked dependencies
     notificationService = new NotificationService(

@@ -14,6 +14,7 @@ import {
   DeleteOptions,
   FindOneAndUpdateOptions,
 } from 'mongodb';
+import logger from '../../../utils/logger';
 
 export interface BaseRepository<T extends Document> {
   findById(id: string | ObjectId): Promise<WithId<T> | null>;
@@ -51,7 +52,7 @@ export abstract class MongoRepository<T extends Document>
       try {
         return new ObjectId(id);
       } catch (error) {
-        console.error(`Invalid ObjectId format: ${id}`, error);
+        logger.error({ id, err: error }, 'Invalid ObjectId format');
         throw new Error(`Invalid ID format: ${id}`);
       }
     } else if (id instanceof ObjectId) {
@@ -69,7 +70,7 @@ export abstract class MongoRepository<T extends Document>
       } as Filter<T>);
       return result;
     } catch (error) {
-      console.error(`Error finding document by ID: ${String(error)}`);
+      logger.error({ id, err: error }, 'Error finding document by ID');
       return null;
     }
   }
@@ -127,7 +128,7 @@ export abstract class MongoRepository<T extends Document>
       );
       return result.modifiedCount > 0;
     } catch (error) {
-      console.error(`Error updating document by ID: ${String(error)}`);
+      logger.error({ id, err: error }, 'Error updating document by ID');
       return false;
     }
   }
@@ -161,7 +162,7 @@ export abstract class MongoRepository<T extends Document>
       const result = await this.collection.deleteOne(filter, options);
       return result.deletedCount > 0;
     } catch (error) {
-      console.error(`Error deleting document: ${String(error)}`);
+      logger.error({ filter, err: error }, 'Error deleting document');
       return false;
     }
   }
