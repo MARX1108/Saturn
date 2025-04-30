@@ -30,6 +30,12 @@ declare module 'jsonwebtoken' {
 jest.mock('@/modules/auth/repositories/auth.repository');
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
+jest.mock('@/utils/logger', () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+}));
 
 // Suppress console output for tests
 jest.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -77,6 +83,8 @@ describe('AuthService', () => {
 
     // Mock Date constructor and static methods
     jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
+    // Fix for Date.now
+    global.Date.now = jest.fn(() => mockDate.getTime());
   });
 
   afterEach(() => {
@@ -149,7 +157,7 @@ describe('AuthService', () => {
       expect(jwt.sign).toHaveBeenCalledWith(
         { id: mockUser._id, username: mockUser.username },
         'test-secret-key',
-        { expiresIn: '24h' }
+        { expiresIn: '24h', algorithm: 'HS256' }
       );
 
       expect(result).toEqual({
@@ -237,7 +245,8 @@ describe('AuthService', () => {
       // Assert
       expect(jwt.verify).toHaveBeenCalledWith(
         'invalid-token',
-        'test-secret-key'
+        'test-secret-key',
+        { algorithms: ['HS256'] }
       );
       expect(result).toBeNull();
     });
@@ -254,7 +263,11 @@ describe('AuthService', () => {
       const result = await authService.verifyToken('valid-token');
 
       // Assert
-      expect(jwt.verify).toHaveBeenCalledWith('valid-token', 'test-secret-key');
+      expect(jwt.verify).toHaveBeenCalledWith(
+        'valid-token',
+        'test-secret-key',
+        { algorithms: ['HS256'] }
+      );
       expect(authRepository.findById).toHaveBeenCalledWith(mockUserId);
       expect(result).toBeNull();
     });
@@ -271,7 +284,11 @@ describe('AuthService', () => {
       const result = await authService.verifyToken('valid-token');
 
       // Assert
-      expect(jwt.verify).toHaveBeenCalledWith('valid-token', 'test-secret-key');
+      expect(jwt.verify).toHaveBeenCalledWith(
+        'valid-token',
+        'test-secret-key',
+        { algorithms: ['HS256'] }
+      );
       expect(authRepository.findById).toHaveBeenCalledWith(mockUserId);
       expect(result).toEqual(mockUser);
     });
