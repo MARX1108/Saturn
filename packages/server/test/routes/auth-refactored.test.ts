@@ -9,10 +9,10 @@ import { AuthController } from '@/modules/auth/controllers/authController';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 import { DbUser } from '@/modules/auth/models/user';
-import { Actor } from '@/modules/actors/models/actor';
 
-// Import a modified version of createTestApp to accept services directly
-import { createApp } from '../../src/app';
+// Import our test helpers instead of the direct app import
+import { createTestAppFromSetup } from '../helpers/testAppRefactored';
+import { createMockRepositories } from '../helpers/createTestServices';
 
 // Helper interfaces for response types
 interface AuthResponse {
@@ -29,6 +29,13 @@ interface AuthResponse {
 interface ErrorResponse {
   error: string;
 }
+
+// Create a helper to create a mock function with bind support
+const createMockMethod = () => {
+  const mockFn = jest.fn();
+  mockFn.bind = jest.fn().mockReturnValue(mockFn);
+  return mockFn;
+};
 
 describe('Auth Routes (Refactored)', () => {
   let app: Express;
@@ -62,8 +69,9 @@ describe('Auth Routes (Refactored)', () => {
 
   beforeEach(async () => {
     // Create repository mocks
-    authRepositoryMock = mock<AuthRepository>();
-    actorRepositoryMock = mock<ActorRepository>();
+    const repositories = createMockRepositories();
+    authRepositoryMock = repositories.authRepository;
+    actorRepositoryMock = repositories.actorRepository;
 
     // Create real services with mocked repositories
     authService = new AuthService(authRepositoryMock);
@@ -72,13 +80,87 @@ describe('Auth Routes (Refactored)', () => {
     // Create real controller with real services
     authController = new AuthController(actorService, authService);
 
-    // Create test app with real controller
-    app = createApp({
-      authService,
-      actorService,
-      authController,
-      // Other services could still be mocked if needed
-    });
+    // Create mock controllers with all required methods
+    const mockPostsController = {
+      getFeed: createMockMethod(),
+      getPostById: createMockMethod(),
+      getPostsByUsername: createMockMethod(),
+      createPost: createMockMethod(),
+      updatePost: createMockMethod(),
+      deletePost: createMockMethod(),
+      likePost: createMockMethod(),
+      unlikePost: createMockMethod(),
+    };
+
+    const mockCommentsController = {
+      getComments: createMockMethod(),
+      createComment: createMockMethod(),
+      deleteComment: createMockMethod(),
+    };
+
+    const mockActorsController = {
+      getActorByUsername: createMockMethod(),
+      updateActor: createMockMethod(),
+      getFollowers: createMockMethod(),
+      getFollowing: createMockMethod(),
+      follow: createMockMethod(),
+      unfollow: createMockMethod(),
+    };
+
+    const mockMediaController = {
+      uploadMedia: createMockMethod(),
+      getMedia: createMockMethod(),
+    };
+
+    const mockActivityPubController = {
+      getActor: createMockMethod(),
+      getOutbox: createMockMethod(),
+      getFollowers: createMockMethod(),
+      getFollowing: createMockMethod(),
+      getInbox: createMockMethod(),
+      handleInboxPost: createMockMethod(),
+    };
+
+    const mockWebfingerController = {
+      handleWebfinger: createMockMethod(),
+    };
+
+    const mockNotificationsController = {
+      getNotifications: createMockMethod(),
+      markRead: createMockMethod(),
+      markAllRead: createMockMethod(),
+      getUnreadCount: createMockMethod(),
+    };
+
+    // Create test app with our helper function
+    const testSetup = {
+      repositories,
+      services: {
+        authService,
+        actorService,
+        // Include properly typed mocks for other required services
+        postService: mock(),
+        commentService: mock(),
+        notificationService: mock(),
+        mediaService: mock(),
+        uploadService: mock(),
+        activityPubService: mock(),
+        webfingerService: mock(),
+      },
+      controllers: {
+        authController,
+        // Include properly typed mock controllers with all required methods
+        postsController: mockPostsController,
+        commentsController: mockCommentsController,
+        actorsController: mockActorsController,
+        mediaController: mockMediaController,
+        activityPubController: mockActivityPubController,
+        webfingerController: mockWebfingerController,
+        notificationsController: mockNotificationsController,
+      },
+    };
+
+    app = createTestAppFromSetup(testSetup);
 
     // Setup bcryptjs mock - more precise than at the module level
     jest
