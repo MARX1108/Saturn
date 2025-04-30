@@ -41,7 +41,8 @@ type MiddlewareFunction = (
 ) => void;
 
 // --- START: Define interface for mock multer ---
-interface _MockMulterMiddleware extends MiddlewareFunction {
+// Renamed from _MockMulterMiddleware to MockMulterMiddleware to follow naming conventions
+interface MockMulterMiddleware extends MiddlewareFunction {
   array: jest.Mock<MiddlewareFunction>;
   single: jest.Mock<MiddlewareFunction>;
   fields: jest.Mock<MiddlewareFunction>;
@@ -128,7 +129,15 @@ globalWithMocks.mockWebfingerController = mockWebfingerController;
 // Ensure configureImageUploadMiddleware is still mocked if needed by controller setup
 const globalUploadService = globalWithMocks.mockUploadService;
 
-// Create a mock multer middleware function that satisfies both the MiddlewareFunction interface and Multer interface
+// Define typed multer middleware
+type MulterMiddlewareType = MiddlewareFunction & {
+  array: jest.Mock<MiddlewareFunction>;
+  single: jest.Mock<MiddlewareFunction>;
+  fields: jest.Mock<MiddlewareFunction>;
+  none: jest.Mock<MiddlewareFunction>;
+};
+
+// Create a mock multer middleware function with proper typing
 const multerMiddleware = ((
   req: Request,
   res: Response,
@@ -136,26 +145,22 @@ const multerMiddleware = ((
 ): void => {
   // Defer calling next to allow stream operations potentially more time
   process.nextTick(() => next());
-}) as unknown as {
-  (req: Request, res: Response, next: NextFunction): void;
-  array: jest.Mock<MiddlewareFunction>;
-  single: jest.Mock<MiddlewareFunction>;
-  fields: jest.Mock<MiddlewareFunction>;
-  none: jest.Mock<MiddlewareFunction>;
-}; // Replace 'as any' with proper typing
+}) as MulterMiddlewareType;
 
 // Add necessary properties to make it compatible with Multer interface
-multerMiddleware.array = jest.fn(() => multerMiddleware); // Returns the modified base function
-multerMiddleware.single = jest.fn(() => multerMiddleware); // Now type-safe
-multerMiddleware.fields = jest.fn(() => multerMiddleware); // Now type-safe
-multerMiddleware.none = jest.fn(() => multerMiddleware); // Now type-safe
+multerMiddleware.array = jest.fn(() => multerMiddleware);
+multerMiddleware.single = jest.fn(() => multerMiddleware);
+multerMiddleware.fields = jest.fn(() => multerMiddleware);
+multerMiddleware.none = jest.fn(() => multerMiddleware);
 
-// Configure image upload middleware mock (uses the reverted simple mock)
-// Use a proper type instead of 'as any'
+// Configure image upload middleware mock with proper typing
+// The return type should match what configureImageUploadMiddleware returns
+type UploadMiddlewareReturnType = ReturnType<
+  typeof globalUploadService.configureImageUploadMiddleware
+>;
+
 globalUploadService.configureImageUploadMiddleware.mockReturnValue(
-  multerMiddleware as unknown as ReturnType<
-    typeof globalUploadService.configureImageUploadMiddleware
-  >
+  multerMiddleware as UploadMiddlewareReturnType
 );
 
 // Mock implementation for the getService method
@@ -490,8 +495,8 @@ interface AttachmentResponse {
   name: string;
 }
 
-// Type for post response
-interface _PostResponse {
+// Type for post response - renamed from _PostResponse to PostResponse
+interface PostResponse {
   _id: string | ObjectId;
   id: string;
   content: string;
