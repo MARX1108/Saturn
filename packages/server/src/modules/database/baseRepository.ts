@@ -1,19 +1,19 @@
-import {
-  Model,
-  FindOptions,
-  ModelStatic,
-  WhereOptions,
-  CreationAttributes,
-} from 'sequelize';
+/**
+ * @deprecated This file is deprecated. Use MongoRepository from modules/shared/repositories/baseRepository.ts instead.
+ * This file is kept for backward compatibility but will be removed in a future update.
+ */
 
 export type FilterArgs<T> = Partial<T> | Record<string, unknown>;
 export type UpdateAttributes<T> = Partial<T>;
 
-export class BaseRepository<T extends Model> {
-  protected modelConstructor: ModelStatic<T>;
+/**
+ * @deprecated Use MongoRepository from modules/shared/repositories/baseRepository.ts instead.
+ */
+export class BaseRepository<T> {
+  protected modelConstructor: any;
   protected modelName: string;
 
-  constructor(modelConstructor: ModelStatic<T>, modelName: string) {
+  constructor(modelConstructor: any, modelName: string) {
     this.modelConstructor = modelConstructor;
     this.modelName = modelName;
   }
@@ -22,7 +22,7 @@ export class BaseRepository<T extends Model> {
     const model = this.modelConstructor;
     try {
       const result = await model.destroy({
-        where: filter as WhereOptions<T>,
+        where: filter,
       });
       return result;
     } catch (_error) {
@@ -34,7 +34,7 @@ export class BaseRepository<T extends Model> {
     }
   }
 
-  async findAll(options: FindOptions<T> = {}): Promise<T[]> {
+  async findAll(options: any = {}): Promise<T[]> {
     const model = this.modelConstructor;
     try {
       const results = await model.findAll(options);
@@ -48,10 +48,7 @@ export class BaseRepository<T extends Model> {
     }
   }
 
-  async findById(
-    id: string | number,
-    options: FindOptions<T> = {}
-  ): Promise<T | null> {
+  async findById(id: string | number, options: any = {}): Promise<T | null> {
     const model = this.modelConstructor;
     try {
       const result = await model.findByPk(id, options);
@@ -65,7 +62,7 @@ export class BaseRepository<T extends Model> {
     }
   }
 
-  async findOne(options: FindOptions<T> = {}): Promise<T | null> {
+  async findOne(options: any = {}): Promise<T | null> {
     const model = this.modelConstructor;
     try {
       const result = await model.findOne(options);
@@ -85,8 +82,8 @@ export class BaseRepository<T extends Model> {
   ): Promise<[number, T[]]> {
     const model = this.modelConstructor;
     try {
-      const result = await model.update(update as CreationAttributes<T>, {
-        where: filter as WhereOptions<T>,
+      const result = await model.update(update, {
+        where: filter,
         returning: true,
       });
       return result as unknown as [number, T[]];
