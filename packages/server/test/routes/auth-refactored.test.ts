@@ -15,7 +15,7 @@ import { createTestAppFromSetup } from '../helpers/testAppRefactored';
 import { createMockRepositories } from '../helpers/createTestServices';
 
 // Helper interfaces for response types
-interface AuthResponse {
+interface _AuthResponse {
   actor: {
     preferredUsername: string;
     displayName?: string;
@@ -165,7 +165,7 @@ describe('Auth Routes (Refactored)', () => {
     // Setup bcryptjs mock - more precise than at the module level
     jest
       .spyOn(bcryptjs, 'compare')
-      .mockImplementation(async (password, hash) => {
+      .mockImplementation(async (password, _hash) => {
         return password === testUserPassword; // Simple password check for tests
       });
 

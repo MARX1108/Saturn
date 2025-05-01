@@ -2,13 +2,13 @@ import request from 'supertest';
 import { jest } from '@jest/globals';
 import { mockActorService } from '../helpers/mockSetup';
 import { Actor } from '@/modules/actors/models/actor';
-import { ObjectId, Db } from 'mongodb';
+import { ObjectId as _ObjectId, Db as _Db } from 'mongodb';
 
 // Remove SearchActorsResult type if searchActors returns Actor[]
 // type SearchActorsResult = { actors: Actor[]; hasMore: boolean };
 
 // Use a valid ObjectId string for mocks
-const mockObjectIdString = new ObjectId().toHexString();
+const mockObjectIdString = '507f1f77bcf86cd799439011';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -17,7 +17,7 @@ beforeEach(() => {
 describe('Actor Routes', () => {
   const mockDate = new Date();
   const fullMockActor: Actor = {
-    _id: new ObjectId(mockObjectIdString),
+    _id: new _ObjectId(mockObjectIdString),
     id: 'https://test.domain/users/testuser',
     username: 'testuser@test.domain',
     preferredUsername: 'testuser',
@@ -65,13 +65,13 @@ describe('Actor Routes', () => {
         actors: [
           {
             ...fullMockActor,
-            _id: new ObjectId(),
+            _id: new _ObjectId(),
             id: 'https://test.domain/users/actor1',
             preferredUsername: 'Actor 1',
           },
           {
             ...fullMockActor,
-            _id: new ObjectId(),
+            _id: new _ObjectId(),
             id: 'https://test.domain/users/actor2',
             preferredUsername: 'Actor 2',
           },
@@ -118,7 +118,7 @@ describe('Actor Routes', () => {
     it('should return an actor by username', async () => {
       const specificMockActor = {
         ...fullMockActor,
-        _id: new ObjectId(),
+        _id: new _ObjectId(),
         preferredUsername: 'testactor',
       };
       mockActorService.getActorByUsername.mockResolvedValue(specificMockActor);

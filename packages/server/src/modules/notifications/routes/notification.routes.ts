@@ -56,7 +56,11 @@ export function configureNotificationRoutes(
   );
 
   // Custom middleware to handle authentication first
-  const validateMarkRead = (req: ExpressRequest, res: any, next: any) => {
+  const validateMarkRead = (
+    req: ExpressRequest,
+    res: express.Response,
+    next: express.NextFunction
+  ): express.Response | void => {
     // Check for authorization header first
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

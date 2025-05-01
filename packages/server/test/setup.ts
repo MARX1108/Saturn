@@ -1,7 +1,9 @@
 // Global setup for Jest tests
 import { Request, Response, NextFunction } from 'express'; // Add express types for mock
 import { Actor } from '@/modules/actors/models/actor'; // Added import
-import { ObjectId } from 'mongodb';
+import _express from 'express';
+import { jest } from '@jest/globals';
+import { ObjectId as _ObjectId } from 'mongodb';
 // import jwt from 'jsonwebtoken'; // Remove top-level import
 
 // Temporarily comment out the global mock to test its effect on routing

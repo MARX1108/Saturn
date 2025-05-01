@@ -3,8 +3,8 @@ import {
   AnyZodObject as _AnyZodObject,
   ZodType,
   ZodTypeDef,
-  ZodFormattedError,
-  ZodError,
+  ZodFormattedError as _ZodFormattedError,
+  ZodError as _ZodError,
 } from 'zod';
 import { AppError, ErrorType } from '../utils/errors';
 

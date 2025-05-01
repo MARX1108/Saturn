@@ -1,7 +1,7 @@
-import { Db, ObjectId } from 'mongodb';
+import { Db as _Db, ObjectId as _ObjectId } from 'mongodb';
 import bcryptjs from 'bcryptjs';
 import { Express } from 'express';
-import { DeepMockProxy } from 'jest-mock-extended';
+import { DeepMockProxy as _DeepMockProxy } from 'jest-mock-extended';
 import _supertest from 'supertest';
 // Remove local express, MongoClient, Db, MongoMemoryServer imports
 // import express from 'express';
@@ -39,7 +39,7 @@ declare global {
     app: Express
   ) => import('supertest').SuperTest<import('supertest').Test>;
   // eslint-disable-next-line no-var
-  var mongoDb: Db;
+  var mongoDb: _Db;
 }
 
 describe('Authentication Routes', () => {

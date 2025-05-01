@@ -1,21 +1,21 @@
 import { jest, expect } from '@jest/globals';
 import {
   ObjectId,
-  Collection,
-  Db,
-  Document,
-  FindOptions,
-  Filter,
-  CountDocumentsOptions,
-  WithId,
-  OptionalId,
-  UpdateResult,
-  OptionalUnlessRequiredId,
+  Collection as _Collection,
+  Db as _Db,
+  Document as _Document,
+  FindOptions as _FindOptions,
+  Filter as _Filter,
+  CountDocumentsOptions as _CountDocumentsOptions,
+  WithId as _WithId,
+  OptionalId as _OptionalId,
+  UpdateResult as _UpdateResult,
+  OptionalUnlessRequiredId as _OptionalUnlessRequiredId,
 } from 'mongodb';
 
 // Use proper path aliases that match the project configuration
 import { NotificationService } from '../../src/modules/notifications/services/notification.service';
-import { NotificationRepository } from '../../src/modules/notifications/repositories/notification.repository';
+import { NotificationRepository as _NotificationRepository } from '../../src/modules/notifications/repositories/notification.repository';
 import { ActorService } from '../../src/modules/actors/services/actorService';
 import { PostService } from '../../src/modules/posts/services/postService';
 import { CommentService } from '../../src/modules/comments/services/comment.service';
@@ -26,8 +26,8 @@ import {
   FormattedNotification,
 } from '../../src/modules/notifications/models/notification';
 import { Actor } from '../../src/modules/actors/models/actor';
-import { Post } from '../../src/modules/posts/models/post';
-import { Comment } from '../../src/modules/comments/models/comment';
+import { Post as _Post } from '../../src/modules/posts/models/post';
+import { Comment as _Comment } from '../../src/modules/comments/models/comment';
 
 // Define interfaces with simple jest.Mock type
 interface MockActorService {
@@ -94,7 +94,7 @@ describe('NotificationService', () => {
   const mockUserId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c1');
   const mockActorId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c2');
   const mockPostId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c3');
-  const mockCommentId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c4');
+  const _mockCommentId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c4');
   const mockNotificationId = new ObjectId('60a0f3f1e1b8f1a1a8b4c1c5');
 
   const mockActor: Actor = {
@@ -125,7 +125,7 @@ describe('NotificationService', () => {
     updatedAt: mockDate,
   };
 
-  const mockFormattedNotification: FormattedNotification = {
+  const _mockFormattedNotification: FormattedNotification = {
     ...mockDbNotification,
     id: mockNotificationId.toHexString(),
     actor: {
@@ -209,7 +209,7 @@ describe('NotificationService', () => {
 
     // Create notification service instance and set dependencies
     notificationService = new NotificationService(
-      mockDb as unknown as Db,
+      mockDb as unknown as _Db,
       actorService as unknown as ActorService
     );
     notificationService.setPostService(postService as unknown as PostService);
