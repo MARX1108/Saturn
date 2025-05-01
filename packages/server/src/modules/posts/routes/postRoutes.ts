@@ -10,13 +10,23 @@ import { authenticate } from '../../../middleware/auth';
 import { AuthService as _AuthService } from '../../auth/services/auth.service';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
-import { validateRequestBody } from '../../../middleware/validateRequest';
+import {
+  validateRequestBody,
+  validateRequestParams,
+  validateRequestQuery,
+} from '../../../middleware/validateRequest';
 import { createPostSchema, updatePostSchema } from '../schemas/post.schema';
 import {
   createPostRateLimiter,
   engagementRateLimiter,
   defaultRateLimiter,
 } from '../../../middleware/rateLimiter';
+import {
+  routeFeedQuerySchema,
+  postIdParamSchema,
+  usernameParamSchema,
+} from '../schemas/posts.schemas';
+import { commentIdParamSchema } from '../../comments/schemas/comments.schemas';
 
 /**
  * Configure post routes with the controller
@@ -69,11 +79,25 @@ export default function configurePostRoutes(
   // Public routes using wrapAsync
   // Pass authService to authenticate middleware factory
 
-  router.get('/', authenticate(authService), wrapAsync(boundGetFeed));
+  router.get(
+    '/',
+    authenticate(authService),
+    validateRequestQuery(routeFeedQuerySchema),
+    wrapAsync(boundGetFeed)
+  );
 
-  router.get('/:id', wrapAsync(boundGetPostById));
+  router.get(
+    '/:id',
+    validateRequestParams(postIdParamSchema),
+    wrapAsync(boundGetPostById)
+  );
 
-  router.get('/users/:username', wrapAsync(boundGetPostsByUsername));
+  router.get(
+    '/users/:username',
+    validateRequestParams(usernameParamSchema),
+    validateRequestQuery(routeFeedQuerySchema),
+    wrapAsync(boundGetPostsByUsername)
+  );
 
   // Protected routes using wrapAsync with rate limiting
   // Pass authService to authenticate middleware factory
@@ -89,16 +113,23 @@ export default function configurePostRoutes(
   router.put(
     '/:id',
     authenticate(authService),
+    validateRequestParams(postIdParamSchema),
     validateRequestBody(updatePostSchema),
     wrapAsync(boundUpdatePost)
   );
 
-  router.delete('/:id', authenticate(authService), wrapAsync(boundDeletePost));
+  router.delete(
+    '/:id',
+    authenticate(authService),
+    validateRequestParams(postIdParamSchema),
+    wrapAsync(boundDeletePost)
+  );
 
   // Apply engagement rate limiting to like/unlike routes
   router.post(
     '/:id/like',
     authenticate(authService),
+    validateRequestParams(postIdParamSchema),
     engagementRateLimiter,
     wrapAsync(boundLikePost)
   );
@@ -106,6 +137,7 @@ export default function configurePostRoutes(
   router.post(
     '/:id/unlike',
     authenticate(authService),
+    validateRequestParams(postIdParamSchema),
     engagementRateLimiter,
     wrapAsync(boundUnlikePost)
   );
@@ -113,11 +145,16 @@ export default function configurePostRoutes(
   // Comment routes using wrapAsync
   // Pass authService to authenticate middleware factory
 
-  router.get('/:id/comments', wrapAsync(boundGetComments));
+  router.get(
+    '/:id/comments',
+    validateRequestParams(postIdParamSchema),
+    wrapAsync(boundGetComments)
+  );
 
   router.post(
     '/:id/comments',
     authenticate(authService),
+    validateRequestParams(postIdParamSchema),
     engagementRateLimiter, // Apply rate limiting to comment creation
     wrapAsync(boundCreateComment)
   );
@@ -125,6 +162,7 @@ export default function configurePostRoutes(
   router.delete(
     '/comments/:id',
     authenticate(authService),
+    validateRequestParams(commentIdParamSchema),
     wrapAsync(boundDeleteComment)
   );
 

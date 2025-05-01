@@ -4,18 +4,18 @@ import { ActorService } from '@/modules/actors/services/actorService';
 import { PostService } from '@/modules/posts/services/postService';
 import { ServiceContainer } from '@/utils/container';
 import { CommentService } from '@/modules/comments/services/comment.service';
-import { auth } from '@/middleware/auth';
+import { _auth } from '@/middleware/auth';
 import { Actor } from '@/modules/actors/models/actor';
 import { Post } from '@/modules/posts/models/post';
 import {
-  AppError,
+  _AppError,
   // BadRequestError, // Removed unused import
   // ConflictError, // Removed unused import
   // UnauthorizedError, // Removed unused import
 } from '@/utils/errors';
 import { Request, Response, NextFunction } from 'express';
-import { createTestApp } from './testApp';
-import { Comment } from '@/modules/comments/models/comment';
+import { _createTestApp } from './testApp';
+import { _Comment } from '@/modules/comments/models/comment';
 import { jest } from '@jest/globals';
 import { AuthService } from '@/modules/auth/services/auth.service';
 import { MediaService } from '@/modules/media/services/media.service';
@@ -42,7 +42,7 @@ type MiddlewareFunction = (
 
 // --- START: Define interface for mock multer ---
 // Renamed from _MockMulterMiddleware to MockMulterMiddleware to follow naming conventions
-interface MockMulterMiddleware extends MiddlewareFunction {
+interface _MockMulterMiddleware extends MiddlewareFunction {
   array: jest.Mock<MiddlewareFunction>;
   single: jest.Mock<MiddlewareFunction>;
   fields: jest.Mock<MiddlewareFunction>;
@@ -496,7 +496,7 @@ interface AttachmentResponse {
 }
 
 // Type for post response - renamed from _PostResponse to PostResponse
-interface PostResponse {
+interface _PostResponse {
   _id: string | ObjectId;
   id: string;
   content: string;

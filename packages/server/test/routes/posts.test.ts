@@ -391,7 +391,7 @@ describe('Posts Routes', () => {
 
       const responseBody = response.body as ErrorResponse;
 
-      expect(responseBody).toHaveProperty('error', 'Invalid post ID format');
+      expect(responseBody).toHaveProperty('error', 'Invalid ID format');
     });
 
     it('should return 400 if post is not found by id', async () => {

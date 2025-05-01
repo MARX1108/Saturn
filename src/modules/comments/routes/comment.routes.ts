@@ -10,8 +10,8 @@ import {
 } from '../../../middleware/validateRequest';
 import {
   commentIdParamSchema,
+  commentsQuerySchema,
   postIdParamSchema,
-  routeCommentsQuerySchema,
 } from '../schemas/comments.schemas';
 
 /**
@@ -27,7 +27,7 @@ export default function configureCommentRoutes(
   router.get(
     '/:postId',
     validateRequestParams(postIdParamSchema),
-    validateRequestQuery(routeCommentsQuerySchema),
+    validateRequestQuery(commentsQuerySchema),
     wrapAsync((req: Request, res: Response) =>
       commentsController.getComments(req, res)
     )
