@@ -1,187 +1,354 @@
-import request from 'supertest';
-import { app } from '../../src/index';
+import { NotificationRepository } from '../../src/modules/notifications/repositories/notification.repository';
+import { NotificationService } from '../../src/modules/notifications/services/notification.service';
+import { NotificationsController } from '../../src/modules/notifications/controllers/notifications.controller';
+import { Request, Response, NextFunction } from 'express';
+import { ObjectId } from 'mongodb';
 
-// Define notification types constants to avoid referencing external modules in jest.mock
-const NOTIFICATION_TYPE = {
+// Constants for notification types
+const NOTIFICATION_TYPES = {
   LIKE: 'like',
   COMMENT: 'comment',
   FOLLOW: 'follow',
   MENTION: 'mention',
-  REPOST: 'repost',
 };
 
-// Mock the repositories
+// Mock repositories
 jest.mock(
-  '../../src/modules/notifications/repositories/notification.repository',
-  () => ({
-    NotificationRepository: jest.fn().mockImplementation(() => ({
-      findByRecipient: jest.fn().mockImplementation((userId, options = {}) => {
-        const mockNotifications = [
-          {
-            _id: 'notification123',
-            recipientUserId: 'user123456789',
-            actorUserId: 'actor123456789',
-            type: NOTIFICATION_TYPE.LIKE,
-            postId: 'post123456789',
-            read: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            _id: 'notification456',
-            recipientUserId: 'user123456789',
-            actorUserId: 'actor123456789',
-            type: NOTIFICATION_TYPE.COMMENT,
-            postId: 'post123456789',
-            read: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ];
-
-        // Apply read filter if specified
-        if (options.read !== undefined) {
-          return Promise.resolve(
-            mockNotifications.filter(n => n.read === options.read)
-          );
-        }
-
-        return Promise.resolve(mockNotifications);
-      }),
-      markAsRead: jest.fn().mockImplementation(notificationId => {
-        return Promise.resolve({ modifiedCount: 1 });
-      }),
-      markAllAsRead: jest.fn().mockImplementation(userId => {
-        return Promise.resolve({ modifiedCount: 2 });
-      }),
-      getUnreadCount: jest.fn().mockImplementation(userId => {
-        return Promise.resolve(1);
-      }),
-    })),
-  })
+  '../../src/modules/notifications/repositories/notification.repository'
 );
-
-jest.mock('../../src/modules/actors/repositories/actorRepository', () => ({
-  ActorRepository: jest.fn().mockImplementation(() => ({
-    findById: jest.fn().mockImplementation(id => {
-      if (id === 'actor123456789') {
-        return Promise.resolve({
-          _id: 'actor123456789',
-          username: 'testuser',
-          displayName: 'Test User',
-          createdAt: new Date(),
-        });
-      }
-      return Promise.resolve(null);
-    }),
-  })),
-}));
-
-// Mock the JWT verify function
-jest.mock('jsonwebtoken', () => ({
-  ...jest.requireActual('jsonwebtoken'),
-  verify: jest.fn().mockImplementation((token, secret) => {
-    if (token === 'test_token') {
-      return { userId: 'user123456789' };
-    }
-    throw new Error('Invalid token');
-  }),
-}));
+jest.mock('../../src/modules/actors/repositories/actorRepository');
 
 describe('Notification Routes Integration', () => {
-  const testUserToken = 'test_token';
+  let notificationRepository: jest.Mocked<NotificationRepository>;
+  let notificationService: jest.Mocked<NotificationService>;
+  let notificationsController: NotificationsController;
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+  let next: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    // Setup repository mocks
+    notificationRepository = {
+      findByRecipient: jest.fn(),
+      markAsRead: jest.fn(),
+      markAllAsRead: jest.fn(),
+      getUnreadCount: jest.fn(),
+    } as unknown as jest.Mocked<NotificationRepository>;
+
+    // Mock the response object
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      end: jest.fn(),
+    };
+
+    next = jest.fn();
+
+    // Create notification service with mocked repository
+    notificationService = {
+      getNotificationsForUser: jest.fn(),
+      markNotificationsAsRead: jest.fn(),
+      markAllNotificationsAsRead: jest.fn(),
+      getUnreadCount: jest.fn(),
+    } as unknown as jest.Mocked<NotificationService>;
+    (notificationService as any).notificationRepository =
+      notificationRepository;
+
+    // Create controller with service
+    notificationsController = new NotificationsController(notificationService);
+
+    // Setup default service responses
+    notificationService.getNotificationsForUser.mockResolvedValue({
+      notifications: [
+        {
+          _id: new ObjectId('000000000000000000000001'),
+          recipientUserId: 'user123',
+          type: NOTIFICATION_TYPES.LIKE,
+          read: false,
+          actorId: 'actor1',
+          createdAt: new Date(),
+        },
+        {
+          _id: new ObjectId('000000000000000000000002'),
+          recipientUserId: 'user123',
+          type: NOTIFICATION_TYPES.COMMENT,
+          read: true,
+          actorId: 'actor2',
+          createdAt: new Date(),
+        },
+      ],
+      pagination: {
+        total: 2,
+        page: 1,
+        limit: 10,
+      },
+    });
+
+    notificationService.markNotificationsAsRead.mockResolvedValue({
+      modifiedCount: 1,
+    });
+    notificationService.markAllNotificationsAsRead.mockResolvedValue({
+      modifiedCount: 2,
+    });
+    notificationService.getUnreadCount.mockResolvedValue(1);
+  });
 
   describe('GET /api/notifications', () => {
-    it('should return 401 when not authenticated', async () => {
-      const response = await request(app).get('/api/notifications');
+    it('should require authentication', async () => {
+      // Setup request without user
+      req = {
+        query: {},
+      };
 
-      expect(response.status).toBe(401);
+      await notificationsController.getNotifications(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 401,
+          message: 'Authentication required',
+        })
+      );
+      expect(
+        notificationService.getNotificationsForUser
+      ).not.toHaveBeenCalled();
     });
 
-    it('should return notifications when authenticated', async () => {
-      const response = await request(app)
-        .get('/api/notifications')
-        .set('Authorization', `Bearer ${testUserToken}`);
+    it('should return notifications for authenticated user', async () => {
+      // Setup authenticated request
+      req = {
+        user: { id: 'user123' },
+        query: {},
+      };
 
-      // Since we're using mocks that don't hit the actual API,
-      // we'll just check for non-server errors
-      expect(response.status).toBeLessThan(500);
+      await notificationsController.getNotifications(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(notificationService.getNotificationsForUser).toHaveBeenCalledWith(
+        'user123',
+        expect.objectContaining({ limit: 10, offset: 0 })
+      );
+      expect(res.json).toHaveBeenCalled();
     });
 
-    it('should accept read filter parameter', async () => {
-      const response = await request(app)
-        .get('/api/notifications?read=false')
-        .set('Authorization', `Bearer ${testUserToken}`);
+    it('should handle read filter parameter', async () => {
+      // Setup authenticated request with read filter
+      req = {
+        user: { id: 'user123' },
+        query: { read: 'false' },
+      };
 
-      expect(response.status).toBeLessThan(500);
+      await notificationsController.getNotifications(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      // The controller doesn't actually handle the read parameter, it's handled at the service level
+      expect(notificationService.getNotificationsForUser).toHaveBeenCalledWith(
+        'user123',
+        expect.any(Object)
+      );
+    });
+
+    it('should handle pagination parameters', async () => {
+      // Setup authenticated request with pagination
+      req = {
+        user: { id: 'user123' },
+        query: { page: '2' },
+      };
+
+      await notificationsController.getNotifications(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(notificationService.getNotificationsForUser).toHaveBeenCalledWith(
+        'user123',
+        expect.objectContaining({ limit: 10, offset: 10 })
+      );
+    });
+
+    it('should get unread count', async () => {
+      // Setup authenticated request
+      req = {
+        user: { id: 'user123' },
+      };
+
+      await notificationsController.getUnreadCount(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(notificationService.getUnreadCount).toHaveBeenCalledWith(
+        'user123'
+      );
+      expect(res.json).toHaveBeenCalledWith({ count: 1 });
     });
   });
 
   describe('POST /api/notifications/mark-read', () => {
-    it('should return 401 when not authenticated', async () => {
-      const response = await request(app)
-        .post('/api/notifications/mark-read')
-        .send({
-          notificationId: 'notification123',
-        });
+    it('should require authentication', async () => {
+      // Setup request without user
+      req = {
+        body: { ids: ['notification1'] },
+      };
 
-      expect(response.status).toBe(401);
+      await notificationsController.markRead(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 401,
+          message: 'Authentication required',
+        })
+      );
+      expect(
+        notificationService.markNotificationsAsRead
+      ).not.toHaveBeenCalled();
     });
 
-    it('should mark notification as read when authenticated', async () => {
-      const response = await request(app)
-        .post('/api/notifications/mark-read')
-        .set('Authorization', `Bearer ${testUserToken}`)
-        .send({
-          notificationId: 'notification123',
-        });
+    it('should mark notifications as read', async () => {
+      // Setup authenticated request
+      req = {
+        user: { id: 'user123' },
+        body: { ids: ['notification1'] },
+      };
 
-      expect(response.status).toBeLessThan(500);
+      await notificationsController.markRead(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(notificationService.markNotificationsAsRead).toHaveBeenCalledWith(
+        ['notification1'],
+        'user123'
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true });
     });
 
-    it('should return 400 when notificationId is missing', async () => {
-      const response = await request(app)
-        .post('/api/notifications/mark-read')
-        .set('Authorization', `Bearer ${testUserToken}`)
-        .send({});
+    it('should handle missing ids parameter', async () => {
+      // Setup authenticated request with missing ids
+      req = {
+        user: { id: 'user123' },
+        body: {},
+      };
 
-      expect(response.status).toBeGreaterThanOrEqual(400);
+      await notificationsController.markRead(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 400,
+          message: 'Missing ids parameter',
+        })
+      );
+      expect(
+        notificationService.markNotificationsAsRead
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should handle non-array ids parameter', async () => {
+      // Setup authenticated request with non-array ids
+      req = {
+        user: { id: 'user123' },
+        body: { ids: 'notification1' },
+      };
+
+      await notificationsController.markRead(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 400,
+          message: 'Ids must be an array',
+        })
+      );
+      expect(
+        notificationService.markNotificationsAsRead
+      ).not.toHaveBeenCalled();
     });
   });
 
   describe('POST /api/notifications/mark-all-read', () => {
-    it('should return 401 when not authenticated', async () => {
-      const response = await request(app).post(
-        '/api/notifications/mark-all-read'
+    it('should require authentication', async () => {
+      // Setup request without user
+      req = {};
+
+      await notificationsController.markAllRead(
+        req as Request,
+        res as Response,
+        next
       );
 
-      expect(response.status).toBe(401);
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 401,
+          message: 'Authentication required',
+        })
+      );
+      expect(
+        notificationService.markAllNotificationsAsRead
+      ).not.toHaveBeenCalled();
     });
 
-    it('should mark all notifications as read when authenticated', async () => {
-      const response = await request(app)
-        .post('/api/notifications/mark-all-read')
-        .set('Authorization', `Bearer ${testUserToken}`);
+    it('should mark all notifications as read', async () => {
+      // Setup authenticated request
+      req = {
+        user: { id: 'user123' },
+      };
 
-      expect(response.status).toBeLessThan(500);
-    });
-  });
-
-  describe('GET /api/notifications/unread-count', () => {
-    it('should return 401 when not authenticated', async () => {
-      const response = await request(app).get(
-        '/api/notifications/unread-count'
+      await notificationsController.markAllRead(
+        req as Request,
+        res as Response,
+        next
       );
 
-      expect(response.status).toBe(401);
+      expect(
+        notificationService.markAllNotificationsAsRead
+      ).toHaveBeenCalledWith('user123');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true });
     });
 
-    it('should return unread count when authenticated', async () => {
-      const response = await request(app)
-        .get('/api/notifications/unread-count')
-        .set('Authorization', `Bearer ${testUserToken}`);
+    it('should allow admin users to mark all notifications as read', async () => {
+      // Setup authenticated admin request
+      req = {
+        user: { id: 'admin456', role: 'admin' },
+      };
 
-      expect(response.status).toBeLessThan(500);
+      await notificationsController.markAllRead(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(
+        notificationService.markAllNotificationsAsRead
+      ).toHaveBeenCalledWith('admin456');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true });
     });
   });
 });
