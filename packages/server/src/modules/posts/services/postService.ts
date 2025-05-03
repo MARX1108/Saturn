@@ -50,11 +50,18 @@ export class PostService {
 
   // --- Create Post ---
   async createPost(data: CreatePostData): Promise<Post> {
-    // Validate actorId
-    const actorObjectId =
-      typeof data.actorId === 'string'
-        ? new ObjectId(data.actorId)
-        : data.actorId;
+    // Validate actorId - improve string handling and error cases
+    let actorObjectId;
+    try {
+      actorObjectId =
+        typeof data.actorId === 'string'
+          ? new ObjectId(data.actorId)
+          : data.actorId;
+    } catch {
+      throw new AppError('Invalid actor ID format', 400, ErrorType.BAD_REQUEST);
+    }
+
+    // Ensure actor exists before proceeding
     const actor = await this.actorService.getActorById(actorObjectId);
     if (!actor) {
       throw new AppError('Author not found', 404, ErrorType.NOT_FOUND);

@@ -39,7 +39,15 @@ export class AuthController {
       );
       res.status(201).json(result);
     } catch (error) {
-      next(error);
+      // Handle specific duplicate user error
+      if (
+        error instanceof Error &&
+        error.message === 'Username or email already exists'
+      ) {
+        next(new AppError(error.message, 409, ErrorType.CONFLICT));
+      } else {
+        next(error);
+      }
     }
   }
 
@@ -84,7 +92,11 @@ export class AuthController {
           ErrorType.AUTHENTICATION
         );
       }
-      res.json(req.user);
+
+      // Remove password from response using destructuring and rest operator
+      const { password: _password, ...userWithoutPassword } = req.user;
+
+      res.json(userWithoutPassword);
     } catch (error) {
       next(error);
     }

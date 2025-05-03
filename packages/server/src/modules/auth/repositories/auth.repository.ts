@@ -1,7 +1,7 @@
 import { Db, MongoServerError } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
 import { DbUser } from '../models/user';
-import { logger } from '../../../utils/logger'; // Assuming logger setup
+import logger from '../../../utils/logger'; // Assuming logger setup
 
 export class AuthRepository extends MongoRepository<DbUser> {
   constructor(db: Db) {

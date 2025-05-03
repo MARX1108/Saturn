@@ -82,6 +82,18 @@ export class AuthService {
     password: string,
     email: string
   ): Promise<{ actor: Omit<DbUser, 'password'>; token: string }> {
+    // Check if username already exists before attempting to create
+    const existingUser = await this.repository.findByUsername(username);
+    if (existingUser) {
+      throw new Error('Username or email already exists');
+    }
+
+    // Check if email already exists
+    const existingEmail = await this.repository.findByEmail(email);
+    if (existingEmail) {
+      throw new Error('Username or email already exists');
+    }
+
     const hashedPassword = await bcryptjs.hash(password, 10);
     const user: DbUser = {
       _id: new ObjectId().toString(),
@@ -96,21 +108,34 @@ export class AuthService {
       updatedAt: new Date(),
     };
 
-    // Save user to database
-    await this.repository.create(user);
+    try {
+      // Save user to database
+      await this.repository.create(user);
 
-    // Remove password from response
-    const { password: _password, ...userWithoutPassword } = user;
+      // Remove password from response
+      const { password: _password, ...userWithoutPassword } = user;
 
-    // Generate token
-    const token = this.generateToken(user);
+      // Generate token
+      const token = this.generateToken(user);
 
-    logger.info({ username }, 'User created successfully');
+      logger.info({ username }, 'User created successfully');
 
-    return {
-      actor: userWithoutPassword,
-      token,
-    };
+      return {
+        actor: userWithoutPassword,
+        token,
+      };
+    } catch (error) {
+      // Handle MongoDB duplicate key error
+      if (
+        error instanceof Error &&
+        (error.message.includes('duplicate key') ||
+          error.message.includes('E11000'))
+      ) {
+        throw new Error('Username or email already exists');
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async verifyToken(token: string): Promise<DbUser | null> {
