@@ -15,7 +15,7 @@
           "Content-Type": "application/json"
         },
         "method": "POST",
-        "path": "/auth/login"
+        "path": "/api/auth/login"
       },
       "response": {
         "body": {

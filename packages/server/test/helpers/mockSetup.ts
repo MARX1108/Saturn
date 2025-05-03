@@ -40,15 +40,13 @@ type MiddlewareFunction = (
   next: NextFunction
 ) => void;
 
-// --- START: Define interface for mock multer ---
-// Renamed from _MockMulterMiddleware to MockMulterMiddleware to follow naming conventions
+// Define interface for mock multer
 interface _MockMulterMiddleware extends MiddlewareFunction {
   array: jest.Mock<MiddlewareFunction>;
   single: jest.Mock<MiddlewareFunction>;
   fields: jest.Mock<MiddlewareFunction>;
   none: jest.Mock<MiddlewareFunction>;
 }
-// --- END: Define interface for mock multer ---
 
 // Type for mock implementations
 interface MockService {
@@ -188,7 +186,7 @@ const knownTestPostUrl = `https://test.domain/posts/${knownTestPostIdString}`;
 const knownNonExistentObjectId = new ObjectId('ffffffffffffffffffffffff');
 const knownNonExistentIdString = knownNonExistentObjectId.toHexString();
 
-// Revert: Remove export
+// Mock Actor data
 const mockActor: Actor = {
   _id: knownTestUserId,
   id: `https://test.domain/users/${knownTestUsername}`,
@@ -245,8 +243,6 @@ mockNotificationService.markAllNotificationsAsRead.mockResolvedValue({
 });
 
 // Mock AuthController methods
-// Restore original mock implementations for AuthController methods
-
 mockAuthController.register.mockImplementation(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Restore original implementation (may need adjustment based on original state)
@@ -406,7 +402,6 @@ mockPostService.getFeed.mockResolvedValue({
   hasMore: false,
 });
 
-// --- ADD Multer Mock ---
 // Mock the multer library itself
 jest.mock('multer', () => {
   // Create multer mock with proper typing
@@ -450,9 +445,8 @@ jest.mock('multer', () => {
 
   return multerMock;
 });
-// --- END Multer Mock ---
 
-// --- Helper Data & Mocks ---
+// Helper Data & Mocks
 const mockPost: Post = {
   _id: knownTestPostObjectId,
   id: knownTestPostUrl,
@@ -485,18 +479,16 @@ const mockPost: Post = {
 
 export const isPostLikedTestState = false;
 
-// --- CONTROLLER MOCKS ---
-
 // Type for attachment in response
-interface AttachmentResponse {
+export interface AttachmentResponse {
   type: string;
   mediaType: string;
   url: string;
   name: string;
 }
 
-// Type for post response - renamed from _PostResponse to PostResponse
-interface _PostResponse {
+// Type for post response
+export interface PostResponse {
   _id: string | ObjectId;
   id: string;
   content: string;
@@ -599,7 +591,7 @@ mockPostsController.getPostById.mockImplementation(
     const postId = req.params.id;
 
     try {
-      // --- Basic ID validation ---
+      // Basic ID validation
       if (postId === 'invalid-id-format') {
         res.status(400).json({ error: 'Invalid post ID format' });
         return;
@@ -618,7 +610,7 @@ mockPostsController.getPostById.mockImplementation(
         return;
       }
 
-      // --- Call the mocked service ---
+      // Call the mocked service
       // Access mock service safely via globalWithMocks
       const postData =
         await globalWithMocks.mockPostService.getPostById(postId);
@@ -629,9 +621,9 @@ mockPostsController.getPostById.mockImplementation(
         return;
       }
 
-      // --- SIMPLIFICATION: Determine likedByUser status ---
+      // Determine likedByUser status
       const likedByUser = false; // Keep simplified logic for now
-      // TODO: This needs proper handling, likely based on req.user._id
+      // This needs proper handling, likely based on req.user._id
 
       // Create final response
       const responseData = {

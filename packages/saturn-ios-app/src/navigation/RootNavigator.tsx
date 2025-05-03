@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
+import CreatePostScreen from '../screens/main/CreatePostScreen';
 import { useAppSelector } from '../store/hooks'; // Import typed selector
 import { View, ActivityIndicator, StyleSheet } from 'react-native'; // For loading state
 
@@ -23,11 +24,28 @@ const RootNavigator = (): React.JSX.Element => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator>
       {isAuthenticated ? (
-        <Stack.Screen name="MainFlow" component={MainTabNavigator} />
+        <>
+          <Stack.Screen
+            name="MainFlow"
+            component={MainTabNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CreatePostModal"
+            component={CreatePostScreen}
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+              headerShown: true,
+            }}
+          />
+        </>
       ) : (
-        <Stack.Screen name="AuthFlow" component={AuthNavigator} />
+        <Stack.Group screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="AuthFlow" component={AuthNavigator} />
+        </Stack.Group>
       )}
     </Stack.Navigator>
   );

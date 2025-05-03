@@ -20,6 +20,8 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   AuthFlow: NavigatorScreenParams<AuthStackParamList>;
   MainFlow: NavigatorScreenParams<MainTabParamList>;
+  // Modal screens
+  CreatePostModal: undefined;
 };
 
 // Props for screens within the Root Stack
