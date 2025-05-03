@@ -4,6 +4,7 @@ import {
   setUser,
   setStatus,
   clearCredentials,
+  setProfileComplete,
 } from '../store/slices/authSlice';
 import { fetchCurrentUserData } from '../services/userService';
 import { ApiError } from '../types/api';
@@ -38,8 +39,21 @@ export const useCurrentUser = (): UseQueryResult<User, Error> => {
         '[useCurrentUser] Successfully fetched user data:',
         query.data.username
       );
+
+      // Check for profile completeness
+      const isProfileComplete = !!query.data.displayName?.trim();
+      if (!isProfileComplete) {
+        console.warn(
+          `[useCurrentUser] User profile for ${query.data.username} might be incomplete (missing displayName). Triggering profile navigation.`
+        );
+      }
+
+      // Store profile completeness in Redux
+      dispatch(setProfileComplete(isProfileComplete));
+
       // Update user data in RTK store with the typed user data
       dispatch(setUser(query.data));
+
       // Ensure status reflects success if it was loading
       if (authStatus === 'loading') {
         dispatch(setStatus('authenticated'));

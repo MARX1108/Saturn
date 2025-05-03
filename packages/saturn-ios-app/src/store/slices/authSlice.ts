@@ -8,6 +8,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed' | 'authenticated';
+  profileComplete: boolean;
 }
 
 /**
@@ -17,6 +18,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   status: 'idle', // Initial status before checking storage
+  profileComplete: false,
 };
 
 /**
@@ -40,6 +42,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.status = 'idle';
+      state.profileComplete = false;
     },
     // Action to update status during async operations (e.g., checking token)
     setStatus(state, action: PayloadAction<AuthState['status']>) {
@@ -58,6 +61,10 @@ const authSlice = createSlice({
     setUser(state, action: PayloadAction<User | null>) {
       state.user = action.payload;
     },
+    // Action to update profile completeness status
+    setProfileComplete(state, action: PayloadAction<boolean>) {
+      state.profileComplete = action.payload;
+    },
   },
   // TODO: Add extraReducers later for handling async thunks (login, register, fetchUser)
   // extraReducers: (builder) => {
@@ -68,7 +75,12 @@ const authSlice = createSlice({
   // }
 });
 
-export const { setCredentials, clearCredentials, setStatus, setUser } =
-  authSlice.actions;
+export const {
+  setCredentials,
+  clearCredentials,
+  setStatus,
+  setUser,
+  setProfileComplete,
+} = authSlice.actions;
 
 export default authSlice.reducer;

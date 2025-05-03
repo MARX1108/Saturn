@@ -1,5 +1,5 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient, Db as _Db } from 'mongodb';
 
 /**
  * Helper function to properly close MongoDB connections in test environments

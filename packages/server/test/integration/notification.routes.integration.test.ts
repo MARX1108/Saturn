@@ -1,7 +1,7 @@
 import { NotificationRepository } from '../../src/modules/notifications/repositories/notification.repository';
 import { NotificationService } from '../../src/modules/notifications/services/notification.service';
 import { NotificationsController } from '../../src/modules/notifications/controllers/notifications.controller';
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction as _NextFunction } from 'express';
 import { ObjectId } from 'mongodb';
 
 // Constants for notification types
@@ -53,7 +53,7 @@ describe('Notification Routes Integration', () => {
       markAllNotificationsAsRead: jest.fn(),
       getUnreadCount: jest.fn(),
     } as unknown as jest.Mocked<NotificationService>;
-    (notificationService as any).notificationRepository =
+    (notificationService as unknown).notificationRepository =
       notificationRepository;
 
     // Create controller with service

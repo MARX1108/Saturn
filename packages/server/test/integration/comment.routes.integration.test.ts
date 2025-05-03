@@ -1,5 +1,5 @@
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
+import _jwt from 'jsonwebtoken';
 import { app } from '../../src/index';
 
 // Mock the repositories
@@ -13,9 +13,9 @@ jest.mock('../../src/modules/comments/repositories/comment.repository', () => ({
         updatedAt: new Date(),
       });
     }),
-    findById: jest.fn().mockImplementation(id => {
-      if (id === 'nonexistent-id') return Promise.resolve(null);
-      if (id === 'comment123456789') {
+    findById: jest.fn().mockImplementation(_id => {
+      if (_id === 'nonexistent-id') return Promise.resolve(null);
+      if (_id === 'comment123456789') {
         return Promise.resolve({
           _id: 'comment123456789',
           postId: 'post123456789',
@@ -42,13 +42,13 @@ jest.mock('../../src/modules/comments/repositories/comment.repository', () => ({
       }
       return Promise.resolve([]);
     }),
-    deleteByIdAndAuthorId: jest.fn().mockImplementation((id, authorId) => {
-      if (id === 'comment123456789' && authorId === 'user123456789') {
+    deleteByIdAndAuthorId: jest.fn().mockImplementation((_id, authorId) => {
+      if (_id === 'comment123456789' && authorId === 'user123456789') {
         return Promise.resolve({ acknowledged: true, deletedCount: 1 });
       }
       return Promise.resolve({ acknowledged: true, deletedCount: 0 });
     }),
-    delete: jest.fn().mockImplementation(id => {
+    delete: jest.fn().mockImplementation(_id => {
       return Promise.resolve({ acknowledged: true, deletedCount: 1 });
     }),
   })),
@@ -56,8 +56,8 @@ jest.mock('../../src/modules/comments/repositories/comment.repository', () => ({
 
 jest.mock('../../src/modules/posts/repositories/postRepository', () => ({
   PostRepository: jest.fn().mockImplementation(() => ({
-    findById: jest.fn().mockImplementation(id => {
-      if (id === 'post123456789') {
+    findById: jest.fn().mockImplementation(_id => {
+      if (_id === 'post123456789') {
         return Promise.resolve({
           _id: 'post123456789',
           actorId: 'actor123456789',
@@ -73,8 +73,8 @@ jest.mock('../../src/modules/posts/repositories/postRepository', () => ({
 
 jest.mock('../../src/modules/actors/repositories/actorRepository', () => ({
   ActorRepository: jest.fn().mockImplementation(() => ({
-    findById: jest.fn().mockImplementation(id => {
-      if (id === 'user123456789') {
+    findById: jest.fn().mockImplementation(_id => {
+      if (_id === 'user123456789') {
         return Promise.resolve({
           _id: 'user123456789',
           username: 'testuser',
@@ -90,7 +90,7 @@ jest.mock('../../src/modules/actors/repositories/actorRepository', () => ({
 // Mock the JWT verify function
 jest.mock('jsonwebtoken', () => ({
   ...jest.requireActual('jsonwebtoken'),
-  verify: jest.fn().mockImplementation((token, secret) => {
+  verify: jest.fn().mockImplementation((token, _secret) => {
     if (token === 'test_token') {
       return { userId: 'user123456789' };
     }

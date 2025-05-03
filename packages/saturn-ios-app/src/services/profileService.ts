@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import { ApiEndpoints, API_BASE_URL } from '../config/api';
 import { User } from '../types/user';
+import { AxiosError } from 'axios';
 
 // This interface represents the raw backend response
 // We only use it for typing - the actual data is defensively filtered to User type
@@ -20,6 +21,11 @@ interface ActorResponse {
   passwordHash?: string;
   // There could be other fields here that we don't need
   [key: string]: unknown;
+}
+
+// Custom error interface with status code
+interface ApiErrorWithStatus extends Error {
+  status?: number;
 }
 
 /**
@@ -92,15 +98,18 @@ export const fetchUserProfileByUsername = async (
     }
 
     return profileData;
-  } catch (error: any) {
+  } catch (error) {
     // Provide more specific error messages for debugging
-    if (error.response && error.response.status === 404) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response && axiosError.response.status === 404) {
       console.error(
         `[ProfileService] User with username "${username}" not found`
       );
       // Add the 404 status to the error for proper handling in useUserProfile
-      const notFoundError = new Error(`User "${username}" not found`);
-      (notFoundError as any).status = 404;
+      const notFoundError: ApiErrorWithStatus = new Error(
+        `User "${username}" not found`
+      );
+      notFoundError.status = 404;
       throw notFoundError;
     }
 

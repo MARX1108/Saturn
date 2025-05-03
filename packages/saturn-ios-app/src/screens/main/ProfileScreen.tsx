@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,13 @@ import {
   Button,
   SafeAreaView,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native'; // Import useRoute
 import type { RouteProp } from '@react-navigation/native'; // Import RouteProp
 import { MainTabParamList } from '../../navigation/types'; // Import ParamList
 import { useUserProfile } from '../../hooks/useUserProfile'; // Import the hook
+import { useAppSelector } from '../../store/hooks'; // Import useAppSelector for auth state
 
 // Placeholder image URL
 const PLACEHOLDER_AVATAR =
@@ -23,7 +25,19 @@ type ProfileScreenRouteProp = RouteProp<MainTabParamList, 'ProfileTab'>;
 export default function ProfileScreen(): React.JSX.Element {
   const route = useRoute<ProfileScreenRouteProp>();
   // Get username from route params. Fallback needed if viewing own profile without param later.
-  const username = route.params?.username; // Example: 'myUsername' was set as initialParam
+  const profileUsername = route.params?.username; // Example: 'myUsername' was set as initialParam
+
+  // Get logged-in user's info from Redux
+  const loggedInUser = useAppSelector((state) => state.auth.user);
+
+  // Determine if this is the logged-in user's own profile
+  const isOwnProfile = useMemo(() => {
+    return loggedInUser?.username === profileUsername;
+  }, [loggedInUser, profileUsername]);
+
+  // --- Placeholder state for follow status ---
+  // TODO: Replace this with actual follow status from API data later
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // Fetch profile data using the hook
   const {
@@ -32,10 +46,26 @@ export default function ProfileScreen(): React.JSX.Element {
     isError,
     error,
     refetch, // Add refetch for retry button
-  } = useUserProfile(username);
+  } = useUserProfile(profileUsername);
 
-  const handleEditProfileOrFollow = (): void => {
-    console.log('Edit Profile / Follow button pressed for:', username);
+  // --- Action Handlers ---
+  const handleEditProfile = (): void => {
+    console.log('Edit Profile button pressed (Own Profile)');
+    // TODO: Navigate to Edit Profile Screen
+  };
+
+  const handleFollow = (): void => {
+    if (!profileUsername) return;
+    console.log(`Follow button pressed for: ${profileUsername}`);
+    // TODO: Implement API call via useMutation
+    setIsFollowing(true); // Optimistic UI update (placeholder)
+  };
+
+  const handleUnfollow = (): void => {
+    if (!profileUsername) return;
+    console.log(`Unfollow button pressed for: ${profileUsername}`);
+    // TODO: Implement API call via useMutation
+    setIsFollowing(false); // Optimistic UI update (placeholder)
   };
 
   // --- Loading State ---
@@ -80,6 +110,32 @@ export default function ProfileScreen(): React.JSX.Element {
     );
   }
 
+  // Determine which button to show in the header
+  const renderHeaderButton = (): React.ReactNode => {
+    if (isOwnProfile) {
+      return <Button title="Edit Profile" onPress={handleEditProfile} />;
+    } else if (isFollowing) {
+      // Use a styled TouchableOpacity for better customization later
+      return (
+        <TouchableOpacity
+          onPress={handleUnfollow}
+          style={[styles.followButton, styles.followingButton]}
+        >
+          <Text style={styles.followingButtonText}>Following</Text>
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TouchableOpacity
+          onPress={handleFollow}
+          style={[styles.followButton, styles.followButtonActive]}
+        >
+          <Text style={styles.followButtonText}>Follow</Text>
+        </TouchableOpacity>
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -117,10 +173,7 @@ export default function ProfileScreen(): React.JSX.Element {
               </View>
             )}
           </View>
-          <Button
-            title="Edit Profile" // TODO: Change based on isOwnProfile
-            onPress={handleEditProfileOrFollow}
-          />
+          {renderHeaderButton()}
         </View>
 
         {/* --- Bio --- */}
@@ -217,5 +270,37 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginBottom: 10,
+  },
+  // --- Follow Button Styles ---
+  followButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 15, // More rounded
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 80, // Ensure minimum width
+  },
+  followButtonActive: {
+    // Style for "Follow"
+    backgroundColor: '#007AFF', // Example blue
+    borderColor: '#007AFF',
+  },
+  followingButton: {
+    // Style for "Following"
+    backgroundColor: '#fff',
+    borderColor: '#ccc',
+  },
+  followButtonText: {
+    // Text for "Follow"
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  followingButtonText: {
+    // Text for "Following"
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });

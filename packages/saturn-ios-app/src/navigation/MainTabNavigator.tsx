@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   useNavigation,
   CompositeNavigationProp,
   CommonActions,
+  useIsFocused,
 } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +14,7 @@ import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { Alert } from 'react-native';
+import { useAppSelector } from '../store/hooks';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -28,6 +30,9 @@ type MainTabNavigationProp = CompositeNavigationProp<
 const MainTabNavigator = (): React.JSX.Element => {
   const { isLoading, error, data: currentUser } = useCurrentUser();
   const navigation = useNavigation<MainTabNavigationProp>();
+  const isFocused = useIsFocused();
+  const profileCheckPerformed = useRef(false);
+  const profileComplete = useAppSelector((state) => state.auth.profileComplete);
 
   useEffect(() => {
     if (isLoading) {
@@ -47,7 +52,57 @@ const MainTabNavigator = (): React.JSX.Element => {
     }
   }, [isLoading, error, currentUser]);
 
-  const handleCreatePostPress = () => {
+  // Profile completeness check and navigation
+  useEffect(() => {
+    if (
+      isFocused &&
+      !isLoading &&
+      currentUser &&
+      !profileCheckPerformed.current
+    ) {
+      console.log(
+        `[MainTabNavigator] Profile completeness check for ${currentUser.username}: ${profileComplete}`
+      );
+
+      if (!profileComplete) {
+        console.log(
+          `[MainTabNavigator] Navigating to ProfileTab for ${currentUser.username} to complete profile.`
+        );
+        profileCheckPerformed.current = true; // Mark check performed
+
+        // Use try-catch for navigation robustness
+        try {
+          // Ensure username is valid before navigating
+          const targetUsername = currentUser.username;
+          if (targetUsername) {
+            navigation.navigate('ProfileTab', { username: targetUsername });
+          } else {
+            console.error(
+              '[MainTabNavigator] Cannot navigate to profile, username is missing from fetched data.'
+            );
+          }
+        } catch (navError) {
+          console.error(
+            '[MainTabNavigator] Error navigating to profile tab:',
+            navError
+          );
+          // Allow retry if navigation fails
+          profileCheckPerformed.current = false;
+        }
+      } else {
+        profileCheckPerformed.current = true; // Mark check performed
+      }
+    }
+  }, [isFocused, currentUser, isLoading, navigation, profileComplete]);
+
+  // Reset the check when the component unmounts
+  useEffect(() => {
+    return () => {
+      profileCheckPerformed.current = false;
+    };
+  }, []);
+
+  const handleCreatePostPress = (): void => {
     console.log('DEBUG - Attempting to navigate to CreatePostModal');
     // Use multiple approaches to ensure the navigation works
     try {
