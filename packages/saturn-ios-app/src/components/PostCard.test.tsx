@@ -3,29 +3,37 @@ import { render } from '@testing-library/react-native';
 import PostCard from './PostCard';
 import { Post } from '../types/post';
 
-// Define React createElement type properly
-type ReactElement = ReturnType<typeof React.createElement>;
-
-// Type for test elements
+// Define test element type
 interface TestElement {
   props: Record<string, unknown>;
   type: string;
   children: Array<unknown>;
 }
 
+// Interface for mock component props
+interface MockPostCardProps {
+  post: Post;
+  onAuthorPress?: (username: string) => void;
+}
+
 // Mock PostCard with a simple mock
 jest.mock('./PostCard', () => {
-  return function MockedPostCard(props: {
-    post: Post;
-    onAuthorPress?: (username: string) => void;
-  }): ReactElement {
-    // Use imported React instead of require
-    return React.createElement('div', {
-      'data-testid': 'post-card',
-      'data-post': JSON.stringify(props.post),
-      'data-on-author-press': !!props.onAuthorPress,
-      onAuthorPress: props.onAuthorPress,
-    });
+  // Using a string mock for Jest to avoid scoping issues
+  return {
+    __esModule: true,
+    default: function MockedPostCard(props: MockPostCardProps): JSX.Element {
+      // Using basic HTML to make the mock simpler and free of React Native deps
+      return {
+        type: 'div',
+        props: {
+          'data-testid': 'post-card',
+          'data-post': JSON.stringify(props.post),
+          'data-on-author-press': !!props.onAuthorPress,
+          onAuthorPress: props.onAuthorPress,
+        },
+        children: [],
+      } as unknown as JSX.Element;
+    },
   };
 });
 
