@@ -69,9 +69,10 @@ export async function startServer(): Promise<{
   try {
     // Check that JWT_SECRET is defined and not empty
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
-      throw new Error(
+      logger.fatal(
         'JWT_SECRET environment variable is not defined or empty. This is required for secure operation.'
       );
+      process.exit(1);
     }
 
     const client = new MongoClient(MONGO_URI);
@@ -193,9 +194,9 @@ function gracefullyShutdown(
 
     logger.info('Server closed successfully');
 
-    // Then close the MongoDB connection
+    // Then close the MongoDB connection with force=true to terminate all connections
     mongoClient
-      .close()
+      .close(true)
       .then(() => {
         logger.info('MongoDB connection closed successfully');
         process.exit(0);

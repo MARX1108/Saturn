@@ -67,17 +67,13 @@ beforeAll(async (): Promise<void> => {
   global.mongoDb = mongoDb;
 });
 
+// Import the MongoDB connection helper
+import { closeMongoDBConnections } from '../helpers/testMongoMemory';
+
 // Cleanup after all tests
 afterAll(async (): Promise<void> => {
-  // Disconnect from the database
-  if (mongoClient) {
-    await mongoClient.close();
-  }
-
-  // Stop the MongoDB Memory Server
-  if (mongoServer) {
-    await mongoServer.stop();
-  }
+  // Use the specialized helper to properly close all MongoDB connections
+  await closeMongoDBConnections(mongoClient, mongoServer);
 });
 
 // Make available to global context

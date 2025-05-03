@@ -1,15 +1,65 @@
 // jest.setup.js
 // Mock react-native modules that might not be available in the test environment
 jest.mock('react-native', () => {
-  return {
+  // Return a merged object with both existing mock and our new mocks
+  const rn = {
     // Add any RN components or APIs that are used in your tests
     Platform: {
       OS: 'ios',
       select: jest.fn((obj) => obj.ios || obj.default),
     },
     NativeModules: {},
-    // Add other mocks as needed
+
+    // Add StyleSheet mock
+    StyleSheet: {
+      create: (styles) => styles,
+      hairlineWidth: 1,
+      absoluteFill: {},
+      flatten: jest.fn(),
+    },
+
+    // Mock Animated
+    Animated: {
+      View: 'Animated.View',
+      Text: 'Animated.Text',
+      Image: 'Animated.Image',
+      ScrollView: 'Animated.ScrollView',
+      createAnimatedComponent: (component) => component,
+      timing: jest.fn(() => ({
+        start: jest.fn(),
+      })),
+      spring: jest.fn(() => ({
+        start: jest.fn(),
+      })),
+      Value: jest.fn(() => ({
+        setValue: jest.fn(),
+        interpolate: jest.fn(() => ({
+          interpolate: jest.fn(),
+        })),
+      })),
+    },
+
+    // Mock other components
+    ActivityIndicator: 'ActivityIndicator',
+    Button: 'Button',
+    FlatList: 'FlatList',
+    Image: 'Image',
+    Modal: 'Modal',
+    Pressable: 'Pressable',
+    RefreshControl: 'RefreshControl',
+    SafeAreaView: 'SafeAreaView',
+    ScrollView: 'ScrollView',
+    SectionList: 'SectionList',
+    StatusBar: 'StatusBar',
+    Switch: 'Switch',
+    Text: 'Text',
+    TextInput: 'TextInput',
+    TouchableOpacity: 'TouchableOpacity',
+    TouchableWithoutFeedback: 'TouchableWithoutFeedback',
+    View: 'View',
   };
+
+  return rn;
 });
 
 // Mock tokenStorage to prevent circular dependencies
@@ -18,6 +68,20 @@ jest.mock('../services/tokenStorage', () => {
     getToken: jest.fn().mockResolvedValue(null),
     setToken: jest.fn().mockResolvedValue(undefined),
     clearToken: jest.fn().mockResolvedValue(undefined),
+  };
+});
+
+// Mock React Navigation
+jest.mock('@react-navigation/native', () => {
+  return {
+    useNavigation: () => ({
+      navigate: jest.fn(),
+      goBack: jest.fn(),
+    }),
+    useRoute: () => ({
+      params: { username: 'testprofile' },
+    }),
+    useIsFocused: jest.fn(() => true),
   };
 });
 

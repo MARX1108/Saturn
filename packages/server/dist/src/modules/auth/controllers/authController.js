@@ -28,7 +28,17 @@ class AuthController {
       );
       res.status(201).json(result);
     } catch (error) {
-      next(error);
+      // Handle specific duplicate user error
+      if (
+        error instanceof Error &&
+        error.message === 'Username or email already exists'
+      ) {
+        next(
+          new errors_1.AppError(error.message, 409, errors_1.ErrorType.CONFLICT)
+        );
+      } else {
+        next(error);
+      }
     }
   }
   /**
@@ -69,7 +79,9 @@ class AuthController {
           errors_1.ErrorType.AUTHENTICATION
         );
       }
-      res.json(req.user);
+      // Remove password from response
+      const { password, ...userWithoutPassword } = req.user;
+      res.json(userWithoutPassword);
     } catch (error) {
       next(error);
     }

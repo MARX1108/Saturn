@@ -1,9 +1,14 @@
 'use strict';
+var __importDefault =
+  (this && this.__importDefault) ||
+  function (mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.AuthRepository = void 0;
 const mongodb_1 = require('mongodb');
 const baseRepository_1 = require('../../shared/repositories/baseRepository');
-const logger_1 = require('../../../utils/logger'); // Assuming logger setup
+const logger_1 = __importDefault(require('../../../utils/logger')); // Assuming logger setup
 class AuthRepository extends baseRepository_1.MongoRepository {
   constructor(db) {
     super(db, 'actors');
@@ -26,12 +31,12 @@ class AuthRepository extends baseRepository_1.MongoRepository {
           error.codeName === 'IndexKeySpecsConflict' || // Code 86
           error.message.includes('already exists'))
       ) {
-        logger_1.logger.warn(
+        logger_1.default.warn(
           { indexName: error.message.match(/index: (\S+)/)?.[1] },
           `Index creation conflict/exists in AuthRepository, likely harmless: ${error.message}`
         );
       } else {
-        logger_1.logger.error(
+        logger_1.default.error(
           { err: error },
           'Error creating indexes in AuthRepository'
         );

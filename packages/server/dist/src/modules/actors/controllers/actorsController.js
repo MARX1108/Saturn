@@ -50,7 +50,9 @@ class ActorsController {
     if (!actor) {
       return res.status(404).json({ error: 'Actor not found' });
     }
-    return res.json(actor);
+    // Remove sensitive information from the response
+    const { password, email, ...actorWithoutSensitiveInfo } = actor;
+    return res.json(actorWithoutSensitiveInfo);
   }
   /**
    * Update actor

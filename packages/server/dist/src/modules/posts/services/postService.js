@@ -21,11 +21,21 @@ class PostService {
   }
   // --- Create Post ---
   async createPost(data) {
-    // Validate actorId
-    const actorObjectId =
-      typeof data.actorId === 'string'
-        ? new mongodb_1.ObjectId(data.actorId)
-        : data.actorId;
+    // Validate actorId - improve string handling and error cases
+    let actorObjectId;
+    try {
+      actorObjectId =
+        typeof data.actorId === 'string'
+          ? new mongodb_1.ObjectId(data.actorId)
+          : data.actorId;
+    } catch (error) {
+      throw new errors_1.AppError(
+        'Invalid actor ID format',
+        400,
+        errors_1.ErrorType.BAD_REQUEST
+      );
+    }
+    // Ensure actor exists before proceeding
     const actor = await this.actorService.getActorById(actorObjectId);
     if (!actor) {
       throw new errors_1.AppError(

@@ -60,7 +60,8 @@ jest.mock('@/middleware/auth', () => {
         // Use simple object type and handle in a type-safe way
         const decoded = jwt.verify(
           token,
-          process.env.JWT_SECRET || 'test-jwt-secret-key'
+          process.env.JWT_SECRET || 'test-jwt-secret-key',
+          { algorithms: ['HS256'] }
         );
 
         // Use type guard pattern without unsafe access
@@ -239,17 +240,13 @@ beforeAll(async (): Promise<void> => {
   */
 });
 
+// Import the MongoDB connection helper
+import { closeMongoDBConnections } from './helpers/testMongoMemory';
+
 // Cleanup after all tests
 afterAll(async (): Promise<void> => {
-  // Disconnect from the database
-  if (mongoClient) {
-    await mongoClient.close();
-  }
-
-  // Stop the MongoDB Memory Server
-  if (mongoServer) {
-    await mongoServer.stop();
-  }
+  // Use the specialized helper to properly close all MongoDB connections
+  await closeMongoDBConnections(mongoClient, mongoServer);
 });
 
 // Clean database before each test

@@ -28,10 +28,11 @@ export const generateToken = (user: DbUser): string => {
 };
 
 /**
- * @deprecated Use authenticate() instead which uses AuthService for secure DB lookups
+ * @deprecated SECURITY RISK: Do not use in new code or modify existing usage.
  * This middleware directly accesses the DB collection and is less modular.
+ * Use authenticate() instead which uses AuthService for secure DB lookups.
  *
- * SECURITY RISK: Do not use this middleware in new code.
+ * This function will emit a runtime warning when used.
  */
 export const auth = async (
   req: Request,
@@ -123,10 +124,11 @@ declare module 'express' {
 }
 
 /**
- * @deprecated Use authenticate() instead which uses AuthService for secure DB lookups
- * This middleware does NOT verify the user exists in the database.
+ * @deprecated SECURITY RISK: Do not use in new code or modify existing usage.
+ * This middleware does NOT verify the user exists in the database, allowing spoofed tokens.
+ * Use authenticate() instead which uses AuthService for secure DB lookups.
  *
- * SECURITY RISK: Do not use this middleware in new code.
+ * This function will emit a runtime warning when used.
  */
 export const authenticateToken = (
   req: Request,

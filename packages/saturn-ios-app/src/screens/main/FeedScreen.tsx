@@ -84,6 +84,7 @@ export default function FeedScreen(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
+        testID="feed-flatlist"
         data={postsData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
