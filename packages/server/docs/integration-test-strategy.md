@@ -1,3 +1,9 @@
+# Server Testing Strategy
+
+> **Note:** For API documentation, see the [API Reference](api-reference.md) document.
+
+This document outlines our testing strategy and directory structure.
+
 # Integration Test Strategy Refactoring
 
 ## Current Approach Analysis

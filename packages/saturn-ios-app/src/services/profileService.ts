@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import { ApiEndpoints } from '../config/api';
+import { ApiEndpoints, API_BASE_URL } from '../config/api';
 import { User } from '../types/user';
 
 // This interface represents the raw backend response
@@ -36,8 +36,9 @@ export const fetchUserProfileByUsername = async (
   try {
     // Log the exact URL we're calling
     const url = ApiEndpoints.getActorByUsername(username);
+    const fullUrl = `${API_BASE_URL}${url}`;
     console.log(
-      `[ProfileService] Fetching profile for username: ${username}, URL: ${url}`
+      `[ProfileService] Fetching profile for username: ${username}, Endpoint: ${url}, Full URL: ${fullUrl}`
     );
 
     // Note: apiClient.get<T> will return the data directly due to the response interceptor

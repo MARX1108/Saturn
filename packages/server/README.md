@@ -1,39 +1,67 @@
-# Server Testing Strategy
+# Saturn Server
 
-This README documents our testing strategy and directory structure.
+The server component of Saturn, a federated social network built on top of ActivityPub.
 
-## Test Directory Structure
+## Project Structure
 
-We follow a co-located test pattern, with test files residing directly alongside the source code they test:
+- `src/`: Main application source code
+  - `config/`: Configuration files
+  - `modules/`: Feature modules (actors, posts, comments, etc.)
+  - `utils/`: Utility functions
+- `test/`: Test files
+  - `unit/`: Unit tests
+  - `integration/`: Integration tests
+- `docs/`: Documentation
+  - `api-reference.md`: API documentation for frontend developers
+  - `integration-test-strategy.md`: Testing strategy documentation
 
-```
-src/modules/[feature]/
-  ├── services/
-  │   ├── someService.ts
-  │   └── __tests__/
-  │       └── someService.test.ts
-  ├── routes/
-  │   ├── someRoutes.ts
-  │   └── __tests__/
-  │       └── someRoutes.test.ts
-  └── repositories/
-      ├── someRepository.ts
-      └── __tests__/
-          └── someRepository.test.ts
-```
+## Available Scripts
 
-## Test Categories
+- `yarn start`: Start the server
+- `yarn dev`: Start the server in development mode with hot reloading
+- `yarn build`: Build the project
+- `yarn test`: Run tests
+- `yarn test:debug`: Run tests in debug mode
+- `yarn lint`: Lint the code
 
-- **Unit Tests**: Test individual functions/classes in isolation with mocks
-- **Integration Tests**: Test interactions between components using in-memory MongoDB
-- **API Tests**: Test complete HTTP endpoints using Supertest
+## API Documentation
 
-## Testing Guidelines
+For detailed API documentation, see [API Reference](docs/api-reference.md).
 
-1. Tests must be independent - no test should depend on another test's execution
-2. Each test file should focus on testing a single module or component
-3. Use factory functions from `tests/helpers/factories.ts` to create test data
-4. Always clear database between tests using provided helpers
+## Testing Strategy
+
+For information about our testing approach, see [Integration Test Strategy](docs/integration-test-strategy.md).
+
+## Features
+
+- **Authentication**: JWT-based authentication system
+- **Actors**: User profiles and management
+- **Posts**: Create, read, update, and delete posts
+- **Comments**: Commenting system for posts
+- **Likes**: Like and unlike posts
+- **Notifications**: Real-time notification system
+- **Media**: Media upload and management
+- **ActivityPub Support**: Federation with other ActivityPub servers
+- **WebFinger**: User discovery across federated servers
+- **Rate Limiting**: Protection against abuse
+- **Structured Logging**: Comprehensive logging system
+- **Graceful Shutdown**: Proper handling of server shutdown
+- **Security Headers**: Implementation of security best practices
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `yarn install`
+3. Set up environment variables (see `.env.example`)
+4. Start the development server: `yarn dev`
+
+## Dependencies
+
+- Node.js
+- Express
+- MongoDB
+- Redis (for rate limiting)
+- Other dependencies listed in package.json
 
 ```
 
