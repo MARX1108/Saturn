@@ -1,9 +1,4 @@
 // src/services/authService.contract.test.ts
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/await-thenable */
 import { pactProvider } from '../test/pact/pactSetup';
 import { ApiEndpoints } from '../config/api';
 import apiClient, { post } from './apiClient';

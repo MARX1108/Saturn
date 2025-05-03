@@ -41,6 +41,8 @@ let authToken: string | null = null;
  * @param token JWT token from server
  */
 export const setToken = async (token: string): Promise<void> => {
+  // Simulate async operation for future AsyncStorage compatibility
+  await Promise.resolve();
   authToken = token;
   console.warn('[TokenStorage] setToken: Using in-memory storage only');
   // In a real app, store in secure storage:
@@ -52,6 +54,8 @@ export const setToken = async (token: string): Promise<void> => {
  * @returns The stored JWT token or null if not found
  */
 export const getToken = async (): Promise<string | null> => {
+  // Simulate async operation for future AsyncStorage compatibility
+  await Promise.resolve();
   // In a real app, retrieve from secure storage:
   // return await SecureStore.getItemAsync('auth_token');
   return authToken;
@@ -61,6 +65,8 @@ export const getToken = async (): Promise<string | null> => {
  * Clear the stored authentication token (for logout)
  */
 export const clearToken = async (): Promise<void> => {
+  // Simulate async operation for future AsyncStorage compatibility
+  await Promise.resolve();
   authToken = null;
   console.warn('[TokenStorage] clearToken: Using in-memory storage only');
   // In a real app, remove from secure storage:

@@ -1,11 +1,23 @@
 // src/test/pact/pactSetup.ts
-import { Pact, LogLevel } from '@pact-foundation/pact';
+import { Pact, LogLevel, InteractionObject } from '@pact-foundation/pact';
 import path from 'path';
 
-// Create a wrapper for the Pact instance with public methods
+/**
+ * Interface for the mock service
+ */
+interface MockService {
+  baseUrl: string;
+}
+
+/**
+ * A wrapper for the Pact instance with public methods
+ */
 class PactWrapper {
   private pact: Pact;
 
+  /**
+   * Creates an instance of the PactWrapper
+   */
   constructor() {
     this.pact = new Pact({
       // Consumer name (Frontend App)
@@ -23,29 +35,44 @@ class PactWrapper {
     });
   }
 
-  // Public methods to expose the functionality we need
+  /**
+   * Sets up the Pact mock server
+   */
   async setup(): Promise<void> {
     await this.pact.setup();
     return Promise.resolve();
   }
 
-  async addInteraction(interaction: any): Promise<void> {
+  /**
+   * Adds an interaction to the Pact mock server
+   * @param interaction The interaction object to add
+   */
+  async addInteraction(interaction: InteractionObject): Promise<void> {
     await this.pact.addInteraction(interaction);
     return Promise.resolve();
   }
 
+  /**
+   * Verifies all interactions have been exercised
+   */
   async verify(): Promise<void> {
     await this.pact.verify();
     return Promise.resolve();
   }
 
+  /**
+   * Finalizes the Pact mock server and writes the contract file
+   */
   async finalize(): Promise<void> {
     await this.pact.finalize();
     return Promise.resolve();
   }
 
-  // Expose the mockService for setting the base URL
-  get mockService() {
+  /**
+   * Gets the mock service information
+   * @returns The mock service with base URL
+   */
+  get mockService(): MockService {
     return {
       baseUrl: `http://localhost:1234`, // Match the port from the constructor
     };
