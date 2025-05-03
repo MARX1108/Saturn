@@ -8,6 +8,7 @@ export interface User {
   username: string;
   preferredUsername?: string;
   displayName?: string;
+  avatarUrl?: string; // URL to user's avatar image
   // Add other non-sensitive fields as needed
   // IMPORTANT: DO NOT include email, password, or any sensitive data here
 }

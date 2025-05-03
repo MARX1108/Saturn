@@ -1,82 +1,110 @@
 import React from 'react';
-import { StyleSheet, FlatList, SafeAreaView } from 'react-native';
+import {
+  StyleSheet,
+  FlatList,
+  SafeAreaView,
+  View,
+  Text,
+  ActivityIndicator,
+  RefreshControl,
+  Button,
+} from 'react-native';
 import PostCard from '../../components/PostCard';
-
-// Placeholder data structure - align with PostCardProps for now
-interface PlaceholderPost {
-  id: string;
-  author: string;
-  content: string;
-  timestamp: string;
-}
-
-// Static placeholder data for UI layout
-const PLACEHOLDER_FEED_DATA: PlaceholderPost[] = [
-  {
-    id: '1',
-    author: 'User One',
-    content: 'This is the first placeholder post!',
-    timestamp: '10m ago',
-  },
-  {
-    id: '2',
-    author: 'User Two',
-    content: 'Just setting up my Saturn app.',
-    timestamp: '1h ago',
-  },
-  {
-    id: '3',
-    author: 'User Three',
-    content: 'React Native is fun! Building the feed UI.',
-    timestamp: '3h ago',
-  },
-  {
-    id: '4',
-    author: 'User Four',
-    content: 'Placeholder content number four.',
-    timestamp: '5h ago',
-  },
-  {
-    id: '5',
-    author: 'User Five',
-    content: 'Testing the FlatList rendering.',
-    timestamp: '1d ago',
-  },
-];
+import { Post } from '../../types/post';
+import { useFeedPosts } from '../../hooks/useFeedPosts'; // Import the hook
 
 export default function FeedScreen(): React.JSX.Element {
+  const {
+    data: posts, // Rename data to posts for clarity
+    isLoading, // Initial load state
+    isError,
+    error,
+    isRefetching, // State for pull-to-refresh
+    refetch, // Function to refetch data
+  } = useFeedPosts();
+
   // Render item function for FlatList
-  const renderItem = ({ item }: { item: PlaceholderPost }) => (
-    <PostCard
-      id={item.id}
-      author={item.author}
-      content={item.content}
-      timestamp={item.timestamp}
-    />
-  );
+  const renderItem = ({ item }: { item: Post }) => <PostCard post={item} />;
+
+  // Function to handle retry button press
+  const handleRetry = (): void => {
+    void refetch();
+  };
+
+  // Handle refresh for RefreshControl (no async needed)
+  const handleRefresh = (): void => {
+    void refetch();
+  };
+
+  // --- Conditional Rendering based on query state ---
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
+        <ActivityIndicator size="large" />
+        <Text>Loading Feed...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
+        <Text style={styles.errorText}>Error loading feed:</Text>
+        <Text style={styles.errorText}>
+          {error?.message || 'Unknown error'}
+        </Text>
+        <Button title="Retry" onPress={handleRetry} />
+      </SafeAreaView>
+    );
+  }
+
+  // --- Render Feed List ---
+  // Ensure posts is always an array
+  const postsData = Array.isArray(posts) ? posts : [];
 
   return (
-    // Use SafeAreaView to avoid notches/status bars
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={PLACEHOLDER_FEED_DATA}
+        data={postsData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
-        // Add ListHeaderComponent, ListEmptyComponent, etc. later
+        ListEmptyComponent={
+          <View style={styles.centerContent}>
+            <Text>No posts yet. Follow some users!</Text>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching} // Use isRefetching for pull-to-refresh indicator
+            onRefresh={handleRefresh} // Call refetch on pull
+          />
+        }
       />
     </SafeAreaView>
   );
 }
 
-// Update styles
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f0f0', // Background for the whole screen area
+    backgroundColor: '#f0f0f0',
   },
   listContainer: {
-    paddingTop: 8, // Add some padding at the top of the list
-    paddingBottom: 8, // Add some padding at the bottom
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexGrow: 1, // Ensure ListEmptyComponent can center if list is short
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
