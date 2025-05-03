@@ -1,10 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, Alert } from 'react-native';
+import { Button, StyleSheet } from 'react-native';
 import * as Sentry from '@sentry/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import RootNavigator from './src/navigation/RootNavigator';
 
 // Initialize Sentry
 Sentry.init({
-  dsn: 'foryoupageorg', // Replace with your actual DSN
+  dsn: 'https://2ad6e37b1605ca0b5ac800d53f652d91@o4509256617623552.ingest.us.sentry.io/4509256623915008', // Replace with your actual DSN
   debug: __DEV__, // Enable debug in development
   environment: __DEV__ ? 'development' : 'production',
 });
@@ -25,11 +27,12 @@ const sendTestEvent = (): void => {
 
 export default Sentry.wrap(function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+    <NavigationContainer>
       <StatusBar style="auto" />
-      <Button title="Send Test Event to Sentry" onPress={sendTestEvent} />
-    </View>
+
+      <RootNavigator />
+
+    </NavigationContainer>
   );
 });
 

@@ -23,8 +23,8 @@ const RootNavigator = (): React.JSX.Element => {
 
 // Placeholder Auth Hook - remove and use actual state management later
 const usePlaceholderAuth = (): { isAuthenticated: boolean } => {
-  // Temporarily set to true for testing MainFlow
-  const [isAuthenticated] = React.useState(true);
+  // Temporarily set to false for testing AuthFlow
+  const [isAuthenticated] = React.useState(false);
   return { isAuthenticated };
 };
 
