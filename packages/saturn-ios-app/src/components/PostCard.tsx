@@ -5,19 +5,29 @@ import { Post } from '../types/post'; // Import the Post type
 // Props now take a single 'post' object
 interface PostCardProps {
   post: Post;
-  // Add onPress handlers later, e.g.:
+  // Add onAuthorPress prop
+  onAuthorPress?: (username: string) => void;
+  // Add other onPress handlers later, e.g.:
   // onLikePress?: (postId: string) => void;
   // onCommentPress?: (postId: string) => void;
-  // onAuthorPress?: (username: string) => void;
 }
 
 // Placeholder image URL
 const PLACEHOLDER_AVATAR = 'https://placehold.co/50x50/EFEFEF/AAAAAA&text=PFP';
 
-const PostCard = ({ post }: PostCardProps): React.JSX.Element => {
+const PostCard = ({
+  post,
+  onAuthorPress,
+}: PostCardProps): React.JSX.Element => {
   // Placeholder state/logic for interaction - replace later
   const [isLiked, setIsLiked] = React.useState(post.isLiked || false);
   const [likeCount, setLikeCount] = React.useState(post.likeCount || 0);
+
+  // Check if this post has author information
+  const hasAuthor = React.useMemo(
+    () => !!(post.author && post.author.username),
+    [post.author?.username]
+  );
 
   const handleLike = () => {
     // Placeholder toggle logic
@@ -33,8 +43,15 @@ const PostCard = ({ post }: PostCardProps): React.JSX.Element => {
   };
 
   const handleAuthor = () => {
-    // Call onAuthorPress prop later
-    console.log(`Navigate to profile for author ${post.author.username}`);
+    if (onAuthorPress && hasAuthor && post.author?.username) {
+      onAuthorPress(post.author.username);
+    } else if (hasAuthor) {
+      console.log(
+        `Navigate to profile for author ${post.author?.username || 'unknown'}`
+      );
+    } else {
+      console.warn('Cannot navigate to author profile: author data missing');
+    }
   };
 
   // Format timestamp later using date-fns or similar
@@ -44,7 +61,12 @@ const PostCard = ({ post }: PostCardProps): React.JSX.Element => {
     <View style={styles.card}>
       {/* Header: Avatar, Name, Timestamp */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleAuthor} style={styles.authorInfo}>
+        <TouchableOpacity
+          onPress={hasAuthor ? handleAuthor : undefined}
+          style={styles.authorInfo}
+          activeOpacity={0.7}
+          disabled={!hasAuthor}
+        >
           <Image
             source={{ uri: post.author?.avatarUrl || PLACEHOLDER_AVATAR }}
             style={styles.avatar}

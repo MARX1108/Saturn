@@ -9,11 +9,21 @@ import {
   RefreshControl,
   Button,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'; // Import navigation prop type
+import { MainTabParamList } from '../../navigation/types'; // Import MainTabParamList
 import PostCard from '../../components/PostCard';
 import { Post } from '../../types/post';
 import { useFeedPosts } from '../../hooks/useFeedPosts'; // Import the hook
 
+// Define the specific navigation prop type for this screen
+type FeedScreenNavigationProp = BottomTabNavigationProp<
+  MainTabParamList,
+  'FeedTab'
+>;
+
 export default function FeedScreen(): React.JSX.Element {
+  const navigation = useNavigation<FeedScreenNavigationProp>(); // Use typed navigation hook
   const {
     data: posts, // Rename data to posts for clarity
     isLoading, // Initial load state
@@ -23,8 +33,16 @@ export default function FeedScreen(): React.JSX.Element {
     refetch, // Function to refetch data
   } = useFeedPosts();
 
+  // Navigation handler for author profile
+  const handleAuthorPress = (username: string): void => {
+    console.log(`Navigating to profile: ${username}`);
+    navigation.navigate('ProfileTab', { username });
+  };
+
   // Render item function for FlatList
-  const renderItem = ({ item }: { item: Post }) => <PostCard post={item} />;
+  const renderItem = ({ item }: { item: Post }) => (
+    <PostCard post={item} onAuthorPress={handleAuthorPress} />
+  );
 
   // Function to handle retry button press
   const handleRetry = (): void => {

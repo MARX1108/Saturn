@@ -69,10 +69,12 @@ apiClient.interceptors.response.use(
   (error: AxiosError): Promise<never> => {
     // --- Error Handling ---
     console.error(
-      '[API Client] Response Error Interceptor:',
+      '[API Client] Response Error:',
+      error.response?.status,
       error.response?.data || error.message
     );
 
+    // Create a standardized error object with status code
     const apiError: ApiError = {
       status: error.response?.status || null,
       message: 'An unexpected error occurred. Please try again.', // Default message
@@ -105,15 +107,20 @@ apiClient.interceptors.response.use(
       apiError.message = error.message || apiError.message;
     }
 
-    // Specific error handling (e.g., for 401 Unauthorized for token refresh - TO BE ADDED LATER)
-    // if (apiError.status === 401) {
-    //   // Handle token refresh logic here or trigger logout
-    // }
+    // Create an error with additional properties
+    const enhancedError = new Error(apiError.message) as Error & {
+      status?: number | null;
+      code?: string;
+      details?: Record<string, unknown>;
+    };
 
-    // Reject with the standardized ApiError object wrapped in an Error
-    const wrappedError = new Error(apiError.message);
-    Object.assign(wrappedError, { apiError });
-    return Promise.reject(wrappedError);
+    // Add properties to the error
+    enhancedError.status = apiError.status;
+    enhancedError.code = apiError.code;
+    enhancedError.details = apiError.details;
+
+    // Reject with the enhanced error object
+    return Promise.reject(enhancedError);
   }
 );
 

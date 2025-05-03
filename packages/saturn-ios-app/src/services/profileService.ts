@@ -34,16 +34,21 @@ export const fetchUserProfileByUsername = async (
   }
 
   try {
-    // Get profile data from API
+    // Log the exact URL we're calling
     const url = ApiEndpoints.getActorByUsername(username);
+    console.log(
+      `[ProfileService] Fetching profile for username: ${username}, URL: ${url}`
+    );
+
     // Note: apiClient.get<T> will return the data directly due to the response interceptor
-    const responseData = await apiClient.get(url);
+    const responseData = await apiClient.get<ActorResponse, ActorResponse>(url);
 
     // Cast/validate the response as our expected type
-    const data = responseData as unknown as ActorResponse;
+    const data = responseData;
 
     // --- Defensive Data Selection ---
     if (!data || typeof data !== 'object') {
+      console.error('[ProfileService] Invalid response:', responseData);
       throw new Error('Invalid user profile data received from API');
     }
 
@@ -71,20 +76,34 @@ export const fetchUserProfileByUsername = async (
 
     // Validate essential fields are present
     if (!profileData._id || !profileData.id || !profileData.username) {
-      console.error('Fetched profile data missing essential fields:', data);
+      console.error(
+        '[ProfileService] Missing essential fields in profile data:',
+        data
+      );
       throw new Error('Incomplete user profile data received from API');
     }
 
     // Log a warning if we detect the response contains sensitive fields that we're filtering out
     if (data.email || data.password || data.passwordHash) {
       console.warn(
-        'WARNING: API returned sensitive data that frontend is filtering out'
+        '[ProfileService] WARNING: API returned sensitive data that frontend is filtering out'
       );
     }
 
     return profileData;
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
+  } catch (error: any) {
+    // Provide more specific error messages for debugging
+    if (error.response && error.response.status === 404) {
+      console.error(
+        `[ProfileService] User with username "${username}" not found`
+      );
+      // Add the 404 status to the error for proper handling in useUserProfile
+      const notFoundError = new Error(`User "${username}" not found`);
+      (notFoundError as any).status = 404;
+      throw notFoundError;
+    }
+
+    console.error('[ProfileService] Error fetching user profile:', error);
     throw error; // Rethrow to be handled by the query
   }
 };
