@@ -7,7 +7,7 @@ import axios, {
 import { API_BASE_URL, API_TIMEOUT } from '../config/api';
 import { ApiError } from '../types/api';
 // Placeholder for token storage service
-import { getToken } from './tokenStorage';
+import * as tokenStorage from './tokenStorage';
 
 // Type for API error response data
 interface ErrorResponseData {
@@ -33,16 +33,21 @@ apiClient.interceptors.request.use(
   async (
     config: InternalAxiosRequestConfig
   ): Promise<InternalAxiosRequestConfig> => {
-    // --- Auth Token Logic ---
-    // Retrieve the token from storage (e.g., AsyncStorage, SecureStore)
-    const token = await getToken(); // Replace with your actual token retrieval logic
+    try {
+      // --- Auth Token Logic ---
+      // Retrieve the token from storage (e.g., AsyncStorage, SecureStore)
+      const token = await tokenStorage.getToken(); // Replace with your actual token retrieval logic
 
-    if (token && config.headers) {
-      // Ensure headers object exists before assigning
-      config.headers.Authorization = `Bearer ${token}`;
+      if (token && config.headers) {
+        // Ensure headers object exists before assigning
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      // You can add other request modifications here (e.g., logging)
+      return config;
+    } catch (error) {
+      console.error('[API Client] Error setting auth token:', error);
+      return config;
     }
-    // You can add other request modifications here (e.g., logging)
-    return config;
   },
   (error: AxiosError): Promise<AxiosError> => {
     // Handle request setup errors

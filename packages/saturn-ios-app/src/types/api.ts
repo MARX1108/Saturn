@@ -12,10 +12,49 @@ export interface ApiResponse<T> {
 /**
  * Standardized structure for API errors handled by the client.
  */
+import { AxiosError } from 'axios';
+
+/**
+ * Standardized API error structure
+ */
 export interface ApiError {
-  status: number | null; // HTTP status code
-  message: string; // User-friendly error message
-  code?: string; // Optional backend error code (e.g., 'VALIDATION_ERROR')
-  details?: Record<string, unknown>; // Optional detailed error info (e.g., validation specifics)
-  originalError?: unknown; // The original error object (e.g., from Axios)
+  /** HTTP status code (e.g., 400, 401, 404, 500), or null if no response */
+  status: number | null;
+  /** Human-readable error message */
+  message: string;
+  /** Error type or code for programmatic handling */
+  code?: string;
+  /** Additional error details if available */
+  details?: Record<string, unknown>;
+  /** Original error object for debugging */
+  originalError?: AxiosError;
+}
+
+/**
+ * Pagination parameters for paginated endpoints
+ */
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  cursor?: string;
+}
+
+/**
+ * Standard pagination metadata in API responses
+ */
+export interface PaginationMeta {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  nextCursor?: string;
+}
+
+/**
+ * Paginated API response wrapper
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
 }
