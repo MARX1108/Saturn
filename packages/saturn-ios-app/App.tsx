@@ -1,19 +1,47 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Button, Alert } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 
-export default function App() {
+// Initialize Sentry
+Sentry.init({
+  dsn: 'YOUR_DSN_HERE', // Replace with your actual DSN
+  debug: __DEV__, // Enable debug in development
+  environment: __DEV__ ? 'development' : 'production',
+});
+
+const sendTestEvent = (): void => {
+  try {
+    // Send a test message
+    Sentry.captureMessage('Testing Sentry Integration');
+    Alert.alert('Success', 'Test event sent to Sentry');
+
+    // Uncomment to test error capturing
+    // throw new Error('Test Exception for Sentry');
+  } catch (error) {
+    Sentry.captureException(error);
+    Alert.alert('Error Sent', 'Test exception captured by Sentry');
+  }
+};
+
+export default function App(): React.ReactElement {
   return (
     <View style={styles.container}>
       <Text>Open up App.tsx to start working on your app!</Text>
       <StatusBar style="auto" />
+      <Button title="Send Test Event to Sentry" onPress={sendTestEvent} />
     </View>
   );
 }
 
+// Color constants to avoid color literals
+const Colors = {
+  WHITE: '#fff',
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.WHITE,
     alignItems: 'center',
     justifyContent: 'center',
   },
