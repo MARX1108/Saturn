@@ -14,14 +14,24 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import apiClient from '../../services/apiClient';
 import { ApiEndpoints } from '../../config/api';
+import { useAppDispatch } from '../../store/hooks';
+import { setCredentials } from '../../store/slices/authSlice';
+import { setToken } from '../../services/tokenStorage';
+import { User } from '../../types/user';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
   'Register'
 >;
 
+interface RegisterResponse {
+  token: string;
+  actor: User;
+}
+
 export default function RegisterScreen(): React.JSX.Element {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const dispatch = useAppDispatch();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +45,6 @@ export default function RegisterScreen(): React.JSX.Element {
     setIsLoading(true);
     setError(null);
 
-    // Basic client-side validation
     if (!username || !email || !password || !displayName) {
       setError('All fields are required.');
       setIsLoading(false);
@@ -46,60 +55,39 @@ export default function RegisterScreen(): React.JSX.Element {
       console.log(
         `Attempting registration for user: ${username}, email: ${email}`
       );
-      const response = await apiClient.post(ApiEndpoints.register, {
-        username,
-        email,
-        password,
-        displayName,
-      });
-
-      // --- Registration Success ---
-      console.log('Registration successful:', response);
-      // TODO: Dispatch action to update auth state (RTK)
-      // TODO: Store token securely (tokenStorage.ts)
-      // TODO: Navigate to MainFlow (handled by RootNavigator state change)
-
-      let successMessage = 'User created successfully';
-
-      // Type guard to ensure safe access to the response properties
-      if (typeof response === 'object' && response !== null) {
-        // Handle token display
-        if ('token' in response && typeof response.token === 'string') {
-          const tokenPreview = response.token.substring(0, 10);
-          successMessage = `User created. Token: ${tokenPreview}...`;
+      // Use proper typing: apiClient.post<ResponseType, ResponseType>
+      // The second type parameter tells TypeScript that the return is already the response data
+      const data = await apiClient.post<RegisterResponse, RegisterResponse>(
+        ApiEndpoints.register,
+        {
+          username,
+          email,
+          password,
+          displayName,
         }
+      );
 
-        // If actor info is available
-        if (
-          'actor' in response &&
-          response.actor &&
-          typeof response.actor === 'object' &&
-          'username' in response.actor &&
-          typeof response.actor.username === 'string'
-        ) {
-          const username = response.actor.username;
-          let tokenPart = '';
+      console.log('Registration successful:', data);
 
-          if ('token' in response && typeof response.token === 'string') {
-            tokenPart = `Token: ${response.token.substring(0, 10)}...`;
-          }
-
-          successMessage = `User ${username} created. ${tokenPart}`.trim();
-        }
+      if (data.actor && data.token) {
+        await setToken(data.token);
+        dispatch(
+          setCredentials({
+            user: data.actor,
+            token: data.token,
+          })
+        );
+      } else {
+        throw new Error('Invalid registration response structure');
       }
-
-      Alert.alert('Registration Success', successMessage);
     } catch (error) {
-      // --- Registration Failure ---
       console.error('Registration failed:', error);
 
-      let userMessage = 'Registration failed. Please try again.'; // Default message
+      let userMessage = 'Registration failed. Please try again.';
 
-      // Extract error message from Error object
       if (error instanceof Error) {
         const errorMsg = error.message || '';
 
-        // Handle specific known errors defensively
         if (
           errorMsg.includes('E11000 duplicate key error') ||
           errorMsg.includes('duplicate')
@@ -109,10 +97,8 @@ export default function RegisterScreen(): React.JSX.Element {
           errorMsg.includes('validation') ||
           errorMsg.includes('required')
         ) {
-          // Handle validation errors
           userMessage = errorMsg;
         } else {
-          // Use the message from the backend if available and not handled above
           userMessage = errorMsg || userMessage;
         }
       }
@@ -124,12 +110,10 @@ export default function RegisterScreen(): React.JSX.Element {
     }
   };
 
-  // Wrap the navigation function to avoid Promise-related ESLint error
   const handleNavigateToLogin = (): void => {
     navigation.navigate('Login');
   };
 
-  // Function wrapper for the register button to fix the Promise issue
   const onRegisterPress = (): void => {
     void handleRegister();
   };
@@ -205,7 +189,6 @@ export default function RegisterScreen(): React.JSX.Element {
   );
 }
 
-// Define colors as variables to avoid color literal warnings
 const colors = {
   border: '#808080',
   error: '#FF0000',
@@ -213,7 +196,6 @@ const colors = {
   background: '#FFFFFF',
 };
 
-// Basic Styles - Consistent with LoginScreen
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,

@@ -13,6 +13,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import apiClient from '../../services/apiClient';
 import { ApiEndpoints } from '../../config/api';
+import { useAppDispatch } from '../../store/hooks';
+import { setCredentials } from '../../store/slices/authSlice';
+import { setToken } from '../../services/tokenStorage';
+import { User } from '../../types/user';
 
 // Define navigation prop type for type safety
 type LoginScreenNavigationProp = NativeStackNavigationProp<
@@ -20,18 +24,15 @@ type LoginScreenNavigationProp = NativeStackNavigationProp<
   'Login'
 >;
 
-// Login response shape for type casting
-interface LoginResponseData {
+// Define login response type
+interface LoginResponse {
   token: string;
-  user: {
-    id: string;
-    username: string;
-    // Add other user fields as needed
-  };
+  actor: User;
 }
 
 export default function LoginScreen(): React.JSX.Element {
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const dispatch = useAppDispatch();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -46,39 +47,39 @@ export default function LoginScreen(): React.JSX.Element {
     try {
       console.log(`Attempting login for user: ${username}`);
 
-      // Make the API call and type the response properly
-      const data = await apiClient.post(ApiEndpoints.login, {
-        username,
-        password,
-      });
+      // Use proper typing: apiClient.post<ResponseType, ResponseType>
+      // The second type parameter tells TypeScript that the return is already the response data
+      const data = await apiClient.post<LoginResponse, LoginResponse>(
+        ApiEndpoints.login,
+        {
+          username,
+          password,
+        }
+      );
 
-      // --- Login Success ---
       console.log('Login successful:', data);
 
-      // Use type guard to ensure safe access to token property
-      const loginData = data as Partial<LoginResponseData>;
-
-      // TODO: Dispatch action to update auth state (RTK)
-      // TODO: Store token securely (tokenStorage.ts)
-      // TODO: Navigate to MainFlow (handled by RootNavigator state change)
-
-      if (loginData.token && typeof loginData.token === 'string') {
-        Alert.alert(
-          'Login Success',
-          `Token: ${loginData.token.substring(0, 10)}...`
+      // --- Dispatch RTK action and save token ---
+      if (data.actor && data.token) {
+        await setToken(data.token);
+        dispatch(
+          setCredentials({
+            user: data.actor,
+            token: data.token,
+          })
         );
       } else {
-        Alert.alert('Login Success', 'Authenticated successfully');
+        throw new Error('Invalid login response structure');
       }
-    } catch (error) {
+    } catch (err) {
       // --- Login Failure ---
-      console.error('Login failed:', error);
+      console.error('Login failed:', err);
 
       // Extract message from the error object
       let errorMessage = 'Login failed. Please check credentials.';
 
-      if (error instanceof Error) {
-        errorMessage = error.message || errorMessage;
+      if (err instanceof Error) {
+        errorMessage = err.message || errorMessage;
       }
 
       setError(errorMessage);

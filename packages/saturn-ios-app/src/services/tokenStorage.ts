@@ -1,44 +1,41 @@
 /**
  * src/services/tokenStorage.ts
- * Token storage service for authentication.
+ * Token storage service for authentication using SecureStore.
  */
+import * as SecureStore from 'expo-secure-store';
 
-// In-memory storage for development (replace with actual storage in production)
-let authToken: string | null = null;
+const AUTH_TOKEN_KEY = 'authToken'; // Key for storing the token
 
 /**
- * Store authentication token
- * @param token JWT token from server
- */
-export const setToken = async (token: string): Promise<void> => {
-  // Simulate async operation for future AsyncStorage compatibility
-  await Promise.resolve();
-  authToken = token;
-  console.warn('[TokenStorage] setToken: Using in-memory storage only');
-  // In a real app, store in secure storage:
-  // await SecureStore.setItemAsync('auth_token', token);
-};
-
-/**
- * Get the stored authentication token
- * @returns The stored JWT token or null if not found
+ * Gets the auth token from secure storage.
  */
 export const getToken = async (): Promise<string | null> => {
-  // Simulate async operation for future AsyncStorage compatibility
-  await Promise.resolve();
-  // In a real app, retrieve from secure storage:
-  // return await SecureStore.getItemAsync('auth_token');
-  return authToken;
+  try {
+    return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+  } catch (error) {
+    console.error('[TokenStorage] Error getting token:', error);
+    return null;
+  }
 };
 
 /**
- * Clear the stored authentication token (for logout)
+ * Sets the auth token in secure storage.
  */
-export const clearToken = async (): Promise<void> => {
-  // Simulate async operation for future AsyncStorage compatibility
-  await Promise.resolve();
-  authToken = null;
-  console.warn('[TokenStorage] clearToken: Using in-memory storage only');
-  // In a real app, remove from secure storage:
-  // await SecureStore.deleteItemAsync('auth_token');
+export const setToken = async (token: string): Promise<void> => {
+  try {
+    await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
+  } catch (error) {
+    console.error('[TokenStorage] Error setting token:', error);
+  }
+};
+
+/**
+ * Removes the auth token from secure storage.
+ */
+export const removeToken = async (): Promise<void> => {
+  try {
+    await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+  } catch (error) {
+    console.error('[TokenStorage] Error removing token:', error);
+  }
 };

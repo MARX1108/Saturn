@@ -1,8 +1,14 @@
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, StyleSheet } from 'react-native';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { Provider } from 'react-redux';
+import { store } from './src/store/store';
 import RootNavigator from './src/navigation/RootNavigator';
+import { getToken, removeToken } from './src/services/tokenStorage';
+import { setCredentials, setStatus } from './src/store/slices/authSlice';
+import { User } from './src/types/user';
 
 // Initialize Sentry
 Sentry.init({
@@ -11,34 +17,101 @@ Sentry.init({
   environment: __DEV__ ? 'development' : 'production',
 });
 
-const sendTestEvent = (): void => {
-  try {
-    // Send a test message
-    Sentry.captureMessage('Testing Sentry Integration');
-    Alert.alert('Success', 'Test event sent to Sentry');
+function App(): React.JSX.Element | null {
+  const [isInitializing, setIsInitializing] = useState(true);
 
-    // Uncomment to test error capturing
-    // throw new Error('Test Exception for Sentry');
-  } catch (error) {
-    Sentry.captureException(error);
-    Alert.alert('Error Sent', 'Test exception captured by Sentry');
+  useEffect(() => {
+    const bootstrapAsync = async (): Promise<void> => {
+      let userToken: string | null = null;
+      let userData: Partial<User> | null = null;
+
+      try {
+        store.dispatch(setStatus('loading')); // Set status to loading
+        userToken = await getToken();
+
+        if (userToken) {
+          console.log('[App] Token found in storage.');
+          // Optional: Verify token validity with backend /me endpoint
+          // try {
+          //   // You might want an API call here that uses the token
+          //   // userData = await fetchUserDetails(userToken); // Example API call
+          //   // If user data fetch fails (e.g., token expired), catch below
+          // } catch (verifyError) {
+          //   console.warn('[App] Token verification failed:', verifyError);
+          //   await removeToken(); // Clear invalid token
+          //   userToken = null;
+          //   userData = null;
+          // }
+
+          // For now, assume token implies logged in, fetch user data later
+          // Placeholder user data - fetch actual user details later
+          userData = {
+            _id: 'temp_id',
+            id: 'temp_id_alt',
+            username: 'loading...',
+          };
+        } else {
+          console.log('[App] No token found in storage.');
+        }
+
+        if (userToken && userData) {
+          // Dispatch action to set credentials in Redux store
+          store.dispatch(
+            setCredentials({
+              token: userToken,
+              user: userData as User, // Safe assertion since we're providing all required fields
+            })
+          );
+        } else {
+          // Ensure state is idle if no token/user found
+          store.dispatch(setStatus('idle'));
+        }
+      } catch (e) {
+        console.error('[App] Error during app bootstrap:', e);
+        store.dispatch(setStatus('failed')); // Set status to failed on error
+        // Optionally clear token if bootstrap fails catastrophically
+        try {
+          await removeToken();
+        } catch (clearError) {
+          console.error('[App] Error clearing token:', clearError);
+        }
+      } finally {
+        setIsInitializing(false); // Signal that initialization is complete
+        // Set status to idle if it was loading and didn't become authenticated
+        const finalAuthState = store.getState().auth;
+        if (finalAuthState.status === 'loading') {
+          store.dispatch(setStatus('idle'));
+        }
+      }
+    };
+
+    void bootstrapAsync(); // Use void operator to explicitly mark the promise as ignored
+  }, []);
+
+  // Render loading indicator or null while initializing
+  if (isInitializing) {
+    // Optional: Render a splash screen or loading indicator here
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
   }
-};
 
-export default Sentry.wrap(function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-
-      <RootNavigator />
-
-    </NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <RootNavigator />
+      </NavigationContainer>
+    </Provider>
   );
-});
+}
 
 // Color constants to avoid color literals
 const Colors = {
   WHITE: '#fff',
+  INDICATOR: '#0000ff',
 };
 
 const styles = StyleSheet.create({
@@ -49,3 +122,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+export default Sentry.wrap(App);

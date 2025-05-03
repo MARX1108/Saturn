@@ -1,0 +1,13 @@
+/**
+ * User type definition for non-sensitive user data to be stored in state.
+ * IMPORTANT: This should only contain non-sensitive fields.
+ */
+export interface User {
+  _id: string;
+  id: string; // Some APIs might use different ID field names
+  username: string;
+  preferredUsername?: string;
+  displayName?: string;
+  // Add other non-sensitive fields as needed
+  // IMPORTANT: DO NOT include email, password, or any sensitive data here
+}
