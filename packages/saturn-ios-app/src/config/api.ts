@@ -19,6 +19,7 @@ export const ApiEndpoints = {
 
   // Actors endpoints
   actors: '/actors',
+  getActorByUsername: (username: string) => `/actors/${username}`,
 
   // Posts endpoints
   posts: '/posts',

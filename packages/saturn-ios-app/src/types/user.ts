@@ -9,6 +9,9 @@ export interface User {
   preferredUsername?: string;
   displayName?: string;
   avatarUrl?: string; // URL to user's avatar image
+  bio?: string; // User's bio or description
+  followersCount?: number; // Number of followers
+  followingCount?: number; // Number of users being followed
   // Add other non-sensitive fields as needed
   // IMPORTANT: DO NOT include email, password, or any sensitive data here
 }

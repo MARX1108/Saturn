@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const CreatePostPlaceholderComponent = (): null => null;
 
 const MainTabNavigator = (): React.JSX.Element => {
-  const { isLoading, error, data } = useCurrentUser();
+  const { isLoading, error, data: currentUser } = useCurrentUser();
 
   useEffect(() => {
     if (isLoading) {
@@ -24,13 +24,13 @@ const MainTabNavigator = (): React.JSX.Element => {
         error?.message
       );
     }
-    if (data) {
+    if (currentUser) {
       console.log(
         '[MainTabNavigator] Current user data available:',
-        data.username
+        currentUser.username
       );
     }
-  }, [isLoading, error, data]);
+  }, [isLoading, error, currentUser]);
 
   return (
     <Tab.Navigator
@@ -60,7 +60,10 @@ const MainTabNavigator = (): React.JSX.Element => {
         name="ProfileTab"
         component={ProfileScreen}
         options={{ title: 'Profile' }}
-        initialParams={{ username: 'myUsername' }}
+        initialParams={{
+          // Use the current user's username if available, otherwise use a test value
+          username: currentUser?.username || 'testuser',
+        }}
       />
       <Tab.Screen
         name="SettingsTab"

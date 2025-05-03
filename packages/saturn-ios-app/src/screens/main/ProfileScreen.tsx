@@ -6,35 +6,79 @@ import {
   Image,
   Button,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
-// Import navigation types if needed to access route params later
-// import { MainTabScreenProps } from '../../navigation/types';
+import { useRoute } from '@react-navigation/native'; // Import useRoute
+import type { RouteProp } from '@react-navigation/native'; // Import RouteProp
+import { MainTabParamList } from '../../navigation/types'; // Import ParamList
+import { useUserProfile } from '../../hooks/useUserProfile'; // Import the hook
 
 // Placeholder image URL
 const PLACEHOLDER_AVATAR =
   'https://placehold.co/100x100/EFEFEF/AAAAAA&text=PFP';
 
-// Define props if needed (e.g., receiving username from route)
-// type ProfileScreenProps = MainTabScreenProps<'ProfileTab'>;
-// export default function ProfileScreen({ route }: ProfileScreenProps): React.JSX.Element {
-// const username = route.params?.username || 'MyProfile'; // Get username from route later
+// Define route prop type
+type ProfileScreenRouteProp = RouteProp<MainTabParamList, 'ProfileTab'>;
 
 export default function ProfileScreen(): React.JSX.Element {
-  // Placeholder data - replace with fetched data later
-  const profileData = {
-    displayName: 'Placeholder User',
-    username: 'placeholderuser',
-    bio: 'This is a placeholder bio description for the profile screen layout.',
-    avatarUrl: null, // Use placeholder image
-    followersCount: 123,
-    followingCount: 45,
-    // Add isOwnProfile flag later
+  const route = useRoute<ProfileScreenRouteProp>();
+  // Get username from route params. Fallback needed if viewing own profile without param later.
+  const username = route.params?.username; // Example: 'myUsername' was set as initialParam
+
+  // Fetch profile data using the hook
+  const {
+    data: profileData,
+    isLoading,
+    isError,
+    error,
+    refetch, // Add refetch for retry button
+  } = useUserProfile(username);
+
+  const handleEditProfileOrFollow = (): void => {
+    console.log('Edit Profile / Follow button pressed for:', username);
   };
 
-  const handleEditProfileOrFollow = () => {
-    // Implement logic later based on whether it's own profile or not
-    console.log('Edit Profile / Follow button pressed');
-  };
+  // --- Loading State ---
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
+        <ActivityIndicator size="large" />
+        <Text>Loading Profile...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // --- Error State ---
+  if (isError) {
+    const errorMessage = error?.message || 'Unknown error';
+    const isNotFound = error?.status === 404;
+
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
+        <Text style={styles.errorText}>Error loading profile:</Text>
+        <Text style={styles.errorText}>{errorMessage}</Text>
+        {!isNotFound && ( // Don't show retry for 404 Not Found
+          <Button
+            title="Retry"
+            onPress={() => {
+              void refetch();
+            }}
+          />
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  // --- Success State ---
+  // Ensure profileData exists before rendering (should be true if !isLoading and !isError)
+  if (!profileData) {
+    // This case should ideally not be reached if loading/error handled, but good practice
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
+        <Text>Profile data unavailable.</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -46,25 +90,35 @@ export default function ProfileScreen(): React.JSX.Element {
             style={styles.avatar}
           />
           <View style={styles.headerText}>
-            <Text style={styles.displayName}>{profileData.displayName}</Text>
+            <Text style={styles.displayName}>
+              {profileData.displayName || profileData.username}
+            </Text>
             <Text style={styles.username}>@{profileData.username}</Text>
-            <View style={styles.statsContainer}>
-              <Text style={styles.statText}>
-                <Text style={styles.statCount}>
-                  {profileData.followingCount}
-                </Text>{' '}
-                Following
-              </Text>
-              <Text style={styles.statText}>
-                <Text style={styles.statCount}>
-                  {profileData.followersCount}
-                </Text>{' '}
-                Followers
-              </Text>
-            </View>
+            {/* Display counts only if available */}
+            {(profileData.followingCount !== undefined ||
+              profileData.followersCount !== undefined) && (
+              <View style={styles.statsContainer}>
+                {profileData.followingCount !== undefined && (
+                  <Text style={styles.statText}>
+                    <Text style={styles.statCount}>
+                      {profileData.followingCount}
+                    </Text>{' '}
+                    Following
+                  </Text>
+                )}
+                {profileData.followersCount !== undefined && (
+                  <Text style={styles.statText}>
+                    <Text style={styles.statCount}>
+                      {profileData.followersCount}
+                    </Text>{' '}
+                    Followers
+                  </Text>
+                )}
+              </View>
+            )}
           </View>
           <Button
-            title="Edit Profile" // Change to "Follow/Unfollow" later
+            title="Edit Profile" // TODO: Change based on isOwnProfile
             onPress={handleEditProfileOrFollow}
           />
         </View>
@@ -77,7 +131,7 @@ export default function ProfileScreen(): React.JSX.Element {
           <Text style={styles.contentPlaceholderText}>
             User Posts / Content Area Placeholder
           </Text>
-          {/* Add Tabs or FlatList for posts later */}
+          {/* Add FlatList for user posts later */}
         </View>
       </View>
     </SafeAreaView>
@@ -87,7 +141,7 @@ export default function ProfileScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // Profile often has white background
+    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
@@ -122,11 +176,13 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap', // Allow stats to wrap on smaller screens
   },
   statText: {
     fontSize: 14,
     color: '#333',
     marginRight: 16, // Space between stats
+    marginBottom: 4, // Add margin bottom for wrapping
   },
   statCount: {
     fontWeight: 'bold',
@@ -148,5 +204,18 @@ const styles = StyleSheet.create({
   contentPlaceholderText: {
     fontSize: 16,
     color: '#999',
+    textAlign: 'center',
+  },
+  centerContent: {
+    // Style for loading/error states
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
