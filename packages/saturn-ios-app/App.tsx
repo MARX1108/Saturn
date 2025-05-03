@@ -4,6 +4,7 @@ import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './src/store/store';
 import RootNavigator from './src/navigation/RootNavigator';
 import { getToken, removeToken } from './src/services/tokenStorage';
@@ -15,6 +16,17 @@ Sentry.init({
   dsn: 'https://2ad6e37b1605ca0b5ac800d53f652d91@o4509256617623552.ingest.us.sentry.io/4509256623915008', // Replace with your actual DSN
   debug: __DEV__, // Enable debug in development
   environment: __DEV__ ? 'development' : 'production',
+});
+
+// Create a query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Configure default query options if needed
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
 });
 
 function App(): React.JSX.Element | null {
@@ -100,10 +112,12 @@ function App(): React.JSX.Element | null {
 
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <RootNavigator />
-      </NavigationContainer>
+      <QueryClientProvider client={queryClient}>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <RootNavigator />
+        </NavigationContainer>
+      </QueryClientProvider>
     </Provider>
   );
 }

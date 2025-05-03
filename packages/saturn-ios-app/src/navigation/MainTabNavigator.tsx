@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './types';
 import FeedScreen from '../screens/main/FeedScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -11,6 +12,26 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const CreatePostPlaceholderComponent = (): null => null;
 
 const MainTabNavigator = (): React.JSX.Element => {
+  const { isLoading, error, data } = useCurrentUser();
+
+  useEffect(() => {
+    if (isLoading) {
+      console.log('[MainTabNavigator] Loading current user...');
+    }
+    if (error) {
+      console.log(
+        '[MainTabNavigator] Error loading current user:',
+        error?.message
+      );
+    }
+    if (data) {
+      console.log(
+        '[MainTabNavigator] Current user data available:',
+        data.username
+      );
+    }
+  }, [isLoading, error, data]);
+
   return (
     <Tab.Navigator
       screenOptions={() => ({

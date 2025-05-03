@@ -33,12 +33,3 @@ export type AuthStackScreenProps<T extends keyof AuthStackParamList> =
 // Props for screens within the Main Tab Navigator
 export type MainTabScreenProps<T extends keyof MainTabParamList> =
   BottomTabScreenProps<MainTabParamList, T>;
-
-// Augment ReactNavigation types
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace ReactNavigation {
-    // Use type instead of interface to extend RootStackParamList
-    type RootParamList = RootStackParamList;
-  }
-}
