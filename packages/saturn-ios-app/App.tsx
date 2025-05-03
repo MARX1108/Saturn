@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/react-native';
 
 // Initialize Sentry
 Sentry.init({
-  dsn: 'YOUR_DSN_HERE', // Replace with your actual DSN
+  dsn: 'foryoupageorg', // Replace with your actual DSN
   debug: __DEV__, // Enable debug in development
   environment: __DEV__ ? 'development' : 'production',
 });

@@ -1,7 +1,8 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, Button, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Sentry from '@sentry/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import RootNavigator from './src/navigation/RootNavigator';
 
 // --- Sentry Configuration ---
 // IMPORTANT: Replace 'YOUR_SENTRY_DSN' with your actual Sentry DSN
@@ -32,59 +33,21 @@ Sentry.init({
 });
 // --- End Sentry Configuration ---
 
-export default function App(): React.JSX.Element {
-  // --- Sentry Test Function ---
-  const sendTestEvent = () => {
-    console.log('Sending Sentry test event...');
-    try {
-      // Capture a message
-      Sentry.captureMessage('Sentry Test Message from Saturn App!', 'info');
-
-      // Or capture an exception
-      // throw new Error('Sentry Test Error from Saturn App!'); // Uncomment to test exceptions
-
-      console.log('Sentry test event sent/captured.');
-      // You should see this event appear in your Sentry dashboard shortly.
-    } catch (error) {
-      console.error('Failed to send Sentry test event:', error);
-      Sentry.captureException(error); // Capture the error itself if sending fails
-    }
-  };
-  // --- End Sentry Test Function ---
-
+function App(): React.JSX.Element {
   return (
-    // <Provider store={store}> {/* Add Redux Provider later */}
-    //   <QueryClientProvider client={queryClient}> {/* Add TanStack Query Provider later */}
-    //     <NavigationContainer ref={navigationRef}> {/* Add Navigation later */}
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <Text style={styles.title}>Saturn App</Text>
-        <Text>Welcome! Basic setup complete.</Text>
-        {/* Temporary Button for Sentry Test */}
-        <Button title="Send Sentry Test Event" onPress={sendTestEvent} />
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </View>
-    //     </NavigationContainer>
+    // Add Providers here later, e.g.:
+    // <Provider store={store}>
+    //   <QueryClientProvider client={queryClient}>
+    //     <ThemeProvider theme={theme}>
+    <NavigationContainer>
+      <RootNavigator />
+      <StatusBar style="auto" />
+    </NavigationContainer>
+    //     </ThemeProvider>
     //   </QueryClientProvider>
     // </Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  safeArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-});
+// export default Sentry.wrap(App); // Consider re-enabling Sentry wrap later
+export default App;
