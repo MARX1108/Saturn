@@ -23,7 +23,7 @@ const sendTestEvent = (): void => {
   }
 };
 
-export default function App(): React.ReactElement {
+export default Sentry.wrap(function App() {
   return (
     <View style={styles.container}>
       <Text>Open up App.tsx to start working on your app!</Text>
@@ -31,7 +31,7 @@ export default function App(): React.ReactElement {
       <Button title="Send Test Event to Sentry" onPress={sendTestEvent} />
     </View>
   );
-}
+});
 
 // Color constants to avoid color literals
 const Colors = {
