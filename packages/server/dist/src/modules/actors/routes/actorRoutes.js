@@ -15,7 +15,13 @@ const routeHandler_1 = require('../../../utils/routeHandler');
  */
 function configureActorRoutes(serviceContainer) {
   const router = express_1.default.Router();
-  const { actorService, uploadService, postService } = serviceContainer;
+  const { actorService, uploadService, postService, authService } =
+    serviceContainer;
+  if (!authService) {
+    throw new Error(
+      'AuthService not found in service container during actor route setup'
+    );
+  }
   const domain = process.env.DOMAIN || 'localhost:4000';
   // Create controller with injected dependencies
   const actorsController = new actorsController_1.ActorsController(
@@ -48,7 +54,7 @@ function configureActorRoutes(serviceContainer) {
   // Update actor
   router.put(
     '/:id',
-    auth_1.auth,
+    (0, auth_1.authenticate)(authService),
     (0, routeHandler_1.wrapAsync)(
       actorsController.updateActor.bind(actorsController)
     )
@@ -56,7 +62,7 @@ function configureActorRoutes(serviceContainer) {
   // Delete actor
   router.delete(
     '/:id',
-    auth_1.auth,
+    (0, auth_1.authenticate)(authService),
     (0, routeHandler_1.wrapAsync)(
       actorsController.deleteActor.bind(actorsController)
     )

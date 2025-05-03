@@ -9,6 +9,7 @@ exports.UploadService = void 0;
 const multer_1 = __importDefault(require('multer'));
 const path_1 = __importDefault(require('path'));
 const promises_1 = __importDefault(require('fs/promises')); // Use async promises version
+const fileUpload_1 = require('../../../utils/fileUpload');
 class UploadService {
   /**
    * Configures multer storage with dynamic destination
@@ -110,6 +111,34 @@ class UploadService {
       originalName: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
+    };
+  }
+  /**
+   * Alternative moveUploadedFile method that uses a subdirectory approach
+   * @param file The uploaded file from multer
+   * @param subDirectory Optional subdirectory within uploads
+   * @returns File information
+   */
+  async moveUploadedFileToSubdir(file, subDirectory) {
+    const destinationDir = path_1.default.join(
+      process.cwd(),
+      'uploads',
+      subDirectory || 'media'
+    );
+    // Move file from temp to permanent location
+    const filePath = (0, fileUpload_1.moveUploadedFile)(
+      file.path,
+      destinationDir,
+      file.filename
+    );
+    // Get the relative path from cwd
+    const relativePath = path_1.default.relative(process.cwd(), filePath);
+    return {
+      filename: file.filename,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: relativePath,
     };
   }
 }

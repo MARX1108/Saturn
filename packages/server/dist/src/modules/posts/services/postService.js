@@ -2,7 +2,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.PostService = void 0;
 const uuid_1 = require('uuid');
-const errors_1 = require('@/utils/errors');
+const errors_1 = require('../../../utils/errors');
 const mongodb_1 = require('mongodb');
 class PostService {
   constructor(postRepository, actorService, domain, actorRepository) {

@@ -10,6 +10,7 @@ exports.AuthService = void 0;
 const bcryptjs_1 = __importDefault(require('bcryptjs'));
 const mongodb_1 = require('mongodb');
 const jsonwebtoken_1 = __importDefault(require('jsonwebtoken'));
+const logger_1 = __importDefault(require('../../../utils/logger'));
 class AuthService {
   constructor(authRepository) {
     this.repository = authRepository;
@@ -18,10 +19,17 @@ class AuthService {
    * Generate a JWT token for a user
    */
   generateToken(user) {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not defined');
+    }
     return jsonwebtoken_1.default.sign(
       { id: user._id, username: user.username },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
+      jwtSecret,
+      {
+        expiresIn: '24h',
+        algorithm: 'HS256',
+      }
     );
   }
   /**
@@ -31,36 +39,25 @@ class AuthService {
     // Find user using repository
     const user = await this.repository.findByUsername(username);
     // Detailed logging to debug user retrieval
-    console.log('AUTH DEBUG - Login attempt for username:', username);
-    console.log(
-      'AUTH DEBUG - User object found:',
-      user ? 'User found' : 'User NOT found'
-    );
-    console.dir(user, { depth: 3, colors: true });
+    logger_1.default.debug({ username, userFound: !!user }, 'Login attempt');
     if (!user) {
+      logger_1.default.debug({ username }, 'User not found during login');
       return null;
     }
     // Password field verification logging
-    console.log('AUTH DEBUG - Password verification:');
-    console.log('AUTH DEBUG - typeof user.password:', typeof user.password);
-    console.log(
-      'AUTH DEBUG - user.password exists:',
-      user.password ? 'Yes' : 'No'
+    logger_1.default.debug(
+      {
+        username,
+        passwordExists: !!user.password,
+        passwordType: typeof user.password,
+        passwordLength: user.password ? user.password.length : 0,
+      },
+      'Password verification'
     );
-    console.log(
-      'AUTH DEBUG - user.password length:',
-      user.password ? user.password.length : 0
-    );
-    // Only log first few chars of hash for security reasons if it exists
-    if (user.password) {
-      console.log(
-        'AUTH DEBUG - password hash preview:',
-        `${user.password.substring(0, 10)}...`
-      );
-    }
     // Check password
     const isMatch = await bcryptjs_1.default.compare(password, user.password);
     if (!isMatch) {
+      logger_1.default.debug({ username }, 'Invalid password during login');
       return null;
     }
     // Remove password from response
@@ -92,6 +89,7 @@ class AuthService {
     const { password: _password, ...userWithoutPassword } = user;
     // Generate token
     const token = this.generateToken(user);
+    logger_1.default.info({ username }, 'User created successfully');
     return {
       actor: userWithoutPassword,
       token,
@@ -99,14 +97,27 @@ class AuthService {
   }
   async verifyToken(token) {
     try {
-      const decoded = jsonwebtoken_1.default.verify(
-        token,
-        process.env.JWT_SECRET || 'your-secret-key'
-      );
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        logger_1.default.error(
+          'JWT_SECRET environment variable is not defined'
+        );
+        return null;
+      }
+      const decoded = jsonwebtoken_1.default.verify(token, jwtSecret, {
+        algorithms: ['HS256'],
+      });
       const user = await this.repository.findById(decoded.id);
-      if (!user) return null;
+      if (!user) {
+        logger_1.default.debug(
+          { userId: decoded.id },
+          'User not found during token verification'
+        );
+        return null;
+      }
       return user;
-    } catch {
+    } catch (error) {
+      logger_1.default.error({ err: error }, 'Token verification failed');
       return null;
     }
   }

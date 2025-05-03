@@ -18,9 +18,15 @@ const rateLimiter_1 = require('../../../middleware/rateLimiter');
 function configureAuthRoutes(serviceContainer) {
   const router = express_1.default.Router();
   const authController = serviceContainer.getService('authController');
+  const authService = serviceContainer.getService('authService');
   if (!authController) {
     throw new Error(
       'AuthController not found in service container during route setup'
+    );
+  }
+  if (!authService) {
+    throw new Error(
+      'AuthService not found in service container during route setup'
     );
   }
   // Bind methods from the MOCKED controller
@@ -50,7 +56,7 @@ function configureAuthRoutes(serviceContainer) {
   // Get current user (protected route)
   router.get(
     '/me',
-    auth_1.auth,
+    (0, auth_1.authenticate)(authService),
     (0, routeHandler_1.wrapAsync)(wrappedGetCurrentUser)
   );
   return router;

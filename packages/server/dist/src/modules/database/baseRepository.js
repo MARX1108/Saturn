@@ -1,6 +1,13 @@
 'use strict';
+/**
+ * @deprecated This file is deprecated. Use MongoRepository from modules/shared/repositories/baseRepository.ts instead.
+ * This file is kept for backward compatibility but will be removed in a future update.
+ */
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.BaseRepository = void 0;
+/**
+ * @deprecated Use MongoRepository from modules/shared/repositories/baseRepository.ts instead.
+ */
 class BaseRepository {
   constructor(modelConstructor, modelName) {
     this.modelConstructor = modelConstructor;

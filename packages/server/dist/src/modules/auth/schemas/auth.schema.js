@@ -7,11 +7,13 @@ exports.registerBodySchema = zod_1.z
   .object({
     username: zod_1.z
       .string()
-      .min(3, 'Username must be at least 3 characters long'),
+      .min(3, 'Username must be at least 3 characters long')
+      .max(30, 'Username must be at most 30 characters long'),
     email: zod_1.z.string().email('Invalid email address'),
     password: zod_1.z
       .string()
-      .min(6, 'Password must be at least 6 characters long'),
+      .min(6, 'Password must be at least 6 characters long')
+      .max(100, 'Password must be at most 100 characters long'),
   })
   .passthrough(); // Allow extra fields like displayName, bio
 // Schema for user login body

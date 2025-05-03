@@ -7,6 +7,8 @@ const routeHandler_1 = require('../../../utils/routeHandler');
 const validateRequest_1 = require('../../../middleware/validateRequest');
 const post_schema_1 = require('../schemas/post.schema');
 const rateLimiter_1 = require('../../../middleware/rateLimiter');
+const posts_schemas_1 = require('../schemas/posts.schemas');
+const comments_schemas_1 = require('../../comments/schemas/comments.schemas');
 /**
  * Configure post routes with the controller
  */
@@ -53,11 +55,26 @@ function configurePostRoutes(container) {
   router.get(
     '/',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestQuery)(
+      posts_schemas_1.routeFeedQuerySchema
+    ),
     (0, routeHandler_1.wrapAsync)(boundGetFeed)
   );
-  router.get('/:id', (0, routeHandler_1.wrapAsync)(boundGetPostById));
+  router.get(
+    '/:id',
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.postIdParamSchema
+    ),
+    (0, routeHandler_1.wrapAsync)(boundGetPostById)
+  );
   router.get(
     '/users/:username',
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.usernameParamSchema
+    ),
+    (0, validateRequest_1.validateRequestQuery)(
+      posts_schemas_1.routeFeedQuerySchema
+    ),
     (0, routeHandler_1.wrapAsync)(boundGetPostsByUsername)
   );
   // Protected routes using wrapAsync with rate limiting
@@ -72,39 +89,63 @@ function configurePostRoutes(container) {
   router.put(
     '/:id',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.postIdParamSchema
+    ),
     (0, validateRequest_1.validateRequestBody)(post_schema_1.updatePostSchema),
     (0, routeHandler_1.wrapAsync)(boundUpdatePost)
   );
   router.delete(
     '/:id',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.postIdParamSchema
+    ),
     (0, routeHandler_1.wrapAsync)(boundDeletePost)
   );
   // Apply engagement rate limiting to like/unlike routes
   router.post(
     '/:id/like',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.postIdParamSchema
+    ),
     rateLimiter_1.engagementRateLimiter,
     (0, routeHandler_1.wrapAsync)(boundLikePost)
   );
   router.post(
     '/:id/unlike',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.postIdParamSchema
+    ),
     rateLimiter_1.engagementRateLimiter,
     (0, routeHandler_1.wrapAsync)(boundUnlikePost)
   );
   // Comment routes using wrapAsync
   // Pass authService to authenticate middleware factory
-  router.get('/:id/comments', (0, routeHandler_1.wrapAsync)(boundGetComments));
+  router.get(
+    '/:id/comments',
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.postIdParamSchema
+    ),
+    (0, routeHandler_1.wrapAsync)(boundGetComments)
+  );
   router.post(
     '/:id/comments',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestParams)(
+      posts_schemas_1.postIdParamSchema
+    ),
     rateLimiter_1.engagementRateLimiter, // Apply rate limiting to comment creation
     (0, routeHandler_1.wrapAsync)(boundCreateComment)
   );
   router.delete(
     '/comments/:id',
     (0, auth_1.authenticate)(authService),
+    (0, validateRequest_1.validateRequestParams)(
+      comments_schemas_1.commentIdParamSchema
+    ),
     (0, routeHandler_1.wrapAsync)(boundDeleteComment)
   );
   return router;

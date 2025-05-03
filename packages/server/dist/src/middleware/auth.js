@@ -13,19 +13,42 @@ exports.requireAuth =
   exports.generateToken =
     void 0;
 const jsonwebtoken_1 = __importDefault(require('jsonwebtoken'));
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const errors_1 = require('../utils/errors');
+const logger_1 = __importDefault(require('../utils/logger'));
+const JWT_SECRET = process.env.JWT_SECRET;
+// Helper function to generate tokens - still used by auth service
 const generateToken = user => {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined');
+  }
   return jsonwebtoken_1.default.sign(
     {
       id: user._id || user.id,
       username: user.preferredUsername || user.username,
     },
     JWT_SECRET,
-    { expiresIn: '7d' }
+    {
+      expiresIn: '7d',
+      algorithm: 'HS256',
+    }
   );
 };
 exports.generateToken = generateToken;
+/**
+ * @deprecated Use authenticate() instead which uses AuthService for secure DB lookups
+ * This middleware directly accesses the DB collection and is less modular.
+ *
+ * SECURITY RISK: Do not use this middleware in new code.
+ */
 const auth = async (req, res, next) => {
+  logger_1.default.warn(
+    {
+      path: req.path,
+      method: req.method,
+      ip: req.ip,
+    },
+    'WARNING: Using deprecated auth() middleware. Please migrate to authenticate().'
+  );
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -36,12 +59,20 @@ const auth = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
+    if (!JWT_SECRET) {
+      logger_1.default.error('JWT_SECRET environment variable is not defined');
+      return res
+        .status(500)
+        .json({ error: 'Internal server configuration error' });
+    }
     // Verify token
-    const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+    const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
     // Get database from app locals
     const db = req.app.locals.db;
     if (!db) {
-      console.error('Database not found in app.locals');
+      logger_1.default.error('Database not found in app.locals');
       return res
         .status(500)
         .json({ error: 'Internal server configuration error' });
@@ -57,7 +88,7 @@ const auth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (__error) {
-    console.error('Auth middleware error:', JSON.stringify(__error));
+    logger_1.default.error({ err: __error }, 'Auth middleware error');
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -69,29 +100,61 @@ const authorize = () => {
   };
 };
 exports.authorize = authorize;
+/**
+ * @deprecated Use authenticate() instead which uses AuthService for secure DB lookups
+ * This middleware does NOT verify the user exists in the database.
+ *
+ * SECURITY RISK: Do not use this middleware in new code.
+ */
 const authenticateToken = (req, res, next) => {
+  logger_1.default.warn(
+    {
+      path: req.path,
+      method: req.method,
+      ip: req.ip,
+    },
+    'WARNING: Using deprecated authenticateToken() middleware. Please migrate to authenticate().'
+  );
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
+  if (!JWT_SECRET) {
+    logger_1.default.error('JWT_SECRET environment variable is not defined');
+    return res.status(500).json({ message: 'Server configuration error' });
+  }
   try {
-    const decoded = jsonwebtoken_1.default.verify(
-      token,
-      process.env.JWT_SECRET || 'your-secret-key'
-    );
+    const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
     req.user = decoded;
     next();
   } catch (_error) {
-    console.error('Token verification failed:', JSON.stringify(_error));
+    logger_1.default.error({ err: _error }, 'Token verification failed');
     return res.status(403).json({ message: 'Invalid token' });
   }
 };
 exports.authenticateToken = authenticateToken;
+/**
+ * The recommended authentication middleware.
+ * This middleware:
+ * 1. Extracts the bearer token
+ * 2. Verifies the token signature and expiration
+ * 3. Uses AuthService to look up the user in the database
+ * 4. Attaches the user to the request if valid
+ *
+ * @param authService The authentication service instance
+ * @returns An Express middleware function
+ */
 const authenticate = authService => {
   return async (req, res, next) => {
     try {
-      const token = req.headers.authorization?.split(' ')[1];
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization header required' });
+      }
+      const token = authHeader.split(' ')[1];
       if (!token) {
         return res.status(401).json({ error: 'No token provided' });
       }
@@ -101,12 +164,29 @@ const authenticate = authService => {
       }
       req.user = user;
       next();
-    } catch (_error) {
-      next(_error);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger_1.default.error(
+          { err: error, path: req.path },
+          'Authentication error'
+        );
+      }
+      next(
+        new errors_1.AppError(
+          'Authentication failed',
+          401,
+          errors_1.ErrorType.AUTHENTICATION
+        )
+      );
     }
   };
 };
 exports.authenticate = authenticate;
+/**
+ * Middleware to check if a user is authenticated.
+ * Use this after authenticate() when you need to enforce authentication
+ * without extracting or verifying a token.
+ */
 const requireAuth = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });

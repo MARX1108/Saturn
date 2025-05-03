@@ -17,6 +17,8 @@ const compatibilityMiddleware_1 = require('./middleware/compatibilityMiddleware'
 const rateLimiter_1 = require('./middleware/rateLimiter');
 const plugins_1 = require('./plugins');
 const config_1 = __importDefault(require('./config'));
+const helmet_1 = __importDefault(require('helmet'));
+const logger_1 = __importDefault(require('./utils/logger'));
 // Import route configurations from modules
 const actorRoutes_1 = __importDefault(
   require('./modules/actors/routes/actorRoutes')
@@ -41,6 +43,10 @@ exports.app = app;
 const PORT = config_1.default.port || 4000;
 const MONGO_URI = config_1.default.mongo.uri;
 const DOMAIN = config_1.default.domain;
+// Set trust proxy for use behind reverse proxies
+app.set('trust proxy', 1);
+// Security: Add helmet middleware for secure HTTP headers
+app.use((0, helmet_1.default)());
 // Middleware
 app.use((0, cors_1.default)(config_1.default.cors));
 app.use(express_1.default.json());
@@ -52,9 +58,9 @@ if (
   process.env.DISABLE_RATE_LIMITS !== 'true'
 ) {
   app.use(rateLimiter_1.defaultRateLimiter);
-  console.log('✅ Global rate limiting enabled');
+  logger_1.default.info('Global rate limiting enabled');
 } else {
-  console.log('⚠️ Rate limiting disabled for testing');
+  logger_1.default.warn('Rate limiting disabled for testing');
 }
 // Root route handler
 app.get('/', (req, res) => {
@@ -68,19 +74,25 @@ app.get('/', (req, res) => {
 // Connect to MongoDB
 async function startServer() {
   try {
+    // Check that JWT_SECRET is defined and not empty
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
+      throw new Error(
+        'JWT_SECRET environment variable is not defined or empty. This is required for secure operation.'
+      );
+    }
     const client = new mongodb_1.MongoClient(MONGO_URI);
     await client.connect();
-    console.log('✅ Connected to MongoDB');
+    logger_1.default.info('Connected to MongoDB');
     const db = client.db();
     // Create service container with repositories and services
     const services = (0, container_1.createServiceContainer)(db, DOMAIN);
     // Store services in app for middleware access
     app.set('services', services);
-    console.log('ServiceContainer initialized:', services);
+    logger_1.default.debug('ServiceContainer initialized');
     // Legacy support - these will be deprecated in future
     app.set('db', db);
     app.set('domain', DOMAIN);
-    console.log('Initializing server...');
+    logger_1.default.info('Initializing server...');
     // Initialize plugins
     (0, plugins_1.initPlugins)(app);
     // Apply middlewares for services and backwards compatibility
@@ -112,18 +124,69 @@ async function startServer() {
     let server;
     if (process.env.NODE_ENV !== 'test') {
       server = app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        logger_1.default.info(`Server running on http://localhost:${PORT}`);
       });
+      // Implement graceful shutdown
+      setupGracefulShutdown(server, client);
     }
     return { app, client, server, db };
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger_1.default.error({ err: error }, 'Failed to start server');
     if (process.env.NODE_ENV !== 'test') {
       process.exit(1);
     } else {
       throw error;
     }
   }
+}
+/**
+ * Set up graceful shutdown handlers for the server
+ */
+function setupGracefulShutdown(server, mongoClient) {
+  // Handle SIGTERM signal (e.g. from kubernetes, heroku, etc)
+  process.on('SIGTERM', () => {
+    logger_1.default.info('SIGTERM received. Shutting down gracefully...');
+    gracefullyShutdown(server, mongoClient);
+  });
+  // Handle SIGINT signal (e.g. from Ctrl+C)
+  process.on('SIGINT', () => {
+    logger_1.default.info('SIGINT received. Shutting down gracefully...');
+    gracefullyShutdown(server, mongoClient);
+  });
+  // Handle uncaught exceptions - log but still initiate graceful shutdown
+  process.on('uncaughtException', error => {
+    logger_1.default.fatal({ err: error }, 'UNCAUGHT EXCEPTION');
+    gracefullyShutdown(server, mongoClient);
+  });
+}
+/**
+ * Perform graceful shutdown of server and database connection
+ */
+function gracefullyShutdown(server, mongoClient) {
+  // First close the server to stop accepting new connections
+  server.close(err => {
+    if (err) {
+      logger_1.default.error({ err }, 'Error closing server');
+      process.exit(1);
+    }
+    logger_1.default.info('Server closed successfully');
+    // Then close the MongoDB connection
+    mongoClient
+      .close()
+      .then(() => {
+        logger_1.default.info('MongoDB connection closed successfully');
+        process.exit(0);
+      })
+      .catch(err => {
+        logger_1.default.error({ err }, 'Error closing MongoDB connection');
+        process.exit(1);
+      });
+  });
+  // Force exit if graceful shutdown takes too long (10 seconds)
+  setTimeout(() => {
+    logger_1.default.warn('Graceful shutdown timeout. Forcing exit.');
+    process.exit(1);
+  }, 10000);
 }
 // For testing purposes, we export the promise
 exports.serverPromise = startServer();

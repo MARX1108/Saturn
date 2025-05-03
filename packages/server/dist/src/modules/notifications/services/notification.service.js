@@ -1,8 +1,14 @@
 'use strict';
+var __importDefault =
+  (this && this.__importDefault) ||
+  function (mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.NotificationService = void 0;
-const notification_repository_1 = require('@/modules/notifications/repositories/notification.repository');
+const notification_repository_1 = require('../../../modules/notifications/repositories/notification.repository');
 const mongodb_1 = require('mongodb');
+const logger_1 = __importDefault(require('../../../utils/logger'));
 class NotificationService {
   constructor(
     db,
@@ -32,7 +38,7 @@ class NotificationService {
   async createNotification(data) {
     // Prevent self-notification
     if (data.actorUserId && data.recipientUserId === data.actorUserId) {
-      console.log('Skipping self-notification');
+      logger_1.default.debug('Skipping self-notification');
       return null;
     }
     const now = new Date();
@@ -97,7 +103,7 @@ class NotificationService {
    * @param notificationIds - Array of notification IDs
    * @param recipientUserId - User ID (for security, to ensure notifications belong to this user)
    */
-  async markNotificationsAsRead(userId, notificationIds) {
+  async markNotificationsAsRead(notificationIds, userId) {
     const userObjectId =
       typeof userId === 'string' ? new mongodb_1.ObjectId(userId) : userId;
     const filter = {
@@ -123,9 +129,8 @@ class NotificationService {
    * @param recipientUserId - User ID
    */
   async markAllNotificationsAsRead(recipientUserId) {
-    const { modifiedCount } =
-      await this.repository.markAllAsRead(recipientUserId);
-    return modifiedCount > 0;
+    const result = await this.repository.markAllAsRead(recipientUserId);
+    return result;
   }
   /**
    * Get count of unread notifications for a user
@@ -174,13 +179,19 @@ class NotificationService {
                   avatarUrl: actor.icon?.url,
                 };
               } else {
-                console.error('Actor found but actor._id is undefined');
+                logger_1.default.error(
+                  'Actor found but actor._id is undefined'
+                );
               }
             }
           } catch (error) {
-            console.warn(
-              `Failed to fetch actor ${String(notification.actorUserId)} for notification ${String(notification._id)}:`,
-              error
+            logger_1.default.warn(
+              {
+                actorId: notification.actorUserId,
+                notificationId: notification._id,
+                err: error,
+              },
+              'Failed to fetch actor for notification'
             );
             // Continue without actor details rather than failing the entire request
           }
@@ -202,10 +213,10 @@ class NotificationService {
     return result.notifications;
   }
   async markRead(id, userId) {
-    await this.repository.markAsRead([id], userId);
+    await this.markNotificationsAsRead([id], userId);
   }
   async markAllRead(userId) {
-    await this.repository.markAllAsRead(userId);
+    await this.markAllNotificationsAsRead(userId);
   }
   async getUnreadCount(recipientUserId) {
     return this.repository.getUnreadCount(recipientUserId);
@@ -242,9 +253,13 @@ class NotificationService {
         // Use findById which expects string | ObjectId
         actor = await this.actorService.getActorById(notification.actorUserId);
       } catch (error) {
-        console.warn(
-          `Failed to fetch actor ${String(notification.actorUserId)} for notification ${String(notification._id)}:`,
-          error
+        logger_1.default.warn(
+          {
+            actorId: notification.actorUserId,
+            notificationId: notification._id,
+            err: error,
+          },
+          'Failed to fetch actor for notification'
         );
       }
     }

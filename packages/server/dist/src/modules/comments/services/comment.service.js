@@ -2,7 +2,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.CommentService = void 0;
 const notification_1 = require('../../notifications/models/notification');
-const errors_1 = require('@/utils/errors');
+const errors_1 = require('../../../utils/errors');
 const mongodb_1 = require('mongodb');
 class CommentService {
   constructor(repository) {
@@ -177,7 +177,7 @@ class CommentService {
     }
   }
   getComments(_postId) {
-    // Implementation
+    // For backwards compatibility, return empty array
     return Promise.resolve([]);
   }
 }

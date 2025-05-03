@@ -1,7 +1,13 @@
 'use strict';
+var __importDefault =
+  (this && this.__importDefault) ||
+  function (mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.MongoRepository = void 0;
 const mongodb_1 = require('mongodb');
+const logger_1 = __importDefault(require('../../../utils/logger'));
 class MongoRepository {
   constructor(db, collectionName) {
     this.collection = db.collection(collectionName);
@@ -11,7 +17,7 @@ class MongoRepository {
       try {
         return new mongodb_1.ObjectId(id);
       } catch (error) {
-        console.error(`Invalid ObjectId format: ${id}`, error);
+        logger_1.default.error({ id, err: error }, 'Invalid ObjectId format');
         throw new Error(`Invalid ID format: ${id}`);
       }
     } else if (id instanceof mongodb_1.ObjectId) {
@@ -28,7 +34,10 @@ class MongoRepository {
       });
       return result;
     } catch (error) {
-      console.error(`Error finding document by ID: ${String(error)}`);
+      logger_1.default.error(
+        { id, err: error },
+        'Error finding document by ID'
+      );
       return null;
     }
   }
@@ -65,7 +74,10 @@ class MongoRepository {
       );
       return result.modifiedCount > 0;
     } catch (error) {
-      console.error(`Error updating document by ID: ${String(error)}`);
+      logger_1.default.error(
+        { id, err: error },
+        'Error updating document by ID'
+      );
       return false;
     }
   }
@@ -89,7 +101,7 @@ class MongoRepository {
       const result = await this.collection.deleteOne(filter, options);
       return result.deletedCount > 0;
     } catch (error) {
-      console.error(`Error deleting document: ${String(error)}`);
+      logger_1.default.error({ filter, err: error }, 'Error deleting document');
       return false;
     }
   }
