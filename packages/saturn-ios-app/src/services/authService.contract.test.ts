@@ -57,7 +57,7 @@ describe('API Pact Tests - Auth Service', () => {
       state: providerState,
       uponReceiving: 'a login request for an existing user',
       withRequest: {
-        method: 'POST',
+        method: 'POST' as const,
         path: ApiEndpoints.login,
         headers: {
           'Content-Type': 'application/json',
