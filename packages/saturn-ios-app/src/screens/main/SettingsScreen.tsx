@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, Alert, Switch } from 'react-native';
 import { useAppDispatch } from '../../store/hooks'; // Import typed dispatch
 import { clearCredentials } from '../../store/slices/authSlice'; // Import action
 import { removeToken } from '../../services/tokenStorage'; // Import removeToken
 import { useQueryClient } from '@tanstack/react-query'; // Import query client hook
+import { useThemeToggle } from '../../theme/ThemeProvider';
 
 export default function SettingsScreen(): React.JSX.Element {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient(); // Get query client instance
+  const { mode, toggleTheme } = useThemeToggle();
 
   const handleLogout = async (): Promise<void> => {
     console.log('Attempting logout...');
@@ -36,7 +38,26 @@ export default function SettingsScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Settings Screen</Text>
-      <Button title="Logout" onPress={() => void handleLogout()} color="red" />
+
+      {/* Theme Toggle */}
+      <View style={styles.settingRow}>
+        <Text style={styles.settingLabel}>Dark Mode</Text>
+        <Switch
+          trackColor={{ false: '#767577', true: '#81b0ff' }}
+          thumbColor={mode === 'dark' ? '#f5dd4b' : '#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={toggleTheme}
+          value={mode === 'dark'}
+        />
+      </View>
+
+      <View style={styles.logoutButtonContainer}>
+        <Button
+          title="Logout"
+          onPress={() => void handleLogout()}
+          color="red"
+        />
+      </View>
     </View>
   );
 }
@@ -45,13 +66,27 @@ export default function SettingsScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 30,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#ccc',
+  },
+  settingLabel: {
+    fontSize: 16,
+  },
+  logoutButtonContainer: {
+    marginTop: 40,
   },
 });

@@ -10,6 +10,7 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { getToken, removeToken } from './src/services/tokenStorage';
 import { setCredentials, setStatus } from './src/store/slices/authSlice';
 import { User } from './src/types/user';
+import { AppThemeProvider } from './src/theme/ThemeProvider';
 
 // Initialize Sentry
 Sentry.init({
@@ -113,10 +114,12 @@ function App(): React.JSX.Element | null {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <NavigationContainer>
-          <StatusBar style="auto" />
-          <RootNavigator />
-        </NavigationContainer>
+        <AppThemeProvider>
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <RootNavigator />
+          </NavigationContainer>
+        </AppThemeProvider>
       </QueryClientProvider>
     </Provider>
   );

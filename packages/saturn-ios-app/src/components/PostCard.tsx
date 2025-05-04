@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  ImageErrorEventData,
+  NativeSyntheticEvent,
+} from 'react-native';
+import styled from 'styled-components/native';
+import { DefaultTheme } from 'styled-components/native';
 import { Post } from '../types/post'; // Import the Post type
 
 // Props now take a single 'post' object
@@ -12,8 +18,108 @@ interface PostCardProps {
   // onCommentPress?: (postId: string) => void;
 }
 
+// Type for styled-components props
+type StyledProps = {
+  theme: DefaultTheme;
+  isLiked?: boolean;
+};
+
 // Placeholder image URL
 const PLACEHOLDER_AVATAR = 'https://placehold.co/50x50/EFEFEF/AAAAAA&text=PFP';
+
+// --- Styled Components ---
+const CardContainer = styled.View`
+  background-color: ${(props: StyledProps): string =>
+    props.theme.colors.surface};
+  padding: ${(props: StyledProps): string => `${props.theme.spacing.m}px`};
+  margin-vertical: ${(props: StyledProps): string =>
+    `${props.theme.spacing.s}px`};
+  border-radius: ${(props: StyledProps): string =>
+    `${props.theme.borderRadius.medium}px`};
+  border-bottom-width: ${StyleSheet.hairlineWidth}px;
+  border-bottom-color: ${(props: StyledProps): string =>
+    props.theme.colors.border};
+`;
+
+const Header = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: ${(props: StyledProps): string =>
+    `${props.theme.spacing.s}px`};
+`;
+
+const AuthorInfoTouchable = styled.TouchableOpacity`
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 1;
+`;
+
+const Avatar = styled.Image`
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  margin-right: ${(props: StyledProps): string => `${props.theme.spacing.m}px`};
+  background-color: #eee;
+`;
+
+const AuthorTextContainer = styled.View``;
+
+const DisplayName = styled.Text`
+  font-weight: bold;
+  font-size: ${(props: StyledProps): string =>
+    `${props.theme.typography.body1}px`};
+  color: ${(props: StyledProps): string => props.theme.colors.textPrimary};
+`;
+
+const Username = styled.Text`
+  font-size: ${(props: StyledProps): string =>
+    `${props.theme.typography.body2}px`};
+  color: ${(props: StyledProps): string => props.theme.colors.textSecondary};
+`;
+
+const Timestamp = styled.Text`
+  font-size: ${(props: StyledProps): string =>
+    `${props.theme.typography.caption}px`};
+  color: ${(props: StyledProps): string => props.theme.colors.textSecondary};
+  margin-left: ${(props: StyledProps): string => `${props.theme.spacing.s}px`};
+`;
+
+const Content = styled.Text`
+  font-size: ${(props: StyledProps): string =>
+    `${props.theme.typography.body1}px`};
+  line-height: ${(props: StyledProps): string =>
+    `${props.theme.typography.body1 * 1.4}px`};
+  color: ${(props: StyledProps): string => props.theme.colors.textPrimary};
+  margin-bottom: ${(props: StyledProps): string =>
+    `${props.theme.spacing.m}px`};
+`;
+
+const ActionBar = styled.View`
+  flex-direction: row;
+  justify-content: space-around;
+  padding-top: ${(props: StyledProps): string => `${props.theme.spacing.m}px`};
+  border-top-width: ${StyleSheet.hairlineWidth}px;
+  border-top-color: ${(props: StyledProps): string =>
+    props.theme.colors.border};
+`;
+
+const ActionButton = styled.TouchableOpacity`
+  padding: ${(props: StyledProps): string => `${props.theme.spacing.xs}px`};
+`;
+
+// Conditional styling for liked text
+const ActionText = styled.Text<{ isLiked?: boolean }>`
+  font-size: ${(props: StyledProps): string =>
+    `${props.theme.typography.body2}px`};
+  color: ${(props: StyledProps): string =>
+    props.isLiked
+      ? props.theme.colors.error
+      : props.theme.colors.textSecondary};
+  font-weight: ${(props: StyledProps): string =>
+    props.isLiked ? 'bold' : 'normal'};
+`;
+// --- End Styled Components ---
 
 const PostCard = ({
   post,
@@ -26,10 +132,10 @@ const PostCard = ({
   // Check if this post has author information
   const hasAuthor = React.useMemo(
     () => !!(post.author && post.author.username),
-    [post.author?.username]
+    [post.author]
   );
 
-  const handleLike = () => {
+  const handleLike = (): void => {
     // Placeholder toggle logic
     setIsLiked(!isLiked);
     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
@@ -37,12 +143,12 @@ const PostCard = ({
     console.log(`Toggled like for post ${post.id}`);
   };
 
-  const handleComment = () => {
+  const handleComment = (): void => {
     // Call onCommentPress prop later
     console.log(`Navigate to comments for post ${post.id}`);
   };
 
-  const handleAuthor = () => {
+  const handleAuthor = (): void => {
     if (onAuthorPress && hasAuthor && post.author?.username) {
       onAuthorPress(post.author.username);
     } else if (hasAuthor) {
@@ -58,128 +164,45 @@ const PostCard = ({
   const formattedTimestamp = post.createdAt; // Use raw for now
 
   return (
-    <View style={styles.card}>
-      {/* Header: Avatar, Name, Timestamp */}
-      <View style={styles.header}>
-        <TouchableOpacity
+    <CardContainer>
+      <Header>
+        <AuthorInfoTouchable
           onPress={hasAuthor ? handleAuthor : undefined}
-          style={styles.authorInfo}
           activeOpacity={0.7}
           disabled={!hasAuthor}
         >
-          <Image
+          <Avatar
             source={{ uri: post.author?.avatarUrl || PLACEHOLDER_AVATAR }}
-            style={styles.avatar}
-            onError={(e) =>
+            onError={(e: NativeSyntheticEvent<ImageErrorEventData>): void =>
               console.log('Failed to load avatar:', e.nativeEvent.error)
-            } // Basic error handling
+            }
           />
-          <View>
-            <Text style={styles.displayName}>
+          <AuthorTextContainer>
+            <DisplayName>
               {post.author?.displayName ||
                 post.author?.username ||
                 'Unknown Author'}
-            </Text>
-            <Text style={styles.username}>
-              @{post.author?.username || 'unknown'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <Text style={styles.timestamp}>{formattedTimestamp}</Text>
-      </View>
+            </DisplayName>
+            <Username>@{post.author?.username || 'unknown'}</Username>
+          </AuthorTextContainer>
+        </AuthorInfoTouchable>
+        <Timestamp>{formattedTimestamp}</Timestamp>
+      </Header>
 
-      {/* Content */}
-      <Text style={styles.content}>{post.content}</Text>
+      <Content>{post.content}</Content>
 
-      {/* TODO: Add Attachment rendering (Image, Video) later */}
-
-      {/* Action Bar */}
-      <View style={styles.actionBar}>
-        <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
-          {/* Replace with Icon later */}
-          <Text style={isLiked ? styles.likedText : styles.actionText}>
+      <ActionBar>
+        <ActionButton onPress={handleLike}>
+          <ActionText isLiked={isLiked}>
             {isLiked ? '[Liked]' : '[Like]'} ({likeCount})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleComment} style={styles.actionButton}>
-          {/* Replace with Icon later */}
-          <Text style={styles.actionText}>
-            [Comment] ({post.commentCount || 0})
-          </Text>
-        </TouchableOpacity>
-        {/* Add Share/More buttons later */}
-      </View>
-    </View>
+          </ActionText>
+        </ActionButton>
+        <ActionButton onPress={handleComment}>
+          <ActionText>[Comment] ({post.commentCount || 0})</ActionText>
+        </ActionButton>
+      </ActionBar>
+    </CardContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    paddingVertical: 12, // Adjusted padding
-    paddingHorizontal: 16,
-    marginVertical: 8,
-    // marginHorizontal: 16, // Remove horizontal margin if list container handles it
-    borderRadius: 8,
-    // Removed shadow for now, can be added back via theme/platform specifics
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0e0e0',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start', // Align items to the top
-    marginBottom: 8,
-  },
-  authorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexShrink: 1, // Allow text to shrink if needed
-  },
-  avatar: {
-    width: 40, // Slightly smaller avatar
-    height: 40,
-    borderRadius: 20, // Circular avatar
-    marginRight: 10,
-    backgroundColor: '#eee', // Placeholder background
-  },
-  displayName: {
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
-  username: {
-    fontSize: 13,
-    color: '#666',
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 8, // Add space between author/timestamp
-  },
-  content: {
-    fontSize: 15, // Slightly larger content font
-    lineHeight: 21, // Improve readability
-    marginBottom: 12, // Add space below content
-  },
-  actionBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around', // Distribute actions
-    paddingTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e0e0e0',
-  },
-  actionButton: {
-    padding: 5, // Add padding for easier tapping
-  },
-  actionText: {
-    fontSize: 13,
-    color: 'gray',
-  },
-  likedText: {
-    fontSize: 13,
-    color: 'red', // Example liked color
-    fontWeight: 'bold',
-  },
-});
 
 export default PostCard;
