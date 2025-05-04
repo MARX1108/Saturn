@@ -11,12 +11,15 @@ const mockedCreatePost = createPost as jest.Mock;
 
 // Mock QueryClient's invalidateQueries
 const mockInvalidateQueries = jest.fn().mockResolvedValue(undefined);
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQueryClient: () => ({
-    invalidateQueries: mockInvalidateQueries,
-  }),
-}));
+jest.mock('@tanstack/react-query', () => {
+  const originalModule = jest.requireActual('@tanstack/react-query');
+  return {
+    ...originalModule,
+    useQueryClient: () => ({
+      invalidateQueries: mockInvalidateQueries,
+    }),
+  };
+});
 
 // Wrapper component with QueryClientProvider
 const queryClient = new QueryClient({
@@ -26,7 +29,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
+// Use React.ReactElement instead of JSX.Element
+const wrapper = ({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 

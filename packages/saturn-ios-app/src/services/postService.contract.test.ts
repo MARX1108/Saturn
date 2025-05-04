@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/await-thenable */
-// @ts-nocheck - Disabled TypeScript checking for this file due to Pact compatibility issues
 import { Pact } from '@pact-foundation/pact';
 import path from 'path';
 import { ApiEndpoints } from '../config/api';
@@ -14,7 +9,7 @@ const PACT_PORT_FEED = 1235;
 const PACT_PORT_CREATE = 1236;
 
 // Define a simple mock provider
-const createProvider = (port) => {
+const createProvider = (port: number): Pact => {
   return new Pact({
     consumer: 'SaturnIOSApp',
     provider: 'SaturnAPI',

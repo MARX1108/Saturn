@@ -124,7 +124,11 @@ const MainTabNavigator = (): React.JSX.Element => {
 
   return (
     <Tab.Navigator
-      screenOptions={() => ({
+      screenOptions={(): {
+        headerShown: boolean;
+        tabBarActiveTintColor: string;
+        tabBarInactiveTintColor: string;
+      } => ({
         headerShown: true, // Show headers for tab screens for now
         tabBarActiveTintColor: 'tomato',
         tabBarInactiveTintColor: 'gray',

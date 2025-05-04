@@ -5,7 +5,6 @@ import {
   NativeSyntheticEvent,
 } from 'react-native';
 import styled from 'styled-components/native';
-import { DefaultTheme } from 'styled-components/native';
 import { Post } from '../types/post'; // Import the Post type
 
 // Props now take a single 'post' object
@@ -18,35 +17,50 @@ interface PostCardProps {
   // onCommentPress?: (postId: string) => void;
 }
 
-// Type for styled-components props
-type StyledProps = {
-  theme: DefaultTheme;
-  isLiked?: boolean;
-};
+// Define theme prop interface for styled components
+interface ThemeProps {
+  theme: {
+    colors: {
+      surface: string;
+      border: string;
+      textPrimary: string;
+      textSecondary: string;
+      error: string;
+    };
+    spacing: {
+      xs: number;
+      s: number;
+      m: number;
+    };
+    borderRadius: {
+      medium: number;
+    };
+    typography: {
+      caption: number;
+      body1: number;
+      body2: number;
+    };
+  };
+}
 
 // Placeholder image URL
 const PLACEHOLDER_AVATAR = 'https://placehold.co/50x50/EFEFEF/AAAAAA&text=PFP';
 
-// --- Styled Components ---
-const CardContainer = styled.View`
-  background-color: ${(props: StyledProps): string =>
-    props.theme.colors.surface};
-  padding: ${(props: StyledProps): string => `${props.theme.spacing.m}px`};
-  margin-vertical: ${(props: StyledProps): string =>
-    `${props.theme.spacing.s}px`};
-  border-radius: ${(props: StyledProps): string =>
-    `${props.theme.borderRadius.medium}px`};
+// Properly typed styled components
+const CardContainer = styled.View<ThemeProps>`
+  background-color: ${(props: ThemeProps) => props.theme.colors.surface};
+  padding: ${(props: ThemeProps) => props.theme.spacing.m}px;
+  margin-vertical: ${(props: ThemeProps) => props.theme.spacing.s}px;
+  border-radius: ${(props: ThemeProps) => props.theme.borderRadius.medium}px;
   border-bottom-width: ${StyleSheet.hairlineWidth}px;
-  border-bottom-color: ${(props: StyledProps): string =>
-    props.theme.colors.border};
+  border-bottom-color: ${(props: ThemeProps) => props.theme.colors.border};
 `;
 
-const Header = styled.View`
+const Header = styled.View<ThemeProps>`
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: ${(props: StyledProps): string =>
-    `${props.theme.spacing.s}px`};
+  margin-bottom: ${(props: ThemeProps) => props.theme.spacing.s}px;
 `;
 
 const AuthorInfoTouchable = styled.TouchableOpacity`
@@ -55,71 +69,65 @@ const AuthorInfoTouchable = styled.TouchableOpacity`
   flex-shrink: 1;
 `;
 
-const Avatar = styled.Image`
+const Avatar = styled.Image<ThemeProps>`
   width: 40px;
   height: 40px;
   border-radius: 20px;
-  margin-right: ${(props: StyledProps): string => `${props.theme.spacing.m}px`};
+  margin-right: ${(props: ThemeProps) => props.theme.spacing.m}px;
   background-color: #eee;
 `;
 
 const AuthorTextContainer = styled.View``;
 
-const DisplayName = styled.Text`
+const DisplayName = styled.Text<ThemeProps>`
   font-weight: bold;
-  font-size: ${(props: StyledProps): string =>
-    `${props.theme.typography.body1}px`};
-  color: ${(props: StyledProps): string => props.theme.colors.textPrimary};
+  font-size: ${(props: ThemeProps) => props.theme.typography.body1}px;
+  color: ${(props: ThemeProps) => props.theme.colors.textPrimary};
 `;
 
-const Username = styled.Text`
-  font-size: ${(props: StyledProps): string =>
-    `${props.theme.typography.body2}px`};
-  color: ${(props: StyledProps): string => props.theme.colors.textSecondary};
+const Username = styled.Text<ThemeProps>`
+  font-size: ${(props: ThemeProps) => props.theme.typography.body2}px;
+  color: ${(props: ThemeProps) => props.theme.colors.textSecondary};
 `;
 
-const Timestamp = styled.Text`
-  font-size: ${(props: StyledProps): string =>
-    `${props.theme.typography.caption}px`};
-  color: ${(props: StyledProps): string => props.theme.colors.textSecondary};
-  margin-left: ${(props: StyledProps): string => `${props.theme.spacing.s}px`};
+const Timestamp = styled.Text<ThemeProps>`
+  font-size: ${(props: ThemeProps) => props.theme.typography.caption}px;
+  color: ${(props: ThemeProps) => props.theme.colors.textSecondary};
+  margin-left: ${(props: ThemeProps) => props.theme.spacing.s}px;
 `;
 
-const Content = styled.Text`
-  font-size: ${(props: StyledProps): string =>
-    `${props.theme.typography.body1}px`};
-  line-height: ${(props: StyledProps): string =>
-    `${props.theme.typography.body1 * 1.4}px`};
-  color: ${(props: StyledProps): string => props.theme.colors.textPrimary};
-  margin-bottom: ${(props: StyledProps): string =>
-    `${props.theme.spacing.m}px`};
+const Content = styled.Text<ThemeProps>`
+  font-size: ${(props: ThemeProps) => props.theme.typography.body1}px;
+  line-height: ${(props: ThemeProps) => props.theme.typography.body1 * 1.4}px;
+  color: ${(props: ThemeProps) => props.theme.colors.textPrimary};
+  margin-bottom: ${(props: ThemeProps) => props.theme.spacing.m}px;
 `;
 
-const ActionBar = styled.View`
+const ActionBar = styled.View<ThemeProps>`
   flex-direction: row;
   justify-content: space-around;
-  padding-top: ${(props: StyledProps): string => `${props.theme.spacing.m}px`};
+  padding-top: ${(props: ThemeProps) => props.theme.spacing.m}px;
   border-top-width: ${StyleSheet.hairlineWidth}px;
-  border-top-color: ${(props: StyledProps): string =>
-    props.theme.colors.border};
+  border-top-color: ${(props: ThemeProps) => props.theme.colors.border};
 `;
 
-const ActionButton = styled.TouchableOpacity`
-  padding: ${(props: StyledProps): string => `${props.theme.spacing.xs}px`};
+const ActionButton = styled.TouchableOpacity<ThemeProps>`
+  padding: ${(props: ThemeProps) => props.theme.spacing.xs}px;
 `;
 
-// Conditional styling for liked text
-const ActionText = styled.Text<{ isLiked?: boolean }>`
-  font-size: ${(props: StyledProps): string =>
-    `${props.theme.typography.body2}px`};
-  color: ${(props: StyledProps): string =>
+interface ActionTextProps extends ThemeProps {
+  isLiked?: boolean;
+}
+
+const ActionText = styled.Text<ActionTextProps>`
+  font-size: ${(props: ThemeProps) => props.theme.typography.body2}px;
+  color: ${(props: ActionTextProps) =>
     props.isLiked
       ? props.theme.colors.error
       : props.theme.colors.textSecondary};
-  font-weight: ${(props: StyledProps): string =>
+  font-weight: ${(props: ActionTextProps) =>
     props.isLiked ? 'bold' : 'normal'};
 `;
-// --- End Styled Components ---
 
 const PostCard = ({
   post,

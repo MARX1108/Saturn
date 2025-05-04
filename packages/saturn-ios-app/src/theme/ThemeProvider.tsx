@@ -40,14 +40,14 @@ export const AppThemeProvider = ({
   );
 
   // Update theme if system preference changes while app is running
-  useEffect(() => {
+  useEffect((): (() => void) => {
     const subscription = Appearance.addChangeListener(
       ({ colorScheme }): void => {
         console.log('System color scheme changed:', colorScheme);
         setThemeMode(colorScheme || 'light');
       }
     );
-    return () => subscription.remove();
+    return (): void => subscription.remove();
   }, []);
 
   const toggleTheme = (): void => {
@@ -56,12 +56,12 @@ export const AppThemeProvider = ({
 
   // Select the theme object based on the current mode
   const currentTheme = useMemo(
-    () => (themeMode === 'light' ? lightTheme : darkTheme),
+    (): typeof lightTheme => (themeMode === 'light' ? lightTheme : darkTheme),
     [themeMode]
   );
 
   const contextValue = useMemo(
-    () => ({ mode: themeMode, toggleTheme }),
+    (): ThemeContextProps => ({ mode: themeMode, toggleTheme }),
     [themeMode]
   );
 

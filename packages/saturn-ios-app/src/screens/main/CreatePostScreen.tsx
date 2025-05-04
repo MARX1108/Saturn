@@ -46,7 +46,7 @@ export default function CreatePostScreen(): React.JSX.Element {
       submitPost(
         { content: postContent.trim() },
         {
-          onSuccess: (newPost) => {
+          onSuccess: (newPost): void => {
             try {
               console.log('Post created successfully:', newPost?.id);
               setPostContent(''); // Clear input on success
@@ -66,7 +66,7 @@ export default function CreatePostScreen(): React.JSX.Element {
               console.error('Error in success handler:', successHandlerError);
             }
           },
-          onError: (err) => {
+          onError: (err): void => {
             try {
               console.error('Error creating post:', err);
 
@@ -79,11 +79,11 @@ export default function CreatePostScreen(): React.JSX.Element {
                     { text: 'Cancel' },
                     {
                       text: 'Go to Profile',
-                      onPress: () => {
+                      onPress: (): void => {
                         try {
                           navigation.goBack(); // Close the create post modal
                           // Navigate to profile tab with proper navigation
-                          setTimeout(() => {
+                          setTimeout((): void => {
                             try {
                               // Use CommonActions to ensure navigation works reliably
                               navigation.dispatch(
@@ -136,7 +136,7 @@ export default function CreatePostScreen(): React.JSX.Element {
           {
             text: 'Discard',
             style: 'destructive',
-            onPress: () => {
+            onPress: (): void => {
               console.log(
                 'DEBUG - Cancel pressed, attempting to dismiss modal'
               );
@@ -180,7 +180,7 @@ export default function CreatePostScreen(): React.JSX.Element {
       ),
       headerRight: () =>
         isLoading ? (
-          <ActivityIndicator style={{ marginRight: 10 }} />
+          <ActivityIndicator style={styles.headerLoadingIndicator} />
         ) : (
           <Button
             onPress={handlePost}
@@ -292,5 +292,8 @@ const styles = StyleSheet.create({
     color: 'red',
     marginTop: 10,
     textAlign: 'center',
+  },
+  headerLoadingIndicator: {
+    marginRight: 10,
   },
 });

@@ -28,9 +28,8 @@ export default function FeedScreen(): React.JSX.Element {
     data: posts, // Rename data to posts for clarity
     isLoading, // Initial load state
     isError,
-    error,
-    isRefetching, // State for pull-to-refresh
     refetch, // Function to refetch data
+    isRefetching, // State for pull-to-refresh
   } = useFeedPosts();
 
   // Navigation handler for author profile
@@ -45,7 +44,7 @@ export default function FeedScreen(): React.JSX.Element {
   };
 
   // Render item function for FlatList
-  const renderItem = ({ item }: { item: Post }) => (
+  const renderItem = ({ item }: { item: Post }): React.JSX.Element => (
     <PostCard post={item} onAuthorPress={handleAuthorPress} />
   );
 
@@ -71,20 +70,29 @@ export default function FeedScreen(): React.JSX.Element {
   }
 
   if (isError) {
+    // Use a static error message for simplicity
+    const errorMessage = 'Error loading feed. Please try again.';
+
     return (
       <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
         <Text style={styles.errorText}>Error loading feed:</Text>
-        <Text style={styles.errorText}>
-          {error?.message || 'Unknown error'}
-        </Text>
+        <Text style={styles.errorText}>{errorMessage}</Text>
         <Button title="Retry" onPress={handleRetry} />
       </SafeAreaView>
     );
   }
 
   // --- Render Feed List ---
-  // Ensure posts is always an array
-  const postsData = Array.isArray(posts) ? posts : [];
+  // Ensure posts is always an array with proper typing
+  const postsData: Post[] = [];
+  if (Array.isArray(posts)) {
+    // Only add items that match the Post type
+    posts.forEach((post) => {
+      if (post && typeof post === 'object' && 'id' in post) {
+        postsData.push(post);
+      }
+    });
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -92,7 +100,7 @@ export default function FeedScreen(): React.JSX.Element {
         testID="feed-flatlist"
         data={postsData}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item): string => item.id}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.centerContent}>

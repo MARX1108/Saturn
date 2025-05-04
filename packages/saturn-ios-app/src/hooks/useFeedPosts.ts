@@ -7,7 +7,18 @@ import { ApiError } from '../types/api';
 // Define query key
 export const FEED_POSTS_QUERY_KEY = ['feedPosts'];
 
-export const useFeedPosts = () => {
+// Define the interface properly without extending UseQueryResult
+interface UseFeedPostsResult {
+  data: Post[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error: ApiError | null;
+  isRefetching: boolean;
+  refetch: () => Promise<void>;
+  invalidateFeedCache: () => void;
+}
+
+export const useFeedPosts = (): UseFeedPostsResult => {
   const queryClient = useQueryClient();
   // Enable query only when authenticated
   const isAuthenticated = useAppSelector(
@@ -40,7 +51,11 @@ export const useFeedPosts = () => {
   };
 
   return {
-    ...queryResult, // Includes data, isLoading, isError, error, isFetching, isRefetching, etc.
+    data: queryResult.data,
+    isLoading: queryResult.isLoading,
+    isError: queryResult.isError,
+    error: queryResult.error || null,
+    isRefetching: queryResult.isRefetching,
     refetch,
     invalidateFeedCache,
   };

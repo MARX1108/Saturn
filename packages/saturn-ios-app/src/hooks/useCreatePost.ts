@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQueryClient,
+  UseMutationResult,
+} from '@tanstack/react-query';
 import { createPost } from '../services/postService';
 import { Post } from '../types/post';
 import { ApiError } from '../types/api';
@@ -9,7 +13,11 @@ interface CreatePostBody {
   // Add other fields if needed by API
 }
 
-export const useCreatePost = () => {
+export const useCreatePost = (): UseMutationResult<
+  Post,
+  ApiError,
+  CreatePostBody
+> => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<Post, ApiError, CreatePostBody>({

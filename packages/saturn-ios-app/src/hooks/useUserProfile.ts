@@ -1,15 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { fetchUserProfileByUsername } from '../services/profileService';
 import { User } from '../types/user';
 import { ApiError } from '../types/api';
 
 // Define query key factory
-export const PROFILE_QUERY_KEY = (username: string) => [
+export const PROFILE_QUERY_KEY = (username: string): string[] => [
   'userProfile',
   username,
 ];
 
-export const useUserProfile = (username: string | undefined) => {
+export const useUserProfile = (
+  username: string | undefined
+): UseQueryResult<User, ApiError> => {
   // Enable query only if username is provided
   const isEnabled = !!username;
 
