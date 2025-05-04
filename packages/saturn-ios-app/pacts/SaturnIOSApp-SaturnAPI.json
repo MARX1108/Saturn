@@ -50,6 +50,44 @@
       }
     },
     {
+      "description": "a request to create a new post",
+      "providerState": "User is authenticated",
+      "request": {
+        "body": {
+          "content": "This is a new test post!"
+        },
+        "headers": {
+          "Accept": "application/json, text/plain, */*",
+          "Authorization": "Bearer VALID_TOKEN_EXAMPLE",
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/posts"
+      },
+      "response": {
+        "body": {
+          "_id": "newPostId123",
+          "author": {
+            "_id": "userId123",
+            "avatarUrl": "http://example.com/avatar.jpg",
+            "displayName": "Test User Display Name",
+            "id": "userId123",
+            "username": "testuser"
+          },
+          "commentCount": 0,
+          "content": "This is a new test post!",
+          "createdAt": "2025-01-01T12:00:00Z",
+          "id": "newPostId123",
+          "isLiked": false,
+          "likeCount": 0
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "status": 201
+      }
+    },
+    {
       "description": "a request to get feed posts",
       "providerState": "User has feed posts",
       "request": {
@@ -159,7 +197,7 @@
           "Authorization": "Bearer VALID_TOKEN_EXAMPLE"
         },
         "method": "GET",
-        "path": "/posts"
+        "path": "/api/posts"
       },
       "response": {
         "body": {
@@ -169,23 +207,7 @@
               "_id": "postId123",
               "author": {
                 "_id": "userId123",
-                "avatarUrl": "https://example.com/avatar.jpg",
-                "displayName": "Test User Display Name",
-                "id": "userId123",
-                "username": "testuser"
-              },
-              "commentCount": 5,
-              "content": "This is some post content",
-              "createdAt": "2025-01-01T12:00:00Z",
-              "id": "postId123",
-              "isLiked": false,
-              "likeCount": 10
-            },
-            {
-              "_id": "postId123",
-              "author": {
-                "_id": "userId123",
-                "avatarUrl": "https://example.com/avatar.jpg",
+                "avatarUrl": "http://example.com/avatar.jpg",
                 "displayName": "Test User Display Name",
                 "id": "userId123",
                 "username": "testuser"
@@ -201,32 +223,6 @@
         },
         "headers": {
           "Content-Type": "application/json; charset=utf-8"
-        },
-        "matchingRules": {
-          "$.body.posts[0]._id": {
-            "match": "type"
-          },
-          "$.body.posts[0].author._id": {
-            "match": "type"
-          },
-          "$.body.posts[0].author.id": {
-            "match": "type"
-          },
-          "$.body.posts[0].id": {
-            "match": "type"
-          },
-          "$.body.posts[1]._id": {
-            "match": "type"
-          },
-          "$.body.posts[1].author._id": {
-            "match": "type"
-          },
-          "$.body.posts[1].author.id": {
-            "match": "type"
-          },
-          "$.body.posts[1].id": {
-            "match": "type"
-          }
         },
         "status": 200
       }

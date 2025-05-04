@@ -72,15 +72,13 @@ const MainTabNavigator = (): React.JSX.Element => {
 
         // Use try-catch for navigation robustness
         try {
-          // Ensure username is valid before navigating
-          const targetUsername = currentUser.username;
-          if (targetUsername) {
-            navigation.navigate('ProfileTab', { username: targetUsername });
-          } else {
-            console.error(
-              '[MainTabNavigator] Cannot navigate to profile, username is missing from fetched data.'
-            );
-          }
+          // Use CommonActions to navigate between tabs
+          navigation.dispatch(
+            CommonActions.navigate({
+              name: 'ProfileTab',
+              params: { username: currentUser.username },
+            })
+          );
         } catch (navError) {
           console.error(
             '[MainTabNavigator] Error navigating to profile tab:',

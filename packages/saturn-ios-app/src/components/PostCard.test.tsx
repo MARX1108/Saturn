@@ -21,7 +21,9 @@ jest.mock('./PostCard', () => {
   // Using a string mock for Jest to avoid scoping issues
   return {
     __esModule: true,
-    default: function MockedPostCard(props: MockPostCardProps): JSX.Element {
+    default: function MockedPostCard(
+      props: MockPostCardProps
+    ): React.ReactElement {
       // Using basic HTML to make the mock simpler and free of React Native deps
       return {
         type: 'div',
@@ -32,7 +34,7 @@ jest.mock('./PostCard', () => {
           onAuthorPress: props.onAuthorPress,
         },
         children: [],
-      } as unknown as JSX.Element;
+      } as unknown as React.ReactElement;
     },
   };
 });

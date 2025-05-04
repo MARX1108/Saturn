@@ -9,7 +9,7 @@ import {
   RefreshControl,
   Button,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation, CommonActions } from '@react-navigation/native'; // Import CommonActions
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'; // Import navigation prop type
 import { MainTabParamList } from '../../navigation/types'; // Import MainTabParamList
 import PostCard from '../../components/PostCard';
@@ -36,7 +36,12 @@ export default function FeedScreen(): React.JSX.Element {
   // Navigation handler for author profile
   const handleAuthorPress = (username: string): void => {
     console.log(`Navigating to profile: ${username}`);
-    navigation.navigate('ProfileTab', { username });
+    navigation.dispatch(
+      CommonActions.navigate({
+        name: 'ProfileTab',
+        params: { username },
+      })
+    );
   };
 
   // Render item function for FlatList
