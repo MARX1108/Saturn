@@ -89,28 +89,45 @@ jest.mock('@react-navigation/native', () => {
 global.console = {
   ...global.console,
   error: jest.fn(),
+  // Completely disable console.warn for tests
   warn: jest.fn(),
   log: jest.fn(),
 };
 
-// Silence specific expected warnings
-jest.spyOn(console, 'warn').mockImplementation((...args) => {
-  if (args[0]?.includes('Some expected warning')) {
-    return;
-  }
-  console.warn(...args);
+// Mock TanStack Query's gc timers to prevent hanging tests
+jest.mock('@tanstack/query-core', () => {
+  const originalModule = jest.requireActual('@tanstack/query-core');
+  return {
+    ...originalModule,
+    Mutation: class extends originalModule.Mutation {
+      scheduleGc() {
+        // Override the scheduleGc method to not set timers that can hang
+        return;
+      }
+    },
+    Query: class extends originalModule.Query {
+      scheduleGc() {
+        // Override the scheduleGc method to not set timers that can hang
+        return;
+      }
+    },
+  };
 });
 
-// Fix for Jest not exiting
+// Clear all timers and pending handles after each test
 afterEach(() => {
   // Clear all timers
   jest.clearAllTimers();
+
+  // Clear any pending promises to avoid "Jest did not exit one second after the test run has completed"
+  jest.runAllTicks();
 });
 
 // Add a global afterAll hook to clean up any hanging async operations
 afterAll(() => {
   // Ensure all timers are cleared
   jest.clearAllTimers();
+  jest.runAllTicks();
 
   // Return a resolved promise to make sure Jest waits for it
   return new Promise((resolve) => {

@@ -7,8 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "eslint . --ignore-pattern \"coverage/**\" --max-warnings=1000 --quiet || exit 0",
-    "test": "jest --testPathPattern=src/services/postService.contract.test.ts --no-watchman",
+    "lint": "eslint . --ignore-pattern \"coverage/**\" --max-warnings=1000 --quiet",
+    "test": "jest --no-watchman",
     "test:contract": "jest --testMatch '**/src/**/*.contract.test.ts'"
   },
   "dependencies": {
@@ -57,7 +57,7 @@
     "jest-expo": "50.0.3",
     "prettier": "^3.5.3",
     "react": "19.1.0",
-    "react-test-renderer": "19.0.0",
+    "react-test-renderer": "19.1.0",
     "typescript": "~5.8.3"
   },
   "private": true

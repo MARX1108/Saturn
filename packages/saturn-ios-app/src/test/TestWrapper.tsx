@@ -2,14 +2,19 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { authReducer } from '../store/authSlice';
+import authReducer from '../store/slices/authSlice';
 
-// Define the correct auth state type
+// Define the correct auth state type based on the real state in authSlice.ts
 type AuthState = {
-  status: 'unauthenticated' | 'authenticated' | 'loading';
+  user: null | {
+    id: string;
+    _id: string;
+    username: string;
+    displayName?: string;
+  };
   token: string | null;
+  status: 'idle' | 'loading' | 'succeeded' | 'failed' | 'authenticated';
   profileComplete: boolean;
-  error: string | null;
 };
 
 // Create a mock redux store
@@ -20,10 +25,15 @@ const mockStore = configureStore({
   },
   preloadedState: {
     auth: {
+      user: {
+        id: 'test-id',
+        _id: 'test-id',
+        username: 'testuser',
+        displayName: 'Test User',
+      },
       status: 'authenticated' as const,
       token: 'test-token',
       profileComplete: true,
-      error: null,
     },
     // Add other state slices as needed
   },
