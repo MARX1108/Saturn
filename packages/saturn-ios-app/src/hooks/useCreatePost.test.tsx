@@ -4,18 +4,31 @@ import { createPost } from '../services/postService';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { FEED_POSTS_QUERY_KEY } from './useFeedPosts';
+import { Post } from '../types/post';
+
+// Type definition for query client mock function
+type InvalidateQueriesFn = (options: { queryKey: string[] }) => Promise<void>;
 
 // Mock the service function
 jest.mock('../services/postService');
 const mockedCreatePost = createPost as jest.Mock;
 
+// Define the return type for useQueryClient mock
+interface MockQueryClient {
+  invalidateQueries: InvalidateQueriesFn;
+}
+
 // Mock QueryClient's invalidateQueries
-const mockInvalidateQueries = jest.fn().mockResolvedValue(undefined);
+const mockInvalidateQueries = jest
+  .fn()
+  .mockResolvedValue(undefined) as jest.Mock<Promise<void>>;
+
+// Make sure we don't mock QueryClient itself
 jest.mock('@tanstack/react-query', () => {
-  const originalModule = jest.requireActual('@tanstack/react-query');
+  const actualModule = jest.requireActual('@tanstack/react-query');
   return {
-    ...originalModule,
-    useQueryClient: () => ({
+    ...actualModule,
+    useQueryClient: (): MockQueryClient => ({
       invalidateQueries: mockInvalidateQueries,
     }),
   };
@@ -45,9 +58,9 @@ describe('useCreatePost Hook', () => {
   });
 
   it('should call createPost service when mutate is called', async () => {
-    const { result } = renderHook(() => useCreatePost(), { wrapper });
+    const { result, waitFor } = renderHook(() => useCreatePost(), { wrapper });
     const postData = { content: 'Hook test content' };
-    const mockResponse = { id: 'post1', ...postData };
+    const mockResponse = { id: 'post1', ...postData } as unknown as Post;
 
     mockedCreatePost.mockResolvedValue(mockResponse);
 
@@ -55,17 +68,17 @@ describe('useCreatePost Hook', () => {
       result.current.mutate(postData);
     });
 
-    // Add a small delay to let the mutation complete
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(mockedCreatePost).toHaveBeenCalledWith(postData);
+    // Wait for the mutation to complete
+    await waitFor(() =>
+      expect(mockedCreatePost).toHaveBeenCalledWith(postData)
+    );
   });
 
   it('should invalidate feed query on success', async () => {
-    const { result } = renderHook(() => useCreatePost(), { wrapper });
+    const { result, waitFor } = renderHook(() => useCreatePost(), { wrapper });
 
     // Create a mock response
-    const mockResponse = { id: 'post3', content: 'test' };
+    const mockResponse = { id: 'post3', content: 'test' } as unknown as Post;
     mockedCreatePost.mockResolvedValue(mockResponse);
 
     // Trigger the mutation
@@ -73,12 +86,11 @@ describe('useCreatePost Hook', () => {
       result.current.mutate({ content: 'test' });
     });
 
-    // Add a small delay to let the mutation complete
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    // Check if invalidateQueries was called with the right query key
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
-      queryKey: FEED_POSTS_QUERY_KEY,
-    });
+    // Wait for invalidateQueries to be called
+    await waitFor(() =>
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({
+        queryKey: FEED_POSTS_QUERY_KEY,
+      })
+    );
   });
 });

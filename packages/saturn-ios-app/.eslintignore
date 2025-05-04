@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Build outputs
+build/
+dist/
+
+# Coverage reports
+coverage/
+
+# Expo generated files
+.expo/
+web-build/
+
+# Test snapshots
+__snapshots__/ 

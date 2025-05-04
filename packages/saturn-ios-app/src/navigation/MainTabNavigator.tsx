@@ -16,7 +16,24 @@ import { useCurrentUser } from '../hooks/useCurrentUser';
 import { Alert } from 'react-native';
 import { useAppSelector } from '../store/hooks';
 
+// Define tab colors to avoid literals
+const TAB_COLORS = {
+  ACTIVE: 'tomato',
+  INACTIVE: 'gray',
+};
+
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Define tab navigator screen options
+const getTabScreenOptions = (): {
+  headerShown: boolean;
+  tabBarActiveTintColor: string;
+  tabBarInactiveTintColor: string;
+} => ({
+  headerShown: true, // Show headers for tab screens for now
+  tabBarActiveTintColor: TAB_COLORS.ACTIVE,
+  tabBarInactiveTintColor: TAB_COLORS.INACTIVE,
+});
 
 // Placeholder component for the middle button action
 const CreatePostPlaceholderComponent = (): null => null;
@@ -123,17 +140,7 @@ const MainTabNavigator = (): React.JSX.Element => {
   };
 
   return (
-    <Tab.Navigator
-      screenOptions={(): {
-        headerShown: boolean;
-        tabBarActiveTintColor: string;
-        tabBarInactiveTintColor: string;
-      } => ({
-        headerShown: true, // Show headers for tab screens for now
-        tabBarActiveTintColor: 'tomato',
-        tabBarInactiveTintColor: 'gray',
-      })}
-    >
+    <Tab.Navigator screenOptions={getTabScreenOptions}>
       <Tab.Screen
         name="FeedTab"
         component={FeedScreen}

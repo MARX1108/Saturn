@@ -16,6 +16,12 @@ import PostCard from '../../components/PostCard';
 import { Post } from '../../types/post';
 import { useFeedPosts } from '../../hooks/useFeedPosts'; // Import the hook
 
+// Define colors to avoid inline literals
+const COLORS = {
+  LIGHT_GRAY: '#f0f0f0',
+  RED: 'red',
+};
+
 // Define the specific navigation prop type for this screen
 type FeedScreenNavigationProp = BottomTabNavigationProp<
   MainTabParamList,
@@ -121,7 +127,7 @@ export default function FeedScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.LIGHT_GRAY,
   },
   listContainer: {
     paddingHorizontal: 16,
@@ -135,8 +141,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    color: 'red',
+    color: COLORS.RED,
     textAlign: 'center',
-    marginBottom: 10,
+    margin: 20,
   },
 });

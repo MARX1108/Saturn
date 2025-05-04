@@ -6,6 +6,11 @@ import { removeToken } from '../../services/tokenStorage'; // Import removeToken
 import { useQueryClient } from '@tanstack/react-query'; // Import query client hook
 import { useThemeToggle } from '../../theme/ThemeProvider';
 
+// Define colors to avoid inline literals
+const COLORS = {
+  BORDER_COLOR: '#ccc',
+};
+
 export default function SettingsScreen(): React.JSX.Element {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient(); // Get query client instance
@@ -81,7 +86,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
+    borderBottomColor: COLORS.BORDER_COLOR,
   },
   settingLabel: {
     fontSize: 16,

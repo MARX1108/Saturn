@@ -21,6 +21,16 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useCreatePost } from '../../hooks/useCreatePost';
 
+// Define colors to avoid inline literals
+const COLORS = {
+  WHITE: '#fff',
+  LIGHT_GRAY: '#ccc',
+  MEDIUM_GRAY: '#999',
+  TOMATO: 'tomato',
+  LIGHT_RED: '#ffcccc',
+  RED: 'red',
+};
+
 type CreatePostScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'CreatePostModal'
@@ -248,7 +258,7 @@ export default function CreatePostScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.WHITE,
   },
   container: {
     flex: 1,
@@ -262,38 +272,35 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: COLORS.LIGHT_GRAY,
   },
   cancelButton: {
-    backgroundColor: '#ccc',
     padding: 12,
     borderRadius: 8,
-    flex: 1,
-    marginRight: 8,
-    alignItems: 'center',
+    backgroundColor: COLORS.LIGHT_GRAY,
   },
   postButton: {
-    backgroundColor: 'tomato',
-    padding: 12,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 8,
-    alignItems: 'center',
+    backgroundColor: COLORS.TOMATO,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
   },
   disabledButton: {
-    backgroundColor: '#ffcccc',
+    backgroundColor: COLORS.LIGHT_RED,
   },
   buttonText: {
-    color: '#fff',
+    color: COLORS.WHITE,
     fontWeight: 'bold',
   },
   errorText: {
-    color: 'red',
-    marginTop: 10,
-    textAlign: 'center',
+    color: COLORS.RED,
+    marginHorizontal: 20,
+    marginBottom: 10,
   },
   headerLoadingIndicator: {
     marginRight: 10,
+    color: COLORS.MEDIUM_GRAY,
   },
 });

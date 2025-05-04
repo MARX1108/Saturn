@@ -2,13 +2,21 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import CreatePostScreen from './CreatePostScreen';
 import { useCreatePost } from '../../hooks/useCreatePost';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
+import TestWrapper from '../../test/TestWrapper';
 
-// Define a proper type for navigation params
-interface NavigationParam {
-  screen?: string;
-  name?: string;
-  params?: Record<string, unknown>;
-}
+// Mock for store hooks is now handled by our wrapper
+// But we'll mock the specific selectors we need
+jest.mock('../../store/hooks', () => ({
+  useAppSelector: jest.fn(() => true), // Mock authenticated state
+}));
+
+// Mock type to match component expectation
+type CreatePostScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'CreatePostModal'
+>;
 
 // Mock all the dependencies
 jest.mock('../../hooks/useCreatePost', () => ({
@@ -21,27 +29,38 @@ jest.mock('react-native/Libraries/Alert/Alert', () => ({
 }));
 
 // Mock React Navigation
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: (): object => ({
-    goBack: jest.fn(),
-    setOptions: jest.fn(),
-    dispatch: jest.fn(),
-  }),
-  StackActions: {
-    pop: (): { type: string } => ({ type: 'POP' }),
-  },
-  CommonActions: {
-    navigate: (
-      params: NavigationParam
-    ): { type: string; payload: NavigationParam } => ({
-      type: 'NAVIGATE',
-      payload: params,
-    }),
-  },
-}));
+const mockGoBack = jest.fn();
+const mockSetOptions = jest.fn();
+const mockDispatch = jest.fn();
+const mockNavigate = jest.fn();
+
+const mockNavigation = {
+  goBack: mockGoBack,
+  setOptions: mockSetOptions,
+  dispatch: mockDispatch,
+  navigate: mockNavigate,
+};
+
+jest.mock('@react-navigation/native', () => {
+  const actualNav = jest.requireActual('@react-navigation/native');
+  return {
+    ...actualNav,
+    useNavigation: () => mockNavigation,
+    StackActions: {
+      pop: jest.fn(() => ({ type: 'POP' })),
+    },
+    CommonActions: {
+      navigate: jest.fn((params) => ({
+        type: 'NAVIGATE',
+        payload: params,
+      })),
+    },
+  };
+});
 
 // Setup the basic mock for useCreatePost
 beforeEach((): void => {
+  jest.clearAllMocks();
   (useCreatePost as jest.Mock).mockReturnValue({
     mutate: jest.fn(),
     isPending: false,
@@ -53,5 +72,11 @@ beforeEach((): void => {
 
 // Simple smoke test
 it('renders without crashing', (): void => {
-  expect(() => render(<CreatePostScreen />)).not.toThrow();
+  expect(() =>
+    render(
+      <TestWrapper>
+        <CreatePostScreen />
+      </TestWrapper>
+    )
+  ).not.toThrow();
 });

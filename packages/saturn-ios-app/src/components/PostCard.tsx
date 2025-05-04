@@ -3,8 +3,11 @@ import {
   StyleSheet,
   ImageErrorEventData,
   NativeSyntheticEvent,
+  View,
+  TouchableOpacity,
+  Image,
+  Text,
 } from 'react-native';
-import styled from 'styled-components/native';
 import { Post } from '../types/post'; // Import the Post type
 
 // Props now take a single 'post' object
@@ -17,117 +20,35 @@ interface PostCardProps {
   // onCommentPress?: (postId: string) => void;
 }
 
-// Define theme prop interface for styled components
-interface ThemeProps {
-  theme: {
-    colors: {
-      surface: string;
-      border: string;
-      textPrimary: string;
-      textSecondary: string;
-      error: string;
-    };
-    spacing: {
-      xs: number;
-      s: number;
-      m: number;
-    };
-    borderRadius: {
-      medium: number;
-    };
-    typography: {
-      caption: number;
-      body1: number;
-      body2: number;
-    };
-  };
-}
-
 // Placeholder image URL
 const PLACEHOLDER_AVATAR = 'https://placehold.co/50x50/EFEFEF/AAAAAA&text=PFP';
 
-// Properly typed styled components
-const CardContainer = styled.View<ThemeProps>`
-  background-color: ${(props: ThemeProps) => props.theme.colors.surface};
-  padding: ${(props: ThemeProps) => props.theme.spacing.m}px;
-  margin-vertical: ${(props: ThemeProps) => props.theme.spacing.s}px;
-  border-radius: ${(props: ThemeProps) => props.theme.borderRadius.medium}px;
-  border-bottom-width: ${StyleSheet.hairlineWidth}px;
-  border-bottom-color: ${(props: ThemeProps) => props.theme.colors.border};
-`;
+// Define colors to avoid literals
+const COLORS = {
+  SURFACE: '#ffffff',
+  BORDER: '#e6e6e6',
+  TEXT_PRIMARY: '#000000',
+  TEXT_SECONDARY: '#666666',
+  ERROR: '#ff3b30',
+  BACKGROUND: '#f5f5f5',
+};
 
-const Header = styled.View<ThemeProps>`
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: ${(props: ThemeProps) => props.theme.spacing.s}px;
-`;
+// Define spacing and typography sizes
+const SPACING = {
+  XS: 4,
+  S: 8,
+  M: 16,
+};
 
-const AuthorInfoTouchable = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
-  flex-shrink: 1;
-`;
+const TYPOGRAPHY = {
+  CAPTION: 12,
+  BODY1: 16,
+  BODY2: 14,
+};
 
-const Avatar = styled.Image<ThemeProps>`
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  margin-right: ${(props: ThemeProps) => props.theme.spacing.m}px;
-  background-color: #eee;
-`;
-
-const AuthorTextContainer = styled.View``;
-
-const DisplayName = styled.Text<ThemeProps>`
-  font-weight: bold;
-  font-size: ${(props: ThemeProps) => props.theme.typography.body1}px;
-  color: ${(props: ThemeProps) => props.theme.colors.textPrimary};
-`;
-
-const Username = styled.Text<ThemeProps>`
-  font-size: ${(props: ThemeProps) => props.theme.typography.body2}px;
-  color: ${(props: ThemeProps) => props.theme.colors.textSecondary};
-`;
-
-const Timestamp = styled.Text<ThemeProps>`
-  font-size: ${(props: ThemeProps) => props.theme.typography.caption}px;
-  color: ${(props: ThemeProps) => props.theme.colors.textSecondary};
-  margin-left: ${(props: ThemeProps) => props.theme.spacing.s}px;
-`;
-
-const Content = styled.Text<ThemeProps>`
-  font-size: ${(props: ThemeProps) => props.theme.typography.body1}px;
-  line-height: ${(props: ThemeProps) => props.theme.typography.body1 * 1.4}px;
-  color: ${(props: ThemeProps) => props.theme.colors.textPrimary};
-  margin-bottom: ${(props: ThemeProps) => props.theme.spacing.m}px;
-`;
-
-const ActionBar = styled.View<ThemeProps>`
-  flex-direction: row;
-  justify-content: space-around;
-  padding-top: ${(props: ThemeProps) => props.theme.spacing.m}px;
-  border-top-width: ${StyleSheet.hairlineWidth}px;
-  border-top-color: ${(props: ThemeProps) => props.theme.colors.border};
-`;
-
-const ActionButton = styled.TouchableOpacity<ThemeProps>`
-  padding: ${(props: ThemeProps) => props.theme.spacing.xs}px;
-`;
-
-interface ActionTextProps extends ThemeProps {
-  isLiked?: boolean;
-}
-
-const ActionText = styled.Text<ActionTextProps>`
-  font-size: ${(props: ThemeProps) => props.theme.typography.body2}px;
-  color: ${(props: ActionTextProps) =>
-    props.isLiked
-      ? props.theme.colors.error
-      : props.theme.colors.textSecondary};
-  font-weight: ${(props: ActionTextProps) =>
-    props.isLiked ? 'bold' : 'normal'};
-`;
+const BORDER_RADIUS = {
+  MEDIUM: 8,
+};
 
 const PostCard = ({
   post,
@@ -139,7 +60,7 @@ const PostCard = ({
 
   // Check if this post has author information
   const hasAuthor = React.useMemo(
-    () => !!(post.author && post.author.username),
+    (): boolean => !!(post.author && post.author.username),
     [post.author]
   );
 
@@ -172,45 +93,121 @@ const PostCard = ({
   const formattedTimestamp = post.createdAt; // Use raw for now
 
   return (
-    <CardContainer>
-      <Header>
-        <AuthorInfoTouchable
+    <View style={styles.cardContainer}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.authorInfoTouchable}
           onPress={hasAuthor ? handleAuthor : undefined}
           activeOpacity={0.7}
           disabled={!hasAuthor}
         >
-          <Avatar
+          <Image
+            style={styles.avatar}
             source={{ uri: post.author?.avatarUrl || PLACEHOLDER_AVATAR }}
             onError={(e: NativeSyntheticEvent<ImageErrorEventData>): void =>
               console.log('Failed to load avatar:', e.nativeEvent.error)
             }
           />
-          <AuthorTextContainer>
-            <DisplayName>
+          <View style={styles.authorTextContainer}>
+            <Text style={styles.displayName}>
               {post.author?.displayName ||
                 post.author?.username ||
                 'Unknown Author'}
-            </DisplayName>
-            <Username>@{post.author?.username || 'unknown'}</Username>
-          </AuthorTextContainer>
-        </AuthorInfoTouchable>
-        <Timestamp>{formattedTimestamp}</Timestamp>
-      </Header>
+            </Text>
+            <Text style={styles.username}>
+              @{post.author?.username || 'unknown'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.timestamp}>{formattedTimestamp}</Text>
+      </View>
 
-      <Content>{post.content}</Content>
+      <Text style={styles.content}>{post.content}</Text>
 
-      <ActionBar>
-        <ActionButton onPress={handleLike}>
-          <ActionText isLiked={isLiked}>
+      <View style={styles.actionBar}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
+          <Text style={[styles.actionText, isLiked && styles.actionTextLiked]}>
             {isLiked ? '[Liked]' : '[Like]'} ({likeCount})
-          </ActionText>
-        </ActionButton>
-        <ActionButton onPress={handleComment}>
-          <ActionText>[Comment] ({post.commentCount || 0})</ActionText>
-        </ActionButton>
-      </ActionBar>
-    </CardContainer>
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={handleComment}>
+          <Text style={styles.actionText}>
+            [Comment] ({post.commentCount || 0})
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    backgroundColor: COLORS.SURFACE,
+    padding: SPACING.M,
+    marginVertical: SPACING.S,
+    borderRadius: BORDER_RADIUS.MEDIUM,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.BORDER,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SPACING.S,
+  },
+  authorInfoTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: SPACING.M,
+    backgroundColor: COLORS.BACKGROUND,
+  },
+  authorTextContainer: {
+    flexShrink: 1,
+  },
+  displayName: {
+    fontWeight: 'bold',
+    fontSize: TYPOGRAPHY.BODY1,
+    color: COLORS.TEXT_PRIMARY,
+  },
+  username: {
+    fontSize: TYPOGRAPHY.BODY2,
+    color: COLORS.TEXT_SECONDARY,
+  },
+  timestamp: {
+    fontSize: TYPOGRAPHY.CAPTION,
+    color: COLORS.TEXT_SECONDARY,
+    marginLeft: SPACING.S,
+  },
+  content: {
+    fontSize: TYPOGRAPHY.BODY1,
+    lineHeight: TYPOGRAPHY.BODY1 * 1.4,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING.M,
+  },
+  actionBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: SPACING.M,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COLORS.BORDER,
+  },
+  actionButton: {
+    padding: SPACING.XS,
+  },
+  actionText: {
+    fontSize: TYPOGRAPHY.BODY2,
+    color: COLORS.TEXT_SECONDARY,
+  },
+  actionTextLiked: {
+    color: COLORS.ERROR,
+    fontWeight: 'bold',
+  },
+});
 
 export default PostCard;

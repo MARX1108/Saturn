@@ -24,29 +24,33 @@ const RootNavigator = (): React.JSX.Element => {
   }
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
       {isAuthenticated ? (
-        <>
-          <Stack.Screen
-            name="MainFlow"
-            component={MainTabNavigator}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="CreatePostModal"
-            component={CreatePostScreen}
-            options={{
-              presentation: 'modal',
-              animation: 'slide_from_bottom',
-              headerShown: true,
-            }}
-          />
-        </>
+        <Stack.Screen
+          name="MainFlow"
+          component={MainTabNavigator}
+          options={{ headerShown: false }}
+        />
       ) : (
-        <Stack.Group screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="AuthFlow" component={AuthNavigator} />
-        </Stack.Group>
+        <Stack.Screen
+          name="Login"
+          component={AuthNavigator}
+          options={{ headerShown: false }}
+        />
       )}
+      <Stack.Screen
+        name="CreatePostModal"
+        component={CreatePostScreen}
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: true,
+        }}
+      />
     </Stack.Navigator>
   );
 };

@@ -11,17 +11,23 @@ export type AuthStackParamList = {
 // Main Tab Navigator
 export type MainTabParamList = {
   FeedTab: undefined;
+  SearchTab: undefined;
   CreatePostPlaceholder: undefined;
-  ProfileTab: { username: string };
+  NotificationsTab: undefined;
+  ProfileTab: { username: string } | undefined;
   SettingsTab: undefined;
 };
 
 // Root Stack
 export type RootStackParamList = {
-  AuthFlow: NavigatorScreenParams<AuthStackParamList>;
-  MainFlow: NavigatorScreenParams<MainTabParamList>;
-  // Modal screens
+  Splash: undefined;
+  Login: undefined;
+  Register: undefined;
+  OnboardingFlow: undefined;
+  MainFlow: { screen?: string; params?: object };
   CreatePostModal: undefined;
+  CommentModal: { postId: string };
+  ProfileSettings: undefined;
 };
 
 // Props for screens within the Root Stack

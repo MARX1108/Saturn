@@ -11,4 +11,13 @@ module.exports = {
   ],
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/test/jest.setup.js'],
+  globals: {
+    __DEV__: true,
+  },
+  // Clear mocks between tests
+  clearMocks: true,
+  // Automatically restore mocks between tests
+  restoreMocks: true,
+  // Use resetMocks to help ensure tests clean up after themselves
+  resetMocks: false,
 };

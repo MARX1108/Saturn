@@ -15,6 +15,19 @@ import { MainTabParamList } from '../../navigation/types'; // Import ParamList
 import { useUserProfile } from '../../hooks/useUserProfile'; // Import the hook
 import { useAppSelector } from '../../store/hooks'; // Import useAppSelector for auth state
 
+// Define colors to avoid inline literals
+const COLORS = {
+  WHITE: '#fff',
+  LIGHT_GRAY: '#eee',
+  BORDER_COLOR: '#e0e0e0',
+  TEXT_LIGHT: '#999',
+  TEXT_MEDIUM: '#666',
+  TEXT_DARK: '#333',
+  BLUE: '#007AFF',
+  RED: 'red',
+  GRAY: '#ccc',
+};
+
 // Placeholder image URL
 const PLACEHOLDER_AVATAR =
   'https://placehold.co/100x100/EFEFEF/AAAAAA&text=PFP';
@@ -194,7 +207,7 @@ export default function ProfileScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.WHITE,
   },
   container: {
     flex: 1,
@@ -204,14 +217,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start', // Align items to top
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.BORDER_COLOR,
   },
   avatar: {
     width: 80, // Larger avatar for profile
     height: 80,
     borderRadius: 40,
     marginRight: 16,
-    backgroundColor: '#eee',
+    backgroundColor: COLORS.LIGHT_GRAY,
   },
   headerText: {
     flex: 1, // Take remaining space
@@ -224,7 +237,7 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 15,
-    color: '#666',
+    color: COLORS.TEXT_MEDIUM,
     marginBottom: 8,
   },
   statsContainer: {
@@ -233,7 +246,7 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.TEXT_MEDIUM,
     marginRight: 16, // Space between stats
     marginBottom: 4, // Add margin bottom for wrapping
   },
@@ -246,7 +259,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.BORDER_COLOR,
   },
   contentArea: {
     flex: 1, // Take remaining vertical space
@@ -256,7 +269,7 @@ const styles = StyleSheet.create({
   },
   contentPlaceholderText: {
     fontSize: 16,
-    color: '#999',
+    color: COLORS.TEXT_LIGHT,
     textAlign: 'center',
   },
   centerContent: {
@@ -267,7 +280,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    color: 'red',
+    color: COLORS.RED,
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -283,23 +296,23 @@ const styles = StyleSheet.create({
   },
   followButtonActive: {
     // Style for "Follow"
-    backgroundColor: '#007AFF', // Example blue
-    borderColor: '#007AFF',
+    backgroundColor: COLORS.BLUE,
+    borderColor: COLORS.BLUE,
   },
   followingButton: {
     // Style for "Following"
-    backgroundColor: '#fff',
-    borderColor: '#ccc',
+    backgroundColor: COLORS.WHITE,
+    borderColor: COLORS.GRAY,
   },
   followButtonText: {
     // Text for "Follow"
-    color: '#fff',
+    color: COLORS.WHITE,
     fontWeight: 'bold',
     fontSize: 14,
   },
   followingButtonText: {
     // Text for "Following"
-    color: '#333',
+    color: COLORS.TEXT_MEDIUM,
     fontWeight: 'bold',
     fontSize: 14,
   },

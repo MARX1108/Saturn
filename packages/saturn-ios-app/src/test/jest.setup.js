@@ -100,3 +100,23 @@ jest.spyOn(console, 'warn').mockImplementation((...args) => {
   }
   console.warn(...args);
 });
+
+// Fix for Jest not exiting
+afterEach(() => {
+  // Clear all timers
+  jest.clearAllTimers();
+});
+
+// Add a global afterAll hook to clean up any hanging async operations
+afterAll(() => {
+  // Ensure all timers are cleared
+  jest.clearAllTimers();
+
+  // Return a resolved promise to make sure Jest waits for it
+  return new Promise((resolve) => {
+    // Small timeout to ensure any pending microtasks are processed
+    setTimeout(() => {
+      resolve();
+    }, 100);
+  });
+});
