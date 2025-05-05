@@ -26,10 +26,10 @@ export const useCurrentUser = (): UseQueryResult<User, Error> => {
     queryKey: USER_QUERY_KEY,
     queryFn: fetchCurrentUserData,
     enabled: isEnabled, // Control query execution
-    staleTime: 1000 * 60 * 15, // 15 minutes stale time
+    staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 60, // 1 hour cache time (formerly cacheTime)
     retry: 1, // Retry once on failure
-    refetchOnWindowFocus: 'always', // Refetch on focus for freshness
+    refetchOnWindowFocus: false, // Disable for React Native
   });
 
   // Handle success case

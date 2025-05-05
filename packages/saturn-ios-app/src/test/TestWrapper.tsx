@@ -39,18 +39,6 @@ const mockStore = configureStore({
   },
 });
 
-// Create a mock query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-    mutations: {
-      retry: false,
-    },
-  },
-});
-
 // For tests, we use a simpler container since we don't need full navigation functionality
 const MockNavigationContainer = ({
   children,
@@ -63,10 +51,25 @@ interface TestWrapperProps {
   children: React.ReactNode;
 }
 
+// Define a proper type for the global object
+interface ExtendedGlobal extends NodeJS.Global {
+  queryClient?: QueryClient;
+  resetQueryClient?: () => QueryClient;
+}
+
 export const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => {
+  // Use the global query client from jest.setup.js with proper type safety
+  const globalObject = global as ExtendedGlobal;
+  const queryClient =
+    globalObject.queryClient ||
+    (globalObject.resetQueryClient && globalObject.resetQueryClient());
+
+  // If no queryClient is available, create a new one
+  const clientToUse = queryClient || new QueryClient();
+
   return (
     <Provider store={mockStore}>
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={clientToUse}>
         <MockNavigationContainer>{children}</MockNavigationContainer>
       </QueryClientProvider>
     </Provider>

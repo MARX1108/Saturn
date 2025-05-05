@@ -24,7 +24,7 @@ export default function SettingsScreen(): React.JSX.Element {
       // 2. Remove token from secure storage
       await removeToken();
       // 3. Clear TanStack Query cache (optional but good practice)
-      queryClient.clear(); // Clears all query caches
+      void queryClient.resetQueries(); // Use void to mark promise as intentionally ignored
 
       console.log(
         'Logout successful: State cleared, token removed, query cache cleared.'
@@ -59,7 +59,9 @@ export default function SettingsScreen(): React.JSX.Element {
       <View style={styles.logoutButtonContainer}>
         <Button
           title="Logout"
-          onPress={() => void handleLogout()}
+          onPress={() => {
+            void handleLogout(); // Mark promise as intentionally ignored
+          }}
           color="red"
         />
       </View>

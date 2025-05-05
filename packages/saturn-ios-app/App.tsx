@@ -17,6 +17,16 @@ Sentry.init({
   dsn: 'https://2ad6e37b1605ca0b5ac800d53f652d91@o4509256617623552.ingest.us.sentry.io/4509256623915008', // Replace with your actual DSN
   debug: __DEV__, // Enable debug in development
   environment: __DEV__ ? 'development' : 'production',
+  enableInExpoDevelopment: true, // Enable in Expo development builds
+  tracesSampleRate: 1.0, // Capture 100% of transactions in development, you may want a lower value in production
+  integrations: [
+    // Add any specific integrations needed
+    new Sentry.ReactNativeTracing(),
+  ],
+  beforeSend(event) {
+    // Add custom logic to filter/modify events before sending
+    return event;
+  },
 });
 
 // Create a query client
@@ -26,9 +36,21 @@ const queryClient = new QueryClient({
       // Configure default query options if needed
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false, // Disable window focus refetching for React Native
     },
   },
 });
+
+// Export the queryClient for testing purposes
+export { queryClient };
+
+// Add a function to test Sentry
+export const testSentryLogger = (message: string): void => {
+  // Use proper type for severity level
+  const severity = Sentry.Severity.Info;
+  Sentry.captureMessage(message, severity);
+  console.log('[Sentry] Test message sent:', message);
+};
 
 function App(): React.JSX.Element | null {
   const [isInitializing, setIsInitializing] = useState(true);

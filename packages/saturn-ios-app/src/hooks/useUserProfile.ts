@@ -19,8 +19,9 @@ export const useUserProfile = (
     queryKey: PROFILE_QUERY_KEY(username ?? ''), // Use username in query key
     queryFn: () => fetchUserProfileByUsername(username!), // Pass username to fetch function, assert non-null due to enabled flag
     enabled: isEnabled,
-    staleTime: 1000 * 60 * 5, // 5 minutes stale time
-    gcTime: 1000 * 60 * 30, // 30 minutes cache time (formerly cacheTime)
+    staleTime: 1000 * 60 * 5, // 5 minutes (this data doesn't change often)
+    gcTime: 1000 * 60 * 60, // 60 minutes
+    refetchOnWindowFocus: false, // Disable for React Native
     retry: (failureCount, error) => {
       // Don't retry on 404 (Not Found) errors
       if (error?.status === 404) {
@@ -29,7 +30,6 @@ export const useUserProfile = (
       // Retry up to 2 times for other errors
       return failureCount < 2;
     },
-    refetchOnWindowFocus: true,
     // onSuccess/onError handled via return status flags below
   });
 };

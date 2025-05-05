@@ -31,7 +31,7 @@ export const useFeedPosts = (): UseFeedPostsResult => {
     enabled: isAuthenticated, // Only run query if authenticated
     staleTime: 1000 * 60 * 2, // Data is stale after 2 minutes
     gcTime: 1000 * 60 * 30, // Garbage collection time (formerly cacheTime)
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Disable for React Native
     // onSuccess/onError handled via queryResult status flags below
   });
 

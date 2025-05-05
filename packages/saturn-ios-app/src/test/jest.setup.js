@@ -177,6 +177,8 @@ jest.mock(
         setQueryData: jest.fn(),
         getQueryData: jest.fn(),
         resetQueries: jest.fn(),
+        clear: jest.fn(),
+        unmount: jest.fn(),
       })),
       QueryClientProvider: ({ children }) => children,
       useQuery: jest.fn().mockReturnValue({
@@ -197,6 +199,7 @@ jest.mock(
         invalidateQueries: jest.fn(),
         setQueryData: jest.fn(),
         getQueryData: jest.fn(),
+        clear: jest.fn(),
       }),
     };
   },
@@ -238,12 +241,55 @@ jest.mock('@tanstack/query-core', () => {
   };
 });
 
+// Expose a function to reset the query client
+global.resetQueryClient = () => {
+  if (!global.queryClient) {
+    const { QueryClient } = require('@tanstack/react-query');
+    global.queryClient = {
+      clear: jest.fn(),
+      unmount: jest.fn(),
+      resetQueries: jest.fn(),
+      invalidateQueries: jest.fn(),
+      setQueryData: jest.fn(),
+      getQueryData: jest.fn(),
+    };
+  } else {
+    // Reset the mock functions
+    global.queryClient.clear.mockReset();
+    global.queryClient.unmount.mockReset();
+  }
+  return global.queryClient;
+};
+
+// Create initial query client
+global.resetQueryClient();
+
 // Enhanced cleanup for TanStack Query
 afterEach(() => {
   // Clear all timers
   jest.clearAllTimers();
 
   // Clear any pending promises to avoid "Jest did not exit one second after the test run has completed"
+  jest.runAllTicks();
+
+  // Reset the query client between tests
+  if (global.queryClient) {
+    global.queryClient.clear();
+  }
+});
+
+// Add a global afterAll hook to clean up any hanging async operations
+afterAll(() => {
+  // Clear the query client
+  if (global.queryClient) {
+    global.queryClient.clear();
+    global.queryClient.unmount();
+  }
+
+  // Ensure all timers are cleared
+  jest.clearAllTimers();
+
+  // Run all ticks to flush any pending promises
   jest.runAllTicks();
 });
 
