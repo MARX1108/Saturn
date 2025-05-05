@@ -33,9 +33,11 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 // Mock Toast library
-jest.mock('react-native-toast-message', () => ({
-  show: jest.fn(),
-  hide: jest.fn(),
+jest.mock('../../components/Toast', () => ({
+  Toast: {
+    show: jest.fn(),
+    hide: jest.fn(),
+  },
 }));
 
 // Mock store hooks

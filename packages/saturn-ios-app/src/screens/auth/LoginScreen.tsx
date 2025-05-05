@@ -6,6 +6,7 @@ import {
   Button,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,7 +17,6 @@ import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
 import { setToken } from '../../services/tokenStorage';
 import { User } from '../../types/user';
-import ToastMessage from 'react-native-toast-message';
 
 // Define navigation prop type for type safety
 type LoginScreenNavigationProp = NativeStackNavigationProp<
@@ -84,13 +84,8 @@ export default function LoginScreen(): React.JSX.Element {
 
       setError(errorMessage);
 
-      // Show toast instead of Alert
-      ToastMessage.show({
-        type: 'error',
-        text1: 'Login Failed',
-        text2: errorMessage,
-        position: 'bottom',
-      });
+      // Show Alert
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }

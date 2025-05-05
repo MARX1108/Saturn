@@ -11,7 +11,6 @@ import { getToken, removeToken } from './src/services/tokenStorage';
 import { setCredentials, setStatus } from './src/store/slices/authSlice';
 import { User } from './src/types/user';
 import { AppThemeProvider } from './src/theme/ThemeProvider';
-import ToastMessage from 'react-native-toast-message';
 
 // Initialize Sentry with minimal configuration to avoid type issues
 Sentry.init({
@@ -140,7 +139,6 @@ function App(): React.JSX.Element | null {
             <StatusBar style="auto" />
             <RootNavigator />
           </NavigationContainer>
-          <ToastMessage />
         </AppThemeProvider>
       </QueryClientProvider>
     </Provider>

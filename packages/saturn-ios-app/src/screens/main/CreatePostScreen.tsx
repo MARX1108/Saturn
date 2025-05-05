@@ -10,6 +10,7 @@ import {
   Text,
   View,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {
   useNavigation,
@@ -19,7 +20,6 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useCreatePost } from '../../hooks/useCreatePost';
-import ToastMessage from 'react-native-toast-message';
 
 // Define colors to avoid inline literals
 const COLORS = {
@@ -61,13 +61,8 @@ export default function CreatePostScreen(): React.JSX.Element {
               console.log('Post created successfully:', newPost?.id);
               setPostContent(''); // Clear input on success
 
-              // Show success toast
-              ToastMessage.show({
-                type: 'success',
-                text1: 'Success',
-                text2: 'Post created successfully!',
-                position: 'bottom',
-              });
+              // Show success alert
+              console.log('Post created successfully!');
 
               // Dismiss the modal
               try {
@@ -90,13 +85,11 @@ export default function CreatePostScreen(): React.JSX.Element {
 
               // Handle specific error cases
               if (err?.message?.includes('Author not found')) {
-                ToastMessage.show({
-                  type: 'error',
-                  text1: 'Profile Setup Required',
-                  text2:
-                    'Your profile is incomplete. Please make sure your profile is set up before posting.',
-                  position: 'bottom',
-                });
+                // Show error alert
+                Alert.alert(
+                  'Profile Setup Required',
+                  'Your profile is incomplete. Please make sure your profile is set up before posting.'
+                );
 
                 // Navigate to profile after a slight delay
                 setTimeout((): void => {
@@ -123,13 +116,11 @@ export default function CreatePostScreen(): React.JSX.Element {
                   }
                 }, 500);
               } else {
-                ToastMessage.show({
-                  type: 'error',
-                  text1: 'Post Failed',
-                  text2:
-                    err?.message || 'Failed to create post. Please try again.',
-                  position: 'bottom',
-                });
+                // Show error alert
+                Alert.alert(
+                  'Post Failed',
+                  err?.message || 'Failed to create post. Please try again.'
+                );
               }
             } catch (errorHandlerError) {
               console.error('Error in error handler:', errorHandlerError);
@@ -139,24 +130,18 @@ export default function CreatePostScreen(): React.JSX.Element {
       );
     } catch (submitError) {
       console.error('Failed to submit post:', submitError);
-      ToastMessage.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Something went wrong. Please try again.',
-        position: 'bottom',
-      });
+      // Show error alert
+      Alert.alert('Error', 'Something went wrong. Please try again.');
     }
   }, [postContent, navigation, submitPost, isLoading]);
 
   const handleCancel = useCallback((): void => {
     if (isLoading) {
-      // Show toast notification instead of alert
-      ToastMessage.show({
-        type: 'info',
-        text1: 'Post in Progress',
-        text2: 'A post is currently being submitted. Please wait.',
-        position: 'bottom',
-      });
+      // Show info alert
+      Alert.alert(
+        'Post in Progress',
+        'A post is currently being submitted. Please wait.'
+      );
       return;
     }
 

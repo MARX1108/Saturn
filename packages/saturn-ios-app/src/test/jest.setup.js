@@ -62,15 +62,6 @@ jest.mock('react-native', () => {
   return rn;
 });
 
-// Mock react-native-toast-message
-jest.mock('react-native-toast-message', () => {
-  const mockToast = {
-    show: jest.fn(),
-    hide: jest.fn(),
-  };
-  return mockToast;
-});
-
 // Mock expo-secure-store to avoid the ESM import errors
 jest.mock(
   'expo-secure-store',
@@ -328,3 +319,12 @@ global.cleanupPactServers = async () => {
   // If there are any hanging Pact servers, they should be cleaned up here
   return Promise.resolve();
 };
+
+// Mock our custom Toast component
+jest.mock('../components/Toast', () => ({
+  Toast: {
+    show: jest.fn(),
+    hide: jest.fn(),
+  },
+  default: jest.fn().mockImplementation(() => null),
+}));
