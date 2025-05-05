@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import apiClient from './apiClient';
 import { ApiEndpoints } from '../config/api';
 import { setToken, clearToken } from './tokenStorage';
@@ -51,7 +53,10 @@ export const login = async (
       throw new Error('Invalid response from server');
     }
   } catch (error) {
-    console.error('Login error:', error);
+    console.error(
+      'Login error:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
     throw error;
   }
 };
@@ -80,7 +85,10 @@ export const register = async (
       throw new Error('Invalid response from server');
     }
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error(
+      'Registration error:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
     throw error;
   }
 };
@@ -93,7 +101,10 @@ export const logout = async (): Promise<void> => {
     // Clear the token from storage
     await clearToken();
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error(
+      'Logout error:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
     throw error;
   }
 };

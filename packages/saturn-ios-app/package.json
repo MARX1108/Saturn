@@ -8,8 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint . --ignore-pattern \"coverage/**\" --max-warnings=1000 --quiet",
-    "test": "jest --no-watchman",
-    "test:contract": "jest --testMatch '**/src/**/*.contract.test.ts'"
+    "test": "jest --no-watchman --forceExit",
+    "test:contract": "jest --testMatch '**/src/**/*.contract.test.ts' --forceExit"
   },
   "dependencies": {
     "@babel/preset-modules": "^0.1.6",

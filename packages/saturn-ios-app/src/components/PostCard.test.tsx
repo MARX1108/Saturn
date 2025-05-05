@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import PostCard from './PostCard';
@@ -11,7 +14,7 @@ jest.unmock('./PostCard');
 jest.mock('@react-navigation/native', () => {
   return {
     ...jest.requireActual('@react-navigation/native'),
-    useNavigation: () => ({
+    useNavigation: (): Record<string, jest.Mock> => ({
       navigate: jest.fn(),
     }),
   };
@@ -66,11 +69,16 @@ describe('PostCard Component', () => {
     );
 
     // Find the author element and press it using fireEvent
-    const authorContainer = getByText('User One').parent?.parent;
+    // Using a safer approach with getByText and then finding the parent element
+    const authorName = getByText('User One');
+
+    // Get the closest TouchableOpacity parent (author container)
+    const authorContainer = authorName.parent?.parent;
     if (!authorContainer) {
       throw new Error('Could not find author container');
     }
 
+    // Trigger press event on the author container
     fireEvent.press(authorContainer);
 
     // Check if the callback was called with the username

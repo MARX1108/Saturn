@@ -3,7 +3,18 @@ import { render } from '@testing-library/react-native';
 import ProfileScreen from './ProfileScreen';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import TestWrapper from '../../test/TestWrapper';
-import { User } from '../../types/user';
+
+// Define a proper extended User type that includes isFollowing
+interface ExtendedUser {
+  id: string;
+  _id: string;
+  username: string;
+  displayName?: string;
+  bio?: string;
+  followersCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
+}
 
 // Mock the useUserProfile hook
 jest.mock('../../hooks/useUserProfile', () => ({
@@ -28,8 +39,8 @@ jest.mock('../../store/hooks', () => ({
   })),
 }));
 
-// Sample user data for mocking
-const mockUser: User = {
+// Sample user data for mocking with the ExtendedUser type
+const mockUser: ExtendedUser = {
   id: 'user1',
   _id: 'user1',
   username: 'testuser',

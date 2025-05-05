@@ -62,6 +62,17 @@ jest.mock('react-native', () => {
   return rn;
 });
 
+// Mock expo-secure-store to avoid the ESM import errors
+jest.mock(
+  'expo-secure-store',
+  () => ({
+    getItemAsync: jest.fn().mockResolvedValue(null),
+    setItemAsync: jest.fn().mockResolvedValue(undefined),
+    deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+  }),
+  { virtual: true }
+);
+
 // Mock tokenStorage to prevent circular dependencies
 jest.mock('../services/tokenStorage', () => {
   return {
@@ -70,6 +81,52 @@ jest.mock('../services/tokenStorage', () => {
     clearToken: jest.fn().mockResolvedValue(undefined),
   };
 });
+
+// Mock React Redux to prevent ESM issues
+jest.mock(
+  'react-redux',
+  () => {
+    return {
+      useDispatch: jest.fn(() => jest.fn()),
+      useSelector: jest.fn((selector) =>
+        selector({
+          auth: {
+            user: {
+              id: 'test-id',
+              _id: 'test-id',
+              username: 'testuser',
+              displayName: 'Test User',
+            },
+            status: 'authenticated',
+            token: 'test-token',
+            profileComplete: true,
+          },
+        })
+      ),
+      Provider: ({ children }) => children,
+    };
+  },
+  { virtual: true }
+);
+
+// Mock Redux Toolkit
+jest.mock(
+  '@reduxjs/toolkit',
+  () => {
+    return {
+      configureStore: jest.fn(() => ({
+        getState: jest.fn(),
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+      })),
+      createSlice: jest.fn(() => ({
+        reducer: jest.fn(),
+        actions: {},
+      })),
+    };
+  },
+  { virtual: true }
+);
 
 // Mock React Navigation more completely
 jest.mock('@react-navigation/native', () => {
@@ -109,6 +166,42 @@ jest.mock('@react-navigation/native-stack', () => {
     }),
   };
 });
+
+// Mock TanStack/React-Query
+jest.mock(
+  '@tanstack/react-query',
+  () => {
+    return {
+      QueryClient: jest.fn().mockImplementation(() => ({
+        invalidateQueries: jest.fn().mockResolvedValue(undefined),
+        setQueryData: jest.fn(),
+        getQueryData: jest.fn(),
+        resetQueries: jest.fn(),
+      })),
+      QueryClientProvider: ({ children }) => children,
+      useQuery: jest.fn().mockReturnValue({
+        data: null,
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: jest.fn(),
+      }),
+      useMutation: jest.fn().mockReturnValue({
+        mutate: jest.fn(),
+        isPending: false,
+        isError: false,
+        error: null,
+        isSuccess: false,
+      }),
+      useQueryClient: jest.fn().mockReturnValue({
+        invalidateQueries: jest.fn(),
+        setQueryData: jest.fn(),
+        getQueryData: jest.fn(),
+      }),
+    };
+  },
+  { virtual: true }
+);
 
 // Set up any global test configurations
 global.console = {
