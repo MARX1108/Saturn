@@ -135,13 +135,13 @@ export const get = <T>(
 
 export const post = <T>(
   url: string,
-  data?: Record<string, unknown>,
+  data?: any,
   config?: InternalAxiosRequestConfig
 ): Promise<T> => apiClient.post<T, T>(url, data, config);
 
 export const put = <T>(
   url: string,
-  data?: Record<string, unknown>,
+  data?: any,
   config?: InternalAxiosRequestConfig
 ): Promise<T> => apiClient.put<T, T>(url, data, config);
 
@@ -156,5 +156,29 @@ export const del = <T>(
 //     ...config,
 //     headers: { ...config?.headers, 'Content-Type': 'multipart/form-data' },
 //   });
+
+// Add explicit type augmentation for axios methods in this file
+declare module 'axios' {
+  export interface AxiosInstance {
+    get<T = any, R = T>(
+      url: string,
+      config?: InternalAxiosRequestConfig
+    ): Promise<R>;
+    post<T = any, R = T>(
+      url: string,
+      data?: any,
+      config?: InternalAxiosRequestConfig
+    ): Promise<R>;
+    put<T = any, R = T>(
+      url: string,
+      data?: any,
+      config?: InternalAxiosRequestConfig
+    ): Promise<R>;
+    delete<T = any, R = T>(
+      url: string,
+      config?: InternalAxiosRequestConfig
+    ): Promise<R>;
+  }
+}
 
 export default apiClient; // Export the configured instance

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import apiClient from './apiClient';
 import { ApiEndpoints } from '../config/api';
-import { setToken, clearToken } from './tokenStorage';
+import { setToken, removeToken } from './tokenStorage';
 
 // Types for authentication
 export interface User {
@@ -40,7 +40,8 @@ export const login = async (
   }
 
   try {
-    const response = await apiClient.post<AuthResponse>(
+    // The response is already the AuthResponse due to the axios interceptor
+    const response = await apiClient.post<AuthResponse, AuthResponse>(
       ApiEndpoints.login,
       credentials
     );
@@ -72,7 +73,8 @@ export const register = async (
   }
 
   try {
-    const response = await apiClient.post<AuthResponse>(
+    // The response is already the AuthResponse due to the axios interceptor
+    const response = await apiClient.post<AuthResponse, AuthResponse>(
       ApiEndpoints.register,
       userData
     );
@@ -99,7 +101,7 @@ export const register = async (
 export const logout = async (): Promise<void> => {
   try {
     // Clear the token from storage
-    await clearToken();
+    await removeToken();
   } catch (error) {
     console.error(
       'Logout error:',
