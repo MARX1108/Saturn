@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-// @ts-nocheck
 import React from 'react';
 import { StyleSheet, Switch, Alert, Button } from 'react-native';
 import styled from 'styled-components/native';
@@ -22,21 +21,23 @@ interface StyledComponentProps {
 // Styled Components
 const ScreenContainer = styled.SafeAreaView<StyledComponentProps>`
   flex: 1;
-  background-color: ${(props) => props.theme.colors.background};
+  background-color: ${(props: StyledComponentProps) =>
+    props.theme.colors.background};
 `;
 
 const ContentContainer = styled.View<StyledComponentProps>`
   flex: 1;
   align-items: center;
-  padding: ${(props) => props.theme.spacing.m}px;
+  padding: ${(props: StyledComponentProps) => props.theme.spacing.m}px;
 `;
 
 const Title = styled.Text<StyledComponentProps>`
-  font-size: ${(props) => props.theme.typography.h2}px;
+  font-size: ${(props: StyledComponentProps) => props.theme.typography.h2}px;
   font-weight: bold;
-  color: ${(props) => props.theme.colors.textPrimary};
-  margin-bottom: ${(props) => props.theme.spacing.xl}px;
-  font-family: ${(props) => props.theme.typography.primary};
+  color: ${(props: StyledComponentProps) => props.theme.colors.textPrimary};
+  margin-bottom: ${(props: StyledComponentProps) => props.theme.spacing.xl}px;
+  font-family: ${(props: StyledComponentProps) =>
+    props.theme.typography.primary};
 `;
 
 const SettingRow = styled.View<StyledComponentProps>`
@@ -44,19 +45,21 @@ const SettingRow = styled.View<StyledComponentProps>`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding-vertical: ${(props) => props.theme.spacing.m}px;
+  padding-vertical: ${(props: StyledComponentProps) => props.theme.spacing.m}px;
   border-bottom-width: ${StyleSheet.hairlineWidth}px;
-  border-bottom-color: ${(props) => props.theme.colors.border};
+  border-bottom-color: ${(props: StyledComponentProps) =>
+    props.theme.colors.border};
 `;
 
 const SettingLabel = styled.Text<StyledComponentProps>`
-  font-size: ${(props) => props.theme.typography.body1}px;
-  color: ${(props) => props.theme.colors.textPrimary};
-  font-family: ${(props) => props.theme.typography.secondary};
+  font-size: ${(props: StyledComponentProps) => props.theme.typography.body1}px;
+  color: ${(props: StyledComponentProps) => props.theme.colors.textPrimary};
+  font-family: ${(props: StyledComponentProps) =>
+    props.theme.typography.secondary};
 `;
 
 const LogoutButtonContainer = styled.View<StyledComponentProps>`
-  margin-top: ${(props) => props.theme.spacing.xl}px;
+  margin-top: ${(props: StyledComponentProps) => props.theme.spacing.xl}px;
 `;
 
 export default function SettingsScreen(): React.JSX.Element {

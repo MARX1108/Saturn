@@ -2,8 +2,16 @@ import { Pact } from '@pact-foundation/pact';
 import path from 'path';
 import { ApiEndpoints } from '../config/api';
 import { fetchUserProfileByUsername } from './profileService';
-import apiClient from './apiClient';
+import mockApiClient from '../test/mockApiClient';
 import * as tokenStorage from './tokenStorage';
+
+// Mock the apiClient import in profileService
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+jest.mock('./apiClient', () => ({
+  __esModule: true,
+  ...jest.requireActual('../test/mockApiClient'),
+}));
+/* eslint-enable @typescript-eslint/no-unsafe-return */
 
 // Use different port to avoid conflicts
 const PACT_PORT_PROFILE = 1238;
@@ -66,9 +74,8 @@ describe('ProfileService Contract Tests', (): void => {
         .spyOn(tokenStorage, 'getToken')
         .mockResolvedValue('VALID_TOKEN_EXAMPLE');
 
-      // Make request to Pact mock server
-      const originalBaseURL = apiClient.defaults.baseURL;
-      apiClient.defaults.baseURL = `http://localhost:${PACT_PORT_PROFILE}`;
+      // Set the base URL for this test
+      mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_PROFILE}`;
 
       try {
         const profile = await fetchUserProfileByUsername(username);
@@ -80,8 +87,7 @@ describe('ProfileService Contract Tests', (): void => {
         expect(profile.displayName).toEqual('Test User');
         expect(profile.bio).toEqual('This is a test bio.');
       } finally {
-        // Reset
-        apiClient.defaults.baseURL = originalBaseURL;
+        // Reset mocks
         jest.restoreAllMocks();
       }
     });

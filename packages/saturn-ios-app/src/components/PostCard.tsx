@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-// @ts-nocheck
 import React from 'react';
 import {
   StyleSheet,
@@ -34,19 +33,22 @@ interface StyledComponentProps {
 
 // Styled Components
 const CardContainer = styled.View<StyledComponentProps>`
-  background-color: ${(props) => props.theme.colors.surface};
-  padding: ${(props) => props.theme.spacing.m}px;
-  margin-vertical: ${(props) => props.theme.spacing.s}px;
-  border-radius: ${(props) => props.theme.borderRadius.medium}px;
+  background-color: ${(props: StyledComponentProps) =>
+    props.theme.colors.surface};
+  padding: ${(props: StyledComponentProps) => props.theme.spacing.m}px;
+  margin-vertical: ${(props: StyledComponentProps) => props.theme.spacing.s}px;
+  border-radius: ${(props: StyledComponentProps) =>
+    props.theme.borderRadius.medium}px;
   border-bottom-width: ${StyleSheet.hairlineWidth}px;
-  border-bottom-color: ${(props) => props.theme.colors.border};
+  border-bottom-color: ${(props: StyledComponentProps) =>
+    props.theme.colors.border};
 `;
 
 const Header = styled.View<StyledComponentProps>`
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: ${(props) => props.theme.spacing.s}px;
+  margin-bottom: ${(props: StyledComponentProps) => props.theme.spacing.s}px;
 `;
 
 const AuthorInfoTouchable = styled.TouchableOpacity`
@@ -59,8 +61,9 @@ const Avatar = styled.Image<StyledComponentProps>`
   width: 40px;
   height: 40px;
   border-radius: 20px;
-  margin-right: ${(props) => props.theme.spacing.m}px;
-  background-color: ${(props) => props.theme.colors.background};
+  margin-right: ${(props: StyledComponentProps) => props.theme.spacing.m}px;
+  background-color: ${(props: StyledComponentProps) =>
+    props.theme.colors.background};
 `;
 
 const AuthorTextContainer = styled.View`
@@ -69,42 +72,49 @@ const AuthorTextContainer = styled.View`
 
 const DisplayName = styled.Text<StyledComponentProps>`
   font-weight: bold;
-  font-size: ${(props) => props.theme.typography.body1}px;
-  color: ${(props) => props.theme.colors.textPrimary};
-  font-family: ${(props) => props.theme.typography.primary};
+  font-size: ${(props: StyledComponentProps) => props.theme.typography.body1}px;
+  color: ${(props: StyledComponentProps) => props.theme.colors.textPrimary};
+  font-family: ${(props: StyledComponentProps) =>
+    props.theme.typography.primary};
 `;
 
 const Username = styled.Text<StyledComponentProps>`
-  font-size: ${(props) => props.theme.typography.body2}px;
-  color: ${(props) => props.theme.colors.textSecondary};
-  font-family: ${(props) => props.theme.typography.secondary};
+  font-size: ${(props: StyledComponentProps) => props.theme.typography.body2}px;
+  color: ${(props: StyledComponentProps) => props.theme.colors.textSecondary};
+  font-family: ${(props: StyledComponentProps) =>
+    props.theme.typography.secondary};
 `;
 
 const Timestamp = styled.Text<StyledComponentProps>`
-  font-size: ${(props) => props.theme.typography.caption}px;
-  color: ${(props) => props.theme.colors.textSecondary};
-  margin-left: ${(props) => props.theme.spacing.s}px;
-  font-family: ${(props) => props.theme.typography.secondary};
+  font-size: ${(props: StyledComponentProps) =>
+    props.theme.typography.caption}px;
+  color: ${(props: StyledComponentProps) => props.theme.colors.textSecondary};
+  margin-left: ${(props: StyledComponentProps) => props.theme.spacing.s}px;
+  font-family: ${(props: StyledComponentProps) =>
+    props.theme.typography.secondary};
 `;
 
 const Content = styled.Text<StyledComponentProps>`
-  font-size: ${(props) => props.theme.typography.body1}px;
-  line-height: ${(props) => props.theme.typography.body1 * 1.4}px;
-  color: ${(props) => props.theme.colors.textPrimary};
-  margin-bottom: ${(props) => props.theme.spacing.m}px;
-  font-family: ${(props) => props.theme.typography.secondary};
+  font-size: ${(props: StyledComponentProps) => props.theme.typography.body1}px;
+  line-height: ${(props: StyledComponentProps) =>
+    props.theme.typography.body1 * 1.4}px;
+  color: ${(props: StyledComponentProps) => props.theme.colors.textPrimary};
+  margin-bottom: ${(props: StyledComponentProps) => props.theme.spacing.m}px;
+  font-family: ${(props: StyledComponentProps) =>
+    props.theme.typography.secondary};
 `;
 
 const ActionBar = styled.View<StyledComponentProps>`
   flex-direction: row;
   justify-content: space-around;
-  padding-top: ${(props) => props.theme.spacing.m}px;
+  padding-top: ${(props: StyledComponentProps) => props.theme.spacing.m}px;
   border-top-width: ${StyleSheet.hairlineWidth}px;
-  border-top-color: ${(props) => props.theme.colors.border};
+  border-top-color: ${(props: StyledComponentProps) =>
+    props.theme.colors.border};
 `;
 
 const ActionButton = styled.TouchableOpacity`
-  padding: ${(props) => props.theme.spacing.xs}px;
+  padding: ${(props: StyledComponentProps) => props.theme.spacing.xs}px;
 `;
 
 // Define a type for ActionText props
@@ -113,13 +123,14 @@ interface ActionTextProps extends StyledComponentProps {
 }
 
 const ActionText = styled.Text<ActionTextProps>`
-  font-size: ${(props) => props.theme.typography.body2}px;
-  color: ${(props) =>
+  font-size: ${(props: ActionTextProps) => props.theme.typography.body2}px;
+  color: ${(props: ActionTextProps) =>
     props.isLiked
       ? props.theme.colors.likeIconActive
       : props.theme.colors.textSecondary};
-  font-weight: ${(props) => (props.isLiked ? 'bold' : 'normal')};
-  font-family: ${(props) => props.theme.typography.secondary};
+  font-weight: ${(props: ActionTextProps) =>
+    props.isLiked ? 'bold' : 'normal'};
+  font-family: ${(props: ActionTextProps) => props.theme.typography.secondary};
 `;
 
 const PostCard = ({

@@ -2,8 +2,16 @@ import { Pact } from '@pact-foundation/pact';
 import path from 'path';
 import { ApiEndpoints } from '../config/api';
 import { fetchFeedPosts, createPost } from './postService';
-import apiClient from './apiClient';
+import mockApiClient from '../test/mockApiClient';
 import * as tokenStorage from './tokenStorage';
+
+// Mock the apiClient import in postService
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+jest.mock('./apiClient', () => ({
+  __esModule: true,
+  ...jest.requireActual('../test/mockApiClient'),
+}));
+/* eslint-enable @typescript-eslint/no-unsafe-return */
 
 // Use different ports to avoid conflicts if tests run in parallel
 const PACT_PORT_FEED = 1235;
@@ -82,9 +90,8 @@ describe('API Pact Tests - Post Service', () => {
         .spyOn(tokenStorage, 'getToken')
         .mockResolvedValue('VALID_TOKEN_EXAMPLE');
 
-      // Make request to Pact mock server
-      const originalBaseURL = apiClient.defaults.baseURL;
-      apiClient.defaults.baseURL = `http://localhost:${PACT_PORT_FEED}`;
+      // Set the base URL for this test
+      mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_FEED}`;
 
       try {
         const posts = await fetchFeedPosts();
@@ -99,8 +106,7 @@ describe('API Pact Tests - Post Service', () => {
         expect(firstPost.content).toBeDefined();
         expect(firstPost.author).toBeDefined();
       } finally {
-        // Reset
-        apiClient.defaults.baseURL = originalBaseURL;
+        // Reset mocks
         jest.restoreAllMocks();
       }
     });
@@ -155,9 +161,8 @@ describe('API Pact Tests - Post Service', () => {
         .spyOn(tokenStorage, 'getToken')
         .mockResolvedValue('VALID_TOKEN_EXAMPLE');
 
-      // Make request to Pact mock server
-      const originalBaseURL = apiClient.defaults.baseURL;
-      apiClient.defaults.baseURL = `http://localhost:${PACT_PORT_CREATE}`;
+      // Set the base URL for this test
+      mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_CREATE}`;
 
       try {
         const newPostData = { content: 'This is a new test post!' };
@@ -169,8 +174,7 @@ describe('API Pact Tests - Post Service', () => {
         expect(createdPost.content).toEqual(newPostData.content);
         expect(createdPost.author).toBeDefined();
       } finally {
-        // Reset
-        apiClient.defaults.baseURL = originalBaseURL;
+        // Reset mocks
         jest.restoreAllMocks();
       }
     });

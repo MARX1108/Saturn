@@ -107,8 +107,10 @@ apiClient.interceptors.response.use(
       apiError.message = error.message || apiError.message;
     }
 
-    // Create an error with additional properties
-    const enhancedError = new Error(apiError.message) as Error & {
+    // Create an error with additional properties - safeguard against undefined message
+    const enhancedError = new Error(
+      apiError.message || 'API Error'
+    ) as Error & {
       status?: number | null;
       code?: string;
       details?: Record<string, unknown>;
@@ -131,24 +133,48 @@ apiClient.interceptors.response.use(
 export const get = <T>(
   url: string,
   config?: InternalAxiosRequestConfig
-): Promise<T> => apiClient.get<T, T>(url, config);
+): Promise<T> => {
+  // Ensure url is a string before using it
+  if (typeof url !== 'string') {
+    throw new Error('URL must be a string');
+  }
+  return apiClient.get<T, T>(url, config);
+};
 
 export const post = <T>(
   url: string,
   data?: any,
   config?: InternalAxiosRequestConfig
-): Promise<T> => apiClient.post<T, T>(url, data, config);
+): Promise<T> => {
+  // Ensure url is a string before using it
+  if (typeof url !== 'string') {
+    throw new Error('URL must be a string');
+  }
+  return apiClient.post<T, T>(url, data, config);
+};
 
 export const put = <T>(
   url: string,
   data?: any,
   config?: InternalAxiosRequestConfig
-): Promise<T> => apiClient.put<T, T>(url, data, config);
+): Promise<T> => {
+  // Ensure url is a string before using it
+  if (typeof url !== 'string') {
+    throw new Error('URL must be a string');
+  }
+  return apiClient.put<T, T>(url, data, config);
+};
 
 export const del = <T>(
   url: string,
   config?: InternalAxiosRequestConfig
-): Promise<T> => apiClient.delete<T, T>(url, config);
+): Promise<T> => {
+  // Ensure url is a string before using it
+  if (typeof url !== 'string') {
+    throw new Error('URL must be a string');
+  }
+  return apiClient.delete<T, T>(url, config);
+};
 
 // Example for form data if needed later
 // export const postForm = <T>(url: string, formData: FormData, config?: InternalAxiosRequestConfig): Promise<T> =>

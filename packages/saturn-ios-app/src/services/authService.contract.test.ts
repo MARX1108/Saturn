@@ -2,7 +2,15 @@ import { Pact } from '@pact-foundation/pact';
 import path from 'path';
 import { ApiEndpoints } from '../config/api';
 import { login, register } from './authService';
-import apiClient from './apiClient';
+import mockApiClient from '../test/mockApiClient';
+
+// Mock the apiClient import in authService
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+jest.mock('./apiClient', () => ({
+  __esModule: true,
+  ...jest.requireActual('../test/mockApiClient'),
+}));
+/* eslint-enable @typescript-eslint/no-unsafe-return */
 
 // Use a unique port for each test to avoid conflicts
 const PACT_PORT_LOGIN = 1240;
@@ -71,9 +79,8 @@ describe('AuthService Contract Tests', (): void => {
         },
       });
 
-      // Make request to Pact mock server
-      const originalBaseURL = apiClient.defaults.baseURL;
-      apiClient.defaults.baseURL = `http://localhost:${PACT_PORT_LOGIN}`;
+      // Set the base URL for this test
+      mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_LOGIN}`;
 
       try {
         const credentials = { username: 'testuser', password: 'password123' };
@@ -85,8 +92,8 @@ describe('AuthService Contract Tests', (): void => {
         expect(result.user).toBeDefined();
         expect(result.user.username).toEqual('testuser');
       } finally {
-        // Reset
-        apiClient.defaults.baseURL = originalBaseURL;
+        // Reset mocks if needed
+        jest.restoreAllMocks();
       }
     });
   });
@@ -128,9 +135,8 @@ describe('AuthService Contract Tests', (): void => {
         },
       });
 
-      // Make request to Pact mock server
-      const originalBaseURL = apiClient.defaults.baseURL;
-      apiClient.defaults.baseURL = `http://localhost:${PACT_PORT_REGISTER}`;
+      // Set the base URL for this test
+      mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_REGISTER}`;
 
       try {
         const userData = {
@@ -146,8 +152,8 @@ describe('AuthService Contract Tests', (): void => {
         expect(result.user).toBeDefined();
         expect(result.user.username).toEqual('newuser');
       } finally {
-        // Reset
-        apiClient.defaults.baseURL = originalBaseURL;
+        // Reset mocks if needed
+        jest.restoreAllMocks();
       }
     });
   });
