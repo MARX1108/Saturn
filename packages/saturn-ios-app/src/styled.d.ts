@@ -15,6 +15,15 @@ declare module 'styled-components/native' {
       border: string;
       error: string;
       success: string;
+      // Component-specific colors
+      buttonPrimaryBackground: string;
+      buttonPrimaryText: string;
+      buttonSecondaryBackground: string;
+      buttonSecondaryText: string;
+      buttonSecondaryBorder: string;
+      tabBarActive: string;
+      tabBarInactive: string;
+      likeIconActive: string;
     };
     spacing: {
       xs: number;

@@ -4,9 +4,10 @@ import React, {
   useContext,
   useMemo,
   useEffect,
+  useCallback,
 } from 'react';
 import { ThemeProvider as SCThemeProvider } from 'styled-components/native';
-import { useColorScheme, Appearance } from 'react-native';
+import { useColorScheme, Appearance, StatusBar } from 'react-native';
 import { lightTheme, darkTheme } from './theme';
 
 interface ThemeContextProps {
@@ -44,25 +45,30 @@ export const AppThemeProvider = ({
     const subscription = Appearance.addChangeListener(
       ({ colorScheme }): void => {
         console.log('System color scheme changed:', colorScheme);
+        // You can add persistent storage here later to respect user override vs system preference
         setThemeMode(colorScheme || 'light');
       }
     );
     return (): void => subscription.remove();
   }, []);
 
-  const toggleTheme = (): void => {
+  const toggleTheme = useCallback((): void => {
     setThemeMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
-  };
+  }, []);
 
   // Select the theme object based on the current mode
-  const currentTheme = useMemo(
-    (): typeof lightTheme => (themeMode === 'light' ? lightTheme : darkTheme),
-    [themeMode]
-  );
+  const currentTheme = useMemo((): typeof lightTheme => {
+    const theme = themeMode === 'light' ? lightTheme : darkTheme;
+    // Set status bar style based on theme
+    StatusBar.setBarStyle(
+      themeMode === 'light' ? 'dark-content' : 'light-content'
+    );
+    return theme;
+  }, [themeMode]);
 
   const contextValue = useMemo(
     (): ThemeContextProps => ({ mode: themeMode, toggleTheme }),
-    [themeMode]
+    [themeMode, toggleTheme]
   );
 
   return (

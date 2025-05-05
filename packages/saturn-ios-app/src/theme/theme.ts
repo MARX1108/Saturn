@@ -44,7 +44,15 @@ export const lightTheme: DefaultTheme = {
     border: '#e0e0e0',
     error: '#B00020',
     success: '#388E3C',
-    // Add other specific colors as needed
+    // Specific component colors
+    buttonPrimaryBackground: '#00A0B0',
+    buttonPrimaryText: '#FFFFFF',
+    buttonSecondaryBackground: '#FFFFFF',
+    buttonSecondaryText: '#00A0B0',
+    buttonSecondaryBorder: '#00A0B0',
+    tabBarActive: '#00A0B0',
+    tabBarInactive: '#8e8e93',
+    likeIconActive: '#E91E63', // Pink/red for like
   },
   spacing,
   typography,
@@ -65,6 +73,15 @@ export const darkTheme: DefaultTheme = {
     border: '#333333', // Darker border
     error: '#CF6679',
     success: '#66BB6A',
+    // Specific component colors
+    buttonPrimaryBackground: '#00A0B0',
+    buttonPrimaryText: '#FFFFFF',
+    buttonSecondaryBackground: '#1E1E1E',
+    buttonSecondaryText: '#00A0B0',
+    buttonSecondaryBorder: '#444444',
+    tabBarActive: '#00A0B0',
+    tabBarInactive: '#757575',
+    likeIconActive: '#F48FB1', // Lighter pink/red for like
   },
   spacing,
   typography,

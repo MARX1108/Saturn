@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../store/slices/authSlice';
+import { ThemeProvider } from 'styled-components/native';
+import { lightTheme } from '../theme/theme';
 
 // Define the correct auth state type based on the real state in authSlice.ts
 type AuthState = {
@@ -70,7 +72,9 @@ export const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => {
   return (
     <Provider store={mockStore}>
       <QueryClientProvider client={clientToUse}>
-        <MockNavigationContainer>{children}</MockNavigationContainer>
+        <ThemeProvider theme={lightTheme}>
+          <MockNavigationContainer>{children}</MockNavigationContainer>
+        </ThemeProvider>
       </QueryClientProvider>
     </Provider>
   );

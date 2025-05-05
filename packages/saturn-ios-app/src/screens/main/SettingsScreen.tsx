@@ -1,15 +1,58 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert, Switch } from 'react-native';
+import { StyleSheet, Switch, Alert, Button } from 'react-native';
+import styled from 'styled-components/native';
+import { DefaultTheme } from 'styled-components/native';
 import { useAppDispatch } from '../../store/hooks'; // Import typed dispatch
 import { clearCredentials } from '../../store/slices/authSlice'; // Import action
 import { removeToken } from '../../services/tokenStorage'; // Import removeToken
 import { useQueryClient } from '@tanstack/react-query'; // Import query client hook
 import { useThemeToggle } from '../../theme/ThemeProvider';
 
-// Define colors to avoid inline literals
-const COLORS = {
-  BORDER_COLOR: '#ccc',
-};
+// Styled Components
+const ScreenContainer = styled.SafeAreaView`
+  flex: 1;
+  background-color: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.colors.background};
+`;
+
+const ContentContainer = styled.View`
+  flex: 1;
+  align-items: center;
+  padding: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.m}px;
+`;
+
+const Title = styled.Text`
+  font-size: ${({ theme }: { theme: DefaultTheme }) => theme.typography.h2}px;
+  font-weight: bold;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.textPrimary};
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.xl}px;
+  font-family: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.primary};
+`;
+
+const SettingRow = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-vertical: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.spacing.m}px;
+  border-bottom-width: ${StyleSheet.hairlineWidth}px;
+  border-bottom-color: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.colors.border};
+`;
+
+const SettingLabel = styled.Text`
+  font-size: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.body1}px;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.textPrimary};
+  font-family: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.secondary};
+`;
+
+const LogoutButtonContainer = styled.View`
+  margin-top: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.xl}px;
+`;
 
 export default function SettingsScreen(): React.JSX.Element {
   const dispatch = useAppDispatch();
@@ -41,59 +84,34 @@ export default function SettingsScreen(): React.JSX.Element {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Settings Screen</Text>
+    <ScreenContainer>
+      <ContentContainer>
+        <Title>Settings</Title>
 
-      {/* Theme Toggle */}
-      <View style={styles.settingRow}>
-        <Text style={styles.settingLabel}>Dark Mode</Text>
-        <Switch
-          trackColor={{ false: '#767577', true: '#81b0ff' }}
-          thumbColor={mode === 'dark' ? '#f5dd4b' : '#f4f3f4'}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleTheme}
-          value={mode === 'dark'}
-        />
-      </View>
+        <SettingRow>
+          <SettingLabel>Dark Mode</SettingLabel>
+          <Switch
+            trackColor={{
+              false: '#767577',
+              true: '#81b0ff',
+            }}
+            thumbColor={mode === 'dark' ? '#f5dd4b' : '#f4f3f4'}
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={toggleTheme}
+            value={mode === 'dark'}
+          />
+        </SettingRow>
 
-      <View style={styles.logoutButtonContainer}>
-        <Button
-          title="Logout"
-          onPress={() => {
-            void handleLogout(); // Mark promise as intentionally ignored
-          }}
-          color="red"
-        />
-      </View>
-    </View>
+        <LogoutButtonContainer>
+          <Button
+            title="Logout"
+            onPress={() => {
+              void handleLogout(); // Mark promise as intentionally ignored
+            }}
+            color="red"
+          />
+        </LogoutButtonContainer>
+      </ContentContainer>
+    </ScreenContainer>
   );
 }
-
-// Add basic styles
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 30,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.BORDER_COLOR,
-  },
-  settingLabel: {
-    fontSize: 16,
-  },
-  logoutButtonContainer: {
-    marginTop: 40,
-  },
-});

@@ -3,11 +3,9 @@ import {
   StyleSheet,
   ImageErrorEventData,
   NativeSyntheticEvent,
-  View,
-  TouchableOpacity,
-  Image,
-  Text,
 } from 'react-native';
+import styled from 'styled-components/native';
+import { DefaultTheme } from 'styled-components/native';
 import { Post } from '../types/post'; // Import the Post type
 
 // Props now take a single 'post' object
@@ -23,32 +21,110 @@ interface PostCardProps {
 // Placeholder image URL
 const PLACEHOLDER_AVATAR = 'https://placehold.co/50x50/EFEFEF/AAAAAA&text=PFP';
 
-// Define colors to avoid literals
-const COLORS = {
-  SURFACE: '#ffffff',
-  BORDER: '#e6e6e6',
-  TEXT_PRIMARY: '#000000',
-  TEXT_SECONDARY: '#666666',
-  ERROR: '#ff3b30',
-  BACKGROUND: '#f5f5f5',
-};
+// Styled Components
+const CardContainer = styled.View`
+  background-color: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.colors.surface};
+  padding: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.m}px;
+  margin-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.s}px;
+  border-radius: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.borderRadius.medium}px;
+  border-bottom-width: ${StyleSheet.hairlineWidth}px;
+  border-bottom-color: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.colors.border};
+`;
 
-// Define spacing and typography sizes
-const SPACING = {
-  XS: 4,
-  S: 8,
-  M: 16,
-};
+const Header = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.s}px;
+`;
 
-const TYPOGRAPHY = {
-  CAPTION: 12,
-  BODY1: 16,
-  BODY2: 14,
-};
+const AuthorInfoTouchable = styled.TouchableOpacity`
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 1;
+`;
 
-const BORDER_RADIUS = {
-  MEDIUM: 8,
-};
+const Avatar = styled.Image`
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  margin-right: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.m}px;
+  background-color: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.colors.background};
+`;
+
+const AuthorTextContainer = styled.View`
+  flex-shrink: 1;
+`;
+
+const DisplayName = styled.Text`
+  font-weight: bold;
+  font-size: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.body1}px;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.textPrimary};
+  font-family: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.primary};
+`;
+
+const Username = styled.Text`
+  font-size: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.body2}px;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.textSecondary};
+  font-family: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.secondary};
+`;
+
+const Timestamp = styled.Text`
+  font-size: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.caption}px;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.textSecondary};
+  margin-left: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.s}px;
+  font-family: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.secondary};
+`;
+
+const Content = styled.Text`
+  font-size: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.body1}px;
+  line-height: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.body1 * 1.4}px;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.textPrimary};
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.m}px;
+  font-family: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.secondary};
+`;
+
+const ActionBar = styled.View`
+  flex-direction: row;
+  justify-content: space-around;
+  padding-top: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.m}px;
+  border-top-width: ${StyleSheet.hairlineWidth}px;
+  border-top-color: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.colors.border};
+`;
+
+const ActionButton = styled.TouchableOpacity`
+  padding: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.xs}px;
+`;
+
+interface ActionTextProps {
+  isLiked?: boolean;
+  theme: DefaultTheme;
+}
+
+const ActionText = styled.Text<{ isLiked?: boolean }>`
+  font-size: ${({ theme }: { theme: DefaultTheme; isLiked?: boolean }) =>
+    theme.typography.body2}px;
+  color: ${({ theme, isLiked }: { theme: DefaultTheme; isLiked?: boolean }) =>
+    isLiked ? theme.colors.likeIconActive : theme.colors.textSecondary};
+  font-weight: ${({ isLiked }: { isLiked?: boolean }) =>
+    isLiked ? 'bold' : 'normal'};
+  font-family: ${({ theme }: { theme: DefaultTheme }) =>
+    theme.typography.secondary};
+`;
 
 const PostCard = ({
   post,
@@ -93,121 +169,45 @@ const PostCard = ({
   const formattedTimestamp = post.createdAt; // Use raw for now
 
   return (
-    <View style={styles.cardContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.authorInfoTouchable}
+    <CardContainer>
+      <Header>
+        <AuthorInfoTouchable
           onPress={hasAuthor ? handleAuthor : undefined}
           activeOpacity={0.7}
           disabled={!hasAuthor}
         >
-          <Image
-            style={styles.avatar}
+          <Avatar
             source={{ uri: post.author?.avatarUrl || PLACEHOLDER_AVATAR }}
             onError={(e: NativeSyntheticEvent<ImageErrorEventData>): void =>
               console.log('Failed to load avatar:', e.nativeEvent.error)
             }
           />
-          <View style={styles.authorTextContainer}>
-            <Text style={styles.displayName}>
+          <AuthorTextContainer>
+            <DisplayName>
               {post.author?.displayName ||
                 post.author?.username ||
                 'Unknown Author'}
-            </Text>
-            <Text style={styles.username}>
-              @{post.author?.username || 'unknown'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <Text style={styles.timestamp}>{formattedTimestamp}</Text>
-      </View>
+            </DisplayName>
+            <Username>@{post.author?.username || 'unknown'}</Username>
+          </AuthorTextContainer>
+        </AuthorInfoTouchable>
+        <Timestamp>{formattedTimestamp}</Timestamp>
+      </Header>
 
-      <Text style={styles.content}>{post.content}</Text>
+      <Content>{post.content}</Content>
 
-      <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
-          <Text style={[styles.actionText, isLiked && styles.actionTextLiked]}>
+      <ActionBar>
+        <ActionButton onPress={handleLike}>
+          <ActionText isLiked={isLiked}>
             {isLiked ? '[Liked]' : '[Like]'} ({likeCount})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={handleComment}>
-          <Text style={styles.actionText}>
-            [Comment] ({post.commentCount || 0})
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          </ActionText>
+        </ActionButton>
+        <ActionButton onPress={handleComment}>
+          <ActionText>[Comment] ({post.commentCount || 0})</ActionText>
+        </ActionButton>
+      </ActionBar>
+    </CardContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  cardContainer: {
-    backgroundColor: COLORS.SURFACE,
-    padding: SPACING.M,
-    marginVertical: SPACING.S,
-    borderRadius: BORDER_RADIUS.MEDIUM,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.BORDER,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: SPACING.S,
-  },
-  authorInfoTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexShrink: 1,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: SPACING.M,
-    backgroundColor: COLORS.BACKGROUND,
-  },
-  authorTextContainer: {
-    flexShrink: 1,
-  },
-  displayName: {
-    fontWeight: 'bold',
-    fontSize: TYPOGRAPHY.BODY1,
-    color: COLORS.TEXT_PRIMARY,
-  },
-  username: {
-    fontSize: TYPOGRAPHY.BODY2,
-    color: COLORS.TEXT_SECONDARY,
-  },
-  timestamp: {
-    fontSize: TYPOGRAPHY.CAPTION,
-    color: COLORS.TEXT_SECONDARY,
-    marginLeft: SPACING.S,
-  },
-  content: {
-    fontSize: TYPOGRAPHY.BODY1,
-    lineHeight: TYPOGRAPHY.BODY1 * 1.4,
-    color: COLORS.TEXT_PRIMARY,
-    marginBottom: SPACING.M,
-  },
-  actionBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingTop: SPACING.M,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.BORDER,
-  },
-  actionButton: {
-    padding: SPACING.XS,
-  },
-  actionText: {
-    fontSize: TYPOGRAPHY.BODY2,
-    color: COLORS.TEXT_SECONDARY,
-  },
-  actionTextLiked: {
-    color: COLORS.ERROR,
-    fontWeight: 'bold',
-  },
-});
 
 export default PostCard;
