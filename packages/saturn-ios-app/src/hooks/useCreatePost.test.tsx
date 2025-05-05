@@ -13,16 +13,16 @@ jest.mock('../services/postService', () => ({
   createPost: jest.fn(),
 }));
 
-// Mock the Query Client hook to return simple objects
+// Mock the queryClient invalidateQueries method
+const mockInvalidateQueries = jest.fn().mockResolvedValue(undefined);
+
+// Mock the Query Client hook
 jest.mock('@tanstack/react-query', () => {
   const actualModule = jest.requireActual('@tanstack/react-query');
 
-  // Setup mock for invalidateQueries
-  const mockInvalidateQueries = jest.fn().mockResolvedValue(undefined);
-
   return {
     ...actualModule,
-    useQueryClient: jest.fn().mockReturnValue({
+    useQueryClient: () => ({
       invalidateQueries: mockInvalidateQueries,
     }),
   };
@@ -30,7 +30,6 @@ jest.mock('@tanstack/react-query', () => {
 
 // Get references to mocks for assertions
 const mockedCreatePost = createPost as jest.Mock;
-const mockInvalidateQueries = jest.fn();
 
 // Create a real QueryClient for the wrapper
 const queryClient = new QueryClient({
@@ -45,8 +44,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-// Skip tests for now until we can debug the issues with React Query
-describe.skip('useCreatePost Hook', () => {
+describe('useCreatePost Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     queryClient.clear();

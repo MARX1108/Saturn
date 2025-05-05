@@ -51,7 +51,14 @@ const queryClient = new QueryClient({
   },
 });
 
-// Test wrapper with query client and redux store
+// For tests, we use a simpler container since we don't need full navigation functionality
+const MockNavigationContainer = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => <>{children}</>;
+
+// Test wrapper with query client, redux store, and navigation container
 interface TestWrapperProps {
   children: React.ReactNode;
 }
@@ -59,7 +66,9 @@ interface TestWrapperProps {
 export const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => {
   return (
     <Provider store={mockStore}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MockNavigationContainer>{children}</MockNavigationContainer>
+      </QueryClientProvider>
     </Provider>
   );
 };

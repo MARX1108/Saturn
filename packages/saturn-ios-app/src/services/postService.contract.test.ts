@@ -5,6 +5,7 @@ import { fetchFeedPosts, createPost } from './postService';
 import apiClient from './apiClient';
 import * as tokenStorage from './tokenStorage';
 
+// Use different ports to avoid conflicts if tests run in parallel
 const PACT_PORT_FEED = 1235;
 const PACT_PORT_CREATE = 1236;
 
@@ -21,18 +22,24 @@ const createProvider = (port: number): Pact => {
   });
 };
 
-// Skip tests temporarily until we can fix the jest.setup.js issues
-describe.skip('API Pact Tests - Post Service', () => {
+// Create providers outside test suites to ensure proper cleanup
+const feedProvider = createProvider(PACT_PORT_FEED);
+const createPostProvider = createProvider(PACT_PORT_CREATE);
+
+// Global teardown to ensure all providers are finalized
+afterAll(async () => {
+  await Promise.all([feedProvider.finalize(), createPostProvider.finalize()]);
+});
+
+describe('API Pact Tests - Post Service', () => {
   // --- Feed Tests Suite ---
   describe('Fetching Feed Posts', () => {
-    const provider = createProvider(PACT_PORT_FEED);
-
-    beforeAll(() => provider.setup());
-    afterAll(() => provider.finalize());
+    beforeAll(() => feedProvider.setup());
+    afterEach(() => feedProvider.verify());
 
     test('should return a list of posts on success', async () => {
       // Setup the expected interaction
-      await provider.addInteraction({
+      await feedProvider.addInteraction({
         state: 'User is authenticated and posts exist',
         uponReceiving: 'a request to get the feed posts',
         withRequest: {
@@ -96,22 +103,17 @@ describe.skip('API Pact Tests - Post Service', () => {
         apiClient.defaults.baseURL = originalBaseURL;
         jest.restoreAllMocks();
       }
-
-      // Verify interactions
-      await provider.verify();
     });
   });
 
   // --- Create Post Tests Suite ---
   describe('Creating a Post', () => {
-    const provider = createProvider(PACT_PORT_CREATE);
-
-    beforeAll(() => provider.setup());
-    afterAll(() => provider.finalize());
+    beforeAll(() => createPostProvider.setup());
+    afterEach(() => createPostProvider.verify());
 
     test('should return the created post on success', async () => {
       // Setup the expected interaction
-      await provider.addInteraction({
+      await createPostProvider.addInteraction({
         state: 'User is authenticated',
         uponReceiving: 'a request to create a new post',
         withRequest: {
@@ -171,9 +173,6 @@ describe.skip('API Pact Tests - Post Service', () => {
         apiClient.defaults.baseURL = originalBaseURL;
         jest.restoreAllMocks();
       }
-
-      // Verify interactions
-      await provider.verify();
     });
   });
 });

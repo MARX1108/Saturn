@@ -1,41 +1,19 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import PostCard from './PostCard';
 import { Post } from '../types/post';
+import TestWrapper from '../test/TestWrapper';
 
-// Define test element type
-interface TestElement {
-  props: Record<string, unknown>;
-  type: string;
-  children: Array<unknown>;
-}
+// Unmock the actual PostCard component to test it properly
+jest.unmock('./PostCard');
 
-// Interface for mock component props
-interface MockPostCardProps {
-  post: Post;
-  onAuthorPress?: (username: string) => void;
-}
-
-// Mock PostCard with a simple mock
-jest.mock('./PostCard', () => {
-  // Using a string mock for Jest to avoid scoping issues
+// Mock navigation as it might be used in the PostCard
+jest.mock('@react-navigation/native', () => {
   return {
-    __esModule: true,
-    default: function MockedPostCard(
-      props: MockPostCardProps
-    ): React.ReactElement {
-      // Using basic HTML to make the mock simpler and free of React Native deps
-      return {
-        type: 'div',
-        props: {
-          'data-testid': 'post-card',
-          'data-post': JSON.stringify(props.post),
-          'data-on-author-press': !!props.onAuthorPress,
-          onAuthorPress: props.onAuthorPress,
-        },
-        children: [],
-      } as unknown as React.ReactElement;
-    },
+    ...jest.requireActual('@react-navigation/native'),
+    useNavigation: () => ({
+      navigate: jest.fn(),
+    }),
   };
 });
 
@@ -64,56 +42,49 @@ const mockPostLiked: Post = {
 };
 
 describe('PostCard Component', () => {
-  // Skip tests that are failing due to React Native environment issues
-  it.skip('renders post data correctly', (): void => {
-    const { getByTestId } = render(<PostCard post={mockPost} />);
-
-    // Type-safe assertions with proper typing
-    const card = getByTestId('post-card') as unknown as TestElement;
-    expect(card).toBeTruthy();
-
-    // Type-safe conversion of JSON string to Post type
-    const postDataStr = card.props['data-post'] as string;
-    const postData = JSON.parse(postDataStr) as Post;
-
-    expect(postData.id).toBe('p1');
-    expect(postData.author.username).toBe('user1');
-    expect(postData.content).toBe('Test post content');
-    expect(postData.likeCount).toBe(5);
-    expect(postData.commentCount).toBe(2);
-    expect(postData.isLiked).toBe(false);
-  });
-
-  it.skip('calls onAuthorPress when author info is pressed', (): void => {
-    const mockAuthorPress = jest.fn();
-    const { getByTestId } = render(
-      <PostCard post={mockPost} onAuthorPress={mockAuthorPress} />
+  it('renders post data correctly', (): void => {
+    const { getByText } = render(
+      <TestWrapper>
+        <PostCard post={mockPost} />
+      </TestWrapper>
     );
 
-    // Type-safe assertions with proper typing
-    const card = getByTestId('post-card') as unknown as TestElement;
-    const hasAuthorPress = card.props['data-on-author-press'] as boolean;
-    expect(hasAuthorPress).toBe(true);
-
-    // Type-safe access to onAuthorPress function
-    const onAuthorPressFn = card.props.onAuthorPress as (
-      username: string
-    ) => void;
-    if (onAuthorPressFn) {
-      onAuthorPressFn('user1');
-      expect(mockAuthorPress).toHaveBeenCalledWith('user1');
-    }
+    // Check if the content is displayed
+    expect(getByText('Test post content')).toBeTruthy();
+    // Check for author name
+    expect(getByText('User One')).toBeTruthy();
+    // Check for username
+    expect(getByText('@user1')).toBeTruthy();
   });
 
-  it.skip('displays post with liked state correctly', (): void => {
-    const { getByTestId } = render(<PostCard post={mockPostLiked} />);
+  it('calls onAuthorPress when author info is pressed', (): void => {
+    const mockAuthorPress = jest.fn();
+    const { getByText } = render(
+      <TestWrapper>
+        <PostCard post={mockPost} onAuthorPress={mockAuthorPress} />
+      </TestWrapper>
+    );
 
-    // Type-safe assertions with proper typing
-    const card = getByTestId('post-card') as unknown as TestElement;
-    const postDataStr = card.props['data-post'] as string;
-    const postData = JSON.parse(postDataStr) as Post;
+    // Find the author element and press it using fireEvent
+    const authorContainer = getByText('User One').parent?.parent;
+    if (!authorContainer) {
+      throw new Error('Could not find author container');
+    }
 
-    expect(postData.isLiked).toBe(true);
-    expect(postData.likeCount).toBe(6);
+    fireEvent.press(authorContainer);
+
+    // Check if the callback was called with the username
+    expect(mockAuthorPress).toHaveBeenCalledWith('user1');
+  });
+
+  it('displays post with liked state correctly', (): void => {
+    const { getByText } = render(
+      <TestWrapper>
+        <PostCard post={mockPostLiked} />
+      </TestWrapper>
+    );
+
+    // Check if like button shows the correct count
+    expect(getByText(/\[Liked\] \(6\)/)).toBeTruthy();
   });
 });

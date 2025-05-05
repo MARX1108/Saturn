@@ -71,17 +71,42 @@ jest.mock('../services/tokenStorage', () => {
   };
 });
 
-// Mock React Navigation
+// Mock React Navigation more completely
 jest.mock('@react-navigation/native', () => {
+  const actualNav = jest.requireActual('@react-navigation/native');
   return {
+    ...actualNav,
     useNavigation: () => ({
       navigate: jest.fn(),
       goBack: jest.fn(),
+      setOptions: jest.fn(),
+      dispatch: jest.fn(),
     }),
     useRoute: () => ({
       params: { username: 'testprofile' },
     }),
     useIsFocused: jest.fn(() => true),
+    // Mock NavigationContainer to avoid getConstants errors
+    NavigationContainer: ({ children }) => children,
+    StackActions: {
+      pop: jest.fn(() => ({ type: 'POP' })),
+    },
+    CommonActions: {
+      navigate: jest.fn((name) => ({
+        type: 'NAVIGATE',
+        payload: { name },
+      })),
+    },
+  };
+});
+
+// Mock @react-navigation/native-stack which is used in many components
+jest.mock('@react-navigation/native-stack', () => {
+  return {
+    createNativeStackNavigator: jest.fn().mockReturnValue({
+      Navigator: ({ children }) => children,
+      Screen: ({ children }) => children,
+    }),
   };
 });
 
@@ -97,24 +122,30 @@ global.console = {
 // Mock TanStack Query's gc timers to prevent hanging tests
 jest.mock('@tanstack/query-core', () => {
   const originalModule = jest.requireActual('@tanstack/query-core');
+
+  // Improved mocked classes that don't use timers
+  const MockMutation = class extends originalModule.Mutation {
+    scheduleGc() {
+      // Override the scheduleGc method to not set timers that can hang
+      return;
+    }
+  };
+
+  const MockQuery = class extends originalModule.Query {
+    scheduleGc() {
+      // Override the scheduleGc method to not set timers that can hang
+      return;
+    }
+  };
+
   return {
     ...originalModule,
-    Mutation: class extends originalModule.Mutation {
-      scheduleGc() {
-        // Override the scheduleGc method to not set timers that can hang
-        return;
-      }
-    },
-    Query: class extends originalModule.Query {
-      scheduleGc() {
-        // Override the scheduleGc method to not set timers that can hang
-        return;
-      }
-    },
+    Mutation: MockMutation,
+    Query: MockQuery,
   };
 });
 
-// Clear all timers and pending handles after each test
+// Enhanced cleanup for TanStack Query
 afterEach(() => {
   // Clear all timers
   jest.clearAllTimers();
@@ -129,6 +160,11 @@ afterAll(() => {
   jest.clearAllTimers();
   jest.runAllTicks();
 
+  // Clear any remaining MutationObserver/QueryObserver instances
+  if (global.gc) {
+    global.gc();
+  }
+
   // Return a resolved promise to make sure Jest waits for it
   return new Promise((resolve) => {
     // Small timeout to ensure any pending microtasks are processed
@@ -137,3 +173,10 @@ afterAll(() => {
     }, 100);
   });
 });
+
+// Add a global teardown function for handling Pact servers
+global.cleanupPactServers = async () => {
+  // This is a placeholder for any pact-specific cleanup
+  // If there are any hanging Pact servers, they should be cleaned up here
+  return Promise.resolve();
+};

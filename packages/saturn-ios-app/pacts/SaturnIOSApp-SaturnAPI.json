@@ -50,6 +50,87 @@
       }
     },
     {
+      "description": "a login request for the auth endpoint",
+      "providerState": "User exists and credentials are correct",
+      "request": {
+        "body": {
+          "password": "password123",
+          "username": "testuser"
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "connection": "keep-alive",
+          "content-length": "48",
+          "host": "localhost:9876",
+          "user-agent": "axios/1.9.0"
+        },
+        "matchingRules": {
+          "$.header.accept": {
+            "match": "type"
+          },
+          "$.header.connection": {
+            "match": "type"
+          },
+          "$.header.host": {
+            "match": "type"
+          },
+          "$.header['accept-encoding']": {
+            "match": "type"
+          },
+          "$.header['content-length']": {
+            "match": "type"
+          },
+          "$.header['user-agent']": {
+            "match": "type"
+          }
+        },
+        "method": "POST",
+        "path": "/api/auth/login"
+      },
+      "response": {
+        "body": {
+          "actor": {
+            "_id": "user-id-123",
+            "displayName": "Test User",
+            "email": "hello@pact.io",
+            "id": "user-id-123",
+            "username": "testuser"
+          },
+          "token": "some.jwt.token"
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "matchingRules": {
+          "$.body.actor": {
+            "match": "type"
+          },
+          "$.body.actor._id": {
+            "match": "type"
+          },
+          "$.body.actor.displayName": {
+            "match": "type"
+          },
+          "$.body.actor.email": {
+            "match": "regex",
+            "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$"
+          },
+          "$.body.actor.id": {
+            "match": "type"
+          },
+          "$.body.actor.username": {
+            "match": "type"
+          },
+          "$.body.token": {
+            "match": "type"
+          }
+        },
+        "status": 200
+      }
+    },
+    {
       "description": "a request to create a new post",
       "providerState": "User is authenticated",
       "request": {
@@ -85,6 +166,34 @@
           "Content-Type": "application/json; charset=utf-8"
         },
         "status": 201
+      }
+    },
+    {
+      "description": "a request to fetch a user profile",
+      "providerState": "User profile exists",
+      "request": {
+        "headers": {
+          "Accept": "application/json, text/plain, */*",
+          "Authorization": "Bearer VALID_TOKEN_EXAMPLE"
+        },
+        "method": "GET",
+        "path": "/api/actors/testuser"
+      },
+      "response": {
+        "body": {
+          "_id": "userId123",
+          "bio": "This is a test bio.",
+          "displayName": "Test User",
+          "followersCount": 100,
+          "followingCount": 50,
+          "id": "userId123",
+          "isFollowing": false,
+          "username": "testuser"
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "status": 200
       }
     },
     {
@@ -225,6 +334,69 @@
           "Content-Type": "application/json; charset=utf-8"
         },
         "status": 200
+      }
+    },
+    {
+      "description": "a request to login",
+      "providerState": "User credentials are valid",
+      "request": {
+        "body": {
+          "password": "password123",
+          "username": "testuser"
+        },
+        "headers": {
+          "Accept": "application/json, text/plain, */*",
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/auth/login"
+      },
+      "response": {
+        "body": {
+          "token": "valid-auth-token",
+          "user": {
+            "_id": "userId123",
+            "displayName": "Test User",
+            "id": "userId123",
+            "username": "testuser"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a request to register a new user",
+      "providerState": "Registration is enabled",
+      "request": {
+        "body": {
+          "email": "newuser@example.com",
+          "password": "newpassword123",
+          "username": "newuser"
+        },
+        "headers": {
+          "Accept": "application/json, text/plain, */*",
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/auth/register"
+      },
+      "response": {
+        "body": {
+          "token": "new-user-auth-token",
+          "user": {
+            "_id": "newUserId123",
+            "displayName": "New User",
+            "id": "newUserId123",
+            "username": "newuser"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        "status": 201
       }
     }
   ],
