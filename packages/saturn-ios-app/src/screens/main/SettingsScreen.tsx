@@ -6,7 +6,7 @@ import { useAppDispatch } from '../../store/hooks'; // Import typed dispatch
 import { clearCredentials } from '../../store/slices/authSlice'; // Import action
 import { removeToken } from '../../services/tokenStorage'; // Import removeToken
 import { useQueryClient } from '@tanstack/react-query'; // Import query client hook
-import { useThemeToggle } from '../../theme/ThemeProvider';
+import { useThemeToggle, useTheme } from '../../theme/ThemeProvider';
 
 // Styled Components
 const ScreenContainer = styled.SafeAreaView`

@@ -1,3 +1,6 @@
+// Import the polyfill first to ensure document is defined before any libraries load
+import './documentPolyfill';
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';

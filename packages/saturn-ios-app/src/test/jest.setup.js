@@ -327,3 +327,17 @@ jest.mock('../../src/components/Toast', () => ({
     hide: jest.fn(),
   },
 }));
+
+// Add global document mock to fix styled-components issues
+global.document = {
+  createElement: () => ({}),
+  head: {},
+  createTextNode: () => ({}),
+};
+
+// Mock Window to avoid 'document' reference errors
+global.window = {
+  navigator: {
+    product: 'ReactNative',
+  },
+};

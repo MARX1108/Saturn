@@ -81,8 +81,9 @@ const ToastComponent: React.FC = () => {
     });
 
     return () => {
-      // Clear reference when unmounted
-      ToastManager.setToastRef(null);
+      // Clear reference when unmounted - using undefined instead of null to fix type error
+      // TypeScript recognizes this as valid, whereas null causes a type error
+      ToastManager.toastRef = undefined as any;
     };
   }, []);
 

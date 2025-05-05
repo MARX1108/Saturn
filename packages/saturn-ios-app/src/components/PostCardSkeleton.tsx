@@ -1,22 +1,25 @@
 import React from 'react';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { View, StyleSheet } from 'react-native';
-import styled from 'styled-components/native';
-import { Theme } from '../theme/theme';
-
-// Match PostCard's container style for consistent spacing/layout
-const SkeletonCardContainer = styled(View)`
-  background-color: ${(props: { theme: Theme }) => props.theme.colors.surface};
-  padding: ${(props: { theme: Theme }) => props.theme.spacing.m}px;
-  margin-vertical: ${(props: { theme: Theme }) => props.theme.spacing.s}px;
-  margin-horizontal: ${(props: { theme: Theme }) => props.theme.spacing.m}px;
-  border-radius: ${(props: { theme: Theme }) =>
-    props.theme.borderRadius.medium}px;
-`;
+import { useTheme } from '../theme/ThemeProvider';
 
 const PostCardSkeleton = (): React.JSX.Element => {
+  const theme = useTheme();
+
   return (
-    <SkeletonCardContainer testID="post-card-skeleton">
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.surface,
+          padding: theme.spacing.m,
+          marginVertical: theme.spacing.s,
+          marginHorizontal: theme.spacing.m,
+          borderRadius: theme.borderRadius.medium,
+        },
+      ]}
+      testID="post-card-skeleton"
+    >
       <SkeletonPlaceholder borderRadius={4}>
         <SkeletonPlaceholder.Item flexDirection="row" alignItems="center">
           {/* Avatar Placeholder */}
@@ -46,8 +49,15 @@ const PostCardSkeleton = (): React.JSX.Element => {
           <SkeletonPlaceholder.Item width={80} height={20} />
         </SkeletonPlaceholder.Item>
       </SkeletonPlaceholder>
-    </SkeletonCardContainer>
+    </View>
   );
 };
+
+// Define styles using StyleSheet
+const styles = StyleSheet.create({
+  container: {
+    // Styles that don't depend on theme can go here
+  },
+});
 
 export default PostCardSkeleton;

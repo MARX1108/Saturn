@@ -6,13 +6,14 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { ThemeProvider as SCThemeProvider } from 'styled-components/native';
 import { useColorScheme, Appearance, StatusBar } from 'react-native';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import { lightTheme, darkTheme } from './theme';
 
 interface ThemeContextProps {
   mode: 'light' | 'dark';
   toggleTheme: () => void;
+  theme: typeof lightTheme;
 }
 
 // Create context with a default value
@@ -24,6 +25,15 @@ export const useThemeToggle = (): ThemeContextProps => {
     throw new Error('useThemeToggle must be used within a AppThemeProvider');
   }
   return context;
+};
+
+// Export the theme hook for use in styled components
+export const useTheme = (): typeof lightTheme => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a AppThemeProvider');
+  }
+  return context.theme;
 };
 
 interface AppThemeProviderProps {
@@ -67,13 +77,17 @@ export const AppThemeProvider = ({
   }, [themeMode]);
 
   const contextValue = useMemo(
-    (): ThemeContextProps => ({ mode: themeMode, toggleTheme }),
-    [themeMode, toggleTheme]
+    (): ThemeContextProps => ({
+      mode: themeMode,
+      toggleTheme,
+      theme: currentTheme,
+    }),
+    [themeMode, toggleTheme, currentTheme]
   );
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <SCThemeProvider theme={currentTheme}>{children}</SCThemeProvider>
+      <StyledThemeProvider theme={currentTheme}>{children}</StyledThemeProvider>
     </ThemeContext.Provider>
   );
 };

@@ -1,23 +1,23 @@
 import React from 'react';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { View, StyleSheet } from 'react-native';
-import styled from 'styled-components/native';
-import { Theme } from '../theme/theme';
-
-// Match ProfileScreen header layout
-const SkeletonHeaderContainer = styled(View)`
-  flex-direction: row;
-  align-items: flex-start;
-  padding: ${(props: { theme: Theme }) => props.theme.spacing.m}px;
-  border-bottom-width: ${StyleSheet.hairlineWidth}px;
-  border-bottom-color: ${(props: { theme: Theme }) =>
-    props.theme.colors.border};
-  background-color: ${(props: { theme: Theme }) => props.theme.colors.surface};
-`;
+import { useTheme } from '../theme/ThemeProvider';
 
 const ProfileHeaderSkeleton = (): React.JSX.Element => {
+  const theme = useTheme();
+
   return (
-    <SkeletonHeaderContainer testID="profile-header-skeleton">
+    <View
+      style={[
+        styles.container,
+        {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: theme.colors.border,
+          backgroundColor: theme.colors.surface,
+        },
+      ]}
+      testID="profile-header-skeleton"
+    >
       <SkeletonPlaceholder borderRadius={4}>
         {/* Avatar Placeholder */}
         <SkeletonPlaceholder.Item width={80} height={80} borderRadius={40} />
@@ -43,9 +43,17 @@ const ProfileHeaderSkeleton = (): React.JSX.Element => {
         {/* Button Placeholder */}
         <SkeletonPlaceholder.Item width={80} height={35} borderRadius={15} />
       </SkeletonPlaceholder>
-    </SkeletonHeaderContainer>
+    </View>
     // Optional: Add skeleton for Bio section if needed
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+  },
+});
 
 export default ProfileHeaderSkeleton;

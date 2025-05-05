@@ -89,13 +89,11 @@ const MainTabNavigator = (): React.JSX.Element => {
 
         // Use try-catch for navigation robustness
         try {
-          // Use CommonActions to navigate between tabs
-          navigation.dispatch(
-            CommonActions.navigate({
-              name: 'ProfileTab',
-              params: { username: currentUser.username },
-            })
-          );
+          // Navigate explicitly to the MainFlow, then the ProfileTab within it
+          navigation.navigate('MainFlow', {
+            screen: 'ProfileTab',
+            params: { username: currentUser.username },
+          });
         } catch (navError) {
           console.error(
             '[MainTabNavigator] Error navigating to profile tab:',
