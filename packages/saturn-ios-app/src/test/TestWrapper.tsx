@@ -52,14 +52,14 @@ interface TestWrapperProps {
 }
 
 // Define a proper type for the global object
-interface ExtendedGlobal extends NodeJS.Global {
+interface ExtendedGlobal {
   queryClient?: QueryClient;
   resetQueryClient?: () => QueryClient;
 }
 
 export const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => {
   // Use the global query client from jest.setup.js with proper type safety
-  const globalObject = global as ExtendedGlobal;
+  const globalObject = global as unknown as ExtendedGlobal;
   const queryClient =
     globalObject.queryClient ||
     (globalObject.resetQueryClient && globalObject.resetQueryClient());
