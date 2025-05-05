@@ -35,6 +35,7 @@ module.exports = {
         '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/require-await': 'off',
       },
     },
     {
@@ -51,20 +52,30 @@ module.exports = {
       },
     },
     {
-      // Target files with complex typing issues
-      files: [
-        '**/PostCard.tsx',
-        '**/MainTabNavigator.tsx',
-        '**/FeedScreen.tsx',
-      ],
+      // Add setup files to the special cases
+      files: ['src/test/setup.ts', 'src/test/__mocks__/**/*.ts'],
       rules: {
-        // Completely disable styled-components related warnings
+        // Disable TypeScript unsafe rules for setup files
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-call': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/explicit-function-return-type': 'off',
-        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/require-await': 'off',
+      },
+    },
+    {
+      // Target files with styled-component typing issues
+      files: [
+        'src/components/PostCard.tsx',
+        'src/screens/main/SettingsScreen.tsx',
+        'src/components/Toast.tsx',
+      ],
+      rules: {
+        // Disable TypeScript unsafe rules for styled-components
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
       },
     },
   ],

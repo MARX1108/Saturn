@@ -1,77 +1,40 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '../store/slices/authSlice';
 import { ThemeProvider } from 'styled-components/native';
+import { NavigationContainer } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { store } from '../store/store';
 import { lightTheme } from '../theme/theme';
 
-// Define the correct auth state type based on the real state in authSlice.ts
-type AuthState = {
-  user: null | {
-    id: string;
-    _id: string;
-    username: string;
-    displayName?: string;
-  };
-  token: string | null;
-  status: 'idle' | 'loading' | 'succeeded' | 'failed' | 'authenticated';
-  profileComplete: boolean;
-};
-
-// Create a mock redux store
-const mockStore = configureStore({
-  reducer: {
-    auth: authReducer,
-    // Add other reducers as needed
-  },
-  preloadedState: {
-    auth: {
-      user: {
-        id: 'test-id',
-        _id: 'test-id',
-        username: 'testuser',
-        displayName: 'Test User',
-      },
-      status: 'authenticated' as const,
-      token: 'test-token',
-      profileComplete: true,
-    },
-    // Add other state slices as needed
-  },
-});
-
-// For tests, we use a simpler container since we don't need full navigation functionality
+// Create a new mock for NavigationContainer since it might not be properly imported
 const MockNavigationContainer = ({
   children,
 }: {
   children: React.ReactNode;
 }) => <>{children}</>;
 
-// Test wrapper with query client, redux store, and navigation container
+// Create a fresh QueryClient for each test
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  });
+
 interface TestWrapperProps {
   children: React.ReactNode;
 }
 
-// Define a proper type for the global object
-interface ExtendedGlobal {
-  queryClient?: QueryClient;
-  resetQueryClient?: () => QueryClient;
-}
-
+// A wrapper component that provides all necessary context providers for tests
 export const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => {
-  // Use the global query client from jest.setup.js with proper type safety
-  const globalObject = global as unknown as ExtendedGlobal;
-  const queryClient =
-    globalObject.queryClient ||
-    (globalObject.resetQueryClient && globalObject.resetQueryClient());
-
-  // If no queryClient is available, create a new one
-  const clientToUse = queryClient || new QueryClient();
+  const queryClient = createTestQueryClient();
 
   return (
-    <Provider store={mockStore}>
-      <QueryClientProvider client={clientToUse}>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={lightTheme}>
           <MockNavigationContainer>{children}</MockNavigationContainer>
         </ThemeProvider>

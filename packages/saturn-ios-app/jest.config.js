@@ -6,11 +6,18 @@ module.exports = {
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
   },
+  setupFiles: ['<rootDir>/src/test/setup.ts'],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|expo-secure-store|expo-|@expo|@sentry|@pact-foundation|react-redux|@reduxjs|@tanstack)/)',
+    'node_modules/(?!(react-native|@react-native|react-native-.*|@react-navigation/.*|@pact-foundation/.*|expo-.*|@expo/.*)/)',
   ],
   testEnvironment: 'node',
-  setupFilesAfterEnv: ['<rootDir>/src/test/jest.setup.js'],
+  moduleNameMapper: {
+    'expo-secure-store': '<rootDir>/src/test/__mocks__/expo-secure-store.ts',
+    '@pact-foundation/pact':
+      '<rootDir>/src/test/__mocks__/@pact-foundation/pact.ts',
+  },
+  // You might add a specific testMatch pattern for contract tests later
+  // testMatch: ['**/*.contract.test.ts'],
   globals: {
     __DEV__: true,
   },
