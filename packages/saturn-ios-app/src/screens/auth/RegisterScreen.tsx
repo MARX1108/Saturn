@@ -6,7 +6,6 @@ import {
   Button,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +17,7 @@ import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
 import { setToken } from '../../services/tokenStorage';
 import { User } from '../../types/user';
+import ToastMessage from 'react-native-toast-message';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -48,6 +48,14 @@ export default function RegisterScreen(): React.JSX.Element {
     if (!username || !email || !password || !displayName) {
       setError('All fields are required.');
       setIsLoading(false);
+
+      // Show toast for validation error
+      ToastMessage.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: 'All fields are required.',
+        position: 'bottom',
+      });
       return;
     }
 
@@ -104,7 +112,14 @@ export default function RegisterScreen(): React.JSX.Element {
       }
 
       setError(userMessage);
-      Alert.alert('Registration Failed', userMessage);
+
+      // Show toast instead of Alert
+      ToastMessage.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: userMessage,
+        position: 'bottom',
+      });
     } finally {
       setIsLoading(false);
     }

@@ -6,7 +6,6 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   TouchableOpacity,
   Text,
   View,
@@ -20,6 +19,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useCreatePost } from '../../hooks/useCreatePost';
+import ToastMessage from 'react-native-toast-message';
 
 // Define colors to avoid inline literals
 const COLORS = {
@@ -61,6 +61,14 @@ export default function CreatePostScreen(): React.JSX.Element {
               console.log('Post created successfully:', newPost?.id);
               setPostContent(''); // Clear input on success
 
+              // Show success toast
+              ToastMessage.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Post created successfully!',
+                position: 'bottom',
+              });
+
               // Dismiss the modal
               try {
                 navigation.goBack();
@@ -82,47 +90,46 @@ export default function CreatePostScreen(): React.JSX.Element {
 
               // Handle specific error cases
               if (err?.message?.includes('Author not found')) {
-                Alert.alert(
-                  'Profile Setup Required',
-                  'Your profile is incomplete. Please make sure your profile is set up before posting.',
-                  [
-                    { text: 'Cancel' },
-                    {
-                      text: 'Go to Profile',
-                      onPress: (): void => {
-                        try {
-                          navigation.goBack(); // Close the create post modal
-                          // Navigate to profile tab with proper navigation
-                          setTimeout((): void => {
-                            try {
-                              // Use CommonActions to ensure navigation works reliably
-                              navigation.dispatch(
-                                CommonActions.navigate({
-                                  name: 'MainFlow',
-                                  params: {
-                                    screen: 'ProfileTab',
-                                  },
-                                })
-                              );
-                            } catch (navError) {
-                              console.error(
-                                'Error navigating to Profile:',
-                                navError
-                              );
-                            }
-                          }, 300); // Small delay to ensure modal is closed first
-                        } catch (error) {
-                          console.error('Error in profile navigation:', error);
-                        }
-                      },
-                    },
-                  ]
-                );
+                ToastMessage.show({
+                  type: 'error',
+                  text1: 'Profile Setup Required',
+                  text2:
+                    'Your profile is incomplete. Please make sure your profile is set up before posting.',
+                  position: 'bottom',
+                });
+
+                // Navigate to profile after a slight delay
+                setTimeout((): void => {
+                  try {
+                    navigation.goBack(); // Close the create post modal
+                    // Navigate to profile tab with proper navigation
+                    setTimeout((): void => {
+                      try {
+                        // Use CommonActions to ensure navigation works reliably
+                        navigation.dispatch(
+                          CommonActions.navigate({
+                            name: 'MainFlow',
+                            params: {
+                              screen: 'ProfileTab',
+                            },
+                          })
+                        );
+                      } catch (navError) {
+                        console.error('Error navigating to Profile:', navError);
+                      }
+                    }, 300); // Small delay to ensure modal is closed first
+                  } catch (error) {
+                    console.error('Error in profile navigation:', error);
+                  }
+                }, 500);
               } else {
-                Alert.alert(
-                  'Error',
-                  err?.message || 'Failed to create post. Please try again.'
-                );
+                ToastMessage.show({
+                  type: 'error',
+                  text1: 'Post Failed',
+                  text2:
+                    err?.message || 'Failed to create post. Please try again.',
+                  position: 'bottom',
+                });
               }
             } catch (errorHandlerError) {
               console.error('Error in error handler:', errorHandlerError);
@@ -132,38 +139,24 @@ export default function CreatePostScreen(): React.JSX.Element {
       );
     } catch (submitError) {
       console.error('Failed to submit post:', submitError);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      ToastMessage.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong. Please try again.',
+        position: 'bottom',
+      });
     }
   }, [postContent, navigation, submitPost, isLoading]);
 
   const handleCancel = useCallback((): void => {
     if (isLoading) {
-      Alert.alert(
-        'Cancel Post',
-        'A post is currently being submitted. Are you sure you want to cancel?',
-        [
-          { text: 'Keep Editing', style: 'cancel' },
-          {
-            text: 'Discard',
-            style: 'destructive',
-            onPress: (): void => {
-              console.log(
-                'DEBUG - Cancel pressed, attempting to dismiss modal'
-              );
-              try {
-                navigation.goBack();
-              } catch (error) {
-                console.error('Error with goBack:', error);
-                try {
-                  navigation.dispatch(StackActions.pop());
-                } catch (popError) {
-                  console.error('Error with pop:', popError);
-                }
-              }
-            },
-          },
-        ]
-      );
+      // Show toast notification instead of alert
+      ToastMessage.show({
+        type: 'info',
+        text1: 'Post in Progress',
+        text2: 'A post is currently being submitted. Please wait.',
+        position: 'bottom',
+      });
       return;
     }
 

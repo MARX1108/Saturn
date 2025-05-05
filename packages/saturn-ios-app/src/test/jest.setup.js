@@ -62,6 +62,15 @@ jest.mock('react-native', () => {
   return rn;
 });
 
+// Mock react-native-toast-message
+jest.mock('react-native-toast-message', () => {
+  const mockToast = {
+    show: jest.fn(),
+    hide: jest.fn(),
+  };
+  return mockToast;
+});
+
 // Mock expo-secure-store to avoid the ESM import errors
 jest.mock(
   'expo-secure-store',
