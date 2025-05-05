@@ -321,10 +321,9 @@ global.cleanupPactServers = async () => {
 };
 
 // Mock our custom Toast component
-jest.mock('../components/Toast', () => ({
+jest.mock('../../src/components/Toast', () => ({
   Toast: {
     show: jest.fn(),
     hide: jest.fn(),
   },
-  default: jest.fn().mockImplementation(() => null),
 }));

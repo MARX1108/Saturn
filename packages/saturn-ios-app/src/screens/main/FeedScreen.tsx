@@ -13,6 +13,7 @@ import { useNavigation, CommonActions } from '@react-navigation/native'; // Impo
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'; // Import navigation prop type
 import { MainTabParamList } from '../../navigation/types'; // Import MainTabParamList
 import PostCard from '../../components/PostCard';
+import PostCardSkeleton from '../../components/PostCardSkeleton';
 import { Post } from '../../types/post';
 import { useFeedPosts } from '../../hooks/useFeedPosts'; // Import the hook
 
@@ -68,9 +69,11 @@ export default function FeedScreen(): React.JSX.Element {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
-        <ActivityIndicator size="large" />
-        <Text>Loading Feed...</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <PostCardSkeleton />
+        <PostCardSkeleton />
+        <PostCardSkeleton />
+        <PostCardSkeleton />
       </SafeAreaView>
     );
   }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
+import { Text } from 'react-native';
 import FeedScreen from './FeedScreen';
 import { useFeedPosts } from '../../hooks/useFeedPosts';
 import TestWrapper from '../../test/TestWrapper';
@@ -16,6 +17,9 @@ jest.mock('@react-navigation/native', () => ({
     navigate: jest.fn(),
   }),
 }));
+
+// Mock PostCardSkeleton with a simple string that we can check
+jest.mock('../../components/PostCardSkeleton', () => 'PostCardSkeleton');
 
 // Sample post data for mocking
 const mockPosts: Post[] = [
@@ -56,7 +60,7 @@ describe('FeedScreen', (): void => {
     jest.clearAllMocks();
   });
 
-  it('displays loading state when posts are loading', (): void => {
+  it('displays skeleton loaders when posts are loading', (): void => {
     (useFeedPosts as jest.Mock).mockReturnValue({
       data: [],
       isLoading: true,
@@ -65,13 +69,15 @@ describe('FeedScreen', (): void => {
       refetch: jest.fn(),
     });
 
-    const { getByText } = render(
+    const { UNSAFE_getAllByType } = render(
       <TestWrapper>
         <FeedScreen />
       </TestWrapper>
     );
 
-    expect(getByText('Loading Feed...')).toBeTruthy();
+    // Should find multiple skeleton loaders
+    const skeletons = UNSAFE_getAllByType('PostCardSkeleton');
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it('displays posts when data is loaded', (): void => {

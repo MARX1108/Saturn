@@ -1,8 +1,15 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
+import { Text } from 'react-native';
 import ProfileScreen from './ProfileScreen';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import TestWrapper from '../../test/TestWrapper';
+
+// Mock ProfileHeaderSkeleton with a simple string we can check
+jest.mock(
+  '../../components/ProfileHeaderSkeleton',
+  () => 'ProfileHeaderSkeleton'
+);
 
 // Define a proper extended User type that includes isFollowing
 interface ExtendedUser {
@@ -64,7 +71,7 @@ describe('ProfileScreen', (): void => {
     jest.clearAllMocks();
   });
 
-  it('displays loading state when profile is loading', (): void => {
+  it('displays skeleton loader when profile is loading', (): void => {
     (useUserProfile as jest.Mock).mockReturnValue({
       data: null,
       isLoading: true,
@@ -73,13 +80,15 @@ describe('ProfileScreen', (): void => {
       refetch: jest.fn(),
     });
 
-    const { getByText } = render(
+    const { UNSAFE_getAllByType } = render(
       <TestWrapper>
         <ProfileScreen />
       </TestWrapper>
     );
 
-    expect(getByText('Loading Profile...')).toBeTruthy();
+    // Should find the skeleton loader
+    const skeletons = UNSAFE_getAllByType('ProfileHeaderSkeleton');
+    expect(skeletons.length).toBe(1);
   });
 
   it('displays profile data when loaded', (): void => {

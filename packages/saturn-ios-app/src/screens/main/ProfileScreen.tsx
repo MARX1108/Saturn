@@ -14,6 +14,7 @@ import type { RouteProp } from '@react-navigation/native'; // Import RouteProp
 import { MainTabParamList } from '../../navigation/types'; // Import ParamList
 import { useUserProfile } from '../../hooks/useUserProfile'; // Import the hook
 import { useAppSelector } from '../../store/hooks'; // Import useAppSelector for auth state
+import ProfileHeaderSkeleton from '../../components/ProfileHeaderSkeleton'; // Import skeleton
 
 // Define colors to avoid inline literals
 const COLORS = {
@@ -84,9 +85,11 @@ export default function ProfileScreen(): React.JSX.Element {
   // --- Loading State ---
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
-        <ActivityIndicator size="large" />
-        <Text>Loading Profile...</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <ProfileHeaderSkeleton />
+        <View style={styles.contentArea}>
+          <ActivityIndicator />
+        </View>
       </SafeAreaView>
     );
   }

@@ -1,6 +1,54 @@
 import { Platform } from 'react-native';
 import { DefaultTheme } from 'styled-components/native';
 
+// Define Theme type for use throughout the app
+export interface Theme extends DefaultTheme {
+  mode: 'light' | 'dark';
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    surface: string;
+    textPrimary: string;
+    textSecondary: string;
+    textDisabled: string;
+    border: string;
+    error: string;
+    success: string;
+    buttonPrimaryBackground: string;
+    buttonPrimaryText: string;
+    buttonSecondaryBackground: string;
+    buttonSecondaryText: string;
+    buttonSecondaryBorder: string;
+    tabBarActive: string;
+    tabBarInactive: string;
+    likeIconActive: string;
+  };
+  spacing: {
+    xs: number;
+    s: number;
+    m: number;
+    l: number;
+    xl: number;
+  };
+  typography: {
+    h1: number;
+    h2: number;
+    h3: number;
+    body1: number;
+    body2: number;
+    caption: number;
+    primary: string;
+    secondary: string;
+  };
+  borderRadius: {
+    small: number;
+    medium: number;
+    large: number;
+    round: number;
+  };
+}
+
 // Define base values (adjust according to UI/UX Spec v1.2)
 const spacing = {
   xs: 4,
