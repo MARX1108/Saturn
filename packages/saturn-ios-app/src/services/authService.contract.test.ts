@@ -4,16 +4,17 @@ import { ApiEndpoints } from '../config/api';
 import { login, register } from './authService';
 import mockApiClient from '../test/mockApiClient';
 import tokenStorage from '../test/mocks/tokenStorage';
+import { User } from '../services/authService';
 
 // Mock the tokenStorage
 jest.mock('./tokenStorage', () => {
-  return jest.requireActual('../test/mocks/tokenStorage');
+  return jest.requireActual<typeof tokenStorage>('../test/mocks/tokenStorage');
 });
 
 // Mock the apiClient import in authService
 jest.mock('./apiClient', () => ({
   __esModule: true,
-  ...(jest.requireActual('../test/mockApiClient')),
+  ...jest.requireActual<typeof mockApiClient>('../test/mockApiClient'),
   defaults: {
     baseURL: 'http://localhost:1240',
   },

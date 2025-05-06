@@ -71,16 +71,59 @@ const refreshToken = async (): Promise<string | null> => {
       timeout: API_TIMEOUT,
     });
 
-    // Attempt to login again with stored credentials
-    const response = await refreshAxios.post(ApiEndpoints.login, credentials);
-
-    if (response.data?.token) {
-      // Store the new token
-      await tokenStorage.setToken(response.data.token);
-      console.log('Token refreshed successfully');
-      return response.data.token;
+    interface ResponseShape {
+      data: unknown;
     }
 
+    // Attempt to login again with stored credentials
+    const response = await refreshAxios.post<ResponseShape>(
+      ApiEndpoints.login,
+      credentials
+    );
+
+    // Check if response and response.data exist and are objects
+    if (!response || typeof response !== 'object') {
+      console.log('Invalid response for token refresh');
+      return null;
+    }
+
+    // Check if response has a data property of type object
+    if (
+      !('data' in response) ||
+      !response.data ||
+      typeof response.data !== 'object'
+    ) {
+      console.log('Response missing data property for token refresh');
+      return null;
+    }
+
+    const responseData = response.data as Record<string, unknown>;
+
+    // Check for direct token property
+    if ('token' in responseData && typeof responseData.token === 'string') {
+      const token = responseData.token;
+      await tokenStorage.setToken(token);
+      console.log('Token refreshed successfully');
+      return token;
+    }
+
+    // Check for nested token in data property
+    if (
+      'data' in responseData &&
+      responseData.data &&
+      typeof responseData.data === 'object'
+    ) {
+      const nestedData = responseData.data as Record<string, unknown>;
+
+      if ('token' in nestedData && typeof nestedData.token === 'string') {
+        const token = nestedData.token;
+        await tokenStorage.setToken(token);
+        console.log('Token refreshed successfully');
+        return token;
+      }
+    }
+
+    console.log('No valid token found in response for token refresh');
     return null;
   } catch (error) {
     console.error('Failed to refresh token:', error);
@@ -145,7 +188,9 @@ apiClient.interceptors.response.use(
             // Update the Authorization header with the new token
             originalRequest.headers.Authorization = `Bearer ${token}`;
             // Retry the original request with the new token
-            resolve(axios(originalRequest));
+            // We need to use a typed Promise here to match the function signature
+            const retryRequest: Promise<never> = axios(originalRequest);
+            resolve(retryRequest);
           });
         });
       }
@@ -164,7 +209,9 @@ apiClient.interceptors.response.use(
           onTokenRefreshed(newToken);
 
           // Retry the original request with the new token
-          return axios(originalRequest);
+          // We need to use a typed Promise here to match the function signature
+          const result: Promise<never> = axios(originalRequest);
+          return result;
         } else {
           // If token refresh fails, clear token and reject
           await tokenStorage.removeToken();

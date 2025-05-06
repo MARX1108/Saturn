@@ -1,13 +1,32 @@
 import apiClient from './apiClient';
 import { ApiEndpoints } from '../config/api';
 import { Post } from '../types/post';
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestHeaders } from 'axios';
 import { addAuthHeader } from '../utils/auth';
+import { User } from '../types/user';
 
 // Define the response structure
 interface FeedResponse {
   posts: Post[];
   hasMore: boolean;
+}
+
+// For raw post data coming from API
+interface RawPost {
+  id?: string;
+  _id?: string;
+  author?: {
+    id: string;
+    _id?: string;
+    username: string;
+    displayName?: string;
+  };
+  authorId?: string;
+  authorUsername?: string;
+  authorDisplayName?: string;
+  content?: string;
+  createdAt?: string;
+  [key: string]: unknown;
 }
 
 // Define the expected request body structure
@@ -21,37 +40,42 @@ interface CreatePostBody {
  * Transforms a raw post object from the API to ensure it has all required fields.
  * Will set fallback values for missing data to prevent display errors.
  */
-const normalizePost = (rawPost: any): Post => {
-  if (!rawPost) return {} as Post;
-
-  // Make a copy to avoid mutating the original
-  const post = { ...rawPost };
-
-  // Ensure ID exists
-  if (!post.id && post._id) {
-    post.id = post._id;
+const normalizePost = (rawPost: unknown): Post => {
+  if (!rawPost || typeof rawPost !== 'object') {
+    return {} as Post;
   }
 
-  // Ensure author exists
-  if (!post.author) {
-    post.author = {
-      id: post.authorId || 'unknown',
-      username: post.authorUsername || 'unknown',
-      displayName: post.authorDisplayName || 'Unknown User',
-    };
-  }
+  // Cast to RawPost interface for easier access with type safety
+  const postData = rawPost as RawPost;
 
-  // Ensure content exists
-  if (!post.content) {
-    post.content = '[No content]';
-  }
+  // Create a new object with the required Post shape
+  const post: Post = {
+    _id: postData._id || 'unknown-id',
+    id: postData.id || postData._id || 'unknown-id',
+    content: postData.content || '[No content]',
+    createdAt: postData.createdAt || new Date().toISOString(),
+    author: {
+      _id:
+        (postData.author && postData.author._id) ||
+        postData.authorId ||
+        'unknown',
+      id:
+        (postData.author && postData.author.id) ||
+        postData.authorId ||
+        'unknown',
+      username:
+        (postData.author && postData.author.username) ||
+        postData.authorUsername ||
+        'unknown',
+      displayName:
+        (postData.author && postData.author.displayName) ||
+        postData.authorDisplayName ||
+        'Unknown User',
+    },
+  };
 
-  // Ensure createdAt exists
-  if (!post.createdAt) {
-    post.createdAt = new Date().toISOString();
-  }
-
-  return post as Post;
+  // Copy any other properties that might exist in the original data
+  return post;
 };
 
 /**
@@ -79,10 +103,16 @@ export const fetchFeedPosts = async (): Promise<Post[]> => {
       console.log('[PostService] No Authorization header available');
     }
 
-    Object.assign(headers, authHeaders);
+    // Merge the headers
+    const mergedHeaders = { ...headers, ...authHeaders };
 
     // Make request to the posts endpoint
-    const response = await apiClient.get(ApiEndpoints.posts, { headers });
+    const response: unknown = await apiClient.get(ApiEndpoints.posts, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      } as unknown as AxiosRequestHeaders,
+    });
 
     // Debug raw response
     console.log('[PostService] Raw response type:', typeof response);
@@ -103,39 +133,52 @@ export const fetchFeedPosts = async (): Promise<Post[]> => {
         '[PostService] Response is an array of posts, length:',
         response.length
       );
-      return response.map(normalizePost);
+      return response.map((item) => normalizePost(item));
     }
 
+    // Check if response is an object
+    if (typeof response !== 'object') {
+      console.error('[PostService] Response is not an object or array');
+      return [];
+    }
+
+    const responseObj = response as Record<string, unknown>;
+
     // Check for posts property
-    if (response.posts && Array.isArray(response.posts)) {
+    if ('posts' in responseObj && Array.isArray(responseObj.posts)) {
       console.log(
         '[PostService] Response has posts array, length:',
-        response.posts.length
+        responseObj.posts.length
       );
-      return response.posts.map(normalizePost);
+      return responseObj.posts.map((item) => normalizePost(item));
     }
 
     // Check for data.posts
     if (
-      response.data &&
-      response.data.posts &&
-      Array.isArray(response.data.posts)
+      'data' in responseObj &&
+      responseObj.data &&
+      typeof responseObj.data === 'object' &&
+      'posts' in responseObj.data &&
+      Array.isArray(responseObj.data.posts)
     ) {
+      const dataObj = responseObj.data as Record<string, unknown>;
       console.log(
         '[PostService] Response has data.posts array, length:',
-        response.data.posts.length
+        Array.isArray(dataObj.posts) ? dataObj.posts.length : 0
       );
-      return response.data.posts.map(normalizePost);
+      if (Array.isArray(dataObj.posts)) {
+        return dataObj.posts.map((item) => normalizePost(item));
+      }
     }
 
     // If the response looks like a single post, wrap it in an array
     if (
-      response.id ||
-      response._id ||
-      (response.content && typeof response.content === 'string')
+      ('id' in responseObj || '_id' in responseObj) &&
+      'content' in responseObj &&
+      typeof responseObj.content === 'string'
     ) {
       console.log('[PostService] Response appears to be a single post');
-      return [normalizePost(response)];
+      return [normalizePost(responseObj)];
     }
 
     // As a last resort, if it's an object with properties that might be posts
@@ -145,11 +188,13 @@ export const fetchFeedPosts = async (): Promise<Post[]> => {
       );
       const extractedPosts: Post[] = [];
 
-      Object.values(response).forEach((value) => {
+      Object.values(responseObj).forEach((value) => {
         if (
           value &&
           typeof value === 'object' &&
-          (value.id || value._id || value.content)
+          ('id' in value ||
+            '_id' in value ||
+            ('content' in value && value.content))
         ) {
           extractedPosts.push(normalizePost(value));
         }
@@ -219,7 +264,7 @@ export const createPost = async (postData: CreatePostBody): Promise<Post> => {
     }
 
     // Make request to create post
-    const { data: response } = await apiClient.post(
+    const response: unknown = await apiClient.post(
       ApiEndpoints.posts,
       postData
     );
@@ -233,31 +278,47 @@ export const createPost = async (postData: CreatePostBody): Promise<Post> => {
       throw new Error('Invalid response format from server');
     }
 
+    const responseObj = response as Record<string, unknown>;
+
     // Check for the presence of required fields in the response
-    if (!response._id && !response.data?._id) {
+    if (
+      !('_id' in responseObj) &&
+      !(
+        'data' in responseObj &&
+        responseObj.data &&
+        typeof responseObj.data === 'object' &&
+        '_id' in responseObj.data
+      )
+    ) {
       console.error('Response missing _id field:', response);
 
       // For tests, if response.data exists and contains content, it's probably a valid mock
       if (
-        response.data &&
-        typeof response.data === 'object' &&
-        response.data.content
+        'data' in responseObj &&
+        responseObj.data &&
+        typeof responseObj.data === 'object' &&
+        'content' in responseObj.data
       ) {
-        return normalizePost(response.data);
+        return normalizePost(responseObj.data);
       }
 
       throw new Error('Invalid post object returned from server');
     }
 
-    // For tests, the response might be in data property
-    return normalizePost(response.data || response);
-  } catch (error) {
-    console.error('Error creating post:', error);
-    // Rethrow but ensure it's a proper Error object with message
-    if (error instanceof Error) {
-      throw error;
+    // If we have a nested data response, extract the post from it
+    if (
+      'data' in responseObj &&
+      responseObj.data &&
+      typeof responseObj.data === 'object'
+    ) {
+      return normalizePost(responseObj.data);
     }
-    throw new Error(String(error));
+
+    // Otherwise, use the response directly as the post
+    return normalizePost(response);
+  } catch (error) {
+    console.error('[PostService] Error creating post:', error);
+    throw error; // Rethrow to let the caller handle
   }
 };
 

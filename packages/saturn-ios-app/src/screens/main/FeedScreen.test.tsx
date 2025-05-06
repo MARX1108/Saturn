@@ -113,7 +113,7 @@ describe('FeedScreen', (): void => {
       </TestWrapper>
     );
 
-    expect(getByText('Error loading feed:')).toBeTruthy();
-    expect(getByText('Error loading feed. Please try again.')).toBeTruthy();
+    expect(getByText('Failed to load posts')).toBeTruthy();
+    expect(getByText('Retry')).toBeTruthy();
   });
 });

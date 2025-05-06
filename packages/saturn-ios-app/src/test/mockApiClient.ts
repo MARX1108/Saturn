@@ -77,6 +77,11 @@ export const resetMocks = (): void => {
 
 // Set up default mock implementations that return the mockResponses
 mockApiClient.get = jest.fn().mockImplementation((url) => {
+  // Type guard for url
+  if (typeof url !== 'string') {
+    return Promise.resolve({ data: {} });
+  }
+
   if (url.includes('/api/posts')) {
     return Promise.resolve({ data: mockResponses.posts });
   }
@@ -87,17 +92,34 @@ mockApiClient.get = jest.fn().mockImplementation((url) => {
 });
 
 mockApiClient.post = jest.fn().mockImplementation((url, data) => {
+  // Type guard for url
+  if (typeof url !== 'string') {
+    return Promise.resolve({ data: {} });
+  }
+
   if (url.includes('/api/auth/login')) {
     return Promise.resolve({ data: mockResponses.login });
   }
   if (url.includes('/api/auth/register')) {
     return Promise.resolve({ data: mockResponses.register });
   }
-  if (url.includes('/api/posts')) {
+  if (url.includes('/api/posts') && data && typeof data === 'object') {
+    // Create a type-safe copy of the first post
+    const postTemplate = { ...mockResponses.posts.posts[0] };
+
+    // Safely extract content from data
+    let postContent = '[No content]';
+
+    // Check if data is an object with a content property
+    const postData = data as Record<string, unknown>;
+    if ('content' in postData && typeof postData.content === 'string') {
+      postContent = postData.content;
+    }
+
     return Promise.resolve({
       data: {
-        ...mockResponses.posts.posts[0],
-        content: data.content,
+        ...postTemplate,
+        content: postContent,
         likeCount: 0,
         commentCount: 0,
       },

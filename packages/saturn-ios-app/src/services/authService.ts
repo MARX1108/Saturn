@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import apiClient from './apiClient';
 import { ApiEndpoints } from '../config/api';
 import {
@@ -20,6 +18,16 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+// Interface for API response wrapper
+interface ApiResponseWrapper {
+  data?: {
+    token?: string;
+    user?: User;
+  };
+  token?: string;
+  user?: User;
 }
 
 export interface LoginCredentials {
@@ -47,25 +55,46 @@ export const login = async (
   }
 
   try {
-    const { data: response } = await apiClient.post(
+    const response = await apiClient.post<ApiResponseWrapper>(
       ApiEndpoints.login,
       credentials
     );
 
+    // Type guard to ensure response is an object
+    if (!response || typeof response !== 'object') {
+      throw new Error('Invalid response format from server');
+    }
+
     let authResponse: AuthResponse;
 
-    if (response?.data) {
-      // Handle case where response is wrapped in a data property (for tests)
-      if (response.data.token && response.data.user) {
+    // Handle case where response is wrapped in a data property
+    if (response.data && typeof response.data === 'object') {
+      if (
+        response.data.token &&
+        typeof response.data.token === 'string' &&
+        response.data.user &&
+        typeof response.data.user === 'object'
+      ) {
         await setToken(response.data.token);
-        authResponse = response.data;
+        authResponse = {
+          token: response.data.token,
+          user: response.data.user,
+        };
       } else {
         throw new Error('Invalid response format from server');
       }
-    } else if (response?.token && response?.user) {
-      // Store the token for future authenticated requests
+      // Handle direct response structure
+    } else if (
+      response.token &&
+      typeof response.token === 'string' &&
+      response.user &&
+      typeof response.user === 'object'
+    ) {
       await setToken(response.token);
-      authResponse = response;
+      authResponse = {
+        token: response.token,
+        user: response.user,
+      };
     } else {
       throw new Error('Invalid response from server');
     }
@@ -100,25 +129,46 @@ export const register = async (
   }
 
   try {
-    const { data: response } = await apiClient.post(
+    const response = await apiClient.post<ApiResponseWrapper>(
       ApiEndpoints.register,
       userData
     );
 
+    // Type guard to ensure response is an object
+    if (!response || typeof response !== 'object') {
+      throw new Error('Invalid response format from server');
+    }
+
     let authResponse: AuthResponse;
 
-    if (response?.data) {
-      // Handle case where response is wrapped in a data property (for tests)
-      if (response.data.token && response.data.user) {
+    // Handle case where response is wrapped in a data property
+    if (response.data && typeof response.data === 'object') {
+      if (
+        response.data.token &&
+        typeof response.data.token === 'string' &&
+        response.data.user &&
+        typeof response.data.user === 'object'
+      ) {
         await setToken(response.data.token);
-        authResponse = response.data;
+        authResponse = {
+          token: response.data.token,
+          user: response.data.user,
+        };
       } else {
         throw new Error('Invalid response format from server');
       }
-    } else if (response?.token && response?.user) {
-      // Store the token for future authenticated requests
+      // Handle direct response structure
+    } else if (
+      response.token &&
+      typeof response.token === 'string' &&
+      response.user &&
+      typeof response.user === 'object'
+    ) {
       await setToken(response.token);
-      authResponse = response;
+      authResponse = {
+        token: response.token,
+        user: response.user,
+      };
     } else {
       throw new Error('Invalid response from server');
     }

@@ -7,13 +7,13 @@ import tokenStorage from '../test/mocks/tokenStorage';
 
 // Mock the tokenStorage
 jest.mock('./tokenStorage', () => {
-  return jest.requireActual('../test/mocks/tokenStorage');
+  return jest.requireActual<typeof tokenStorage>('../test/mocks/tokenStorage');
 });
 
 // Mock the apiClient import in profileService
 jest.mock('./apiClient', () => ({
   __esModule: true,
-  ...(jest.requireActual('../test/mockApiClient')),
+  ...jest.requireActual<typeof mockApiClient>('../test/mockApiClient'),
   defaults: {
     baseURL: 'http://localhost:1238',
   },
