@@ -3,15 +3,21 @@ import path from 'path';
 import { ApiEndpoints } from '../config/api';
 import { fetchFeedPosts, createPost } from './postService';
 import mockApiClient from '../test/mockApiClient';
-import * as tokenStorage from './tokenStorage';
+import tokenStorage from '../test/mocks/tokenStorage';
+
+// Mock the tokenStorage
+jest.mock('./tokenStorage', () => {
+  return jest.requireActual('../test/mocks/tokenStorage');
+});
 
 // Mock the apiClient import in postService
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 jest.mock('./apiClient', () => ({
   __esModule: true,
-  ...jest.requireActual('../test/mockApiClient'),
+  ...(jest.requireActual('../test/mockApiClient')),
+  defaults: {
+    baseURL: 'http://localhost:1235',
+  },
 }));
-/* eslint-enable @typescript-eslint/no-unsafe-return */
 
 // Use different ports to avoid conflicts if tests run in parallel
 const PACT_PORT_FEED = 1235;
@@ -85,10 +91,8 @@ describe('API Pact Tests - Post Service', () => {
         },
       });
 
-      // Mock the token storage
-      jest
-        .spyOn(tokenStorage, 'getToken')
-        .mockResolvedValue('VALID_TOKEN_EXAMPLE');
+      // Set token for authentication
+      await tokenStorage.setToken('VALID_TOKEN_EXAMPLE');
 
       // Set the base URL for this test
       mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_FEED}`;
@@ -108,6 +112,7 @@ describe('API Pact Tests - Post Service', () => {
       } finally {
         // Reset mocks
         jest.restoreAllMocks();
+        await tokenStorage.removeToken();
       }
     });
   });
@@ -156,10 +161,8 @@ describe('API Pact Tests - Post Service', () => {
         },
       });
 
-      // Mock the token storage
-      jest
-        .spyOn(tokenStorage, 'getToken')
-        .mockResolvedValue('VALID_TOKEN_EXAMPLE');
+      // Set token for authentication
+      await tokenStorage.setToken('VALID_TOKEN_EXAMPLE');
 
       // Set the base URL for this test
       mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_CREATE}`;
@@ -176,6 +179,7 @@ describe('API Pact Tests - Post Service', () => {
       } finally {
         // Reset mocks
         jest.restoreAllMocks();
+        await tokenStorage.removeToken();
       }
     });
   });

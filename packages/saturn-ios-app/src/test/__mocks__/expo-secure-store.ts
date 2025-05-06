@@ -1,28 +1,33 @@
-// Mock implementation of SecureStore for tests
-const mockStore: Record<string, string> = {};
+/**
+ * Mock implementation of expo-secure-store for testing
+ */
+
+// In-memory storage for testing
+const mockStorage: Record<string, string> = {};
 
 // Since this is a mock, we don't need actual await operations
 /* eslint-disable @typescript-eslint/require-await */
 
-export async function getItemAsync(key: string): Promise<string | null> {
-  return mockStore[key] || null;
-}
+export const setItemAsync = async (
+  key: string,
+  value: string
+): Promise<void> => {
+  mockStorage[key] = value;
+};
 
-export async function setItemAsync(key: string, value: string): Promise<void> {
-  mockStore[key] = value;
-  return Promise.resolve();
-}
+export const getItemAsync = async (key: string): Promise<string | null> => {
+  return mockStorage[key] || null;
+};
 
-export async function deleteItemAsync(key: string): Promise<void> {
-  delete mockStore[key];
-  return Promise.resolve();
-}
+export const deleteItemAsync = async (key: string): Promise<void> => {
+  delete mockStorage[key];
+};
 
 /* eslint-enable @typescript-eslint/require-await */
 
-// Add any other SecureStore methods that you need to mock
+// Default export
 export default {
-  getItemAsync,
   setItemAsync,
+  getItemAsync,
   deleteItemAsync,
 };

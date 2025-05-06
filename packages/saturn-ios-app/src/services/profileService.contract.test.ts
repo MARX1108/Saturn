@@ -3,15 +3,21 @@ import path from 'path';
 import { ApiEndpoints } from '../config/api';
 import { fetchUserProfileByUsername } from './profileService';
 import mockApiClient from '../test/mockApiClient';
-import * as tokenStorage from './tokenStorage';
+import tokenStorage from '../test/mocks/tokenStorage';
+
+// Mock the tokenStorage
+jest.mock('./tokenStorage', () => {
+  return jest.requireActual('../test/mocks/tokenStorage');
+});
 
 // Mock the apiClient import in profileService
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 jest.mock('./apiClient', () => ({
   __esModule: true,
-  ...jest.requireActual('../test/mockApiClient'),
+  ...(jest.requireActual('../test/mockApiClient')),
+  defaults: {
+    baseURL: 'http://localhost:1238',
+  },
 }));
-/* eslint-enable @typescript-eslint/no-unsafe-return */
 
 // Use different port to avoid conflicts
 const PACT_PORT_PROFILE = 1238;
@@ -69,10 +75,8 @@ describe('ProfileService Contract Tests', (): void => {
         },
       });
 
-      // Mock the token storage
-      jest
-        .spyOn(tokenStorage, 'getToken')
-        .mockResolvedValue('VALID_TOKEN_EXAMPLE');
+      // Set token for authentication
+      await tokenStorage.setToken('VALID_TOKEN_EXAMPLE');
 
       // Set the base URL for this test
       mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_PROFILE}`;
@@ -89,6 +93,7 @@ describe('ProfileService Contract Tests', (): void => {
       } finally {
         // Reset mocks
         jest.restoreAllMocks();
+        await tokenStorage.removeToken();
       }
     });
   });

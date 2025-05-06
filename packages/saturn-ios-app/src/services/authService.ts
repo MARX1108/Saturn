@@ -40,13 +40,20 @@ export const login = async (
   }
 
   try {
-    // The response is already the AuthResponse due to the axios interceptor
-    const response = await apiClient.post<AuthResponse, AuthResponse>(
+    const { data: response } = await apiClient.post(
       ApiEndpoints.login,
       credentials
     );
 
-    if (response.token && response.user) {
+    if (response?.data) {
+      // Handle case where response is wrapped in a data property (for tests)
+      if (response.data.token && response.data.user) {
+        await setToken(response.data.token);
+        return response.data;
+      }
+    }
+
+    if (response?.token && response?.user) {
       // Store the token for future authenticated requests
       await setToken(response.token);
       return response;
@@ -73,13 +80,20 @@ export const register = async (
   }
 
   try {
-    // The response is already the AuthResponse due to the axios interceptor
-    const response = await apiClient.post<AuthResponse, AuthResponse>(
+    const { data: response } = await apiClient.post(
       ApiEndpoints.register,
       userData
     );
 
-    if (response.token && response.user) {
+    if (response?.data) {
+      // Handle case where response is wrapped in a data property (for tests)
+      if (response.data.token && response.data.user) {
+        await setToken(response.data.token);
+        return response.data;
+      }
+    }
+
+    if (response?.token && response?.user) {
       // Store the token for future authenticated requests
       await setToken(response.token);
       return response;

@@ -3,14 +3,21 @@ import path from 'path';
 import { ApiEndpoints } from '../config/api';
 import { login, register } from './authService';
 import mockApiClient from '../test/mockApiClient';
+import tokenStorage from '../test/mocks/tokenStorage';
+
+// Mock the tokenStorage
+jest.mock('./tokenStorage', () => {
+  return jest.requireActual('../test/mocks/tokenStorage');
+});
 
 // Mock the apiClient import in authService
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 jest.mock('./apiClient', () => ({
   __esModule: true,
-  ...jest.requireActual('../test/mockApiClient'),
+  ...(jest.requireActual('../test/mockApiClient')),
+  defaults: {
+    baseURL: 'http://localhost:1240',
+  },
 }));
-/* eslint-enable @typescript-eslint/no-unsafe-return */
 
 // Use a unique port for each test to avoid conflicts
 const PACT_PORT_LOGIN = 1240;
@@ -92,7 +99,7 @@ describe('AuthService Contract Tests', (): void => {
         expect(result.user).toBeDefined();
         expect(result.user.username).toEqual('testuser');
       } finally {
-        // Reset mocks if needed
+        // Reset mocks
         jest.restoreAllMocks();
       }
     });
@@ -152,7 +159,7 @@ describe('AuthService Contract Tests', (): void => {
         expect(result.user).toBeDefined();
         expect(result.user.username).toEqual('newuser');
       } finally {
-        // Reset mocks if needed
+        // Reset mocks
         jest.restoreAllMocks();
       }
     });
