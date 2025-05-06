@@ -36,6 +36,12 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.status = 'authenticated';
+      console.log(
+        '[AuthSlice] setCredentials - User:',
+        JSON.stringify(state.user),
+        'Token (first 10):',
+        state.token?.substring(0, 10)
+      );
     },
     // Action to clear credentials on logout or token expiry
     clearCredentials(state) {

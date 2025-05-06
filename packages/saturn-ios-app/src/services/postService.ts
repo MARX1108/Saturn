@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import apiClient from './apiClient';
 import { ApiEndpoints } from '../config/api';
 import { Post } from '../types/post';
@@ -20,12 +21,19 @@ interface RawPost {
     _id?: string;
     username: string;
     displayName?: string;
+    iconUrl?: string;
+    preferredUsername?: string;
   };
   authorId?: string;
   authorUsername?: string;
   authorDisplayName?: string;
   content?: string;
   createdAt?: string;
+  published?: string;
+  likesCount?: number;
+  likes?: number;
+  replyCount?: number;
+  commentsCount?: number;
   [key: string]: unknown;
 }
 
@@ -48,31 +56,60 @@ const normalizePost = (rawPost: unknown): Post => {
   // Cast to RawPost interface for easier access with type safety
   const postData = rawPost as RawPost;
 
+  // Get author data with proper fallbacks
+  const authorObject = (postData.author || {}) as Record<string, unknown>;
+  const authorUsername =
+    (authorObject.username as string) ||
+    (authorObject.preferredUsername as string) ||
+    postData.authorUsername ||
+    '';
+
+  const authorId =
+    (authorObject.id as string) ||
+    (authorObject._id as string) ||
+    postData.authorId ||
+    'unknown-id';
+
+  // Handle display name with better fallbacks
+  const displayName =
+    (authorObject.displayName as string) ||
+    (authorObject.preferredUsername as string) ||
+    authorUsername ||
+    postData.authorDisplayName ||
+    (authorUsername ? authorUsername : '');
+
+  // Extract icon URL if available
+  const iconUrl = (authorObject.iconUrl as string) || '';
+
   // Create a new object with the required Post shape
   const post: Post = {
-    _id: postData._id || 'unknown-id',
+    _id: postData._id || postData.id || 'unknown-id',
     id: postData.id || postData._id || 'unknown-id',
     content: postData.content || '[No content]',
-    createdAt: postData.createdAt || new Date().toISOString(),
+    createdAt:
+      postData.createdAt || postData.published || new Date().toISOString(),
     author: {
-      _id:
-        (postData.author && postData.author._id) ||
-        postData.authorId ||
-        'unknown',
-      id:
-        (postData.author && postData.author.id) ||
-        postData.authorId ||
-        'unknown',
-      username:
-        (postData.author && postData.author.username) ||
-        postData.authorUsername ||
-        'unknown',
-      displayName:
-        (postData.author && postData.author.displayName) ||
-        postData.authorDisplayName ||
-        'Unknown User',
+      _id: (authorObject._id as string) || authorId,
+      id: authorId,
+      username: authorUsername,
+      displayName: displayName || 'Unknown User', // Only use Unknown User as absolute last resort
+      // Set both icon and avatarUrl for compatibility
+      icon: iconUrl ? { url: iconUrl } : undefined,
+      avatarUrl: iconUrl || undefined,
     },
   };
+
+  // Add likes and comments counts if they exist
+  if (postData.likesCount !== undefined || postData.likes !== undefined) {
+    post.likesCount = postData.likesCount || postData.likes || 0;
+  }
+
+  if (
+    postData.replyCount !== undefined ||
+    postData.commentsCount !== undefined
+  ) {
+    post.commentsCount = postData.replyCount || postData.commentsCount || 0;
+  }
 
   // Copy any other properties that might exist in the original data
   return post;
@@ -269,6 +306,11 @@ export const createPost = async (postData: CreatePostBody): Promise<Post> => {
       postData
     );
 
+    console.log(
+      '[PostService] Create post response:',
+      JSON.stringify(response)
+    );
+
     // More thorough validation of the response structure
     if (!response) {
       throw new Error('No response received from the server');
@@ -280,17 +322,25 @@ export const createPost = async (postData: CreatePostBody): Promise<Post> => {
 
     const responseObj = response as Record<string, unknown>;
 
-    // Check for the presence of required fields in the response
+    // Updated validation to handle both formats:
+    // 1. Direct response with id (new format from server)
+    // 2. Response with _id (old format)
+    // 3. Nested data object with id or _id
     if (
+      !('id' in responseObj) &&
       !('_id' in responseObj) &&
       !(
         'data' in responseObj &&
         responseObj.data &&
         typeof responseObj.data === 'object' &&
-        '_id' in responseObj.data
+        ('id' in (responseObj.data) ||
+          '_id' in (responseObj.data))
       )
     ) {
-      console.error('Response missing _id field:', response);
+      console.error(
+        '[PostService] Response missing id or _id field:',
+        response
+      );
 
       // For tests, if response.data exists and contains content, it's probably a valid mock
       if (

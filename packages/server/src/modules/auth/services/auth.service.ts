@@ -153,7 +153,20 @@ export class AuthService {
         username: string;
       };
 
+      console.log('[AuthService] Token decoded payload:', decoded);
+
       const user = await this.repository.findById(decoded.id);
+      console.log(
+        '[AuthService] User found from token:',
+        user
+          ? {
+              _id: user._id,
+              id: user.id,
+              username: user.username,
+            }
+          : 'No user found'
+      );
+
       if (!user) {
         logger.debug(
           { userId: decoded.id },

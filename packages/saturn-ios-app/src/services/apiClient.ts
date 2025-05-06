@@ -145,6 +145,17 @@ apiClient.interceptors.request.use(
         // Ensure headers object exists before assigning
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      // Specific logging for createPost
+      if (
+        config.url === ApiEndpoints.posts &&
+        config.method?.toLowerCase() === 'post'
+      ) {
+        console.log(
+          `[API Client] Request to ${config.url}: Method=${config.method}, Headers=${JSON.stringify(config.headers)}, Payload=${JSON.stringify(config.data)}`
+        );
+      }
+
       // You can add other request modifications here (e.g., logging)
       return config;
     } catch (error) {

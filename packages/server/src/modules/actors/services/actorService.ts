@@ -102,8 +102,74 @@ export class ActorService {
 
   // --- Get Actor By ID (Internal ObjectId) ---
   async getActorById(id: string | ObjectId): Promise<Actor | null> {
-    const objectId = typeof id === 'string' ? new ObjectId(id) : id;
-    return this.actorRepository.findById(objectId);
+    console.log(
+      '[ActorService] getActorById called with:',
+      id,
+      'type:',
+      typeof id
+    );
+
+    // If id is null or undefined, return null immediately
+    if (!id) {
+      console.log('[ActorService] getActorById called with null/undefined id');
+      return null;
+    }
+
+    try {
+      // Handle different ID formats
+      let objectId: ObjectId | string = id;
+
+      // If string, try to convert to ObjectId
+      if (typeof id === 'string') {
+        try {
+          // Check if it's a valid ObjectId string
+          if (ObjectId.isValid(id)) {
+            objectId = new ObjectId(id);
+            console.log(
+              '[ActorService] Converted string to ObjectId:',
+              objectId
+            );
+          } else {
+            // Keep as string if not a valid ObjectId (might be an API ID or username)
+            console.log(
+              '[ActorService] Using string ID as-is (not a valid ObjectId)'
+            );
+          }
+        } catch (e) {
+          console.log(
+            '[ActorService] Error converting to ObjectId, using string as-is:',
+            e
+          );
+          // Keep as string if conversion fails
+        }
+      }
+
+      // First try direct lookup with the objectId
+      let result = await this.actorRepository.findById(objectId);
+
+      // If not found and objectId is an ObjectId instance, try with string representation
+      if (!result && objectId instanceof ObjectId) {
+        console.log('[ActorService] Trying string representation of ObjectId');
+        result = await this.actorRepository.findOne({
+          _id: objectId.toString(),
+        });
+      }
+
+      // If still not found and id is a string that looks like a URL, try by AP ID
+      if (!result && typeof id === 'string' && id.startsWith('http')) {
+        console.log('[ActorService] Trying lookup by AP ID');
+        result = await this.actorRepository.findOne({ id });
+      }
+
+      console.log(
+        '[ActorService] findById result:',
+        result ? 'Found' : 'Not found'
+      );
+      return result;
+    } catch (error) {
+      console.error('[ActorService] Error in getActorById:', error);
+      return null;
+    }
   }
 
   // --- Get Actor By AP ID (URL) ---

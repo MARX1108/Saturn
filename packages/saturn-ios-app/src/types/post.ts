@@ -14,9 +14,11 @@ export interface Post {
   attachments?: PostAttachment[]; // Optional attachments
   createdAt: string; // Or Date object
   updatedAt?: string;
-  likeCount?: number;
-  commentCount?: number;
-  isLiked?: boolean; // Placeholder for user's like status
+  likesCount?: number; // Match server field name
+  commentsCount?: number; // Match server field name (replyCount)
+  likeCount?: number; // Keep for backward compatibility
+  commentCount?: number; // Keep for backward compatibility
+  isLiked?: boolean; // Indicates if current user has liked the post
   // Add other relevant fields: visibility, tags, etc.
 }
 

@@ -184,7 +184,12 @@ const PostCard = ({
           disabled={!hasAuthor}
         >
           <Avatar
-            source={{ uri: post.author?.avatarUrl || PLACEHOLDER_AVATAR }}
+            source={{
+              uri:
+                post.author?.avatarUrl ||
+                post.author?.icon?.url ||
+                PLACEHOLDER_AVATAR,
+            }}
             onError={(e: NativeSyntheticEvent<ImageErrorEventData>): void =>
               console.log('Failed to load avatar:', e.nativeEvent.error)
             }

@@ -18,7 +18,14 @@ export interface StoredCredentials {
  */
 export const getToken = async (): Promise<string | null> => {
   try {
-    return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+    const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+    console.log(
+      '[TokenStorage] getToken result:',
+      token
+        ? `Token found (length: ${token.length}, first 10: ${token.substring(0, 10)}...)`
+        : 'No token found'
+    );
+    return token;
   } catch (error) {
     console.error('[TokenStorage] Error getting token:', error);
     return null;

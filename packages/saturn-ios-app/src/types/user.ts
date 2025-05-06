@@ -12,6 +12,13 @@ export interface User {
   bio?: string; // User's bio or description
   followersCount?: number; // Number of followers
   followingCount?: number; // Number of users being followed
+  // Server can return icon as an object with url property
+  icon?: {
+    url: string;
+    mediaType?: string;
+  };
+  // Some APIs might return iconUrl directly
+  iconUrl?: string;
   // Add other non-sensitive fields as needed
   // IMPORTANT: DO NOT include email, password, or any sensitive data here
 }
