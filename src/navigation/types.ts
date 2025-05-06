@@ -13,6 +13,7 @@ export type AuthStackParamList = {
 // Main Tab Navigator (Feed, Profile, Settings)
 export type MainTabParamList = {
   FeedTab: undefined; // Renamed to avoid conflict with Feed screen potentially in a stack
+  SearchTab: undefined; // Added SearchTab
   CreatePostPlaceholder: undefined; // Placeholder for the middle button
   ProfileTab: { username: string }; // Profile needs username, maybe optional if viewing own?
   SettingsTab: undefined;

@@ -1,0 +1,203 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SearchScreen Snapshots renders correctly with empty search 1`] = `
+<RCTSafeAreaView
+  style={
+    {
+      "backgroundColor": "#f5f5f5",
+      "flex": 1,
+    }
+  }
+  testID="search-screen-container"
+>
+  <Text
+    style={
+      {
+        "color": "#121212",
+        "fontSize": 24,
+        "fontWeight": "bold",
+        "marginVertical": 16,
+        "textAlign": "center",
+      }
+    }
+    testID="search-screen-header"
+  >
+    User Search
+  </Text>
+  <View
+    style={
+      {
+        "borderBottomColor": "#e0e0e0",
+        "borderBottomWidth": 0.5,
+        "padding": 16,
+      }
+    }
+    testID="search-input-container"
+  >
+    <TextInput
+      autoCapitalize="none"
+      autoCorrect={false}
+      onChangeText={[Function]}
+      placeholder="Search users by username or display name..."
+      placeholderTextColor="#666666"
+      returnKeyType="search"
+      style={
+        {
+          "backgroundColor": "#FFFFFF",
+          "borderColor": "#e0e0e0",
+          "borderRadius": 8,
+          "borderWidth": 1,
+          "color": "#121212",
+          "fontSize": 16,
+          "padding": 12,
+        }
+      }
+      testID="search-input-field"
+      value=""
+    />
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "flex": 1,
+        "justifyContent": "center",
+        "padding": 16,
+      }
+    }
+    testID="search-results-container"
+  >
+    <Text
+      style={
+        {
+          "color": "#666666",
+          "fontSize": 16,
+          "marginBottom": 16,
+          "textAlign": "center",
+        }
+      }
+      testID="search-results-placeholder"
+    >
+      Enter a query to search for users.
+    </Text>
+    <View
+      style={
+        {
+          "backgroundColor": "#f0f0f0",
+          "borderRadius": 8,
+          "padding": 10,
+        }
+      }
+      testID="search-debug-container"
+    >
+      <Text
+        testID="search-debug-text"
+      >
+        Debug info: SearchScreen is rendering
+      </Text>
+    </View>
+  </View>
+</RCTSafeAreaView>
+`;
+
+exports[`SearchScreen Snapshots renders correctly with search text 1`] = `
+<RCTSafeAreaView
+  style={
+    {
+      "backgroundColor": "#f5f5f5",
+      "flex": 1,
+    }
+  }
+  testID="search-screen-container"
+>
+  <Text
+    style={
+      {
+        "color": "#121212",
+        "fontSize": 24,
+        "fontWeight": "bold",
+        "marginVertical": 16,
+        "textAlign": "center",
+      }
+    }
+    testID="search-screen-header"
+  >
+    User Search
+  </Text>
+  <View
+    style={
+      {
+        "borderBottomColor": "#e0e0e0",
+        "borderBottomWidth": 0.5,
+        "padding": 16,
+      }
+    }
+    testID="search-input-container"
+  >
+    <TextInput
+      autoCapitalize="none"
+      autoCorrect={false}
+      onChangeText={[Function]}
+      placeholder="Search users by username or display name..."
+      placeholderTextColor="#666666"
+      returnKeyType="search"
+      style={
+        {
+          "backgroundColor": "#FFFFFF",
+          "borderColor": "#e0e0e0",
+          "borderRadius": 8,
+          "borderWidth": 1,
+          "color": "#121212",
+          "fontSize": 16,
+          "padding": 12,
+        }
+      }
+      testID="search-input-field"
+      value="test query"
+    />
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "flex": 1,
+        "justifyContent": "center",
+        "padding": 16,
+      }
+    }
+    testID="search-results-container"
+  >
+    <Text
+      style={
+        {
+          "color": "#666666",
+          "fontSize": 16,
+          "marginBottom": 16,
+          "textAlign": "center",
+        }
+      }
+      testID="search-results-placeholder"
+    >
+      Searching for "
+      test query
+      "...
+    </Text>
+    <View
+      style={
+        {
+          "backgroundColor": "#f0f0f0",
+          "borderRadius": 8,
+          "padding": 10,
+        }
+      }
+      testID="search-debug-container"
+    >
+      <Text
+        testID="search-debug-text"
+      >
+        Debug info: SearchScreen is rendering
+      </Text>
+    </View>
+  </View>
+</RCTSafeAreaView>
+`;

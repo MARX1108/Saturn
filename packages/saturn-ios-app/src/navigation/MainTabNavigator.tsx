@@ -12,6 +12,7 @@ import { MainTabParamList, RootStackParamList } from './types';
 import FeedScreen from '../screens/main/FeedScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import SearchScreen from '../screens/main/SearchScreen';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { Alert } from 'react-native';
 import { useAppSelector } from '../store/hooks';
@@ -143,6 +144,11 @@ const MainTabNavigator = (): React.JSX.Element => {
         name="FeedTab"
         component={FeedScreen}
         options={{ title: 'Feed' }}
+      />
+      <Tab.Screen
+        name="SearchTab"
+        component={SearchScreen}
+        options={{ title: 'Search' }}
       />
       <Tab.Screen
         name="CreatePostPlaceholder"
