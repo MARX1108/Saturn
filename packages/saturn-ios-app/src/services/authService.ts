@@ -2,7 +2,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import apiClient from './apiClient';
 import { ApiEndpoints } from '../config/api';
-import { setToken, removeToken } from './tokenStorage';
+import {
+  setToken,
+  removeToken,
+  storeCredentials,
+  clearAuthData,
+} from './tokenStorage';
 
 // Types for authentication
 export interface User {
@@ -20,6 +25,7 @@ export interface AuthResponse {
 export interface LoginCredentials {
   username: string;
   password: string;
+  rememberMe?: boolean; // Optional flag to determine if credentials should be stored
 }
 
 export interface RegisterData {
@@ -27,6 +33,7 @@ export interface RegisterData {
   password: string;
   email: string;
   displayName?: string;
+  rememberMe?: boolean; // Optional flag to determine if credentials should be stored
 }
 
 /**
@@ -45,21 +52,34 @@ export const login = async (
       credentials
     );
 
+    let authResponse: AuthResponse;
+
     if (response?.data) {
       // Handle case where response is wrapped in a data property (for tests)
       if (response.data.token && response.data.user) {
         await setToken(response.data.token);
-        return response.data;
+        authResponse = response.data;
+      } else {
+        throw new Error('Invalid response format from server');
       }
-    }
-
-    if (response?.token && response?.user) {
+    } else if (response?.token && response?.user) {
       // Store the token for future authenticated requests
       await setToken(response.token);
-      return response;
+      authResponse = response;
     } else {
       throw new Error('Invalid response from server');
     }
+
+    // Store credentials if rememberMe is true
+    if (credentials.rememberMe) {
+      await storeCredentials({
+        username: credentials.username,
+        password: credentials.password,
+      });
+      console.log('[AuthService] Credentials stored for token refresh');
+    }
+
+    return authResponse;
   } catch (error) {
     console.error(
       'Login error:',
@@ -85,21 +105,34 @@ export const register = async (
       userData
     );
 
+    let authResponse: AuthResponse;
+
     if (response?.data) {
       // Handle case where response is wrapped in a data property (for tests)
       if (response.data.token && response.data.user) {
         await setToken(response.data.token);
-        return response.data;
+        authResponse = response.data;
+      } else {
+        throw new Error('Invalid response format from server');
       }
-    }
-
-    if (response?.token && response?.user) {
+    } else if (response?.token && response?.user) {
       // Store the token for future authenticated requests
       await setToken(response.token);
-      return response;
+      authResponse = response;
     } else {
       throw new Error('Invalid response from server');
     }
+
+    // Store credentials if rememberMe is true
+    if (userData.rememberMe) {
+      await storeCredentials({
+        username: userData.username,
+        password: userData.password,
+      });
+      console.log('[AuthService] Credentials stored for token refresh');
+    }
+
+    return authResponse;
   } catch (error) {
     console.error(
       'Registration error:',
@@ -114,8 +147,8 @@ export const register = async (
  */
 export const logout = async (): Promise<void> => {
   try {
-    // Clear the token from storage
-    await removeToken();
+    // Clear all auth data including token and credentials
+    await clearAuthData();
   } catch (error) {
     console.error(
       'Logout error:',

@@ -3,14 +3,20 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './src/store/store';
 import RootNavigator from './src/navigation/RootNavigator';
 import { getToken, removeToken } from './src/services/tokenStorage';
-import { setCredentials, setStatus } from './src/store/slices/authSlice';
+import {
+  setCredentials,
+  setStatus,
+  clearCredentials,
+} from './src/store/slices/authSlice';
 import { User } from './src/types/user';
 import { AppThemeProvider } from './src/theme/ThemeProvider';
+import { eventEmitter, EventType } from './src/services/eventEmitter';
+import Toast from 'react-native-toast-message';
 
 // Initialize Sentry with minimal configuration to avoid type issues
 Sentry.init({
@@ -49,6 +55,43 @@ export const testSentryLogger = (message: string): void => {
     console.error('[Sentry] Failed to log message:', error);
   }
 };
+
+// Inner app component that has access to Redux dispatcher
+function AppContent(): React.JSX.Element {
+  const dispatch = useDispatch();
+
+  // Listen for session expiration events
+  useEffect(() => {
+    const unsubscribe = eventEmitter.on(EventType.SESSION_EXPIRED, () => {
+      console.log('[App] Session expired, logging out user');
+
+      // Clear user credentials from store
+      dispatch(clearCredentials());
+
+      // Show toast message to user
+      Toast.show({
+        type: 'error',
+        text1: 'Session Expired',
+        text2: 'Please log in again',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
+    });
+
+    // Clean up event listener on unmount
+    return () => {
+      eventEmitter.off(EventType.SESSION_EXPIRED, unsubscribe);
+    };
+  }, [dispatch]);
+
+  return (
+    <>
+      <StatusBar style="auto" />
+      <RootNavigator />
+      <Toast />
+    </>
+  );
+}
 
 function App(): React.JSX.Element | null {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -136,8 +179,7 @@ function App(): React.JSX.Element | null {
       <QueryClientProvider client={queryClient}>
         <AppThemeProvider>
           <NavigationContainer>
-            <StatusBar style="auto" />
-            <RootNavigator />
+            <AppContent />
           </NavigationContainer>
         </AppThemeProvider>
       </QueryClientProvider>

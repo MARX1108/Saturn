@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,8 +17,9 @@ import apiClient from '../../services/apiClient';
 import { ApiEndpoints } from '../../config/api';
 import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
-import { setToken } from '../../services/tokenStorage';
+import { setToken, storeCredentials } from '../../services/tokenStorage';
 import { User } from '../../types/user';
+import { Ionicons } from '@expo/vector-icons';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -36,6 +38,7 @@ export default function RegisterScreen(): React.JSX.Element {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +70,7 @@ export default function RegisterScreen(): React.JSX.Element {
           email,
           password,
           displayName,
+          rememberMe,
         }
       );
 
@@ -74,6 +78,16 @@ export default function RegisterScreen(): React.JSX.Element {
 
       if (data.actor && data.token) {
         await setToken(data.token);
+        
+        // Store credentials if rememberMe is checked
+        if (rememberMe) {
+          await storeCredentials({
+            username,
+            password,
+          });
+          console.log('Credentials stored for token refresh');
+        }
+        
         dispatch(
           setCredentials({
             user: data.actor,
@@ -123,6 +137,11 @@ export default function RegisterScreen(): React.JSX.Element {
     void handleRegister();
   };
 
+  // Toggle remember me checkbox
+  const toggleRememberMe = (): void => {
+    setRememberMe(!rememberMe);
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
@@ -168,6 +187,19 @@ export default function RegisterScreen(): React.JSX.Element {
           editable={!isLoading}
         />
 
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={toggleRememberMe}
+          disabled={isLoading}
+        >
+          <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+            {rememberMe && <Ionicons name="checkmark" size={16} color="#fff" />}
+          </View>
+          <Text style={styles.checkboxLabel}>
+            Remember me to restore session if it expires
+          </Text>
+        </TouchableOpacity>
+
         {isLoading ? (
           <ActivityIndicator
             size="large"
@@ -199,6 +231,9 @@ const colors = {
   error: '#FF0000',
   indicator: '#0000ff',
   background: '#FFFFFF',
+  checkboxBorder: '#808080',
+  checkboxChecked: '#4285F4',
+  checkboxText: '#333333',
 };
 
 const styles = StyleSheet.create({
@@ -236,5 +271,30 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: 20,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    alignSelf: 'flex-start',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1,
+    borderColor: colors.checkboxBorder,
+    marginRight: 8,
+    borderRadius: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.checkboxChecked,
+    borderColor: colors.checkboxChecked,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: colors.checkboxText,
+    flex: 1,
   },
 });

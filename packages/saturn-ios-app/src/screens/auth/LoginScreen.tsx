@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,8 +16,9 @@ import apiClient from '../../services/apiClient';
 import { ApiEndpoints } from '../../config/api';
 import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
-import { setToken } from '../../services/tokenStorage';
+import { setToken, storeCredentials } from '../../services/tokenStorage';
 import { User } from '../../types/user';
+import { Ionicons } from '@expo/vector-icons';
 
 // Define navigation prop type for type safety
 type LoginScreenNavigationProp = NativeStackNavigationProp<
@@ -35,6 +37,7 @@ export default function LoginScreen(): React.JSX.Element {
   const dispatch = useAppDispatch();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +57,7 @@ export default function LoginScreen(): React.JSX.Element {
         {
           username,
           password,
+          rememberMe,
         }
       );
 
@@ -62,6 +66,16 @@ export default function LoginScreen(): React.JSX.Element {
       // --- Dispatch RTK action and save token ---
       if (data.actor && data.token) {
         await setToken(data.token);
+
+        // Store credentials if rememberMe is checked
+        if (rememberMe) {
+          await storeCredentials({
+            username,
+            password,
+          });
+          console.log('Credentials stored for token refresh');
+        }
+
         dispatch(
           setCredentials({
             user: data.actor,
@@ -101,6 +115,11 @@ export default function LoginScreen(): React.JSX.Element {
     void handleLogin();
   };
 
+  // Toggle remember me checkbox
+  const toggleRememberMe = (): void => {
+    setRememberMe(!rememberMe);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -123,6 +142,19 @@ export default function LoginScreen(): React.JSX.Element {
         secureTextEntry
         editable={!isLoading}
       />
+
+      <TouchableOpacity
+        style={styles.checkboxContainer}
+        onPress={toggleRememberMe}
+        disabled={isLoading}
+      >
+        <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+          {rememberMe && <Ionicons name="checkmark" size={16} color="#fff" />}
+        </View>
+        <Text style={styles.checkboxLabel}>
+          Remember me to restore session if it expires
+        </Text>
+      </TouchableOpacity>
 
       {isLoading ? (
         <ActivityIndicator
@@ -150,6 +182,9 @@ const colors = {
   border: '#808080',
   error: '#FF0000',
   indicator: '#0000ff',
+  checkboxBorder: '#808080',
+  checkboxChecked: '#4285F4',
+  checkboxText: '#333333',
 };
 
 // Basic Styles - Refine later with Theme/Styled Components
@@ -184,5 +219,30 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: 20,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    alignSelf: 'flex-start',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1,
+    borderColor: colors.checkboxBorder,
+    marginRight: 8,
+    borderRadius: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.checkboxChecked,
+    borderColor: colors.checkboxChecked,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: colors.checkboxText,
+    flex: 1,
   },
 });

@@ -60,36 +60,78 @@ export const fetchUserProfileByUsername = async (
 
     // Add auth headers - use the return value instead of passing headers
     const authHeaders = await addAuthHeader();
+
+    // Debug auth headers (careful not to log full token in production)
+    if (authHeaders.Authorization) {
+      console.log('[ProfileService] Using Authorization header: Bearer xxx...');
+    } else {
+      console.log('[ProfileService] No Authorization header available');
+    }
+
     Object.assign(headers, authHeaders);
 
     // Make the API request
-    const { data: response } = await apiClient.get(endpoint, { headers });
+    const response = await apiClient.get(endpoint, { headers });
 
-    // Handle data wrapped in `data` property (for tests)
+    // Debug raw response
+    console.log(
+      '[ProfileService] Raw response:',
+      typeof response,
+      response ? 'data present' : 'null/undefined'
+    );
+
+    // Handle null/undefined responses
+    if (!response) {
+      console.error(
+        '[ProfileService] Invalid user profile response: undefined'
+      );
+      throw new Error('Invalid user profile data received: empty response');
+    }
+
+    // Handle data wrapped in `data` property (for tests or certain API formats)
     if (response?.data) {
-      if (
-        response.data.id &&
-        response.data.username &&
-        typeof response.data.displayName === 'string'
-      ) {
+      console.log(
+        '[ProfileService] Response has nested data property, checking its contents'
+      );
+      if (response.data.id && response.data.username) {
+        // Use username as displayName if missing
+        if (!response.data.displayName) {
+          console.log(
+            '[ProfileService] Using username as displayName fallback'
+          );
+          response.data.displayName = response.data.username;
+        }
         return response.data;
       }
     }
 
-    // Validate response
-    if (
-      !response ||
-      !response.id ||
-      !response.username ||
-      typeof response.displayName !== 'string'
-    ) {
-      console.error(
-        '[ProfileService] Invalid user profile response:',
-        JSON.stringify(response)
-      );
-      throw new Error('Invalid user profile data received');
+    // Validate response fields
+    if (!response.id && !response._id) {
+      console.error('[ProfileService] Missing id in response:', response);
+      throw new Error('Invalid user profile data: missing id');
     }
 
+    // If response has _id but no id, use _id as id
+    if (!response.id && response._id) {
+      console.log('[ProfileService] Using _id as id fallback');
+      response.id = response._id;
+    }
+
+    if (!response.username) {
+      console.error('[ProfileService] Missing username in response:', response);
+      throw new Error('Invalid user profile data: missing username');
+    }
+
+    // If displayName is missing, use username as fallback
+    if (typeof response.displayName !== 'string') {
+      console.log('[ProfileService] Using username as displayName fallback');
+      response.displayName = response.username;
+    }
+
+    console.log(
+      '[ProfileService] Successfully retrieved profile data for:',
+      username
+    );
     return response;
   } catch (error) {
     // Add specific error handling for different error types

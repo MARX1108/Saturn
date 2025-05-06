@@ -3,11 +3,14 @@ import axios, {
   AxiosError,
   InternalAxiosRequestConfig,
   AxiosResponse,
+  AxiosRequestConfig,
 } from 'axios';
-import { API_BASE_URL, API_TIMEOUT } from '../config/api';
+import { API_BASE_URL, API_TIMEOUT, ApiEndpoints } from '../config/api';
 import { ApiError } from '../types/api';
 // Placeholder for token storage service
 import * as tokenStorage from './tokenStorage';
+// Import event emitter
+import { eventEmitter, EventType } from './eventEmitter';
 
 // Type for API error response data
 interface ErrorResponseData {
@@ -27,6 +30,63 @@ const apiClient: AxiosInstance = axios.create({
     // Add other default headers if needed (e.g., 'Accept')
   },
 });
+
+// Flag to track if token refresh is in progress
+let isRefreshingToken = false;
+// Queue of requests to retry after token refresh
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+/**
+ * Adds a callback to the refresh queue
+ */
+const addRefreshSubscriber = (callback: (token: string) => void): void => {
+  refreshSubscribers.push(callback);
+};
+
+/**
+ * Executes all callbacks in the refresh queue with the new token
+ */
+const onTokenRefreshed = (newToken: string): void => {
+  refreshSubscribers.forEach((callback) => callback(newToken));
+  refreshSubscribers = [];
+};
+
+/**
+ * Refreshes the authentication token
+ */
+const refreshToken = async (): Promise<string | null> => {
+  try {
+    // Get stored credentials - you'll need to implement this
+    // This is a placeholder - in a real app, you might use a refresh token or stored credentials
+    const credentials = await tokenStorage.getStoredCredentials();
+
+    if (!credentials) {
+      console.log('No stored credentials for token refresh');
+      return null;
+    }
+
+    // Create a new axios instance to avoid interceptors
+    const refreshAxios = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: API_TIMEOUT,
+    });
+
+    // Attempt to login again with stored credentials
+    const response = await refreshAxios.post(ApiEndpoints.login, credentials);
+
+    if (response.data?.token) {
+      // Store the new token
+      await tokenStorage.setToken(response.data.token);
+      console.log('Token refreshed successfully');
+      return response.data.token;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Failed to refresh token:', error);
+    return null;
+  }
+};
 
 // --- Request Interceptor ---
 apiClient.interceptors.request.use(
@@ -66,7 +126,67 @@ apiClient.interceptors.response.use(
     // If it returns data directly, return response.data
     return response.data; // Assuming API returns data directly on success
   },
-  (error: AxiosError): Promise<never> => {
+  async (error: AxiosError): Promise<never> => {
+    // Get the original request configuration
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    // Check if the error is due to an expired token (401 status)
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Mark the request as retried to prevent infinite loops
+      originalRequest._retry = true;
+
+      // If we're already refreshing the token, add this request to the queue
+      if (isRefreshingToken) {
+        // Return a new promise that will be resolved when the token is refreshed
+        return new Promise((resolve, reject) => {
+          addRefreshSubscriber((token: string) => {
+            // Update the Authorization header with the new token
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            // Retry the original request with the new token
+            resolve(axios(originalRequest));
+          });
+        });
+      }
+
+      // Start the token refresh process
+      isRefreshingToken = true;
+
+      try {
+        const newToken = await refreshToken();
+
+        if (newToken) {
+          // Update the original request with the new token
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+          // Notify all pending requests that the token has been refreshed
+          onTokenRefreshed(newToken);
+
+          // Retry the original request with the new token
+          return axios(originalRequest);
+        } else {
+          // If token refresh fails, clear token and reject
+          await tokenStorage.removeToken();
+          console.error('[API Client] Token refresh failed');
+
+          // Reset the refresh state
+          isRefreshingToken = false;
+
+          // Emit session expired event for app to handle
+          eventEmitter.emit(EventType.SESSION_EXPIRED);
+        }
+      } catch (refreshError) {
+        console.error('[API Client] Error refreshing token:', refreshError);
+
+        // Emit session expired event for app to handle
+        eventEmitter.emit(EventType.SESSION_EXPIRED);
+      } finally {
+        // Reset the refresh state
+        isRefreshingToken = false;
+      }
+    }
+
     // --- Error Handling ---
     console.error(
       '[API Client] Response Error:',

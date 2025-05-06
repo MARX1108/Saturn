@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Button,
+  Alert,
 } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native'; // Import CommonActions
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'; // Import navigation prop type
@@ -21,6 +22,7 @@ import { useFeedPosts } from '../../hooks/useFeedPosts'; // Import the hook
 const COLORS = {
   LIGHT_GRAY: '#f0f0f0',
   RED: 'red',
+  ORANGE: '#ff8c00',
 };
 
 // Define the specific navigation prop type for this screen
@@ -31,13 +33,31 @@ type FeedScreenNavigationProp = BottomTabNavigationProp<
 
 export default function FeedScreen(): React.JSX.Element {
   const navigation = useNavigation<FeedScreenNavigationProp>(); // Use typed navigation hook
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const {
     data: posts, // Rename data to posts for clarity
     isLoading, // Initial load state
     isError,
+    error,
     refetch, // Function to refetch data
     isRefetching, // State for pull-to-refresh
   } = useFeedPosts();
+
+  // Handle errors and set messages
+  useEffect(() => {
+    if (isError && error) {
+      let message = 'Error loading feed. Please try again.';
+      if (error.message) {
+        message = error.message;
+      }
+      setErrorMessage(message);
+      setErrorVisible(true);
+    } else {
+      setErrorVisible(false);
+    }
+  }, [isError, error]);
 
   // Navigation handler for author profile
   const handleAuthorPress = (username: string): void => {
@@ -57,16 +77,17 @@ export default function FeedScreen(): React.JSX.Element {
 
   // Function to handle retry button press
   const handleRetry = (): void => {
+    setErrorVisible(false);
     void refetch();
   };
 
   // Handle refresh for RefreshControl (no async needed)
   const handleRefresh = (): void => {
+    setErrorVisible(false);
     void refetch();
   };
 
   // --- Conditional Rendering based on query state ---
-
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -74,19 +95,6 @@ export default function FeedScreen(): React.JSX.Element {
         <PostCardSkeleton />
         <PostCardSkeleton />
         <PostCardSkeleton />
-      </SafeAreaView>
-    );
-  }
-
-  if (isError) {
-    // Use a static error message for simplicity
-    const errorMessage = 'Error loading feed. Please try again.';
-
-    return (
-      <SafeAreaView style={[styles.safeArea, styles.centerContent]}>
-        <Text style={styles.errorText}>Error loading feed:</Text>
-        <Text style={styles.errorText}>{errorMessage}</Text>
-        <Button title="Retry" onPress={handleRetry} />
       </SafeAreaView>
     );
   }
@@ -105,15 +113,23 @@ export default function FeedScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {errorVisible && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+          <Button title="Retry" onPress={handleRetry} />
+        </View>
+      )}
+
       <FlatList
         testID="feed-flatlist"
         data={postsData}
         renderItem={renderItem}
-        keyExtractor={(item): string => item.id}
+        keyExtractor={(item): string => item.id || Math.random().toString()}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.centerContent}>
             <Text>No posts yet. Follow some users!</Text>
+            <Button title="Refresh" onPress={handleRetry} />
           </View>
         }
         refreshControl={
@@ -144,8 +160,16 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    color: COLORS.RED,
+    color: 'white',
     textAlign: 'center',
-    margin: 20,
+    marginBottom: 10,
+  },
+  errorBanner: {
+    backgroundColor: COLORS.ORANGE,
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
   },
 });

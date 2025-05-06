@@ -4,7 +4,7 @@
 
 // Base URL and settings
 export const API_BASE_URL = __DEV__
-  ? 'http://localhost:4000' // Development - removed /api prefix
+  ? 'http://172.20.2.230:4000' // Development - use IP instead of localhost to be accessible from simulator
   : 'https://api.example.com'; // Production - removed /api prefix
 
 // API timeout in milliseconds

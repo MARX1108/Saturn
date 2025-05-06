@@ -1795,30 +1795,8 @@ PODS:
     - React-logger (= 0.79.2)
     - React-perflogger (= 0.79.2)
     - React-utils (= 0.79.2)
-  - RNCMaskedView (0.3.2):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
+  - RNCMaskedView (0.2.9):
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - RNGestureHandler (2.25.0):
     - DoubleConversion
     - glog
@@ -2267,7 +2245,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 04d5eb15eb46be6720e17a4a7fa92940a776e584
   ReactCodegen: 7ea266ccd94436294f516247db7402b57b1214af
   ReactCommon: 76d2dc87136d0a667678668b86f0fca0c16fdeb0
-  RNCMaskedView: ae521efb1c6c2b183ae0f8479487db03c826184c
+  RNCMaskedView: 4b5b12efdee55966f1d68f32d4b3401c2acf05c2
   RNGestureHandler: ebef699ea17e7c0006c1074e1e423ead60ce0121
   RNScreens: 5621e3ad5a329fbd16de683344ac5af4192b40d3
   RNSentry: f444779917ac0314ecffea5e8bd1041d1be06c31
