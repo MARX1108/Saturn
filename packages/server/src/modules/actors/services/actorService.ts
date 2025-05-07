@@ -151,7 +151,7 @@ export class ActorService {
       if (!result && objectId instanceof ObjectId) {
         console.log('[ActorService] Trying string representation of ObjectId');
         result = await this.actorRepository.findOne({
-          _id: objectId.toString(),
+          _id: objectId,
         });
       }
 

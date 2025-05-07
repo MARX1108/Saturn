@@ -2,10 +2,38 @@ import apiClient from './apiClient';
 import { ApiEndpoints } from '../config/api';
 import { User } from '../types/user';
 
-// Update the interface to match the actual server response
-// The server returns an array of actors directly, not an object with an actors property
-interface SearchActorsResponse {
-  actors?: User[]; // For backward compatibility if format changes
+// Define the types for different possible response formats
+interface ActorsObjectResponse {
+  actors: ServerActor[];
+}
+
+// Define response format for mock/contract test data
+interface MockResponseWithData {
+  data: {
+    _id: string;
+    id: string;
+    username: string;
+    [key: string]: unknown;
+  };
+}
+
+// Representing the actor object as returned by the server
+interface ServerActor {
+  _id: string;
+  id: string;
+  username: string;
+  preferredUsername?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  bio?: string;
+  icon?: {
+    url: string;
+    mediaType?: string;
+  };
+  iconUrl?: string;
+  followersCount?: number;
+  followingCount?: number;
+  [key: string]: unknown; // Allow for other properties we don't explicitly define
 }
 
 /**
@@ -24,7 +52,7 @@ export const searchActors = async (query: string): Promise<User[]> => {
     const endpoint = `${ApiEndpoints.searchActors}?q=${encodeURIComponent(query.trim())}`;
     console.log(`[ActorService] Endpoint: ${endpoint}`);
 
-    const response = await apiClient.get(endpoint);
+    const response: unknown = await apiClient.get(endpoint);
 
     // Check various response formats to handle server response format
     if (response) {
@@ -35,21 +63,65 @@ export const searchActors = async (query: string): Promise<User[]> => {
         console.log(
           `[ActorService] Server returned array of ${response.length} actors directly`
         );
-        return response.map(mapUserFields);
+        return (response as ServerActor[]).map(mapUserFields);
       }
 
       // For backward compatibility, if server returns { actors: [...] }
-      if (response.actors && Array.isArray(response.actors)) {
+      if (
+        typeof response === 'object' &&
+        response !== null &&
+        'actors' in response &&
+        Array.isArray((response as ActorsObjectResponse).actors)
+      ) {
+        const typedResponse = response as ActorsObjectResponse;
         console.log(
-          `[ActorService] Server returned ${response.actors.length} actors in "actors" property`
+          `[ActorService] Server returned ${typedResponse.actors.length} actors in "actors" property`
         );
-        return response.actors.map(mapUserFields);
+        return typedResponse.actors.map(mapUserFields);
       }
 
       // For contract tests, the mock response format might be different
-      if (response._id && response.username) {
+      if (
+        typeof response === 'object' &&
+        response !== null &&
+        '_id' in response &&
+        'username' in response
+      ) {
         console.log('[ActorService] Single user object detected');
-        return [mapUserFields(response)];
+        return [mapUserFields(response as ServerActor)];
+      }
+
+      // Handle another format sometimes returned by mock tests with nested data structure
+      if (
+        typeof response === 'object' &&
+        response !== null &&
+        'data' in response
+      ) {
+        const dataResponse = response as { data: unknown };
+        if (
+          typeof dataResponse.data === 'object' &&
+          dataResponse.data !== null
+        ) {
+          // If data contains actors array
+          if (
+            'actors' in dataResponse.data &&
+            Array.isArray((dataResponse.data as ActorsObjectResponse).actors)
+          ) {
+            const typedData = dataResponse.data as ActorsObjectResponse;
+            console.log(
+              `[ActorService] Server returned ${typedData.actors.length} actors in data.actors property`
+            );
+            return typedData.actors.map(mapUserFields);
+          }
+
+          // If data is a single actor
+          if ('_id' in dataResponse.data && 'username' in dataResponse.data) {
+            console.log(
+              '[ActorService] Single user object in data property detected'
+            );
+            return [mapUserFields(dataResponse.data as ServerActor)];
+          }
+        }
       }
 
       // Log the unexpected response format to help with debugging
@@ -74,20 +146,24 @@ export const searchActors = async (query: string): Promise<User[]> => {
 };
 
 // Helper function to defensively map user fields
-const mapUserFields = (actor: any): User => ({
-  _id: actor._id,
-  id: actor.id,
-  username: actor.username,
-  preferredUsername: actor.preferredUsername,
-  ...(actor.displayName && { displayName: actor.displayName }),
-  ...(actor.avatarUrl && { avatarUrl: actor.avatarUrl }),
-  ...(actor.bio && { bio: actor.bio }),
-  ...(actor.icon && { icon: actor.icon }),
-  ...(actor.iconUrl && { iconUrl: actor.iconUrl }),
-  ...(actor.followersCount !== undefined && {
-    followersCount: actor.followersCount,
-  }),
-  ...(actor.followingCount !== undefined && {
-    followingCount: actor.followingCount,
-  }),
-});
+const mapUserFields = (actor: ServerActor): User => {
+  const user: User = {
+    _id: actor._id,
+    id: actor.id,
+    username: actor.username,
+    preferredUsername: actor.preferredUsername,
+  };
+
+  // Conditionally add optional fields if they exist
+  if (actor.displayName) user.displayName = actor.displayName;
+  if (actor.avatarUrl) user.avatarUrl = actor.avatarUrl;
+  if (actor.bio) user.bio = actor.bio;
+  if (actor.icon) user.icon = actor.icon;
+  if (actor.iconUrl) user.iconUrl = actor.iconUrl;
+  if (actor.followersCount !== undefined)
+    user.followersCount = actor.followersCount;
+  if (actor.followingCount !== undefined)
+    user.followingCount = actor.followingCount;
+
+  return user;
+};
