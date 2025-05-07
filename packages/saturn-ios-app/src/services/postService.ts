@@ -140,147 +140,137 @@ export const fetchFeedPosts = async (): Promise<Post[]> => {
       console.log('[PostService] No Authorization header available');
     }
 
-    // Merge the headers
-    const mergedHeaders = { ...headers, ...authHeaders };
-
     // Make request to the posts endpoint
-    const response: unknown = await apiClient.get(ApiEndpoints.posts, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders,
-      } as unknown as AxiosRequestHeaders,
-    });
-
-    // Debug raw response
-    console.log('[PostService] Raw response type:', typeof response);
-    console.log('[PostService] Raw response exists:', response ? 'yes' : 'no');
-
-    // More detailed validation
-    if (!response) {
-      console.error('[PostService] Feed response is undefined or null');
-      throw new Error('Feed response is empty');
-    }
-
-    // Create empty array to store normalized posts
-    const normalizedPosts: Post[] = [];
-
-    // Handle the different possible response formats and normalize posts
-    if (Array.isArray(response)) {
-      console.log(
-        '[PostService] Response is an array of posts, length:',
-        response.length
-      );
-      return response.map((item) => normalizePost(item));
-    }
-
-    // Check if response is an object
-    if (typeof response !== 'object') {
-      console.error('[PostService] Response is not an object or array');
-      return [];
-    }
-
-    const responseObj = response as Record<string, unknown>;
-
-    // Check for posts property
-    if ('posts' in responseObj && Array.isArray(responseObj.posts)) {
-      console.log(
-        '[PostService] Response has posts array, length:',
-        responseObj.posts.length
-      );
-      return responseObj.posts.map((item) => normalizePost(item));
-    }
-
-    // Check for data.posts
-    if (
-      'data' in responseObj &&
-      responseObj.data &&
-      typeof responseObj.data === 'object' &&
-      'posts' in responseObj.data &&
-      Array.isArray(responseObj.data.posts)
-    ) {
-      const dataObj = responseObj.data as Record<string, unknown>;
-      console.log(
-        '[PostService] Response has data.posts array, length:',
-        Array.isArray(dataObj.posts) ? dataObj.posts.length : 0
-      );
-      if (Array.isArray(dataObj.posts)) {
-        return dataObj.posts.map((item) => normalizePost(item));
-      }
-    }
-
-    // If the response looks like a single post, wrap it in an array
-    if (
-      ('id' in responseObj || '_id' in responseObj) &&
-      'content' in responseObj &&
-      typeof responseObj.content === 'string'
-    ) {
-      console.log('[PostService] Response appears to be a single post');
-      return [normalizePost(responseObj)];
-    }
-
-    // As a last resort, if it's an object with properties that might be posts
-    if (typeof response === 'object' && response !== null) {
-      console.log(
-        '[PostService] Attempting to extract posts from object properties'
-      );
-      const extractedPosts: Post[] = [];
-
-      Object.values(responseObj).forEach((value) => {
-        if (
-          value &&
-          typeof value === 'object' &&
-          ('id' in value ||
-            '_id' in value ||
-            ('content' in value && value.content))
-        ) {
-          extractedPosts.push(normalizePost(value));
-        }
+    try {
+      const response: unknown = await apiClient.get(ApiEndpoints.posts, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        } as unknown as AxiosRequestHeaders,
       });
 
-      if (extractedPosts.length > 0) {
+      // Debug raw response
+      console.log('[PostService] Raw response type:', typeof response);
+      console.log(
+        '[PostService] Raw response exists:',
+        response ? 'yes' : 'no'
+      );
+
+      // More detailed validation
+      if (!response) {
+        console.error('[PostService] Feed response is undefined or null');
+        throw new Error('Feed response is empty');
+      }
+
+      // Create empty array to store normalized posts
+      const normalizedPosts: Post[] = [];
+
+      // Handle the different possible response formats and normalize posts
+      if (Array.isArray(response)) {
         console.log(
-          '[PostService] Extracted posts from response:',
-          extractedPosts.length
+          '[PostService] Response is an array of posts, length:',
+          response.length
         );
-        return extractedPosts;
+        return response.map((item) => normalizePost(item));
       }
-    }
 
-    // If we get here, response doesn't match expected structure
-    console.error(
-      '[PostService] Invalid feed response structure:',
-      JSON.stringify(response, null, 2)
-    );
-    // Return empty array instead of throwing error to prevent app crash
-    console.log('[PostService] Returning empty array as fallback');
-    return [];
+      // Check if response is an object
+      if (typeof response !== 'object') {
+        console.error('[PostService] Response is not an object or array');
+        return [];
+      }
+
+      const responseObj = response as Record<string, unknown>;
+
+      // Check for posts property
+      if ('posts' in responseObj && Array.isArray(responseObj.posts)) {
+        console.log(
+          '[PostService] Response has posts array, length:',
+          responseObj.posts.length
+        );
+        return responseObj.posts.map((item) => normalizePost(item));
+      }
+
+      // Check for data.posts
+      if (
+        'data' in responseObj &&
+        responseObj.data &&
+        typeof responseObj.data === 'object' &&
+        'posts' in responseObj.data &&
+        Array.isArray(responseObj.data.posts)
+      ) {
+        const dataObj = responseObj.data as Record<string, unknown>;
+        console.log(
+          '[PostService] Response has data.posts array, length:',
+          Array.isArray(dataObj.posts) ? dataObj.posts.length : 0
+        );
+        if (Array.isArray(dataObj.posts)) {
+          return dataObj.posts.map((item) => normalizePost(item));
+        }
+      }
+
+      // If the response looks like a single post, wrap it in an array
+      if (
+        ('id' in responseObj || '_id' in responseObj) &&
+        'content' in responseObj &&
+        typeof responseObj.content === 'string'
+      ) {
+        console.log('[PostService] Response appears to be a single post');
+        return [normalizePost(responseObj)];
+      }
+
+      console.error(
+        '[PostService] Response does not match any expected format:',
+        JSON.stringify(responseObj)
+      );
+      return [];
+    } catch (requestError) {
+      // Handle specific error for "Author not found for post"
+      console.error('[PostService] Request error details:', requestError);
+
+      // Check if it's an error object
+      if (requestError instanceof Error) {
+        const errorMessage = requestError.message || '';
+
+        // Check for the specific error message pattern regardless of period
+        if (errorMessage.includes('Author not found for post')) {
+          console.log(
+            '[PostService] Caught "Author not found for post" error, returning empty array'
+          );
+          return []; // Return empty array to prevent app crash
+        }
+      }
+
+      // Try Axios error format
+      const axiosError = requestError as AxiosError;
+      if (axiosError.response?.data) {
+        const errorData = axiosError.response.data as Record<string, unknown>;
+        const errorMessage =
+          (errorData.message as string) ||
+          (errorData.error as string) ||
+          (typeof errorData === 'string' ? errorData : '');
+
+        if (
+          (errorMessage &&
+            typeof errorMessage === 'string' &&
+            errorMessage.includes('Author not found for post')) ||
+          (axiosError.response?.status === 404 &&
+            typeof errorMessage === 'string' &&
+            errorMessage.includes('Author not found'))
+        ) {
+          console.log(
+            '[PostService] Caught author not found error via Axios response, returning empty array'
+          );
+          return []; // Return empty array to prevent app crash
+        }
+      }
+
+      // For other errors, re-throw
+      throw requestError;
+    }
   } catch (error) {
-    // Add specific error handling for different error types
-    if (axios.isAxiosError(error)) {
-      // Handle API errors (status codes, network issues, etc.)
-      const axiosError = error as AxiosError;
-      if (axiosError.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error(
-          `[PostService] API Error (${axiosError.response.status}):`,
-          axiosError.response.data
-        );
-      } else if (axiosError.request) {
-        // The request was made but no response was received
-        console.error(
-          '[PostService] No response received from server:',
-          axiosError.request
-        );
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('[PostService] Request setup error:', axiosError.message);
-      }
-    }
-
     console.error('[PostService] Error fetching feed posts:', error);
-    // Return empty array instead of rethrowing to prevent app crash
-    return [];
+    throw error; // Rethrow to be handled by the query
   }
 };
 
@@ -333,8 +323,7 @@ export const createPost = async (postData: CreatePostBody): Promise<Post> => {
         'data' in responseObj &&
         responseObj.data &&
         typeof responseObj.data === 'object' &&
-        ('id' in (responseObj.data) ||
-          '_id' in (responseObj.data))
+        ('id' in responseObj.data || '_id' in responseObj.data)
       )
     ) {
       console.error(

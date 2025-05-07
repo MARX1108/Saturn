@@ -123,7 +123,8 @@ class PostService {
               `Failed to populate actor ${String(post.actorId)} for post ${String(post._id)}:`,
               error
             );
-            // Decide how to handle posts with missing actors
+            // Simply continue without the actor data
+            // The controller's formatPostResponse will handle this case
           }
         }
         return post;

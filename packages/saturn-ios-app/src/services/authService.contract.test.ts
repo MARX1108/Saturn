@@ -126,6 +126,8 @@ describe('AuthService Contract Tests', (): void => {
             username: 'newuser',
             password: 'newpassword123',
             email: 'newuser@example.com',
+            displayName: 'New User Display',
+            bio: 'This is my bio',
           },
         },
         willRespondWith: {
@@ -137,7 +139,8 @@ describe('AuthService Contract Tests', (): void => {
               _id: 'newUserId123',
               id: 'newUserId123',
               username: 'newuser',
-              displayName: 'New User',
+              displayName: 'New User Display',
+              bio: 'This is my bio',
             },
           },
         },
@@ -151,6 +154,8 @@ describe('AuthService Contract Tests', (): void => {
           username: 'newuser',
           password: 'newpassword123',
           email: 'newuser@example.com',
+          displayName: 'New User Display',
+          bio: 'This is my bio',
         };
         const result = await register(userData);
 

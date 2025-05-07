@@ -33,13 +33,22 @@ class PostsController {
     } else {
       author = await this.actorService.getActorById(post.actorId);
     }
+
+    // Handle case where author doesn't exist anymore
     if (!author) {
-      throw new errors_1.AppError(
-        'Author not found for post.',
-        404,
-        errors_1.ErrorType.NOT_FOUND
+      console.warn(
+        `Author not found for post ${post.id} with actorId ${post.actorId}`
       );
+      // Create placeholder author for deleted accounts
+      author = {
+        id: post.actorId.toString(),
+        username: 'deleted-user',
+        preferredUsername: 'deleted-user',
+        displayName: 'Deleted Account',
+        name: 'Deleted Account',
+      };
     }
+
     // Convert potential ObjectId to string for comparison
     const reqActorIdStr = requestingActorId
       ? new mongodb_1.ObjectId(requestingActorId).toHexString()

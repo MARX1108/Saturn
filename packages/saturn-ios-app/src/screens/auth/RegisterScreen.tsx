@@ -38,6 +38,7 @@ export default function RegisterScreen(): React.JSX.Element {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,17 +50,17 @@ export default function RegisterScreen(): React.JSX.Element {
     setError(null);
 
     if (!username || !email || !password || !displayName) {
-      setError('All fields are required.');
+      setError('All required fields must be filled.');
       setIsLoading(false);
 
       // Show alert for validation error
-      Alert.alert('Registration Failed', 'All fields are required.');
+      Alert.alert('Registration Failed', 'All required fields must be filled.');
       return;
     }
 
     try {
       console.log(
-        `Attempting registration for user: ${username}, email: ${email}`
+        `Attempting registration for user: ${username}, email: ${email}, displayName: ${displayName}`
       );
       // Use proper typing: apiClient.post<ResponseType, ResponseType>
       // The second type parameter tells TypeScript that the return is already the response data
@@ -70,6 +71,7 @@ export default function RegisterScreen(): React.JSX.Element {
           email,
           password,
           displayName,
+          bio,
           rememberMe,
         }
       );
@@ -78,7 +80,7 @@ export default function RegisterScreen(): React.JSX.Element {
 
       if (data.actor && data.token) {
         await setToken(data.token);
-        
+
         // Store credentials if rememberMe is checked
         if (rememberMe) {
           await storeCredentials({
@@ -87,7 +89,7 @@ export default function RegisterScreen(): React.JSX.Element {
           });
           console.log('Credentials stored for token refresh');
         }
-        
+
         dispatch(
           setCredentials({
             user: data.actor,
@@ -170,7 +172,7 @@ export default function RegisterScreen(): React.JSX.Element {
         />
         <TextInput
           style={styles.input}
-          placeholder="Display Name"
+          placeholder="Display Name (Required)"
           value={displayName}
           onChangeText={setDisplayName}
           autoCapitalize="words"
@@ -185,6 +187,16 @@ export default function RegisterScreen(): React.JSX.Element {
           secureTextEntry
           textContentType="newPassword"
           editable={!isLoading}
+        />
+        <TextInput
+          style={[styles.input, styles.bioInput]}
+          placeholder="Bio (Optional)"
+          value={bio}
+          onChangeText={setBio}
+          multiline
+          numberOfLines={3}
+          editable={!isLoading}
+          textAlignVertical="top"
         />
 
         <TouchableOpacity
@@ -260,6 +272,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
     backgroundColor: colors.background,
+  },
+  bioInput: {
+    height: 80,
+    paddingTop: 10,
+    textAlignVertical: 'top',
   },
   errorText: {
     color: colors.error,

@@ -68,8 +68,8 @@ describe('SearchScreen', () => {
     expect(getByTestId('search-input-container')).toBeTruthy();
     expect(getByTestId('search-input-field')).toBeTruthy();
     expect(getByTestId('search-results-container')).toBeTruthy();
-    expect(getByTestId('search-debug-container')).toBeTruthy();
-    expect(getByTestId('search-debug-text')).toBeTruthy();
+    expect(getByTestId('search-minimum-chars-container')).toBeTruthy();
+    expect(getByTestId('search-results-placeholder')).toBeTruthy();
 
     // Also check the text content
     expect(getByText('User Search')).toBeTruthy();
@@ -77,7 +77,6 @@ describe('SearchScreen', () => {
       getByPlaceholderText('Search users by username or display name...')
     ).toBeTruthy();
     expect(getByText('Enter at least 2 characters to search.')).toBeTruthy();
-    expect(getByText('Debug info: SearchScreen is rendering')).toBeTruthy();
   });
 
   it('updates search query when text is entered', () => {

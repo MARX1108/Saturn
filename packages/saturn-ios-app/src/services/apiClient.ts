@@ -146,13 +146,20 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      // Specific logging for createPost
+      // Specific logging for API requests
       if (
+        config.url === ApiEndpoints.posts &&
+        config.method?.toLowerCase() === 'get'
+      ) {
+        console.log(
+          `[API Client] GET Feed Request: URL=${config.url}, Headers=${JSON.stringify(config.headers)}`
+        );
+      } else if (
         config.url === ApiEndpoints.posts &&
         config.method?.toLowerCase() === 'post'
       ) {
         console.log(
-          `[API Client] Request to ${config.url}: Method=${config.method}, Headers=${JSON.stringify(config.headers)}, Payload=${JSON.stringify(config.data)}`
+          `[API Client] Create Post Request: URL=${config.url}, Method=${config.method}, Headers=${JSON.stringify(config.headers)}, Payload=${JSON.stringify(config.data)}`
         );
       }
 
@@ -242,6 +249,30 @@ apiClient.interceptors.response.use(
       } finally {
         // Reset the refresh state
         isRefreshingToken = false;
+      }
+    }
+
+    // --- Special Error Handling for Feed Posts error ---
+    // This is a known backend data integrity issue where posts reference non-existent authors
+    if (
+      error.response?.status === 404 &&
+      originalRequest.url === ApiEndpoints.posts &&
+      originalRequest.method?.toLowerCase() === 'get'
+    ) {
+      const responseData = error.response.data as Record<string, unknown>;
+      const errorMessage =
+        typeof responseData === 'string'
+          ? responseData
+          : (responseData?.message as string) ||
+            (responseData?.error as string) ||
+            '';
+
+      if (errorMessage.includes('Author not found for post')) {
+        console.log(
+          '[API Client] Intercepting "Author not found for post" error'
+        );
+        // Return empty array as if the request succeeded with no posts
+        return [] as unknown as never;
       }
     }
 
