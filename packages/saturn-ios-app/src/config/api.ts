@@ -1,11 +1,28 @@
 // src/config/api.ts
+import { Platform } from 'react-native';
 
 // API Configuration Settings
 
+// Your machine's IP address - visible to iOS simulator and on your network
+const MACHINE_IP = '10.137.37.62';
+
+// Helper function for development environments
+const getDevBaseUrl = () => {
+  if (Platform.OS === 'ios') {
+    // For iOS simulator, use the machine's actual IP address
+    return `http://${MACHINE_IP}:4000`;
+  } else if (Platform.OS === 'android') {
+    // Special IP for Android emulator to access host machine
+    return 'http://10.0.2.2:4000';
+  }
+  // Fallback
+  return 'http://localhost:4000';
+};
+
 // Base URL and settings
 export const API_BASE_URL = __DEV__
-  ? 'http://172.20.2.230:4000' // Development - use IP instead of localhost to be accessible from simulator
-  : 'https://api.example.com'; // Production - removed /api prefix
+  ? getDevBaseUrl()
+  : 'https://api.example.com'; // Production
 
 // API timeout in milliseconds
 export const API_TIMEOUT = 10000; // 10 seconds
@@ -20,6 +37,7 @@ export const ApiEndpoints = {
   // Actors endpoints
   actors: '/api/actors',
   getActorByUsername: (username: string) => `/api/actors/${username}`,
+  searchActors: '/api/actors/search',
 
   // Posts endpoints
   posts: '/api/posts',

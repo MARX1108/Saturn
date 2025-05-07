@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -6,17 +6,36 @@ import {
   View,
   TextInput,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
+import { useUserSearch } from '../../hooks/useUserSearch';
 
 export default function SearchScreen(): React.JSX.Element {
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Use the search hook
+  const { data: users, isLoading, isError, error } = useUserSearch(searchQuery);
+
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    if (query.length > 0) {
-      console.log('Search query:', query);
-    }
+    // API call is now handled by useUserSearch hook via debouncedQuery
   };
+
+  // Log results for now
+  useEffect(() => {
+    if (isLoading) {
+      console.log('[SearchScreen] Searching for users...');
+    }
+    if (isError) {
+      console.error('[SearchScreen] Error searching users:', error?.message);
+    }
+    if (users) {
+      console.log(
+        '[SearchScreen] Search results:',
+        users.length > 0 ? users : 'No users found.'
+      );
+    }
+  }, [users, isLoading, isError, error]);
 
   return (
     <SafeAreaView style={styles.container} testID="search-screen-container">
@@ -37,21 +56,41 @@ export default function SearchScreen(): React.JSX.Element {
         />
       </View>
       <View style={styles.resultsContainer} testID="search-results-container">
-        {searchQuery.length > 0 ? (
-          <Text
-            style={styles.placeholderText}
-            testID="search-results-placeholder"
-          >
-            {`Searching for "${searchQuery}"...`}
-          </Text>
-        ) : (
-          <Text
-            style={styles.placeholderText}
-            testID="search-results-placeholder"
-          >
-            Enter a query to search for users.
+        {isLoading && (
+          <ActivityIndicator
+            size="large"
+            color="#0000ff"
+            testID="search-loading-indicator"
+          />
+        )}
+
+        {isError && (
+          <Text style={styles.errorText} testID="search-error-text">
+            Error: {error?.message || 'Could not fetch results'}
           </Text>
         )}
+
+        {!isLoading && !isError && searchQuery.length < 2 && (
+          <Text
+            style={styles.placeholderText}
+            testID="search-results-placeholder"
+          >
+            Enter at least 2 characters to search.
+          </Text>
+        )}
+
+        {!isLoading &&
+          !isError &&
+          searchQuery.length >= 2 &&
+          (!users || users.length === 0) && (
+            <Text
+              style={styles.placeholderText}
+              testID="search-results-placeholder"
+            >
+              No users found for &quot;{searchQuery}&quot;.
+            </Text>
+          )}
+
         <View style={styles.debugContainer} testID="search-debug-container">
           <Text testID="search-debug-text">
             Debug info: SearchScreen is rendering
@@ -97,6 +136,12 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: 16,
     color: '#666666',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ff0000',
     textAlign: 'center',
     marginBottom: 16,
   },
