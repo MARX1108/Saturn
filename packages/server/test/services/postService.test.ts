@@ -108,6 +108,7 @@ describe('PostService', () => {
 
     actorService = {
       getActorById: jest.fn(),
+      getActorByUsername: jest.fn(),
     } as unknown as jest.Mocked<ActorService>;
 
     notificationService = {

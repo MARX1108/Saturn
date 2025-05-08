@@ -20,6 +20,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useCreatePost } from '../../hooks/useCreatePost';
+import { useAppSelector } from '../../store/hooks';
 
 // Define colors to avoid inline literals
 const COLORS = {
@@ -29,6 +30,9 @@ const COLORS = {
   TOMATO: 'tomato',
   LIGHT_RED: '#ffcccc',
   RED: 'red',
+  WARNING_BG: '#fff3cd',
+  WARNING_TEXT: '#856404',
+  WARNING_BORDER: '#ffeeba',
 };
 
 type CreatePostScreenNavigationProp = NativeStackNavigationProp<
@@ -39,145 +43,144 @@ type CreatePostScreenNavigationProp = NativeStackNavigationProp<
 export default function CreatePostScreen(): React.JSX.Element {
   const navigation = useNavigation<CreatePostScreenNavigationProp>();
   const [postContent, setPostContent] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: submitPost, isError, error } = useCreatePost();
+  const user = useAppSelector((state) => state.auth.user);
+  const profileComplete = useAppSelector((state) => state.auth.profileComplete);
 
-  // Use the mutation hook with correct property access for v5
-  const mutation = useCreatePost();
-  const { mutate: submitPost } = mutation;
-  const isLoading = mutation.isPending;
-  const isError = mutation.isError;
-  const error = mutation.error;
+  // Check if the profile is complete on mount
+  useLayoutEffect(() => {
+    if (!profileComplete && user) {
+      Alert.alert(
+        'Profile Setup Required',
+        'Your profile is incomplete. Please make sure your profile is set up before posting.',
+        [
+          {
+            text: 'Complete Profile',
+            onPress: () => {
+              navigation.goBack(); // Close the create post modal
+              // Navigate to profile edit
+              setTimeout(() => {
+                navigation.navigate('ProfileEditModal');
+              }, 300);
+            },
+          },
+          {
+            text: 'Cancel',
+            onPress: () => navigation.goBack(),
+            style: 'cancel',
+          },
+        ]
+      );
+    }
+  }, [navigation, profileComplete, user]);
 
   const handlePost = useCallback((): void => {
     if (!postContent.trim() || isLoading) return; // Prevent empty posts or double submit
-
-    console.log('DEBUG - Posting content:', postContent);
-
-    try {
-      submitPost(
-        { content: postContent.trim() },
-        {
-          onSuccess: (newPost): void => {
-            try {
-              console.log('Post created successfully:', newPost?.id);
-              setPostContent(''); // Clear input on success
-
-              // Show success alert
-              console.log('Post created successfully!');
-
-              // Dismiss the modal
-              try {
-                navigation.goBack();
-              } catch (navError) {
-                console.error('Error with goBack:', navError);
-                try {
-                  navigation.dispatch(StackActions.pop());
-                } catch (popError) {
-                  console.error('Error with pop:', popError);
-                }
-              }
-            } catch (successHandlerError) {
-              console.error('Error in success handler:', successHandlerError);
-            }
-          },
-          onError: (err): void => {
-            try {
-              console.error('Error creating post:', err);
-
-              // Handle specific error cases
-              if (err?.message?.includes('Author not found')) {
-                // Show error alert
-                Alert.alert(
-                  'Profile Setup Required',
-                  'Your profile is incomplete. Please make sure your profile is set up before posting.'
-                );
-
-                // Navigate to profile after a slight delay
-                setTimeout((): void => {
-                  try {
-                    navigation.goBack(); // Close the create post modal
-                    // Navigate to profile tab with proper navigation
-                    setTimeout((): void => {
-                      try {
-                        // Use CommonActions to ensure navigation works reliably
-                        navigation.dispatch(
-                          CommonActions.navigate({
-                            name: 'MainFlow',
-                            params: {
-                              screen: 'ProfileTab',
-                            },
-                          })
-                        );
-                      } catch (navError) {
-                        console.error('Error navigating to Profile:', navError);
-                      }
-                    }, 300); // Small delay to ensure modal is closed first
-                  } catch (error) {
-                    console.error('Error in profile navigation:', error);
-                  }
-                }, 500);
-              } else {
-                // Show error alert
-                Alert.alert(
-                  'Post Failed',
-                  err?.message || 'Failed to create post. Please try again.'
-                );
-              }
-            } catch (errorHandlerError) {
-              console.error('Error in error handler:', errorHandlerError);
-            }
-          },
-        }
-      );
-    } catch (submitError) {
-      console.error('Failed to submit post:', submitError);
-      // Show error alert
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    }
-  }, [postContent, navigation, submitPost, isLoading]);
-
-  const handleCancel = useCallback((): void => {
-    if (isLoading) {
-      // Show info alert
+    if (!profileComplete) {
       Alert.alert(
-        'Post in Progress',
-        'A post is currently being submitted. Please wait.'
+        'Profile Setup Required',
+        'Your profile is incomplete. Please make sure your profile is set up before posting.',
+        [
+          {
+            text: 'Complete Profile',
+            onPress: () => {
+              navigation.goBack(); // Close the create post modal
+              // Navigate to profile edit
+              setTimeout(() => {
+                navigation.navigate('ProfileEditModal');
+              }, 300);
+            },
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ]
       );
       return;
     }
 
-    console.log('DEBUG - Cancel pressed, attempting to dismiss modal');
-    try {
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error with goBack:', error);
-      try {
-        navigation.dispatch(StackActions.pop());
-      } catch (popError) {
-        console.error('Error with pop:', popError);
-      }
-    }
-  }, [navigation, isLoading]);
+    setIsLoading(true);
 
-  // Configure Header Buttons
+    // Call the mutation
+    submitPost(
+      { content: postContent },
+      {
+        onSuccess: (): void => {
+          console.log('Post created successfully');
+          // Reset form
+          setPostContent('');
+          setIsLoading(false);
+          // Close the modal
+          navigation.dispatch(StackActions.pop());
+        },
+        onError: (err): void => {
+          try {
+            console.error('Error creating post:', err);
+
+            // Handle specific error cases
+            if (err?.message?.includes('Author not found')) {
+              // Show error alert
+              Alert.alert(
+                'Profile Setup Required',
+                'Your profile is incomplete. Please make sure your profile is set up before posting.'
+              );
+
+              // Navigate to profile after a slight delay
+              setTimeout((): void => {
+                try {
+                  navigation.goBack(); // Close the create post modal
+                  // Navigate to profile tab with proper navigation
+                  setTimeout((): void => {
+                    try {
+                      // Use navigate to ProfileEditModal
+                      navigation.navigate('ProfileEditModal');
+                    } catch (navError) {
+                      console.error('Error navigating to Profile:', navError);
+                    }
+                  }, 300); // Small delay to ensure modal is closed first
+                } catch (error) {
+                  console.error('Error in profile navigation:', error);
+                }
+              }, 500);
+            } else {
+              // Show error alert
+              Alert.alert(
+                'Post Failed',
+                err?.message || 'Failed to create post. Please try again.'
+              );
+            }
+          } catch (errorHandlerError) {
+            console.error('Error in error handler:', errorHandlerError);
+          }
+          setIsLoading(false);
+        },
+      }
+    );
+  }, [postContent, isLoading, submitPost, navigation, profileComplete]);
+
   useLayoutEffect(() => {
+    // Set up the "Post" button in the header
     navigation.setOptions({
-      headerShown: true,
       title: 'Create Post',
-      headerLeft: () => (
-        <Button onPress={handleCancel} title="Cancel" disabled={isLoading} />
+      headerRight: () => (
+        <Button
+          title="Post"
+          onPress={handlePost}
+          disabled={postContent.trim() === '' || isLoading}
+        />
       ),
-      headerRight: () =>
-        isLoading ? (
-          <ActivityIndicator style={styles.headerLoadingIndicator} />
-        ) : (
-          <Button
-            onPress={handlePost}
-            title="Post"
-            disabled={!postContent.trim() || isLoading}
-          />
-        ),
+      headerLeft: () => (
+        <Button
+          title="Cancel"
+          onPress={() => navigation.goBack()}
+          disabled={isLoading}
+        />
+      ),
+      headerTitleAlign: 'center', // Position title in the center (iOS style)
     });
-  }, [navigation, postContent, handleCancel, handlePost, isLoading]);
+  }, [navigation, handlePost, postContent, isLoading]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -205,7 +208,7 @@ export default function CreatePostScreen(): React.JSX.Element {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={handleCancel}
+            onPress={() => navigation.goBack()}
             disabled={isLoading}
           >
             <Text style={styles.buttonText}>Cancel</Text>

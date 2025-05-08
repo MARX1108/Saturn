@@ -23,20 +23,77 @@ class PostService {
   async createPost(data) {
     // Validate actorId - improve string handling and error cases
     let actorObjectId;
-    try {
-      actorObjectId =
-        typeof data.actorId === 'string'
-          ? new mongodb_1.ObjectId(data.actorId)
-          : data.actorId;
-    } catch (error) {
-      throw new errors_1.AppError(
-        'Invalid actor ID format',
-        400,
-        errors_1.ErrorType.BAD_REQUEST
-      );
+    console.log('[PostService] CreatePost actorId: type:', typeof data.actorId);
+    // First attempt to convert to ObjectId if it's a string
+    if (typeof data.actorId === 'string') {
+      try {
+        actorObjectId = new mongodb_1.ObjectId(data.actorId);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        // If that fails, throw an error since actorId must be an ObjectId
+        throw new errors_1.AppError(
+          'Invalid actor ID format',
+          400,
+          errors_1.ErrorType.BAD_REQUEST
+        );
+      }
+    } else {
+      actorObjectId = data.actorId;
     }
-    // Ensure actor exists before proceeding
-    const actor = await this.actorService.getActorById(actorObjectId);
+    console.log('[PostService] Processed actorId:', actorObjectId);
+    // Try multiple approaches to find the actor
+    let actor = null;
+    // Attempt 1: Try using the actorObjectId directly
+    console.log(
+      '[PostService] Attempt 1: Looking up actor with objectId:',
+      actorObjectId
+    );
+    actor = await this.actorService.getActorById(actorObjectId);
+    // Attempt 2: If actorObjectId is an ObjectId, try its string representation
+    if (!actor) {
+      const idString = actorObjectId.toString();
+      console.log(
+        '[PostService] Attempt 2: Looking up actor with string id:',
+        idString
+      );
+      actor = await this.actorService.getActorById(idString);
+    }
+    // Since actorObjectId is now always an ObjectId, we don't need the type checks
+    // for string methods, but we can still try lookups by URL or username if needed
+    // using the string representation
+    // Attempt 3: Try looking up by string representations
+    if (!actor) {
+      const idString = actorObjectId.toString();
+      console.log(
+        '[PostService] Attempt 3: Looking up actor by string representation:',
+        idString
+      );
+      // Try as AP ID if it looks like a URL
+      if (idString.startsWith('http')) {
+        console.log('[PostService] Trying as AP ID');
+        actor = await this.actorService.getActorByApId(idString);
+      }
+      // Try as username if it doesn't contain slashes
+      if (!actor && !idString.includes('/')) {
+        console.log('[PostService] Trying as username');
+        actor = await this.actorService.getActorByUsername(idString);
+      }
+    }
+    // Attempt 4: Last resort, try querying the actor repository directly with _id
+    if (!actor) {
+      console.log(
+        '[PostService] Attempt 4: Querying actor repository directly'
+      );
+      try {
+        actor = await this.actorRepository.findOne({ _id: actorObjectId });
+      } catch (e) {
+        console.error('[PostService] Final attempt error:', e);
+      }
+    }
+    console.log(
+      '[PostService] Actor lookup final result:',
+      actor ? 'Found' : 'Not found'
+    );
     if (!actor) {
       throw new errors_1.AppError(
         'Author not found',

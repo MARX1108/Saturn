@@ -9,9 +9,10 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useRoute } from '@react-navigation/native'; // Import useRoute
+import { useRoute, useNavigation } from '@react-navigation/native'; // Import useRoute and useNavigation
 import type { RouteProp } from '@react-navigation/native'; // Import RouteProp
-import { MainTabParamList } from '../../navigation/types'; // Import ParamList
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainTabParamList, RootStackParamList } from '../../navigation/types'; // Import ParamList
 import { useUserProfile } from '../../hooks/useUserProfile'; // Import the hook
 import { useAppSelector } from '../../store/hooks'; // Import useAppSelector for auth state
 import ProfileHeaderSkeleton from '../../components/ProfileHeaderSkeleton'; // Import skeleton
@@ -27,17 +28,27 @@ const COLORS = {
   BLUE: '#007AFF',
   RED: 'red',
   GRAY: '#ccc',
+  WARNING_BG: '#fff3cd',
+  WARNING_TEXT: '#856404',
+  WARNING_BORDER: '#ffeeba',
 };
 
 // Placeholder image URL
 const PLACEHOLDER_AVATAR =
   'https://placehold.co/100x100/EFEFEF/AAAAAA&text=PFP';
 
+// Define combined navigation type that allows navigating to root stack screens
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList & MainTabParamList,
+  'ProfileTab'
+>;
+
 // Define route prop type
 type ProfileScreenRouteProp = RouteProp<MainTabParamList, 'ProfileTab'>;
 
 export default function ProfileScreen(): React.JSX.Element {
   const route = useRoute<ProfileScreenRouteProp>();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   // Get username from route params. Fallback needed if viewing own profile without param later.
   const profileUsername = route.params?.username; // Example: 'myUsername' was set as initialParam
 
@@ -65,7 +76,8 @@ export default function ProfileScreen(): React.JSX.Element {
   // --- Action Handlers ---
   const handleEditProfile = (): void => {
     console.log('Edit Profile button pressed (Own Profile)');
-    // TODO: Navigate to Edit Profile Screen
+    // Navigate to Edit Profile Screen
+    navigation.navigate('ProfileEditModal');
   };
 
   const handleFollow = (): void => {
@@ -125,6 +137,9 @@ export default function ProfileScreen(): React.JSX.Element {
       </SafeAreaView>
     );
   }
+
+  // Check if profile is incomplete and this is the current user's profile
+  const isProfileIncomplete = isOwnProfile && !profileData.displayName;
 
   // Determine which button to show in the header
   const renderHeaderButton = (): React.ReactNode => {
@@ -191,6 +206,19 @@ export default function ProfileScreen(): React.JSX.Element {
           </View>
           {renderHeaderButton()}
         </View>
+
+        {/* --- Profile Incomplete Warning --- */}
+        {isProfileIncomplete && (
+          <TouchableOpacity
+            style={styles.warningBanner}
+            onPress={handleEditProfile}
+          >
+            <Text style={styles.warningText}>
+              Your profile is incomplete. Tap here to complete it and enable
+              posting.
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* --- Bio --- */}
         {profileData.bio && <Text style={styles.bio}>{profileData.bio}</Text>}
@@ -318,5 +346,19 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT_MEDIUM,
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  warningBanner: {
+    backgroundColor: COLORS.WARNING_BG,
+    borderColor: COLORS.WARNING_BORDER,
+    borderWidth: 1,
+    padding: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 6,
+  },
+  warningText: {
+    color: COLORS.WARNING_TEXT,
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

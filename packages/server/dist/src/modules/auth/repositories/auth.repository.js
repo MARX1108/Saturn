@@ -52,7 +52,43 @@ class AuthRepository extends baseRepository_1.MongoRepository {
     return this.findOne({ email });
   }
   async findById(id) {
-    return this.findOne({ _id: id });
+    console.log('[AuthRepository] Looking up user by id:', id);
+    // Try to find by _id field first
+    let result = await this.findOne({ _id: id });
+    // If not found, try by id field
+    if (!result) {
+      result = await this.findOne({ id: id });
+    }
+    console.log(
+      '[AuthRepository] findById result:',
+      result ? 'Found' : 'Not found'
+    );
+    // If not found, try alternative lookups
+    if (!result) {
+      console.log('[AuthRepository] Trying alternative lookups for id:', id);
+      // Try by id property (ActivityPub ID) if the id looks like a URL
+      if (id.startsWith('http')) {
+        console.log('[AuthRepository] Looking up by AP id');
+        const apResult = await this.findOne({ id });
+        if (apResult) {
+          console.log('[AuthRepository] Found by AP id');
+          return apResult;
+        }
+      }
+      // Try string equality match against _id as a fallback
+      console.log(
+        '[AuthRepository] Looking up with string equality on _id field'
+      );
+      const stringResult = await this.collection.findOne({
+        $expr: { $eq: [{ $toString: '$_id' }, id] },
+      });
+      if (stringResult) {
+        console.log('[AuthRepository] Found with string equality on _id');
+        return stringResult;
+      }
+      console.log('[AuthRepository] Failed all lookup attempts');
+    }
+    return result;
   }
 }
 exports.AuthRepository = AuthRepository;

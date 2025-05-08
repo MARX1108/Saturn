@@ -1,10 +1,8 @@
+import { Actor } from '../models/actor';
+import { ActorRepository } from '../repositories/actorRepository';
+import { NotificationService } from '@/modules/notifications/services/notification.service';
+import { AppError, ErrorType } from '@/utils/errors';
 import { ObjectId } from 'mongodb';
-import * as crypto from 'crypto';
-import * as bcryptjs from 'bcryptjs';
-import { Actor } from '../../../modules/actors/models/actor';
-import { ActorRepository } from '../../../modules/actors/repositories/actorRepository';
-import { NotificationService } from '../../../modules/notifications/services/notification.service';
-import { AppError, ErrorType } from '../../../utils/errors';
 
 // Define CreateActorData interface and export it
 export interface CreateActorData {
@@ -34,69 +32,65 @@ export class ActorService {
 
   // --- Create Local Actor ---
   async createLocalActor(data: CreateActorData): Promise<Actor> {
-    if (!data.password) {
+    const {
+      username,
+      email,
+      password,
+      displayName = username, // Use username as default display name
+      summary = '', // Empty string as default summary
+      isAdmin = false,
+      isVerified = false,
+    } = data;
+
+    const domain = this.domain;
+    const preferredUsername = username; // For local actors, preferredUsername is the username
+
+    // Check if the username already exists
+    // This should be done before attempting to create the user
+    const existingActor =
+      await this.actorRepository.findByPreferredUsername(preferredUsername);
+    if (existingActor) {
       throw new AppError(
-        'Password is required for local actor creation',
+        `Username '${preferredUsername}' is already taken`,
         400,
-        ErrorType.BAD_REQUEST
+        ErrorType.VALIDATION
       );
     }
 
-    // Check if username or email already exists
-    const existingByUsername = await this.actorRepository.findOne({
-      preferredUsername: data.username,
-    });
-    if (existingByUsername) {
-      throw new AppError('Username already taken', 409, ErrorType.CONFLICT);
-    }
-    const existingByEmail = await this.actorRepository.findOne({
-      email: data.email,
-    });
-    if (existingByEmail) {
-      throw new AppError('Email already registered', 409, ErrorType.CONFLICT);
-    }
+    // Generate MongoDB ObjectId (ensure _id and id are consistent)
+    const actorObjectId = new ObjectId();
 
-    const actorId = new ObjectId();
-    const hashedPassword = await bcryptjs.hash(data.password, 10);
-    const actorAPID = `https://${this.domain}/users/${data.username}`;
-    const now = new Date();
-
-    // Generate Keypair (replace with more robust key generation/storage)
-    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: { type: 'spki', format: 'pem' },
-      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-    });
-
-    const newActor: Omit<Actor, '_id'> = {
-      id: actorAPID,
-      type: 'Person',
-      username: `${data.username}@${this.domain}`, // Full username
-      preferredUsername: data.username,
-      email: data.email,
-      password: hashedPassword,
-      displayName: data.displayName || data.username,
-      summary: data.summary || '',
-      inbox: `${actorAPID}/inbox`,
-      outbox: `${actorAPID}/outbox`,
-      followers: `${actorAPID}/followers`,
-      publicKey: {
-        id: `${actorAPID}#main-key`,
-        owner: actorAPID,
-        publicKeyPem: publicKey,
-      },
-      privateKey: privateKey, // Store securely!
-      isAdmin: data.isAdmin || false,
-      isVerified: data.isVerified || false, // Should require email verification flow
-      createdAt: now,
-      updatedAt: now,
+    // Create a new actor
+    const actor: Omit<Actor, '_id'> = {
+      id: `https://${domain}/actors/${preferredUsername}`, // ActivityPub ID (URL)
+      type: 'Person', // ActivityPub type
+      username: `${preferredUsername}@${domain}`, // Full username (user@domain)
+      preferredUsername, // Local username
+      name: displayName, // Also set name for ActivityPub compatibility
+      displayName,
+      summary,
+      email, // Set email
+      password, // Will be hashed in repository/controller
+      inbox: `https://${domain}/actors/${preferredUsername}/inbox`,
+      outbox: `https://${domain}/actors/${preferredUsername}/outbox`,
+      followers: `https://${domain}/actors/${preferredUsername}/followers`,
+      following: [], // Empty array initially
+      isAdmin,
+      isVerified,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isRemote: false, // Local actor
     };
+
+    // Manually generate key pair if needed
+    // TODO: Move key generation to a separate service/util
 
     // Use create method from base repository
     const createdActor = await this.actorRepository.create({
-      ...newActor,
-      _id: actorId,
+      ...actor,
+      _id: actorObjectId,
     } as Actor);
+
     return createdActor;
   }
 
@@ -165,7 +159,7 @@ export class ActorService {
         '[ActorService] findById result:',
         result ? 'Found' : 'Not found'
       );
-      return result;
+      return result || null;
     } catch (error) {
       console.error('[ActorService] Error in getActorById:', error);
       return null;
@@ -200,8 +194,53 @@ export class ActorService {
     actorId: string | ObjectId,
     updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>>
   ): Promise<Actor | null> {
-    // Call repository method
-    return this.actorRepository.updateProfile(actorId, updates);
+    try {
+      console.log(`[ActorService] Updating actor profile with ID: ${actorId}`);
+      console.log(`[ActorService] Update payload:`, JSON.stringify(updates));
+
+      // Validate actorId
+      if (!actorId) {
+        console.error(
+          '[ActorService] updateActorProfile called with null/undefined actorId'
+        );
+        return null;
+      }
+
+      // Validate ObjectId format if string
+      if (typeof actorId === 'string') {
+        if (!ObjectId.isValid(actorId)) {
+          console.error(`[ActorService] Invalid ObjectId format: ${actorId}`);
+          return null;
+        }
+      }
+
+      // Validate update payload
+      if (!updates || Object.keys(updates).length === 0) {
+        console.error('[ActorService] Empty update payload provided');
+        return null;
+      }
+
+      // Call repository method
+      const result = await this.actorRepository.updateProfile(actorId, updates);
+
+      if (!result) {
+        console.error(
+          `[ActorService] Actor update returned null for ID: ${actorId}`
+        );
+      } else {
+        console.log(
+          `[ActorService] Successfully updated actor: ${result.preferredUsername}`
+        );
+      }
+
+      return result;
+    } catch (error) {
+      console.error(
+        `[ActorService] Error in updateActorProfile for ID ${actorId}:`,
+        error
+      );
+      throw error;
+    }
   }
 
   // --- Update Actor (by username) ---
@@ -227,14 +266,16 @@ export class ActorService {
     followeeApId: string
   ): Promise<boolean> {
     const follower = await this.getActorById(followerId);
-    if (!follower)
+    if (!follower) {
       throw new AppError('Follower not found', 404, ErrorType.NOT_FOUND);
+    }
 
     // TODO: Fetch followee actor (local or remote)
     // const followee = await this.getActorByApId(followeeApId) || await this.fetchRemoteActor(followeeApId);
     const followee = await this.getActorByApId(followeeApId);
-    if (!followee)
+    if (!followee) {
       throw new AppError('Followee not found', 404, ErrorType.NOT_FOUND);
+    }
 
     // Add followee AP ID to follower's following list
     // Use addFollowing from repository

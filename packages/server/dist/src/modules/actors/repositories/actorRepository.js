@@ -28,13 +28,105 @@ class ActorRepository extends baseRepository_1.MongoRepository {
     return this.findOne({ preferredUsername: preferredUsername });
   }
   async updateProfile(id, updates) {
-    const objectId = typeof id === 'string' ? new mongodb_1.ObjectId(id) : id;
-    // Use findOneAndUpdate to get the updated document, returning the document *after* update
-    return this.findOneAndUpdate(
-      { _id: objectId }, // Filter by ObjectId
-      { $set: { ...updates, updatedAt: new Date() } },
-      { returnDocument: 'after' } // Option to return the updated document
-    );
+    try {
+      console.log(`[ActorRepository] Updating profile for actor ID: ${id}`);
+      console.log(`[ActorRepository] Update data:`, JSON.stringify(updates));
+      // Convert to ObjectId if needed
+      let objectId;
+      if (typeof id === 'string') {
+        try {
+          if (mongodb_1.ObjectId.isValid(id)) {
+            objectId = new mongodb_1.ObjectId(id);
+            console.log(
+              `[ActorRepository] Successfully converted string to ObjectId: ${objectId}`
+            );
+          } else {
+            console.error(`[ActorRepository] Invalid ObjectId format: ${id}`);
+            return null;
+          }
+        } catch (idError) {
+          console.error(
+            `[ActorRepository] Error converting ID to ObjectId: ${id}`,
+            idError
+          );
+          return null;
+        }
+      } else {
+        objectId = id;
+      }
+      // First verify collection name
+      console.log(
+        `[ActorRepository] Collection name: ${this.collection.collectionName}`
+      );
+      console.log(
+        `[ActorRepository] Collection namespace: ${this.collection.namespace}`
+      );
+      // Try different query approaches for debugging
+      console.log(`[ActorRepository] Finding actor by exact ObjectId`);
+      const query = { _id: objectId };
+      // Verify the query
+      console.log(`[ActorRepository] Query:`, JSON.stringify(query));
+      // Do a direct find with just ID to check DB access
+      const count = await this.collection.countDocuments();
+      console.log(`[ActorRepository] Total documents in collection: ${count}`);
+      // Step 1: Find the document first to verify it exists
+      const actor = await this.collection.findOne(query);
+      if (!actor) {
+        console.error(`[ActorRepository] No actor found with ID: ${objectId}`);
+        // Try a different approach - find by username using the ID from token
+        const actorsByUsername = await this.collection
+          .find({})
+          .limit(5)
+          .toArray();
+        console.log(
+          '[ActorRepository] First 5 actors in collection:',
+          actorsByUsername.map(a => ({
+            id: a._id.toString(),
+            username: a.preferredUsername,
+          }))
+        );
+        return null;
+      }
+      console.log(
+        `[ActorRepository] Found actor with username: ${actor.preferredUsername}`
+      );
+      // Step 2: Update the document using updateOne for reliability
+      const updateData = {
+        ...updates,
+        updatedAt: new Date(),
+      };
+      const updateResult = await this.collection.updateOne(
+        { _id: objectId },
+        { $set: updateData }
+      );
+      if (updateResult.modifiedCount === 0) {
+        console.error(
+          `[ActorRepository] Update operation did not modify any document. ID: ${objectId}`
+        );
+        return null;
+      }
+      console.log(
+        `[ActorRepository] Successfully updated actor, modified count: ${updateResult.modifiedCount}`
+      );
+      // Step 3: Fetch the updated document to return
+      const updatedActor = await this.collection.findOne({ _id: objectId });
+      if (!updatedActor) {
+        console.error(
+          `[ActorRepository] Could not retrieve updated actor. ID: ${objectId}`
+        );
+        return null;
+      }
+      console.log(
+        `[ActorRepository] Retrieved updated actor: ${updatedActor.preferredUsername}`
+      );
+      return updatedActor;
+    } catch (error) {
+      console.error(
+        `[ActorRepository] Error in updateProfile for ID ${id}:`,
+        error
+      );
+      throw error;
+    }
   }
   async addFollowing(actorId, targetActorApId) {
     return this.updateById(actorId, {
@@ -89,6 +181,24 @@ class ActorRepository extends baseRepository_1.MongoRepository {
   // Add deleteByUsername method
   async deleteByUsername(preferredUsername) {
     return this.deleteOne({ preferredUsername });
+  }
+  async findById(id) {
+    try {
+      // If id is an ObjectId already, use it directly
+      const objectId =
+        id instanceof mongodb_1.ObjectId ? id : new mongodb_1.ObjectId(id);
+      // Try to find by _id field first
+      let result = await this.findOne({ _id: objectId });
+      // If not found, try by id field (string representation)
+      if (!result) {
+        const idStr = objectId.toString();
+        result = await this.findOne({ id: idStr });
+      }
+      return result;
+    } catch (error) {
+      console.error(`[ActorRepository] Error in findById: ${error}`);
+      return null;
+    }
   }
 }
 exports.ActorRepository = ActorRepository;

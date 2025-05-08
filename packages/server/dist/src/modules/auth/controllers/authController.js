@@ -79,8 +79,8 @@ class AuthController {
           errors_1.ErrorType.AUTHENTICATION
         );
       }
-      // Remove password from response
-      const { password, ...userWithoutPassword } = req.user;
+      // Remove password from response using destructuring and rest operator
+      const { password: _password, ...userWithoutPassword } = req.user;
       res.json(userWithoutPassword);
     } catch (error) {
       next(error);

@@ -1,66 +1,8 @@
 'use strict';
-var __createBinding =
-  (this && this.__createBinding) ||
-  (Object.create
-    ? function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        var desc = Object.getOwnPropertyDescriptor(m, k);
-        if (
-          !desc ||
-          ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)
-        ) {
-          desc = {
-            enumerable: true,
-            get: function () {
-              return m[k];
-            },
-          };
-        }
-        Object.defineProperty(o, k2, desc);
-      }
-    : function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        o[k2] = m[k];
-      });
-var __setModuleDefault =
-  (this && this.__setModuleDefault) ||
-  (Object.create
-    ? function (o, v) {
-        Object.defineProperty(o, 'default', { enumerable: true, value: v });
-      }
-    : function (o, v) {
-        o['default'] = v;
-      });
-var __importStar =
-  (this && this.__importStar) ||
-  (function () {
-    var ownKeys = function (o) {
-      ownKeys =
-        Object.getOwnPropertyNames ||
-        function (o) {
-          var ar = [];
-          for (var k in o)
-            if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-          return ar;
-        };
-      return ownKeys(o);
-    };
-    return function (mod) {
-      if (mod && mod.__esModule) return mod;
-      var result = {};
-      if (mod != null)
-        for (var k = ownKeys(mod), i = 0; i < k.length; i++)
-          if (k[i] !== 'default') __createBinding(result, mod, k[i]);
-      __setModuleDefault(result, mod);
-      return result;
-    };
-  })();
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.ActorService = void 0;
+const errors_1 = require('@/utils/errors');
 const mongodb_1 = require('mongodb');
-const crypto = __importStar(require('crypto'));
-const bcryptjs = __importStar(require('bcryptjs'));
-const errors_1 = require('../../../utils/errors');
 class ActorService {
   constructor(actorRepository, domain) {
     this.actorRepository = actorRepository;
@@ -72,78 +14,123 @@ class ActorService {
   }
   // --- Create Local Actor ---
   async createLocalActor(data) {
-    if (!data.password) {
+    const {
+      username,
+      email,
+      password,
+      displayName = username, // Use username as default display name
+      summary = '', // Empty string as default summary
+      isAdmin = false,
+      isVerified = false,
+    } = data;
+    const domain = this.domain;
+    const preferredUsername = username; // For local actors, preferredUsername is the username
+    // Check if the username already exists
+    // This should be done before attempting to create the user
+    const existingActor =
+      await this.actorRepository.findByPreferredUsername(preferredUsername);
+    if (existingActor) {
       throw new errors_1.AppError(
-        'Password is required for local actor creation',
+        `Username '${preferredUsername}' is already taken`,
         400,
-        errors_1.ErrorType.BAD_REQUEST
+        errors_1.ErrorType.VALIDATION
       );
     }
-    // Check if username or email already exists
-    const existingByUsername = await this.actorRepository.findOne({
-      preferredUsername: data.username,
-    });
-    if (existingByUsername) {
-      throw new errors_1.AppError(
-        'Username already taken',
-        409,
-        errors_1.ErrorType.CONFLICT
-      );
-    }
-    const existingByEmail = await this.actorRepository.findOne({
-      email: data.email,
-    });
-    if (existingByEmail) {
-      throw new errors_1.AppError(
-        'Email already registered',
-        409,
-        errors_1.ErrorType.CONFLICT
-      );
-    }
-    const actorId = new mongodb_1.ObjectId();
-    const hashedPassword = await bcryptjs.hash(data.password, 10);
-    const actorAPID = `https://${this.domain}/users/${data.username}`;
-    const now = new Date();
-    // Generate Keypair (replace with more robust key generation/storage)
-    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: { type: 'spki', format: 'pem' },
-      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-    });
-    const newActor = {
-      id: actorAPID,
-      type: 'Person',
-      username: `${data.username}@${this.domain}`, // Full username
-      preferredUsername: data.username,
-      email: data.email,
-      password: hashedPassword,
-      displayName: data.displayName || data.username,
-      summary: data.summary || '',
-      inbox: `${actorAPID}/inbox`,
-      outbox: `${actorAPID}/outbox`,
-      followers: `${actorAPID}/followers`,
-      publicKey: {
-        id: `${actorAPID}#main-key`,
-        owner: actorAPID,
-        publicKeyPem: publicKey,
-      },
-      privateKey: privateKey, // Store securely!
-      isAdmin: data.isAdmin || false,
-      isVerified: data.isVerified || false, // Should require email verification flow
-      createdAt: now,
-      updatedAt: now,
+    // Generate MongoDB ObjectId (ensure _id and id are consistent)
+    const actorObjectId = new mongodb_1.ObjectId();
+    // Create a new actor
+    const actor = {
+      id: `https://${domain}/actors/${preferredUsername}`, // ActivityPub ID (URL)
+      type: 'Person', // ActivityPub type
+      username: `${preferredUsername}@${domain}`, // Full username (user@domain)
+      preferredUsername, // Local username
+      name: displayName, // Also set name for ActivityPub compatibility
+      displayName,
+      summary,
+      email, // Set email
+      password, // Will be hashed in repository/controller
+      inbox: `https://${domain}/actors/${preferredUsername}/inbox`,
+      outbox: `https://${domain}/actors/${preferredUsername}/outbox`,
+      followers: `https://${domain}/actors/${preferredUsername}/followers`,
+      following: [], // Empty array initially
+      isAdmin,
+      isVerified,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isRemote: false, // Local actor
     };
+    // Manually generate key pair if needed
+    // TODO: Move key generation to a separate service/util
     // Use create method from base repository
     const createdActor = await this.actorRepository.create({
-      ...newActor,
-      _id: actorId,
+      ...actor,
+      _id: actorObjectId,
     });
     return createdActor;
   }
   // --- Get Actor By ID (Internal ObjectId) ---
   async getActorById(id) {
-    const objectId = typeof id === 'string' ? new mongodb_1.ObjectId(id) : id;
-    return this.actorRepository.findById(objectId);
+    console.log(
+      '[ActorService] getActorById called with:',
+      id,
+      'type:',
+      typeof id
+    );
+    // If id is null or undefined, return null immediately
+    if (!id) {
+      console.log('[ActorService] getActorById called with null/undefined id');
+      return null;
+    }
+    try {
+      // Handle different ID formats
+      let objectId = id;
+      // If string, try to convert to ObjectId
+      if (typeof id === 'string') {
+        try {
+          // Check if it's a valid ObjectId string
+          if (mongodb_1.ObjectId.isValid(id)) {
+            objectId = new mongodb_1.ObjectId(id);
+            console.log(
+              '[ActorService] Converted string to ObjectId:',
+              objectId
+            );
+          } else {
+            // Keep as string if not a valid ObjectId (might be an API ID or username)
+            console.log(
+              '[ActorService] Using string ID as-is (not a valid ObjectId)'
+            );
+          }
+        } catch (e) {
+          console.log(
+            '[ActorService] Error converting to ObjectId, using string as-is:',
+            e
+          );
+          // Keep as string if conversion fails
+        }
+      }
+      // First try direct lookup with the objectId
+      let result = await this.actorRepository.findById(objectId);
+      // If not found and objectId is an ObjectId instance, try with string representation
+      if (!result && objectId instanceof mongodb_1.ObjectId) {
+        console.log('[ActorService] Trying string representation of ObjectId');
+        result = await this.actorRepository.findOne({
+          _id: objectId,
+        });
+      }
+      // If still not found and id is a string that looks like a URL, try by AP ID
+      if (!result && typeof id === 'string' && id.startsWith('http')) {
+        console.log('[ActorService] Trying lookup by AP ID');
+        result = await this.actorRepository.findOne({ id });
+      }
+      console.log(
+        '[ActorService] findById result:',
+        result ? 'Found' : 'Not found'
+      );
+      return result || null;
+    } catch (error) {
+      console.error('[ActorService] Error in getActorById:', error);
+      return null;
+    }
   }
   // --- Get Actor By AP ID (URL) ---
   async getActorByApId(apId) {
@@ -166,8 +153,47 @@ class ActorService {
   }
   // --- Update Actor Profile ---
   async updateActorProfile(actorId, updates) {
-    // Call repository method
-    return this.actorRepository.updateProfile(actorId, updates);
+    try {
+      console.log(`[ActorService] Updating actor profile with ID: ${actorId}`);
+      console.log(`[ActorService] Update payload:`, JSON.stringify(updates));
+      // Validate actorId
+      if (!actorId) {
+        console.error(
+          '[ActorService] updateActorProfile called with null/undefined actorId'
+        );
+        return null;
+      }
+      // Validate ObjectId format if string
+      if (typeof actorId === 'string') {
+        if (!mongodb_1.ObjectId.isValid(actorId)) {
+          console.error(`[ActorService] Invalid ObjectId format: ${actorId}`);
+          return null;
+        }
+      }
+      // Validate update payload
+      if (!updates || Object.keys(updates).length === 0) {
+        console.error('[ActorService] Empty update payload provided');
+        return null;
+      }
+      // Call repository method
+      const result = await this.actorRepository.updateProfile(actorId, updates);
+      if (!result) {
+        console.error(
+          `[ActorService] Actor update returned null for ID: ${actorId}`
+        );
+      } else {
+        console.log(
+          `[ActorService] Successfully updated actor: ${result.preferredUsername}`
+        );
+      }
+      return result;
+    } catch (error) {
+      console.error(
+        `[ActorService] Error in updateActorProfile for ID ${actorId}:`,
+        error
+      );
+      throw error;
+    }
   }
   // --- Update Actor (by username) ---
   // Keep this method name if controllers/tests use it, but have it call repo
@@ -187,21 +213,23 @@ class ActorService {
   // --- Follow Actor ---
   async follow(followerId, followeeApId) {
     const follower = await this.getActorById(followerId);
-    if (!follower)
+    if (!follower) {
       throw new errors_1.AppError(
         'Follower not found',
         404,
         errors_1.ErrorType.NOT_FOUND
       );
+    }
     // TODO: Fetch followee actor (local or remote)
     // const followee = await this.getActorByApId(followeeApId) || await this.fetchRemoteActor(followeeApId);
     const followee = await this.getActorByApId(followeeApId);
-    if (!followee)
+    if (!followee) {
       throw new errors_1.AppError(
         'Followee not found',
         404,
         errors_1.ErrorType.NOT_FOUND
       );
+    }
     // Add followee AP ID to follower's following list
     // Use addFollowing from repository
     const result = await this.actorRepository.addFollowing(

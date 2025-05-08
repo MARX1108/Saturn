@@ -22,7 +22,8 @@ export class AuthService {
       throw new Error('JWT_SECRET environment variable is not defined');
     }
 
-    return jwt.sign({ id: user._id, username: user.username }, jwtSecret, {
+    // Use id consistently across the application
+    return jwt.sign({ id: user.id, username: user.username }, jwtSecret, {
       expiresIn: '24h',
       algorithm: 'HS256',
     });
@@ -95,9 +96,11 @@ export class AuthService {
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
+    // Use the same ObjectId for both _id and id to ensure consistency
+    const userId = new ObjectId().toString();
     const user: DbUser = {
-      _id: new ObjectId().toString(),
-      id: new ObjectId().toString(),
+      _id: userId,
+      id: userId,
       username,
       preferredUsername: username,
       password: hashedPassword,

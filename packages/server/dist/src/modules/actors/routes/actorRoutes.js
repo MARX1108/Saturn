@@ -51,6 +51,14 @@ function configureActorRoutes(serviceContainer) {
   router.get('/:username', (req, res, next) => {
     void actorsController.getActorByUsername(req, res).catch(next);
   });
+  // Update actor by username
+  router.put(
+    '/username/:username',
+    (0, auth_1.authenticate)(authService),
+    (0, routeHandler_1.wrapAsync)(
+      actorsController.updateActorByUsername.bind(actorsController)
+    )
+  );
   // Update actor
   router.put(
     '/:id',

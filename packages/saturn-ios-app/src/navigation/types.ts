@@ -26,6 +26,7 @@ export type RootStackParamList = {
   OnboardingFlow: undefined;
   MainFlow: { screen?: string; params?: object };
   CreatePostModal: undefined;
+  ProfileEditModal: undefined;
   CommentModal: { postId: string };
   ProfileSettings: undefined;
 };

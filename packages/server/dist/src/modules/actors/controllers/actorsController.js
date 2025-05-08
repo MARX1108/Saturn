@@ -51,7 +51,11 @@ class ActorsController {
       return res.status(404).json({ error: 'Actor not found' });
     }
     // Remove sensitive information from the response
-    const { password, email, ...actorWithoutSensitiveInfo } = actor;
+    const {
+      password: _password,
+      email: _email,
+      ...actorWithoutSensitiveInfo
+    } = actor;
     return res.json(actorWithoutSensitiveInfo);
   }
   /**
@@ -128,6 +132,105 @@ class ActorsController {
       console.warn('getPostsByActorUsername not implemented in PostService');
       res.json({ posts: [], total: 0, limit, offset });
     } catch (error) {
+      next(error);
+    }
+  }
+  /**
+   * Update actor by username
+   */
+  async updateActorByUsername(req, res, next) {
+    try {
+      const username = req.params.username;
+      const updates = req.body;
+      console.log(
+        `[ActorsController] Attempting to update actor with username: ${username}`
+      );
+      console.log(
+        `[ActorsController] Update payload:`,
+        JSON.stringify(updates)
+      );
+      console.log(
+        `[ActorsController] Current user:`,
+        req.user?.preferredUsername
+      );
+      // Authorization check: Only allow users to update their own profiles (or admin users)
+      // Cast req.user to our interface that includes isAdmin
+      const user = req.user;
+      if (user?.preferredUsername !== username && !(user?.isAdmin === true)) {
+        console.error(
+          `[ActorsController] Authorization failed - user ${user?.preferredUsername} attempted to update ${username}`
+        );
+        throw new errors_1.AppError(
+          'Not authorized to update this actor',
+          403,
+          errors_1.ErrorType.FORBIDDEN
+        );
+      }
+      // Find the actor first to verify it exists
+      const actor = await this.actorService.getActorByUsername(username);
+      if (!actor) {
+        throw new errors_1.AppError(
+          'Actor not found with username: ' + username,
+          404,
+          errors_1.ErrorType.NOT_FOUND
+        );
+      }
+      console.log(`Updating actor with username ${username}, ID: ${actor._id}`);
+      // Create clean update object
+      const cleanUpdates = {};
+      // Only include fields that are actually provided
+      if (updates.displayName !== undefined)
+        cleanUpdates.displayName = updates.displayName;
+      if (updates.summary !== undefined) cleanUpdates.summary = updates.summary;
+      if (updates.icon !== undefined) cleanUpdates.icon = updates.icon;
+      console.log(
+        `[ActorsController] Cleaned update object:`,
+        JSON.stringify(cleanUpdates)
+      );
+      // CHANGE: Use updateActor method which updates by username rather than ID
+      // since we're having issues with the ObjectId lookups
+      try {
+        const updatedActor = await this.actorService.updateActor(
+          username,
+          cleanUpdates
+        );
+        if (!updatedActor) {
+          console.error(
+            `[ActorsController] Actor update failed, returned null for username: ${username}`
+          );
+          throw new errors_1.AppError(
+            'Actor update failed',
+            500,
+            errors_1.ErrorType.INTERNAL_SERVER_ERROR
+          );
+        }
+        console.log(
+          `[ActorsController] Successfully updated actor: ${updatedActor.preferredUsername}`
+        );
+        res.status(200).json({
+          id: updatedActor.id,
+          username: updatedActor.preferredUsername,
+          displayName: updatedActor.displayName,
+        });
+      } catch (updateError) {
+        console.error(
+          `[ActorsController] Error updating actor with username ${username}:`,
+          updateError
+        );
+        // Handle error with proper type casting
+        const errorMessage =
+          updateError instanceof Error ? updateError.message : 'Unknown error';
+        throw new errors_1.AppError(
+          `Actor update failed: ${errorMessage}`,
+          500,
+          errors_1.ErrorType.INTERNAL_SERVER_ERROR
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[ActorsController] Error in updateActorByUsername:`,
+        error
+      );
       next(error);
     }
   }

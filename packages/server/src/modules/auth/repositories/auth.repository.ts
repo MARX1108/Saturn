@@ -51,7 +51,15 @@ export class AuthRepository extends MongoRepository<DbUser> {
 
   async findById(id: string): Promise<DbUser | null> {
     console.log('[AuthRepository] Looking up user by id:', id);
-    const result = await this.findOne({ _id: id });
+
+    // Try to find by _id field first
+    let result = await this.findOne({ _id: id });
+
+    // If not found, try by id field
+    if (!result) {
+      result = await this.findOne({ id: id });
+    }
+
     console.log(
       '[AuthRepository] findById result:',
       result ? 'Found' : 'Not found'

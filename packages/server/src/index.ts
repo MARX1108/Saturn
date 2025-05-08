@@ -133,8 +133,8 @@ export async function startServer(): Promise<{
     // Start the server only if not in test mode
     let server;
     if (process.env.NODE_ENV !== 'test') {
-      server = app.listen(PORT, () => {
-        logger.info(`Server running on http://localhost:${PORT}`);
+      server = app.listen(PORT, '0.0.0.0', () => {
+        logger.info(`Server running on http://0.0.0.0:${PORT}`);
       });
 
       // Implement graceful shutdown

@@ -33,7 +33,6 @@ class PostsController {
     } else {
       author = await this.actorService.getActorById(post.actorId);
     }
-
     // Handle case where author doesn't exist anymore
     if (!author) {
       console.warn(
@@ -48,7 +47,6 @@ class PostsController {
         name: 'Deleted Account',
       };
     }
-
     // Convert potential ObjectId to string for comparison
     const reqActorIdStr = requestingActorId
       ? new mongodb_1.ObjectId(requestingActorId).toHexString()
@@ -88,14 +86,21 @@ class PostsController {
    */
   async createPost(req, res, next) {
     try {
-      if (!req.user?._id) {
+      if (!req.user) {
         throw new errors_1.AppError(
           'Authentication required',
           401,
           errors_1.ErrorType.UNAUTHORIZED
         );
       }
-      const actorId = req.user._id;
+      // Use id field consistently - this is what the JWT token uses
+      const actorId = req.user.id;
+      console.log('[PostsController] Creating post with actor ID:', actorId);
+      console.log('[PostsController] User object:', {
+        id: req.user.id,
+        _id: req.user._id,
+        username: req.user.username,
+      });
       // Data has already been validated by the Zod schema middleware
       // We can safely typecast here
       const validatedData = req.body;
@@ -128,7 +133,7 @@ class PostsController {
       }
       const page = parseInt(req.query.page, 10) || 1;
       const limit = parseInt(req.query.limit, 10) || 20;
-      const userId = req.user?._id; // Get authenticated user ID if available
+      const userId = req.user.id; // Get authenticated user ID if available
       // Pass options object to service
       const { posts, hasMore } = await this.postService.getFeed({
         page,
@@ -136,7 +141,7 @@ class PostsController {
       }); // <<< Use options object
       // Format posts
       const formattedPosts = await Promise.all(
-        posts.map(post => this.formatPostResponse(post, userId?.toString()))
+        posts.map(post => this.formatPostResponse(post, userId.toString()))
       );
       res.json({
         posts: formattedPosts,
@@ -160,7 +165,7 @@ class PostsController {
           errors_1.ErrorType.NOT_FOUND
         );
       }
-      const userId = req.user?._id;
+      const userId = req.user ? req.user.id : undefined;
       const formattedPost = await this.formatPostResponse(
         post,
         userId?.toString()
@@ -180,6 +185,8 @@ class PostsController {
       const limit = parseInt(req.query.limit) || 20;
       // Calculate offset from page and limit
       const offset = (page - 1) * limit;
+      // Get user ID for like/share status if user is authenticated
+      const userId = req.user ? req.user.id : undefined;
       // Call the service method to get posts by username
       const result = await this.postService.getPostsByUsername(username, {
         limit,
@@ -188,7 +195,7 @@ class PostsController {
       // Format posts
       const formattedPosts = await Promise.all(
         result.posts.map(post =>
-          this.formatPostResponse(post, req.user?._id?.toString() || undefined)
+          this.formatPostResponse(post, userId?.toString())
         )
       );
       // Calculate if there are more posts
@@ -206,14 +213,14 @@ class PostsController {
    */
   async updatePost(req, res, next) {
     try {
-      if (!req.user?._id) {
+      if (!req.user) {
         throw new errors_1.AppError(
           'Authentication required',
           401,
           errors_1.ErrorType.UNAUTHORIZED
         );
       }
-      const actorId = req.user._id;
+      const actorId = req.user.id;
       const postId = req.params.id;
       // Data has already been validated by the Zod schema middleware
       const validatedData = req.body;
@@ -246,24 +253,24 @@ class PostsController {
    */
   async deletePost(req, res, next) {
     try {
-      if (!req.user?._id) {
+      if (!req.user) {
         throw new errors_1.AppError(
           'Authentication required',
           401,
           errors_1.ErrorType.UNAUTHORIZED
         );
       }
+      const actorId = req.user.id;
       const postId = req.params.id;
-      const actorId = req.user._id;
-      const success = await this.postService.deletePost(postId, actorId);
-      if (!success) {
+      const deleted = await this.postService.deletePost(postId, actorId);
+      if (!deleted) {
         throw new errors_1.AppError(
           'Post not found or user not authorized',
           404,
           errors_1.ErrorType.NOT_FOUND
         );
       }
-      res.status(204).end();
+      res.status(204).send();
     } catch (error) {
       next(error);
     }
@@ -273,24 +280,28 @@ class PostsController {
    */
   async likePost(req, res, next) {
     try {
-      if (!req.user?._id) {
+      if (!req.user) {
         throw new errors_1.AppError(
           'Authentication required',
           401,
           errors_1.ErrorType.UNAUTHORIZED
         );
       }
+      const actorId = req.user.id;
       const postId = req.params.id;
-      const actorId = req.user._id;
-      const liked = await this.postService.likePost(postId, actorId);
-      if (!liked) {
+      const updatedPost = await this.postService.likePost(postId, actorId);
+      if (!updatedPost) {
         throw new errors_1.AppError(
-          'Post already liked or not found',
-          400, // Bad Request
-          errors_1.ErrorType.VALIDATION // Or a different type?
+          'Post not found',
+          404,
+          errors_1.ErrorType.NOT_FOUND
         );
       }
-      res.json({ success: true });
+      const formattedPost = await this.formatPostResponse(
+        updatedPost,
+        actorId.toString()
+      );
+      res.json(formattedPost);
     } catch (error) {
       next(error);
     }
@@ -300,24 +311,90 @@ class PostsController {
    */
   async unlikePost(req, res, next) {
     try {
-      if (!req.user?._id) {
+      if (!req.user) {
         throw new errors_1.AppError(
           'Authentication required',
           401,
           errors_1.ErrorType.UNAUTHORIZED
         );
       }
+      const actorId = req.user.id;
       const postId = req.params.id;
-      const actorId = req.user._id;
-      const unliked = await this.postService.unlikePost(postId, actorId);
-      if (!unliked) {
+      const updatedPost = await this.postService.unlikePost(postId, actorId);
+      if (!updatedPost) {
         throw new errors_1.AppError(
-          'Post not liked or not found',
-          400, // Bad Request
-          errors_1.ErrorType.VALIDATION // Or a different type?
+          'Post not found',
+          404,
+          errors_1.ErrorType.NOT_FOUND
         );
       }
-      res.json({ success: true });
+      const formattedPost = await this.formatPostResponse(
+        updatedPost,
+        actorId.toString()
+      );
+      res.json(formattedPost);
+    } catch (error) {
+      next(error);
+    }
+  }
+  /**
+   * Share a post (aka reblog/boost)
+   */
+  async sharePost(req, res, next) {
+    try {
+      if (!req.user) {
+        throw new errors_1.AppError(
+          'Authentication required',
+          401,
+          errors_1.ErrorType.UNAUTHORIZED
+        );
+      }
+      const actorId = req.user.id;
+      const postId = req.params.id;
+      const updatedPost = await this.postService.sharePost(postId, actorId);
+      if (!updatedPost) {
+        throw new errors_1.AppError(
+          'Post not found',
+          404,
+          errors_1.ErrorType.NOT_FOUND
+        );
+      }
+      const formattedPost = await this.formatPostResponse(
+        updatedPost,
+        actorId.toString()
+      );
+      res.json(formattedPost);
+    } catch (error) {
+      next(error);
+    }
+  }
+  /**
+   * Unshare a post
+   */
+  async unsharePost(req, res, next) {
+    try {
+      if (!req.user) {
+        throw new errors_1.AppError(
+          'Authentication required',
+          401,
+          errors_1.ErrorType.UNAUTHORIZED
+        );
+      }
+      const actorId = req.user.id;
+      const postId = req.params.id;
+      const updatedPost = await this.postService.unsharePost(postId, actorId);
+      if (!updatedPost) {
+        throw new errors_1.AppError(
+          'Post not found',
+          404,
+          errors_1.ErrorType.NOT_FOUND
+        );
+      }
+      const formattedPost = await this.formatPostResponse(
+        updatedPost,
+        actorId.toString()
+      );
+      res.json(formattedPost);
     } catch (error) {
       next(error);
     }

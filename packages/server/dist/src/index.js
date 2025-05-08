@@ -76,9 +76,10 @@ async function startServer() {
   try {
     // Check that JWT_SECRET is defined and not empty
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
-      throw new Error(
+      logger_1.default.fatal(
         'JWT_SECRET environment variable is not defined or empty. This is required for secure operation.'
       );
+      process.exit(1);
     }
     const client = new mongodb_1.MongoClient(MONGO_URI);
     await client.connect();
@@ -123,8 +124,8 @@ async function startServer() {
     // Start the server only if not in test mode
     let server;
     if (process.env.NODE_ENV !== 'test') {
-      server = app.listen(PORT, () => {
-        logger_1.default.info(`Server running on http://localhost:${PORT}`);
+      server = app.listen(PORT, '0.0.0.0', () => {
+        logger_1.default.info(`Server running on http://0.0.0.0:${PORT}`);
       });
       // Implement graceful shutdown
       setupGracefulShutdown(server, client);
@@ -170,9 +171,9 @@ function gracefullyShutdown(server, mongoClient) {
       process.exit(1);
     }
     logger_1.default.info('Server closed successfully');
-    // Then close the MongoDB connection
+    // Then close the MongoDB connection with force=true to terminate all connections
     mongoClient
-      .close()
+      .close(true)
       .then(() => {
         logger_1.default.info('MongoDB connection closed successfully');
         process.exit(0);

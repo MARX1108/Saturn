@@ -65,6 +65,13 @@ export default function configureActorRoutes(
     }
   );
 
+  // Update actor by username
+  router.put(
+    '/username/:username',
+    authenticate(authService),
+    wrapAsync(actorsController.updateActorByUsername.bind(actorsController))
+  );
+
   // Update actor
   router.put(
     '/:id',

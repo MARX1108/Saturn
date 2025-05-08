@@ -38,6 +38,9 @@ export const ApiEndpoints = {
   actors: '/api/actors',
   getActorByUsername: (username: string) => `/api/actors/${username}`,
   searchActors: '/api/actors/search',
+  updateActor: (id: string) => `/api/actors/${id}`,
+  updateActorByUsername: (username: string) =>
+    `/api/actors/username/${username}`,
 
   // Posts endpoints
   posts: '/api/posts',

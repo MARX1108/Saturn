@@ -4,6 +4,7 @@ import { RootStackParamList } from './types';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
 import CreatePostScreen from '../screens/main/CreatePostScreen';
+import ProfileEditScreen from '../screens/main/ProfileEditScreen';
 import { useAppSelector } from '../store/hooks'; // Import typed selector
 import { View, ActivityIndicator, StyleSheet } from 'react-native'; // For loading state
 
@@ -49,6 +50,16 @@ const RootNavigator = (): React.JSX.Element => {
           presentation: 'modal',
           animation: 'slide_from_bottom',
           headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="ProfileEditModal"
+        component={ProfileEditScreen}
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: true,
+          title: 'Edit Profile',
         }}
       />
     </Stack.Navigator>

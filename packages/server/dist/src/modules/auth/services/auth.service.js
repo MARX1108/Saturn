@@ -23,8 +23,9 @@ class AuthService {
     if (!jwtSecret) {
       throw new Error('JWT_SECRET environment variable is not defined');
     }
+    // Use id consistently across the application
     return jsonwebtoken_1.default.sign(
-      { id: user._id, username: user.username },
+      { id: user.id, username: user.username },
       jwtSecret,
       {
         expiresIn: '24h',
@@ -81,9 +82,11 @@ class AuthService {
       throw new Error('Username or email already exists');
     }
     const hashedPassword = await bcryptjs_1.default.hash(password, 10);
+    // Use the same ObjectId for both _id and id to ensure consistency
+    const userId = new mongodb_1.ObjectId().toString();
     const user = {
-      _id: new mongodb_1.ObjectId().toString(),
-      id: new mongodb_1.ObjectId().toString(),
+      _id: userId,
+      id: userId,
       username,
       preferredUsername: username,
       password: hashedPassword,
@@ -130,7 +133,18 @@ class AuthService {
       const decoded = jsonwebtoken_1.default.verify(token, jwtSecret, {
         algorithms: ['HS256'],
       });
+      console.log('[AuthService] Token decoded payload:', decoded);
       const user = await this.repository.findById(decoded.id);
+      console.log(
+        '[AuthService] User found from token:',
+        user
+          ? {
+              _id: user._id,
+              id: user.id,
+              username: user.username,
+            }
+          : 'No user found'
+      );
       if (!user) {
         logger_1.default.debug(
           { userId: decoded.id },
