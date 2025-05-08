@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -17,6 +17,7 @@ import PostCard from '../../components/PostCard';
 import PostCardSkeleton from '../../components/PostCardSkeleton';
 import { Post } from '../../types/post';
 import { useFeedPosts } from '../../hooks/useFeedPosts'; // Import the hook
+import * as Haptics from 'expo-haptics'; // Add Haptics import
 
 // Define colors to avoid inline literals
 const COLORS = {
@@ -81,11 +82,14 @@ export default function FeedScreen(): React.JSX.Element {
     void refetch();
   };
 
-  // Handle refresh for RefreshControl (no async needed)
-  const handleRefresh = (): void => {
+  // Enhanced refresh handler with haptic feedback
+  const handleRefresh = useCallback((): void => {
+    // Trigger light impact haptic feedback when pull-to-refresh is initiated
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     setErrorVisible(false);
     void refetch();
-  };
+  }, [refetch]);
 
   // --- Conditional Rendering based on query state ---
   if (isLoading) {
@@ -135,7 +139,7 @@ export default function FeedScreen(): React.JSX.Element {
         refreshControl={
           <RefreshControl
             refreshing={isRefetching} // Use isRefetching for pull-to-refresh indicator
-            onRefresh={handleRefresh} // Call refetch on pull
+            onRefresh={handleRefresh} // Call enhanced refresh handler with haptics
           />
         }
       />

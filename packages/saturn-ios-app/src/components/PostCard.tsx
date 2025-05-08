@@ -9,9 +9,11 @@ import {
   ImageErrorEventData,
   NativeSyntheticEvent,
 } from 'react-native';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { DefaultTheme } from 'styled-components/native';
 import { Post } from '../types/post'; // Import the Post type
+import Icon from 'react-native-vector-icons/Ionicons';
+import * as Haptics from 'expo-haptics'; // Add Haptics import
 
 // Props now take a single 'post' object
 interface PostCardProps {
@@ -115,6 +117,8 @@ const ActionBar = styled.View<StyledComponentProps>`
 
 const ActionButton = styled.TouchableOpacity`
   padding: ${(props: StyledComponentProps) => props.theme.spacing.xs}px;
+  flex-direction: row;
+  align-items: center;
 `;
 
 // Define a type for ActionText props
@@ -128,8 +132,7 @@ const ActionText = styled.Text<ActionTextProps>`
     props.isLiked
       ? props.theme.colors.likeIconActive
       : props.theme.colors.textSecondary};
-  font-weight: ${(props: ActionTextProps) =>
-    props.isLiked ? 'bold' : 'normal'};
+  margin-left: ${(props: ActionTextProps) => props.theme.spacing.xs}px;
   font-family: ${(props: ActionTextProps) => props.theme.typography.secondary};
 `;
 
@@ -140,6 +143,7 @@ const PostCard = ({
   // Placeholder state/logic for interaction - replace later
   const [isLiked, setIsLiked] = React.useState(post.isLiked || false);
   const [likeCount, setLikeCount] = React.useState(post.likeCount || 0);
+  const theme = useTheme();
 
   // Check if this post has author information
   const hasAuthor = React.useMemo(
@@ -148,6 +152,9 @@ const PostCard = ({
   );
 
   const handleLike = (): void => {
+    // Trigger light impact haptic feedback on both like and unlike
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     // Placeholder toggle logic
     setIsLiked(!isLiked);
     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
@@ -210,12 +217,29 @@ const PostCard = ({
 
       <ActionBar>
         <ActionButton onPress={handleLike}>
-          <ActionText isLiked={isLiked}>
-            {isLiked ? '[Liked]' : '[Like]'} ({likeCount})
-          </ActionText>
+          <Icon
+            name={isLiked ? 'heart' : 'heart-outline'}
+            size={22}
+            color={
+              isLiked ? theme.colors.likeIconActive : theme.colors.textSecondary
+            }
+          />
+          <ActionText isLiked={isLiked}>{likeCount}</ActionText>
         </ActionButton>
         <ActionButton onPress={handleComment}>
-          <ActionText>{`[Comment] (${post.commentCount || 0})`}</ActionText>
+          <Icon
+            name="chatbubble-outline"
+            size={22}
+            color={theme.colors.textSecondary}
+          />
+          <ActionText>{post.commentCount || 0}</ActionText>
+        </ActionButton>
+        <ActionButton>
+          <Icon
+            name="bookmark-outline"
+            size={22}
+            color={theme.colors.textSecondary}
+          />
         </ActionButton>
       </ActionBar>
     </CardContainer>

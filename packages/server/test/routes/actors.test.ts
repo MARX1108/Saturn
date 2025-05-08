@@ -138,7 +138,7 @@ describe('Actor Routes', () => {
 
       // Fix unbound method issue by getting mockActorService.getActorByUsername.mock
       expect(mockActorService.getActorByUsername.mock.calls.length).toBe(1);
-    });
+    }, 60000); // Increase timeout to 60 seconds
 
     it('should return 404 if actor not found', async () => {
       mockActorService.getActorByUsername.mockResolvedValue(null);

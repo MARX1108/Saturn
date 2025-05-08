@@ -19,11 +19,7 @@ export class NotificationsController {
   ): Promise<void | Response> {
     try {
       if (!req.user) {
-        throw new AppError(
-          'Authentication required',
-          401,
-          ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
 
       // Handle page parameter validation
@@ -62,11 +58,7 @@ export class NotificationsController {
   ): Promise<void | Response> {
     try {
       if (!req.user) {
-        throw new AppError(
-          'Authentication required',
-          401,
-          ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
 
       const { ids } = req.body;
@@ -97,11 +89,7 @@ export class NotificationsController {
   ): Promise<void | Response> {
     try {
       if (!req.user) {
-        throw new AppError(
-          'Authentication required',
-          401,
-          ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
 
       await this.notificationService.markAllNotificationsAsRead(req.user.id);
@@ -121,11 +109,7 @@ export class NotificationsController {
   ): Promise<void | Response> {
     try {
       if (!req.user) {
-        throw new AppError(
-          'Authentication required',
-          401,
-          ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
 
       const count = await this.notificationService.getUnreadCount(req.user.id);

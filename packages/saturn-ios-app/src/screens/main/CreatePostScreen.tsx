@@ -21,6 +21,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useCreatePost } from '../../hooks/useCreatePost';
 import { useAppSelector } from '../../store/hooks';
+import * as Haptics from 'expo-haptics';
 
 // Define colors to avoid inline literals
 const COLORS = {
@@ -109,6 +110,10 @@ export default function CreatePostScreen(): React.JSX.Element {
       {
         onSuccess: (): void => {
           console.log('Post created successfully');
+          // Trigger success haptic feedback
+          void Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success
+          );
           // Reset form
           setPostContent('');
           setIsLoading(false);
@@ -118,6 +123,10 @@ export default function CreatePostScreen(): React.JSX.Element {
         onError: (err): void => {
           try {
             console.error('Error creating post:', err);
+            // Trigger error haptic feedback
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Error
+            );
 
             // Handle specific error cases
             if (err?.message?.includes('Author not found')) {

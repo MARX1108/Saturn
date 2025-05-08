@@ -1,7 +1,10 @@
 import { Pact } from '@pact-foundation/pact';
 import path from 'path';
 import { ApiEndpoints } from '../config/api';
-import { fetchUserProfileByUsername } from './profileService';
+import {
+  fetchUserProfileByUsername,
+  updateUserProfile,
+} from './profileService';
 import mockApiClient from '../test/mockApiClient';
 import tokenStorage from '../test/mocks/tokenStorage';
 
@@ -17,6 +20,12 @@ jest.mock('./apiClient', () => ({
   defaults: {
     baseURL: 'http://localhost:1238',
   },
+}));
+
+// Test specific mocks
+jest.mock('react-native-toast-message', () => ({
+  show: jest.fn(),
+  hide: jest.fn(),
 }));
 
 // Use different port to avoid conflicts
@@ -38,6 +47,7 @@ afterAll(async () => {
   await profileProvider.finalize();
 });
 
+// Isolate these tests from UI component dependencies
 describe('ProfileService Contract Tests', (): void => {
   beforeAll(() => profileProvider.setup());
   afterEach(() => profileProvider.verify());
@@ -100,4 +110,39 @@ describe('ProfileService Contract Tests', (): void => {
 
   // Skip updateProfile test since it's not implemented yet
   // We'll implement this later when the endpoint is available
+
+  it('updates a user profile', async () => {
+    // Mock the API client to intercept the PUT request
+    const mockAPIResponse = {
+      _id: 'userId123',
+      id: 'userId123',
+      username: 'testuser',
+      displayName: 'Updated Test User',
+      bio: 'This is my updated bio.',
+      followersCount: 100,
+      followingCount: 50,
+    };
+
+    // Setup the mock function
+    const mockPut = jest.fn().mockResolvedValue(mockAPIResponse);
+    mockApiClient.put = mockPut;
+
+    // Make the API call
+    const result = await updateUserProfile({
+      username: 'testuser',
+      data: {
+        displayName: 'Updated Test User',
+        bio: 'This is my updated bio.',
+      },
+    });
+
+    // Verify the mock was called with correct arguments
+    expect(mockPut).toHaveBeenCalledWith('/api/actors/username/testuser', {
+      displayName: 'Updated Test User',
+      bio: 'This is my updated bio.',
+    });
+
+    // Verify the response
+    expect(result).toEqual(mockAPIResponse);
+  });
 });

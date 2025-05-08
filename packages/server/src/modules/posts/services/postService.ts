@@ -123,7 +123,8 @@ export class PostService {
         '[PostService] Attempt 4: Querying actor repository directly'
       );
       try {
-        actor = await this.actorRepository.findOne({ _id: actorObjectId });
+        // Use findById instead of findOne which doesn't exist on actorRepository
+        actor = await this.actorRepository.findById(actorObjectId);
       } catch (e) {
         console.error('[PostService] Final attempt error:', e);
       }

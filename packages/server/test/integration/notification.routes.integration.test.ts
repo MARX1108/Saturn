@@ -108,12 +108,10 @@ describe('Notification Routes Integration', () => {
         next
       );
 
-      expect(next).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statusCode: 401,
-          message: 'Authentication required',
-        })
-      );
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Authentication required',
+      });
       expect(
         notificationService.getNotificationsForUser
       ).not.toHaveBeenCalled();
@@ -177,24 +175,6 @@ describe('Notification Routes Integration', () => {
         expect.objectContaining({ limit: 10, offset: 10 })
       );
     });
-
-    it('should get unread count', async () => {
-      // Setup authenticated request
-      req = {
-        user: { id: 'user123' },
-      };
-
-      await notificationsController.getUnreadCount(
-        req as Request,
-        res as Response,
-        next
-      );
-
-      expect(notificationService.getUnreadCount).toHaveBeenCalledWith(
-        'user123'
-      );
-      expect(res.json).toHaveBeenCalledWith({ count: 1 });
-    });
   });
 
   describe('POST /api/notifications/mark-read', () => {
@@ -210,12 +190,10 @@ describe('Notification Routes Integration', () => {
         next
       );
 
-      expect(next).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statusCode: 401,
-          message: 'Authentication required',
-        })
-      );
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Authentication required',
+      });
       expect(
         notificationService.markNotificationsAsRead
       ).not.toHaveBeenCalled();
@@ -302,12 +280,10 @@ describe('Notification Routes Integration', () => {
         next
       );
 
-      expect(next).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statusCode: 401,
-          message: 'Authentication required',
-        })
-      );
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Authentication required',
+      });
       expect(
         notificationService.markAllNotificationsAsRead
       ).not.toHaveBeenCalled();
@@ -349,6 +325,43 @@ describe('Notification Routes Integration', () => {
       ).toHaveBeenCalledWith('admin456');
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true });
+    });
+  });
+
+  describe('GET /api/notifications/unread-count', () => {
+    it('should require authentication', async () => {
+      // Setup request without user
+      req = {};
+
+      await notificationsController.getUnreadCount(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Authentication required',
+      });
+      expect(notificationService.getUnreadCount).not.toHaveBeenCalled();
+    });
+
+    it('should get unread count', async () => {
+      // Setup authenticated request
+      req = {
+        user: { id: 'user123' },
+      };
+
+      await notificationsController.getUnreadCount(
+        req as Request,
+        res as Response,
+        next
+      );
+
+      expect(notificationService.getUnreadCount).toHaveBeenCalledWith(
+        'user123'
+      );
+      expect(res.json).toHaveBeenCalledWith({ count: 1 });
     });
   });
 });

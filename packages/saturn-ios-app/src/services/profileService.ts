@@ -164,3 +164,75 @@ export const fetchUserProfileByUsername = async (
     throw error; // Rethrow to be handled by the query
   }
 };
+
+/**
+ * Updates the user's profile data.
+ * Assumes API requires authentication (handled by apiClient interceptor).
+ */
+export interface UpdateProfilePayload {
+  displayName?: string;
+  bio?: string;
+  // avatarUrl will be handled separately in a future task
+}
+
+export const updateUserProfile = async ({
+  username,
+  data,
+}: {
+  username: string;
+  data: UpdateProfilePayload;
+}): Promise<User> => {
+  if (!username) {
+    throw new Error('Username required for profile update');
+  }
+
+  try {
+    const endpoint = ApiEndpoints.updateActorByUsername(username);
+    console.log(
+      `[ProfileService] Updating profile for username: ${username}, Endpoint: ${endpoint}`
+    );
+
+    // Make the API request
+    const response = await apiClient.put<User>(endpoint, data);
+
+    // Handle null/undefined responses
+    if (!response) {
+      console.error(
+        '[ProfileService] Invalid update profile response: undefined'
+      );
+      throw new Error('Invalid profile update data received: empty response');
+    }
+
+    // Validate response fields
+    if (!response.id && !response._id) {
+      console.error('[ProfileService] Missing id in response:', response);
+      throw new Error('Invalid profile update data: missing id');
+    }
+
+    // If response has _id but no id, use _id as id
+    if (!response.id && response._id) {
+      console.log('[ProfileService] Using _id as id fallback');
+      response.id = response._id;
+    }
+
+    if (!response.username) {
+      console.error('[ProfileService] Missing username in response:', response);
+      throw new Error('Invalid profile update data: missing username');
+    }
+
+    // If displayName is missing, use username as fallback
+    if (!response.displayName) {
+      console.log('[ProfileService] Using username as displayName fallback');
+      response.displayName = response.username;
+    }
+
+    console.log(
+      '[ProfileService] Successfully updated profile data for:',
+      username
+    );
+    return response;
+  } catch (error) {
+    console.error('[ProfileService] Error updating user profile:', error);
+    throw error; // Rethrow to be handled by the mutation
+  }
+};

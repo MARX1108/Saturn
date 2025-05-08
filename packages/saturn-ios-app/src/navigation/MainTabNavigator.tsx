@@ -16,6 +16,8 @@ import SearchScreen from '../screens/main/SearchScreen';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { Alert } from 'react-native';
 import { useAppSelector } from '../store/hooks';
+import { useTheme } from 'styled-components/native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 // Define tab colors to avoid literals
 const TAB_COLORS = {
@@ -51,6 +53,7 @@ const MainTabNavigator = (): React.JSX.Element => {
   const isFocused = useIsFocused();
   const profileCheckPerformed = useRef(false);
   const profileComplete = useAppSelector((state) => state.auth.profileComplete);
+  const theme = useTheme();
 
   useEffect(() => {
     if (isLoading) {
@@ -139,7 +142,33 @@ const MainTabNavigator = (): React.JSX.Element => {
   };
 
   return (
-    <Tab.Navigator screenOptions={getTabScreenOptions}>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: true,
+        tabBarActiveTintColor: TAB_COLORS.ACTIVE,
+        tabBarInactiveTintColor: TAB_COLORS.INACTIVE,
+        tabBarShowLabel: false, // Hide labels like Instagram
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName = 'ellipse-outline'; // Default fallback
+          size = focused ? size + 2 : size; // Slightly larger when focused
+
+          if (route.name === 'FeedTab') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'SearchTab') {
+            iconName = focused ? 'search' : 'search-outline';
+          } else if (route.name === 'CreatePostPlaceholder') {
+            iconName = focused ? 'add-circle' : 'add-circle-outline';
+            size = size + 4; // Make create button larger
+          } else if (route.name === 'ProfileTab') {
+            iconName = focused ? 'person-circle' : 'person-circle-outline';
+          } else if (route.name === 'SettingsTab') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          }
+
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
       <Tab.Screen
         name="FeedTab"
         component={FeedScreen}
@@ -153,7 +182,7 @@ const MainTabNavigator = (): React.JSX.Element => {
       <Tab.Screen
         name="CreatePostPlaceholder"
         component={CreatePostPlaceholderComponent}
-        options={{ title: 'Create', tabBarLabel: '' }}
+        options={{ title: '' }}
         listeners={{
           tabPress: (e): void => {
             e.preventDefault();

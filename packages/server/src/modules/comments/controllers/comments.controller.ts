@@ -16,17 +16,13 @@ export class CommentsController {
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void> {
+  ): Promise<void | Response> {
     try {
       const { content, postId } = req.body as CreateCommentInput;
       const actorId = req.user?.id;
 
       if (!actorId) {
-        throw new AppError(
-          'Authentication required',
-          401,
-          ErrorType.UNAUTHORIZED
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
       if (!content) {
         throw new AppError(

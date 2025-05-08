@@ -117,6 +117,7 @@ describe('PostService', () => {
 
     actorRepository = {
       findByUsername: jest.fn(),
+      findById: jest.fn(),
     } as unknown as jest.Mocked<ActorRepository>;
 
     // Create service instance with mocked dependencies
@@ -153,6 +154,7 @@ describe('PostService', () => {
       };
 
       actorService.getActorById.mockResolvedValue(mockActor);
+      actorRepository.findById.mockResolvedValue(mockActor);
       postRepository.create.mockResolvedValue(mockPost);
 
       // Act
@@ -183,6 +185,7 @@ describe('PostService', () => {
       };
 
       actorService.getActorById.mockResolvedValue(mockActor);
+      actorRepository.findById.mockResolvedValue(mockActor);
       postRepository.create.mockResolvedValue(mockPost);
 
       // Act
@@ -208,6 +211,7 @@ describe('PostService', () => {
       };
 
       actorService.getActorById.mockResolvedValue(mockActor);
+      actorRepository.findById.mockResolvedValue(mockActor);
       postRepository.create.mockResolvedValue({
         ...mockPost,
         visibility: 'followers',
@@ -238,6 +242,7 @@ describe('PostService', () => {
       };
 
       actorService.getActorById.mockResolvedValue(mockActor);
+      actorRepository.findById.mockResolvedValue(mockActor);
       postRepository.create.mockResolvedValue({
         ...mockPost,
         visibility: 'direct',
@@ -269,6 +274,7 @@ describe('PostService', () => {
       };
 
       actorService.getActorById.mockResolvedValue(mockActor);
+      actorRepository.findById.mockResolvedValue(mockActor);
       postRepository.create.mockResolvedValue({
         ...mockPost,
         sensitive: true,

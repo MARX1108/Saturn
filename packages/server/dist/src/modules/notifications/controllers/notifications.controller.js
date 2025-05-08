@@ -12,11 +12,7 @@ class NotificationsController {
   async getNotifications(req, res, next) {
     try {
       if (!req.user) {
-        throw new errors_1.AppError(
-          'Authentication required',
-          401,
-          errors_1.ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
       // Handle page parameter validation
       let page = 1;
@@ -47,11 +43,7 @@ class NotificationsController {
   async markRead(req, res, next) {
     try {
       if (!req.user) {
-        throw new errors_1.AppError(
-          'Authentication required',
-          401,
-          errors_1.ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
       const { ids } = req.body;
       // Validate the ids parameter
@@ -81,11 +73,7 @@ class NotificationsController {
   async markAllRead(req, res, next) {
     try {
       if (!req.user) {
-        throw new errors_1.AppError(
-          'Authentication required',
-          401,
-          errors_1.ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
       await this.notificationService.markAllNotificationsAsRead(req.user.id);
       return res.status(200).json({ success: true });
@@ -99,11 +87,7 @@ class NotificationsController {
   async getUnreadCount(req, res, next) {
     try {
       if (!req.user) {
-        throw new errors_1.AppError(
-          'Authentication required',
-          401,
-          errors_1.ErrorType.AUTHENTICATION
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
       const count = await this.notificationService.getUnreadCount(req.user.id);
       return res.json({ count });

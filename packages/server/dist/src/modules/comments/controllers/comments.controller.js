@@ -11,11 +11,7 @@ class CommentsController {
       const { content, postId } = req.body;
       const actorId = req.user?.id;
       if (!actorId) {
-        throw new errors_1.AppError(
-          'Authentication required',
-          401,
-          errors_1.ErrorType.UNAUTHORIZED
-        );
+        return res.status(401).json({ error: 'Authentication required' });
       }
       if (!content) {
         throw new errors_1.AppError(
