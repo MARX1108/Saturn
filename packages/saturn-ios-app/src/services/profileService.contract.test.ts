@@ -5,7 +5,6 @@ import {
   fetchUserProfileByUsername,
   updateUserProfile,
 } from './profileService';
-import mockApiClient from '../test/mockApiClient';
 import tokenStorage from '../test/mocks/tokenStorage';
 
 // Mock the tokenStorage
@@ -13,14 +12,25 @@ jest.mock('./tokenStorage', () => {
   return jest.requireActual<typeof tokenStorage>('../test/mocks/tokenStorage');
 });
 
-// Mock the apiClient import in profileService
-jest.mock('./apiClient', () => ({
-  __esModule: true,
-  ...jest.requireActual<typeof mockApiClient>('../test/mockApiClient'),
-  defaults: {
-    baseURL: 'http://localhost:1238',
-  },
-}));
+// Mock the apiClient
+jest.mock('./apiClient', () => {
+  return {
+    defaults: {
+      baseURL: 'http://localhost:1238',
+    },
+    get: jest.fn(),
+    put: jest.fn(),
+    post: jest.fn(),
+    delete: jest.fn(),
+    interceptors: {
+      request: { use: jest.fn(), eject: jest.fn() },
+      response: { use: jest.fn(), eject: jest.fn() },
+    },
+  };
+});
+
+// Import apiClient after mocking it
+import apiClient from './apiClient';
 
 // Test specific mocks
 jest.mock('react-native-toast-message', () => ({
@@ -89,7 +99,19 @@ describe('ProfileService Contract Tests', (): void => {
       await tokenStorage.setToken('VALID_TOKEN_EXAMPLE');
 
       // Set the base URL for this test
-      mockApiClient.defaults.baseURL = `http://localhost:${PACT_PORT_PROFILE}`;
+      apiClient.defaults.baseURL = `http://localhost:${PACT_PORT_PROFILE}`;
+
+      // Mock the API response
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        _id: 'userId123',
+        id: 'userId123',
+        username: 'testuser',
+        displayName: 'Test User',
+        bio: 'This is a test bio.',
+        followersCount: 100,
+        followingCount: 50,
+        isFollowing: false,
+      });
 
       try {
         const profile = await fetchUserProfileByUsername(username);
@@ -108,41 +130,81 @@ describe('ProfileService Contract Tests', (): void => {
     });
   });
 
-  // Skip updateProfile test since it's not implemented yet
-  // We'll implement this later when the endpoint is available
-
-  it('updates a user profile', async () => {
-    // Mock the API client to intercept the PUT request
-    const mockAPIResponse = {
-      _id: 'userId123',
-      id: 'userId123',
-      username: 'testuser',
-      displayName: 'Updated Test User',
-      bio: 'This is my updated bio.',
-      followersCount: 100,
-      followingCount: 50,
-    };
-
-    // Setup the mock function
-    const mockPut = jest.fn().mockResolvedValue(mockAPIResponse);
-    mockApiClient.put = mockPut;
-
-    // Make the API call
-    const result = await updateUserProfile({
-      username: 'testuser',
-      data: {
+  describe('updateUserProfile', () => {
+    test('should update a user profile successfully', async () => {
+      const username = 'testuserToUpdate';
+      const updateEndpoint = ApiEndpoints.updateActorByUsername(username);
+      const updateData = {
         displayName: 'Updated Test User',
         bio: 'This is my updated bio.',
-      },
-    });
+      };
 
-    // Verify the mock was called with correct arguments
-    expect(mockPut).toHaveBeenCalledWith('/api/actors/username/testuser', {
-      displayName: 'Updated Test User',
-      bio: 'This is my updated bio.',
-    });
+      // Setup the expected interaction
+      await profileProvider.addInteraction({
+        state: `User profile exists for username ${username}`,
+        uponReceiving: `a request to update ${username}'s profile`,
+        withRequest: {
+          method: 'PUT',
+          path: updateEndpoint,
+          headers: {
+            Authorization: 'Bearer VALID_TOKEN_EXAMPLE',
+            'Content-Type': 'application/json',
+            Accept: 'application/json, text/plain, */*',
+          },
+          body: {
+            displayName: 'Updated Test User',
+            bio: 'This is my updated bio.',
+          },
+        },
+        willRespondWith: {
+          status: 200,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+          body: {
+            _id: 'userId123',
+            id: 'userId123',
+            username: 'testuserToUpdate',
+            displayName: 'Updated Test User',
+            bio: 'This is my updated bio.',
+            followersCount: 100,
+            followingCount: 50,
+          },
+        },
+      });
 
-    // Verify the response
-    expect(result).toEqual(mockAPIResponse);
+      // Set token for authentication
+      await tokenStorage.setToken('VALID_TOKEN_EXAMPLE');
+
+      // Set the base URL for this test
+      apiClient.defaults.baseURL = `http://localhost:${PACT_PORT_PROFILE}`;
+
+      // Mock the API response
+      (apiClient.put as jest.Mock).mockResolvedValueOnce({
+        _id: 'userId123',
+        id: 'userId123',
+        username: 'testuserToUpdate',
+        displayName: 'Updated Test User',
+        bio: 'This is my updated bio.',
+        followersCount: 100,
+        followingCount: 50,
+      });
+
+      try {
+        const updatedProfile = await updateUserProfile({
+          username,
+          data: updateData,
+        });
+
+        // Verify the response
+        expect(updatedProfile).toBeDefined();
+        expect(updatedProfile.id).toBeDefined();
+        expect(updatedProfile.username).toEqual(username);
+        expect(updatedProfile.displayName).toEqual(updateData.displayName);
+        expect(updatedProfile.bio).toEqual(updateData.bio);
+      } finally {
+        // Reset mocks
+        jest.restoreAllMocks();
+        await tokenStorage.removeToken();
+      }
+    });
   });
 });

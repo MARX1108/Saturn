@@ -42,19 +42,35 @@ export class ActorService {
       isVerified = false,
     } = data;
 
+    // Validate password is required
+    if (!password) {
+      throw new AppError(
+        'Password is required for local actor creation',
+        400,
+        ErrorType.BAD_REQUEST
+      );
+    }
+
     const domain = this.domain;
     const preferredUsername = username; // For local actors, preferredUsername is the username
 
     // Check if the username already exists
     // This should be done before attempting to create the user
-    const existingActor =
-      await this.actorRepository.findByPreferredUsername(preferredUsername);
+    const existingActor = await this.actorRepository.findOne({
+      preferredUsername,
+    });
+
     if (existingActor) {
-      throw new AppError(
-        `Username '${preferredUsername}' is already taken`,
-        400,
-        ErrorType.VALIDATION
-      );
+      throw new AppError('Username already taken', 409, ErrorType.CONFLICT);
+    }
+
+    // Check if email already exists
+    const existingEmail = await this.actorRepository.findOne({
+      email,
+    });
+
+    if (existingEmail) {
+      throw new AppError('Email already registered', 409, ErrorType.CONFLICT);
     }
 
     // Generate MongoDB ObjectId (ensure _id and id are consistent)
@@ -204,14 +220,6 @@ export class ActorService {
           '[ActorService] updateActorProfile called with null/undefined actorId'
         );
         return null;
-      }
-
-      // Validate ObjectId format if string
-      if (typeof actorId === 'string') {
-        if (!ObjectId.isValid(actorId)) {
-          console.error(`[ActorService] Invalid ObjectId format: ${actorId}`);
-          return null;
-        }
       }
 
       // Validate update payload
