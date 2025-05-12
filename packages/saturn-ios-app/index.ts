@@ -1,11 +1,13 @@
-// Import the polyfill first to ensure document is defined before any libraries load
-import './documentPolyfill';
+/**
+ * Saturn iOS App - Simple Navigation Test
+ */
 
-import { registerRootComponent } from 'expo';
+import { AppRegistry } from 'react-native';
+import SimpleNavigation from './SimpleNavigation';
 
-import App from './App';
+// Log startup information
+console.log('Initializing Saturn iOS app with basic NavigationContainer only');
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// Register the app component with minimal Navigation wrapper
+console.log('Registering simple navigation app');
+AppRegistry.registerComponent('main', () => SimpleNavigation);

@@ -1,11 +1,13 @@
 import React from 'react';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
+// Temporarily replace SkeletonPlaceholder with ActivityIndicator
 const PostCardSkeleton = (): React.JSX.Element => {
+  console.log('[PostCardSkeleton] Rendering...');
   const theme = useTheme();
 
+  // Simple fallback instead of using SkeletonPlaceholder
   return (
     <View
       style={[
@@ -16,39 +18,14 @@ const PostCardSkeleton = (): React.JSX.Element => {
           marginVertical: theme.spacing.s,
           marginHorizontal: theme.spacing.m,
           borderRadius: theme.borderRadius.medium,
+          height: 200, // Approximate height of a post card
+          justifyContent: 'center',
+          alignItems: 'center',
         },
       ]}
       testID="post-card-skeleton"
     >
-      <SkeletonPlaceholder borderRadius={4}>
-        <SkeletonPlaceholder.Item flexDirection="row" alignItems="center">
-          {/* Avatar Placeholder */}
-          <SkeletonPlaceholder.Item width={40} height={40} borderRadius={20} />
-          <SkeletonPlaceholder.Item marginLeft={10}>
-            {/* Author Name Placeholder */}
-            <SkeletonPlaceholder.Item
-              width={120}
-              height={16}
-              marginBottom={6}
-            />
-            {/* Username Placeholder */}
-            <SkeletonPlaceholder.Item width={80} height={12} />
-          </SkeletonPlaceholder.Item>
-        </SkeletonPlaceholder.Item>
-        {/* Content Placeholder */}
-        <SkeletonPlaceholder.Item marginTop={12} width="100%" height={15} />
-        <SkeletonPlaceholder.Item marginTop={6} width="80%" height={15} />
-        <SkeletonPlaceholder.Item marginTop={6} width="90%" height={15} />
-        {/* Action Bar Placeholder */}
-        <SkeletonPlaceholder.Item
-          marginTop={16}
-          flexDirection="row"
-          justifyContent="space-around"
-        >
-          <SkeletonPlaceholder.Item width={60} height={20} />
-          <SkeletonPlaceholder.Item width={80} height={20} />
-        </SkeletonPlaceholder.Item>
-      </SkeletonPlaceholder>
+      <ActivityIndicator size="large" color={theme.colors.primary} />
     </View>
   );
 };

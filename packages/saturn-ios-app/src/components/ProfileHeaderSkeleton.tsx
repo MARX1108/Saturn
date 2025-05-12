@@ -1,6 +1,5 @@
 import React from 'react';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
 const ProfileHeaderSkeleton = (): React.JSX.Element => {
