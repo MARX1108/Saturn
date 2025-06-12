@@ -75,6 +75,7 @@
     "jest-expo": "50.0.3",
     "prettier": "^3.5.3",
     "react": "19.0.0",
+    "react-native-dotenv": "^3.4.11",
     "react-test-renderer": "19.0.0",
     "typescript": "~5.8.3"
   },

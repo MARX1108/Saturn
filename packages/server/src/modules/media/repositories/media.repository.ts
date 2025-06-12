@@ -26,7 +26,7 @@ export class MediaRepository extends MongoRepository<Media> {
   async findByUserId(userId: string, page = 1, limit = 20): Promise<Media[]> {
     const skip = (page - 1) * limit;
     return this.collection
-      .find({ userId })
+      .find({ userId } as any)
       .sort({ uploadedAt: -1 })
       .skip(skip)
       .limit(limit)

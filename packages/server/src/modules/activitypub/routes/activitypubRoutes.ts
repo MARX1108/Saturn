@@ -2,6 +2,7 @@ import express, { Request, Response, Router, NextFunction } from 'express';
 import { ActivityPubController } from '../controllers/activitypubController';
 import { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
+import { verifyHttpSignature } from '../../../middleware/httpSignature';
 
 /**
  * Configure ActivityPub routes with the controller
@@ -32,6 +33,7 @@ export function configureActivityPubRoutes(
   router.post(
     '/users/:username/inbox',
     express.json(),
+    verifyHttpSignature,
     wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
       return activityPubController.receiveActivity(req, res);
     })

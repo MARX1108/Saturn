@@ -9,6 +9,7 @@ exports.configureActivityPubRoutes = configureActivityPubRoutes;
 const express_1 = __importDefault(require('express'));
 const activitypubController_1 = require('../controllers/activitypubController');
 const routeHandler_1 = require('../../../utils/routeHandler');
+const httpSignature_1 = require('../../../middleware/httpSignature');
 /**
  * Configure ActivityPub routes with the controller
  */
@@ -34,6 +35,7 @@ function configureActivityPubRoutes(serviceContainer) {
   router.post(
     '/users/:username/inbox',
     express_1.default.json(),
+    httpSignature_1.verifyHttpSignature,
     (0, routeHandler_1.wrapAsync)(async (req, res, _next) => {
       return activityPubController.receiveActivity(req, res);
     })
