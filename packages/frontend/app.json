@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "Qui",
+    "slug": "qui",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "install": {
+      "exclude": [
+        "react-native@~0.74.0",
+        "react-native-reanimated@~3.10.0",
+        "react-native-gesture-handler@~2.16.1",
+        "react-native-screens@~3.31.1"
+      ]
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "me.isaacojo.qui"
+    },
+    "android": {
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "me.isaacojo.qui"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e618bb47-6149-4585-8cc8-884c5992795e"
+      }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification.png",
+          "color": "#ffffff"
+        }
+      ],
+      "react-native-compressor",
+      "react-native-edge-to-edge",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": false
+          },
+          "android": {
+            "newArchEnabled": false
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification.png",
+          "color": "#ffffff"
+        }
+      ],
+      "react-native-compressor",
+      "react-native-edge-to-edge",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": false
+          },
+          "android": {
+            "newArchEnabled": false
+          }
+        }
+      ],
+      "expo-video"
+    ],
+    "owner": "hojoisaac"
+  }
+}
