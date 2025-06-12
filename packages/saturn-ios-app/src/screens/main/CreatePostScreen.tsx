@@ -176,7 +176,7 @@ export default function CreatePostScreen(): React.JSX.Element {
       headerRight: () => (
         <Button
           title="Post"
-          onPress={handlePost}
+          onPress={() => void handlePost()}
           disabled={postContent.trim() === '' || isLoading}
         />
       ),
@@ -233,7 +233,7 @@ export default function CreatePostScreen(): React.JSX.Element {
                 styles.postButton,
                 !postContent.trim() && styles.disabledButton,
               ]}
-              onPress={handlePost}
+              onPress={() => void handlePost()}
               disabled={!postContent.trim() || isLoading}
             >
               <Text style={styles.buttonText}>Post</Text>

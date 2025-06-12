@@ -12,12 +12,9 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
-import apiClient from '../../services/apiClient';
-import { ApiEndpoints } from '../../config/api';
 import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
-import { setToken, storeCredentials } from '../../services/tokenStorage';
-import { User } from '../../types/user';
+import { useLoginMutation } from '../../store/api';
 import { Ionicons } from '@expo/vector-icons';
 
 // Define navigation prop type for type safety
@@ -26,11 +23,6 @@ type LoginScreenNavigationProp = NativeStackNavigationProp<
   'Login'
 >;
 
-// Define login response type
-interface LoginResponse {
-  token: string;
-  actor: User;
-}
 
 export default function LoginScreen(): React.JSX.Element {
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -38,53 +30,33 @@ export default function LoginScreen(): React.JSX.Element {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const [login, { isLoading }] = useLoginMutation();
 
   const handleLogin = async (): Promise<void> => {
     if (isLoading) return;
 
-    setIsLoading(true);
     setError(null);
 
     try {
       console.log(`Attempting login for user: ${username}`);
 
-      // Use proper typing: apiClient.post<ResponseType, ResponseType>
-      // The second type parameter tells TypeScript that the return is already the response data
-      const data = await apiClient.post<LoginResponse, LoginResponse>(
-        ApiEndpoints.login,
-        {
-          username,
-          password,
-          rememberMe,
-        }
+      const result = await login({
+        username,
+        password,
+        rememberMe,
+      }).unwrap();
+
+      console.log('Login successful:', result);
+
+      // Dispatch RTK action with user data
+      dispatch(
+        setCredentials({
+          user: result.user,
+          token: result.token,
+        })
       );
-
-      console.log('Login successful:', data);
-
-      // --- Dispatch RTK action and save token ---
-      if (data.actor && data.token) {
-        await setToken(data.token);
-
-        // Store credentials if rememberMe is checked
-        if (rememberMe) {
-          await storeCredentials({
-            username,
-            password,
-          });
-          console.log('Credentials stored for token refresh');
-        }
-
-        dispatch(
-          setCredentials({
-            user: data.actor,
-            token: data.token,
-          })
-        );
-      } else {
-        throw new Error('Invalid login response structure');
-      }
     } catch (err) {
       // --- Login Failure ---
       console.error('Login failed:', err);
@@ -94,14 +66,15 @@ export default function LoginScreen(): React.JSX.Element {
 
       if (err instanceof Error) {
         errorMessage = err.message || errorMessage;
+      } else if (typeof err === 'object' && err !== null && 'data' in err) {
+        const errorData = err.data as { message?: string };
+        errorMessage = errorData.message || errorMessage;
       }
 
       setError(errorMessage);
 
       // Show Alert
       Alert.alert('Login Failed', errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -163,7 +136,11 @@ export default function LoginScreen(): React.JSX.Element {
           style={styles.loader}
         />
       ) : (
-        <Button title="Login" onPress={onLoginPress} disabled={isLoading} />
+        <Button 
+          title="Login" 
+          onPress={onLoginPress} 
+          disabled={isLoading || !username || !password} 
+        />
       )}
 
       <View style={styles.spacer} />

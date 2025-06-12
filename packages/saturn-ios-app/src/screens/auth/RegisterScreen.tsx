@@ -13,12 +13,9 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
-import apiClient from '../../services/apiClient';
-import { ApiEndpoints } from '../../config/api';
 import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
-import { setToken, storeCredentials } from '../../services/tokenStorage';
-import { User } from '../../types/user';
+import { useRegisterMutation } from '../../store/api';
 import { Ionicons } from '@expo/vector-icons';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
@@ -26,10 +23,6 @@ type RegisterScreenNavigationProp = NativeStackNavigationProp<
   'Register'
 >;
 
-interface RegisterResponse {
-  token: string;
-  actor: User;
-}
 
 export default function RegisterScreen(): React.JSX.Element {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
@@ -40,20 +33,17 @@ export default function RegisterScreen(): React.JSX.Element {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const [register, { isLoading }] = useRegisterMutation();
 
   const handleRegister = async (): Promise<void> => {
     if (isLoading) return;
 
-    setIsLoading(true);
     setError(null);
 
     if (!username || !email || !password || !displayName) {
       setError('All required fields must be filled.');
-      setIsLoading(false);
-
-      // Show alert for validation error
       Alert.alert('Registration Failed', 'All required fields must be filled.');
       return;
     }
@@ -62,43 +52,23 @@ export default function RegisterScreen(): React.JSX.Element {
       console.log(
         `Attempting registration for user: ${username}, email: ${email}, displayName: ${displayName}`
       );
-      // Use proper typing: apiClient.post<ResponseType, ResponseType>
-      // The second type parameter tells TypeScript that the return is already the response data
-      const data = await apiClient.post<RegisterResponse, RegisterResponse>(
-        ApiEndpoints.register,
-        {
-          username,
-          email,
-          password,
-          displayName,
-          bio,
-          rememberMe,
-        }
+      
+      const result = await register({
+        username,
+        email,
+        password,
+        displayName,
+        rememberMe,
+      }).unwrap();
+
+      console.log('Registration successful:', result);
+
+      dispatch(
+        setCredentials({
+          user: result.user,
+          token: result.token,
+        })
       );
-
-      console.log('Registration successful:', data);
-
-      if (data.actor && data.token) {
-        await setToken(data.token);
-
-        // Store credentials if rememberMe is checked
-        if (rememberMe) {
-          await storeCredentials({
-            username,
-            password,
-          });
-          console.log('Credentials stored for token refresh');
-        }
-
-        dispatch(
-          setCredentials({
-            user: data.actor,
-            token: data.token,
-          })
-        );
-      } else {
-        throw new Error('Invalid registration response structure');
-      }
     } catch (error) {
       console.error('Registration failed:', error);
 
@@ -106,28 +76,18 @@ export default function RegisterScreen(): React.JSX.Element {
 
       if (error instanceof Error) {
         const errorMsg = error.message || '';
+        userMessage = errorMsg || userMessage;
+      } else if (typeof error === 'object' && error !== null && 'data' in error) {
+        const errorData = error.data as { message?: string };
+        userMessage = errorData.message || userMessage;
+      }
 
-        if (
-          errorMsg.includes('E11000 duplicate key error') ||
-          errorMsg.includes('duplicate')
-        ) {
-          userMessage = 'Username already exists. Please choose another.';
-        } else if (
-          errorMsg.includes('validation') ||
-          errorMsg.includes('required')
-        ) {
-          userMessage = errorMsg;
-        } else {
-          userMessage = errorMsg || userMessage;
-        }
+      if (userMessage.includes('duplicate') || userMessage.includes('E11000')) {
+        userMessage = 'Username already exists. Please choose another.';
       }
 
       setError(userMessage);
-
-      // Show alert
       Alert.alert('Registration Failed', userMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -16,7 +16,7 @@ import { MainTabParamList } from '../../navigation/types'; // Import MainTabPara
 import PostCard from '../../components/PostCard';
 import PostCardSkeleton from '../../components/PostCardSkeleton';
 import { Post } from '../../types/post';
-import { useFeedPosts } from '../../hooks/useFeedPosts'; // Import the hook
+import { useGetFeedQuery } from '../../store/api';
 import * as Haptics from 'expo-haptics'; // Add Haptics import
 
 // Define colors to avoid inline literals
@@ -43,8 +43,8 @@ export default function FeedScreen(): React.JSX.Element {
     isError,
     error,
     refetch, // Function to refetch data
-    isRefetching, // State for pull-to-refresh
-  } = useFeedPosts();
+    isFetching, // State for pull-to-refresh
+  } = useGetFeedQuery();
 
   // Handle errors and set messages
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function FeedScreen(): React.JSX.Element {
   // Function to handle retry button press
   const handleRetry = (): void => {
     setErrorVisible(false);
-    void refetch();
+    refetch();
   };
 
   // Enhanced refresh handler with haptic feedback
@@ -88,7 +88,7 @@ export default function FeedScreen(): React.JSX.Element {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     setErrorVisible(false);
-    void refetch();
+    refetch();
   }, [refetch]);
 
   // --- Conditional Rendering based on query state ---
@@ -138,7 +138,7 @@ export default function FeedScreen(): React.JSX.Element {
         }
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching} // Use isRefetching for pull-to-refresh indicator
+            refreshing={isFetching && !isLoading} // Use isFetching for pull-to-refresh indicator
             onRefresh={handleRefresh} // Call enhanced refresh handler with haptics
           />
         }

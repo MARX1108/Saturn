@@ -28,12 +28,7 @@ import { useGetUserQuery, useTokenValidQuery } from "../../../redux/api/user";
 import { signOut } from "../../../redux/slice/user";
 import { ActivityIndicator } from "react-native-paper";
 import { IPost } from "../../../types/api";
-import {
-  useGetAllPostsQuery,
-  useGetRandomPeopleQuery,
-  useGetRandomPostsQuery,
-  useLazyGetAllPostsQuery,
-} from "../../../redux/api/services";
+import { useGetFeedQuery } from "../../../redux/api/posts";
 import { openToast } from "../../../redux/slice/toast/toast";
 import Animated, {
   FadeIn,
@@ -70,24 +65,15 @@ export default function HomeAll() {
 
   const [noMore, setNoMore] = useState(false);
 
-  const [getLazyPost, postRes] = useLazyGetAllPostsQuery({});
+  const { data: feedData, isLoading, error, refetch } = useGetFeedQuery({ page: 1, limit: 20 });
   const [refreshing, setRefreshing] = React.useState(false);
-  useEffect(() => {
-    getLazyPost({ take: 20, skip: 0 })
-      .unwrap()
-      .then((r) => {});
-  }, []);
+  // Feed is automatically loaded by useGetFeedQuery
   const onRefresh = useCallback(() => {
     if (!authId) return;
-    setSkip(0);
-    setNoMore(false);
     setRefreshing(true);
-    getLazyPost({ take: 20, skip: 0 })
-      .unwrap()
-      .then((e) => {
-        setSkip(e.posts.length);
+    refetch()
+      .then(() => {
         setRefreshing(false);
-        if (e.posts.length === 0) setNoMore(true);
       })
       .catch(() => {
         setRefreshing(false);
@@ -95,10 +81,10 @@ export default function HomeAll() {
           openToast({ text: "Couldn't get recent posts", type: "Failed" })
         );
       });
-  }, [authId, dispatch, getLazyPost]);
+  }, [authId, dispatch, refetch]);
 
   const renderFooter = () => {
-    if (noMore) {
+    if (feedData?.pagination?.hasMore === false) {
       return (
         <View
           style={{
@@ -111,7 +97,7 @@ export default function HomeAll() {
           <Robot />
         </View>
       );
-    } else if (posts.loading) {
+    } else if (isLoading) {
       return (
         <Animated.View
           style={{
@@ -142,94 +128,44 @@ export default function HomeAll() {
   //       });
   // }, [skip, noMore]);
 
-  useEffect(() => {
-    getLazyPost({ take: 20, skip })
-      .unwrap()
-      .then((e) => {
-        setSkip(e.posts?.length);
-      })
-      .catch((e) => {
-        // dispatch(
-        //   openToast({ text: "couldn't get recent posts", type: "Failed" })
-        // );
-      });
-  }, []);
+  // No longer needed - useGetFeedQuery handles initial load
 
   const fetchMoreData = () => {
-    if (!noMore)
-      getLazyPost({ take: 20, skip })
-        .unwrap()
-        .then((e) => {
-          setSkip(skip + e.posts.length);
-
-          if (e.posts.length === 0) {
-            setNoMore(true);
-          }
-        })
-        .catch((e) => {
-          // dispatch(
-          //   openToast({ text: "couldn't get recent posts", type: "Failed" })
-          // );
-        });
+    // For MVP, we'll just show a single page of posts
+    // Pagination can be implemented later
   };
   const handleRefetch = () => {
-    setSkip(0);
-    setNoMore(false);
-    getLazyPost({ take: 10, skip: 0 })
-      .unwrap()
-      .then((r) => {
-        setRefreshing(false);
-      })
-      .catch((e) => {
-        setRefreshing(false);
-        // dispatch(
-        //   openToast({ text: "couldn't get recent posts", type: "Failed" })
-        // );
-      });
+    refetch();
   };
 
   const [indexInView, setIndexInView] = useState<Array<number | null>>([]);
 
-  const renderItem = ({ item, index }: { item: IPost; index: number }) => (
+  const renderItem = ({ item, index }: { item: any; index: number }) => (
     <PostBuilder
       id={item.id}
-      isReposted={
-        item?.repostUser?.find((repostUser) => repostUser?.id === authId)
-          ? true
-          : false
-      }
+      isReposted={false}
       date={item.createdAt}
-      link={item.link}
-      comments={item._count?.comments}
-      like={item._count?.like}
-      isLiked={
-        item?.like?.find((like) => like?.userId === authId) ? true : false
-      }
-      photo={
-        item.photo
-          ? {
-              uri: item.photo?.imageUri,
-              width: item.photo?.imageWidth,
-              height: item.photo?.imageHeight,
-            }
-          : undefined
-      }
-      thumbNail={item.videoThumbnail}
-      imageUri={item.user?.imageUri}
-      name={item.user?.name}
-      userId={item.user?.id}
-      userTag={item.user?.userName}
-      verified={item.user?.verified}
-      audioUri={item.audioUri || undefined}
-      photoUri={item.photoUri}
-      videoTitle={item.videoTitle || undefined}
-      videoUri={item.videoUri || undefined}
-      postText={item.postText}
-      videoViews={item.videoViews?.toString()}
+      link={""}
+      comments={item._count?.comments || 0}
+      like={item._count?.likes || 0}
+      isLiked={false}
+      photo={undefined}
+      thumbNail={""}
+      imageUri={item.author?.avatar}
+      name={item.author?.name}
+      userId={item.author?.id}
+      userTag={item.author?.username}
+      verified={false}
+      audioUri={undefined}
+      photoUri={""}
+      videoTitle={undefined}
+      videoUri={undefined}
+      postText={item.content}
+      videoViews={"0"}
       idx={index}
     />
   );
-  const keyExtractor = (item: IPost) => item?.id?.toString();
+  const keyExtractor = (item: any) => item?.id?.toString();
 
   const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
   const viewabilityConfig = {
@@ -262,29 +198,28 @@ export default function HomeAll() {
     index,
   });
 
+  const posts = feedData?.posts || [];
+  
   return (
     <View style={{ flex: 1 }}>
-      {posts.loading && posts.data.length === 0 ? (
+      {isLoading && posts.length === 0 ? (
         <SkeletonGroupPost />
-      ) : posts.data.length === 0 ? (
+      ) : posts.length === 0 ? (
         <EmptyList handleRefetch={handleRefetch} />
       ) : (
         <Animated.View style={{ flex: 1 }}>
           <FlashList
-            data={posts?.data}
+            data={posts}
             decelerationRate={0.991}
             estimatedItemSize={100}
             ListFooterComponent={renderFooter}
             refreshControl={
               <RefreshControl
-                
                 refreshing={refreshing}
                 onRefresh={onRefresh}
                 colors={["red", "blue"]}
               />
             }
-            // onViewableItemsChanged={onViewableItemsChanged.current}
-            // viewabilityConfig={viewabilityConfig}
             keyExtractor={keyExtractor}
             estimatedListSize={{ width: width, height: height }}
             onEndReachedThreshold={0.3}

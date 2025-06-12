@@ -30,12 +30,8 @@ import PickAudioButton from "../../components/postContent/PickAudioButton";
 import axios from "axios";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks/hooks";
 import { ActivityIndicator } from "react-native-paper";
-import {
-  usePostContentMutation,
-  useUploadAudioMutation,
-  useUploadPhotoMutation,
-  useUploadVideoMutation,
-} from "../../redux/api/services";
+import { useCreatePostMutation } from "../../redux/api/posts";
+import { useUploadMediaMutation } from "../../redux/api/media";
 import { openToast } from "../../redux/slice/toast/toast";
 import {
   closeLoadingModal,
@@ -190,61 +186,44 @@ export default function PostContent({ navigation }: PostContentProp) {
     };
   }, [postAudio]);
 
-  const [photo] = useUploadPhotoMutation();
-  const [audio] = useUploadAudioMutation();
-  const [video] = useUploadVideoMutation();
-  const [postContent] = usePostContentMutation();
+  const [uploadMedia] = useUploadMediaMutation();
+  const [createPost] = useCreatePostMutation();
   useEffect(() => {
-    if (postPhoto?.mimeType.startsWith("image/")) {
+    if (postPhoto || postAudio) {
       setDone(false);
-      photo(postPhoto)
+      const formData = new FormData();
+      
+      if (postPhoto) {
+        const fileData = {
+          uri: postPhoto.uri,
+          type: postPhoto.mimeType,
+          name: `file.${postPhoto.mimeType.split('/')[1]}`,
+        } as any;
+        formData.append('file', fileData);
+      }
+      
+      if (postAudio) {
+        const fileData = {
+          uri: postAudio.uri,
+          type: postAudio.mimeType,
+          name: postAudio.name,
+        } as any;
+        formData.append('file', fileData);
+      }
+
+      uploadMedia(formData)
         .unwrap()
         .then((r) => {
           setDone(true);
-          setPhotoServer(r.photo);
+          if (postPhoto?.mimeType.startsWith("image/")) {
+            setPhotoServer({ uri: r.url, width: 400, height: 400 });
+          } else {
+            setFTServer(r.url);
+          }
         })
         .catch((e) => {
           setDone(true);
-
-          dispatch(openToast({ text: "Photo didn't upload", type: "Failed" }));
-        });
-    }
-    if (postAudio) {
-      console.log(
-        "🚀 ~ file: PostContent.tsx:197 ~ useEffect ~ postAudio:",
-        postAudio
-      );
-      setDone(false);
-      audio(postAudio)
-        .unwrap()
-        .then((r) => {
-          setDone(true);
-          setFTServer(r.audio);
-        })
-        .catch((e) => {
-          console.log("🚀 ~ file: PostContent.tsx:206 ~ useEffect ~ e:", e);
-          setDone(true);
-
-          dispatch(openToast({ text: "Audio didn't upload", type: "Failed" }));
-        });
-    }
-    if (postPhoto?.mimeType.startsWith("video/")) {
-      setDone(false);
-      video(postPhoto)
-        .unwrap()
-        .then((r) => {
-          console.log("🚀 ~ file: PostContent.tsx:229 ~ .then ~ r:", r)
-
-          setDone(true);
-          setFTServer(r.video);
-          setVideoThumbnail(r.thumbNail);
-        })
-        .catch((e) => {
-          console.log("🚀 ~ file: PostContent.tsx:236 ~ useEffect ~ e:", e)
-
-          setDone(true);
-
-          dispatch(openToast({ text: "video didn't upload", type: "Failed" }));
+          dispatch(openToast({ text: "Media didn't upload", type: "Failed" }));
         });
     }
   }, [postPhoto, postAudio]);
@@ -255,105 +234,37 @@ export default function PostContent({ navigation }: PostContentProp) {
 
   const handlePostContent = () => {
     Keyboard.dismiss();
-    if (postPhoto?.mimeType.startsWith("image/")) {
-      if (photoServer) {
-        dispatch(openLoadingModal());
-        postContent({
-          photo: {
-            uri: photoServer.uri,
-            height: photoServer.height,
-            width: photoServer.width,
-          },
-          postText,
-        })
-          .then((e) => {
-            dispatch(
-              openToast({ text: "Successfully posted", type: "Success" })
-            );
-            navigation.pop();
-            dispatch(closeLoadingModal());
-          })
-          .catch((e) => {
-            dispatch(openToast({ text: "Post failed ", type: "Failed" }));
-            dispatch(closeLoadingModal());
-          });
-      } else {
-        dispatch(
-          openToast({
-            text: "Image didnot upload due to server error",
-            type: "Failed",
-          })
-        );
-      }
+    
+    if (!postText && !postPhoto && !postAudio) {
+      dispatch(openToast({ text: "Please add content to your post", type: "Failed" }));
+      return;
     }
 
-    if (postAudio) {
-      if (fileToServer) {
-        dispatch(openLoadingModal());
-        postContent({ audioUri: fileToServer, postText, audioTitle: "Audio" })
-          .then((e) => {
-            dispatch(
-              openToast({ text: "Successfully posted", type: "Success" })
-            );
-            navigation.pop();
-            dispatch(closeLoadingModal());
-          })
-          .catch((e) => {
-            dispatch(openToast({ text: "Post failed ", type: "Failed" }));
-            dispatch(closeLoadingModal());
-          });
-      } else {
-        dispatch(
-          openToast({
-            text: "Audio didnot upload due to server error",
-            type: "Failed",
-          })
-        );
+    dispatch(openLoadingModal());
+    
+    let content = postText || "";
+    if (photoServer) {
+      content += ` [Image: ${photoServer.uri}]`;
+    }
+    if (fileToServer) {
+      if (postAudio) {
+        content += ` [Audio: ${fileToServer}]`;
+      } else if (postPhoto?.mimeType.startsWith("video/")) {
+        content += ` [Video: ${fileToServer}]`;
       }
     }
-    if (postPhoto?.mimeType.startsWith("video/")) {
-      if (fileToServer) {
-        console.log("filetoServer", fileToServer);
-        dispatch(openLoadingModal());
-        postContent({
-          videoUri: fileToServer,
-          videoTitle: videoTitle || "🎥",
-          videoThumbnail,
-          postText,
-        })
-          .then((e) => {
-            dispatch(
-              openToast({ text: "Successfully posted", type: "Success" })
-            );
-            navigation.pop();
-            dispatch(closeLoadingModal());
-          })
-          .catch((e) => {
-            dispatch(openToast({ text: "Post failed ", type: "Failed" }));
-            dispatch(closeLoadingModal());
-          });
-      } else {
-        dispatch(
-          openToast({
-            text: "Video did not upload due to server error",
-            type: "Failed",
-          })
-        );
-      }
-    }
-    if (postText && !postAudio && !postPhoto) {
-      dispatch(openLoadingModal());
-      postContent({ postText })
-        .then((e) => {
-          dispatch(openToast({ text: "Successfully posted", type: "Success" }));
-          navigation.pop();
-          dispatch(closeLoadingModal());
-        })
-        .catch((e) => {
-          dispatch(openToast({ text: "Post failed ", type: "Failed" }));
-          dispatch(closeLoadingModal());
-        });
-    }
+    
+    createPost({ content })
+      .unwrap()
+      .then((e) => {
+        dispatch(openToast({ text: "Successfully posted", type: "Success" }));
+        navigation.pop();
+        dispatch(closeLoadingModal());
+      })
+      .catch((e) => {
+        dispatch(openToast({ text: "Post failed", type: "Failed" }));
+        dispatch(closeLoadingModal());
+      });
   };
   const [progress, setProgress] = useState(0);
   console.log(

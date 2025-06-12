@@ -26,6 +26,8 @@ import {
 import chatList, { ChatList } from "./slice/chat/chatlist";
 import { userApi } from "./api/user";
 import { servicesApi } from "./api/services";
+import { postsApi } from "./api/posts";
+import { mediaApi } from "./api/media";
 import loadingModal, { LoadingModal } from "./slice/modal/loading";
 import searchPeople, { personState } from "./slice/people/search";
 import followers, { FollowerState } from "./slice/user/followers";
@@ -57,6 +59,8 @@ const persistConfig: PersistConfig<
     [authApi.reducerPath]: any;
     [userApi.reducerPath]: any;
     [servicesApi.reducerPath]: any;
+    [postsApi.reducerPath]: any;
+    [mediaApi.reducerPath]: any;
   }>
 > = {
   key: "root",
@@ -81,6 +85,8 @@ const reducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
   [userApi.reducerPath]: userApi.reducer,
   [servicesApi.reducerPath]: servicesApi.reducer,
+  [postsApi.reducerPath]: postsApi.reducer,
+  [mediaApi.reducerPath]: mediaApi.reducer,
   user,
   searchPeople,
   followedPost,
@@ -101,6 +107,8 @@ export const store = configureStore({
       .concat(authApi.middleware)
       .concat(userApi.middleware)
       .concat(servicesApi.middleware)
+      .concat(postsApi.middleware)
+      .concat(mediaApi.middleware)
       .concat(chatApi.middleware),
 });
 
