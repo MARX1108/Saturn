@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { useTheme } from '../theme/ThemeProvider';
 
 const ProfileHeaderSkeleton = (): React.JSX.Element => {
@@ -23,18 +24,20 @@ const ProfileHeaderSkeleton = (): React.JSX.Element => {
       </SkeletonPlaceholder>
       <View style={{ flex: 1, marginLeft: 16, marginRight: 16 }}>
         <SkeletonPlaceholder borderRadius={4}>
-          {/* Display Name */}
-          <SkeletonPlaceholder.Item width="60%" height={20} marginBottom={6} />
-          {/* Username */}
-          <SkeletonPlaceholder.Item width="40%" height={15} marginBottom={10} />
-          {/* Stats */}
-          <SkeletonPlaceholder.Item flexDirection="row">
-            <SkeletonPlaceholder.Item
-              width="30%"
-              height={14}
-              marginRight={16}
-            />
-            <SkeletonPlaceholder.Item width="30%" height={14} />
+          <SkeletonPlaceholder.Item>
+            {/* Display Name */}
+            <SkeletonPlaceholder.Item width="60%" height={20} marginBottom={6} />
+            {/* Username */}
+            <SkeletonPlaceholder.Item width="40%" height={15} marginBottom={10} />
+            {/* Stats */}
+            <SkeletonPlaceholder.Item flexDirection="row">
+              <SkeletonPlaceholder.Item
+                width="30%"
+                height={14}
+                marginRight={16}
+              />
+              <SkeletonPlaceholder.Item width="30%" height={14} />
+            </SkeletonPlaceholder.Item>
           </SkeletonPlaceholder.Item>
         </SkeletonPlaceholder>
       </View>

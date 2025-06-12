@@ -10,7 +10,7 @@
     "lint": "eslint . --ignore-pattern \"coverage/**\" --max-warnings=1000 --quiet --no-error-on-unmatched-pattern",
     "test": "jest --no-watchman",
     "test:contract": "jest --testMatch '**/src/**/*.contract.test.ts'",
-    "test:unit": "jest --testPathIgnorePatterns '*.contract.test.ts'",
+    "test:unit": "jest --testPathIgnorePatterns='.*\\.contract\\.test\\.ts$'",
     "test:api": "jest --config=jest.config.api.js",
     "test:contract:safe": "jest --config=jest.config.api.js --testMatch=\"**/*.contract.test.ts\""
   },
