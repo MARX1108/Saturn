@@ -84,6 +84,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.8",
+    "@react-native-community/cli": "^18.0.0",
     "@types/react": "~18.2.79",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-plugin-transform-remove-console": "^6.9.4",

@@ -21,7 +21,10 @@ export function configureMediaRoutes(
   // Create controller with injected service
   const mediaController = new MediaController(mediaService);
 
+  // Media routes are now configured properly
+
   // Upload media - apply rate limiting to prevent abuse
+  // NOTE: This route must come BEFORE /:id routes to avoid conflicts
   router.post(
     '/upload',
     authenticate(authService), // Ensure users are authenticated
@@ -31,7 +34,15 @@ export function configureMediaRoutes(
     })
   );
 
-  // Get media by ID
+  // Handle GET requests to /upload (common mistake)
+  router.get('/upload', (req: Request, res: Response) => {
+    res.status(405).json({
+      error: 'Method Not Allowed. Use POST to upload media.',
+      allowedMethods: ['POST'],
+    });
+  });
+
+  // Get media by ID - comes after specific routes
   router.get(
     '/:id',
     wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
@@ -39,7 +50,7 @@ export function configureMediaRoutes(
     })
   );
 
-  // Delete media
+  // Delete media - comes after specific routes
   router.delete(
     '/:id',
     authenticate(authService), // Ensure users are authenticated

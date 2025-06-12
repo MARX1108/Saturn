@@ -42,7 +42,7 @@ export const authApi = createApi({
       }
     >({
       query: (payload) => ({
-        url: "/signup",
+        url: "/register",
         method: "POST",
         body: payload,
         headers: {
