@@ -53,7 +53,6 @@ export default function HomeAll() {
   const dark = useGetMode();
   const dispatch = useAppDispatch();
   const authId = useAppSelector((state) => state.user.data?.id);
-  const posts = useAppSelector((state) => state.post);
 
   const isDark = dark;
   const color = isDark ? "white" : "black";

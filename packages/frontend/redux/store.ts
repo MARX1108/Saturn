@@ -112,5 +112,6 @@ export const store = configureStore({
       .concat(chatApi.middleware),
 });
 
+// Export types after store creation to avoid circular dependencies
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

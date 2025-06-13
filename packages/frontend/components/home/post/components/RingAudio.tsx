@@ -1,18 +1,19 @@
 import { useEffect, useRef } from "react";
-import Lottie from "lottie-react-native";
-import { View } from "react-native";
+import { View, Platform } from "react-native";
+import LottieWrapper from "./LottieWrapper";
 import { useAppSelector } from "../../../../redux/hooks/hooks";
 import { Image } from "expo-image";
-
 
 
 export default function RingAudio({
   animationRef,
 }: {
-  animationRef: React.RefObject<Lottie>;
+  animationRef: React.RefObject<any>;
 }) {
   useEffect(() => {
-    animationRef.current?.pause();
+    if (Platform.OS !== 'web') {
+      animationRef.current?.pause();
+    }
   }, []);
   const userImage = useAppSelector((state) => state.user.data?.imageUri);
   return (
@@ -39,8 +40,8 @@ export default function RingAudio({
           source={{ uri: userImage }}
         />
       </View>
-      <Lottie
-        style={{ width: 200, height: 200,position: "absolute",zIndex:0 }}
+      <LottieWrapper
+        style={{ width: 200, height: 200, position: "absolute", zIndex: 0 }}
         ref={animationRef}
         source={require("../../../../assets/lottie/play.json")}
       />

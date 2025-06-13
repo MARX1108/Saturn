@@ -111,15 +111,17 @@ export default function App() {
     };
   }, []);
   return (
-    <Provider store={store}>
-      <PersistGate persistor={persistor}>
-        <PaperProvider>
-          <CustomToast /> 
-          <LoadingModal /> 
-          <Navigation />
-        </PaperProvider>
-      </PersistGate>
-    </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <PersistGate persistor={persistor}>
+          <PaperProvider>
+            <CustomToast /> 
+            <LoadingModal /> 
+            <Navigation />
+          </PaperProvider>
+        </PersistGate>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }
 function AnimatedSplashScreen({ children }: { children: ReactNode }) {
@@ -485,11 +487,11 @@ const Navigation = () => {
           style={style}
           backgroundColor="transparent"
         />
-        <GestureHandlerRootView
+        <View
           style={{ flex: 1, backgroundColor: dark ? "black" : "white" }}
         >
           {renderRoute()}
-        </GestureHandlerRootView>
+        </View>
       </AnimatedSplashScreen>
     </NavigationContainer>
   );

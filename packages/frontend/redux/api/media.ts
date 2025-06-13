@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { RootState } from "../store";
 
 export interface MediaUploadResponse {
   id: string;
@@ -20,7 +19,7 @@ export const mediaApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${process.env.EXPO_PUBLIC_API_URL}/api/media`,
     prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).user.token;
+      const token = (getState() as any).user.token;
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }

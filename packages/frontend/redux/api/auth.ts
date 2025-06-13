@@ -1,7 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { UserState } from "../slice/user";
 import { IUSerData } from "../../types/api";
-import storage from "../storage";
 
 interface loginResult {
   msg: string;

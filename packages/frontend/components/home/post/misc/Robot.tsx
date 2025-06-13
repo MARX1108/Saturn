@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
-import Lottie from "lottie-react-native";
-import { View } from "react-native";
-import { useAppSelector } from "../../../../redux/hooks/hooks";
-import { Image } from "expo-image";
+import { View, Platform } from "react-native";
+import LottieWrapper from "../components/LottieWrapper";
+
 
 export default function Robot() {
-  const animationRef = useRef<Lottie>(null);
+  const animationRef = useRef<any>(null);
 
   useEffect(() => {
-    animationRef.current?.play();
+    if (Platform.OS !== 'web') {
+      animationRef.current?.play();
+    }
   
   }, []);
   return (
@@ -20,7 +21,7 @@ export default function Robot() {
         alignItems: "center",
       }}
     >
-      <Lottie
+      <LottieWrapper
         style={{ width: 200, height: 200 }}
         loop={true}
         ref={animationRef}

@@ -1,8 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { authApi } from "../../api/auth";
 import { IUSerData } from "../../../types/api";
-import { userApi } from "../../api/user";
-import socket from "../../../util/socket";
 
 export interface UserState {
   data: IUSerData | null;
@@ -23,7 +20,7 @@ const user = createSlice({
       state.error = null;
       state.loading = false;
       state.token = null;
-      socket.disconnect();
+      // Socket disconnect will be handled by middleware
     },
     clearUserData: (state) => {
       state.data = null;
@@ -32,52 +29,8 @@ const user = createSlice({
       state.token = null;
     },
   },
-  extraReducers: (builder) => {
-    builder.addMatcher(
-      userApi.endpoints.getUser.matchFulfilled,
-      (state, { payload }) => {
-        state.data = payload.data;
-        state.error = null;
-        state.loading = false;
-      }
-    );
-    builder.addMatcher(userApi.endpoints.getUser.matchPending, (state) => {
-      state.error = null;
-      state.loading = true;
-    });
-    builder.addMatcher(
-      userApi.endpoints.getUser.matchRejected,
-      (state, { error }) => {
-        state.data = null;
-        state.error = error;
-        state.loading = true;
-      }
-    );
-    builder.addMatcher(
-      authApi.endpoints.login.matchFulfilled,
-      (state, { payload }) => {
-        state.data = payload.data;
-        state.error = null;
-        state.loading = false;
-        state.token = payload.token;
-      }
-    );
-    builder.addMatcher(authApi.endpoints.login.matchPending, (state) => {
-      state.data = null;
-      state.error = null;
-      state.loading = true;
-      state.token = null;
-    });
-    builder.addMatcher(
-      authApi.endpoints.login.matchRejected,
-      (state, { error }) => {
-        state.data = null;
-        state.error = error;
-        state.loading = true;
-        state.token = null;
-      }
-    );
-  },
+  // Note: Extra reducers moved to avoid circular dependencies
+  // API state management will be handled directly by RTK Query
 });
 
 export default user.reducer;

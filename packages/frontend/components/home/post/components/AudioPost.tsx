@@ -2,7 +2,13 @@ import * as React from "react";
 import { Text, View, Pressable } from "react-native";
 import { AVPlaybackStatus, Audio } from "expo-av";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Lottie from "lottie-react-native";
+let Lottie: any = null;
+try {
+  Lottie = require("lottie-react-native").default;
+} catch (error) {
+  const { View } = require("react-native");
+  Lottie = View;
+}
 import Animated, {
   interpolate,
   useAnimatedStyle,

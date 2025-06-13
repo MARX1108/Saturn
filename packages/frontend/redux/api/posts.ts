@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { RootState } from "../store";
 
 export interface Post {
   id: string;
@@ -36,7 +35,7 @@ export const postsApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${process.env.EXPO_PUBLIC_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).user.token;
+      const token = (getState() as any).user.token;
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
@@ -47,7 +46,7 @@ export const postsApi = createApi({
   endpoints: (builder) => ({
     getFeed: builder.query<FeedResponse, { page?: number; limit?: number }>({
       query: ({ page = 1, limit = 20 } = {}) => ({
-        url: "/posts/feed",
+        url: "/posts",
         method: "GET",
         params: { page, limit },
       }),

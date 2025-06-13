@@ -1,17 +1,21 @@
 import { useEffect, useRef } from "react";
-import Lottie from "lottie-react-native";
-import { Dimensions } from "react-native";
+import { Dimensions, Platform } from "react-native";
+import LottieWrapper from "./LottieWrapper";
+
 const { width } = Dimensions.get("window");
+
 export default function EmptyLottie() {
-  const lottieRef = useRef<Lottie>(null);
+  const lottieRef = useRef<any>(null);
 
   useEffect(() => {
-    lottieRef.current?.play();
-    return () => lottieRef.current?.pause();
+    if (Platform.OS !== 'web') {
+      lottieRef.current?.play();
+      return () => lottieRef.current?.pause();
+    }
   }, []);
 
   return (
-    <Lottie
+    <LottieWrapper
       style={{ width: width / 1.5, height: width / 1.5 }}
       ref={lottieRef}
       source={require("../../../../assets/lottie/emptyList.json")}

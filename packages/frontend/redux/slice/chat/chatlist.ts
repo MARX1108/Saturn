@@ -3,7 +3,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { initialDummyChat } from "../../../data/chatDummyData";
 import { ChatType } from "../../../types/app";
 import { chatApi } from "../../api/chat";
-import socket from "../../../util/socket";
+// Removed socket import to fix circular dependency
 
 export type ChatList = {
   data: IChatList[];

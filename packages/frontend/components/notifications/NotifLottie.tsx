@@ -1,11 +1,14 @@
-import { View, Text } from "react-native";
+import { View, Platform } from "react-native";
 import React, { useEffect, useRef } from "react";
-import Lottie from "lottie-react-native";
+import LottieWrapper from "../home/post/components/LottieWrapper";
+
 
 export default function NotifLottie() {
-  const animationRef = useRef<Lottie>(null);
+  const animationRef = useRef<any>(null);
   useEffect(() => {
-    animationRef.current?.play();
+    if (Platform.OS !== 'web') {
+      animationRef.current?.play();
+    }
   }, []);
   return (
     <View
@@ -17,7 +20,7 @@ export default function NotifLottie() {
         alignItems: "center",
       }}
     >
-      <Lottie
+      <LottieWrapper
         style={{ width: "100%", height: "100%", zIndex: 0 }}
         ref={animationRef}
         source={require("../../assets/lottie/notification.json")}

@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { UserState } from "../slice/user";
 import {
   IChatList,
   IComment,
@@ -9,7 +8,6 @@ import {
   IUSerData,
 } from "../../types/api";
 import storage from "../storage";
-import { RootState } from "../store";
 
 interface loginResult {
   msg: string;
@@ -22,7 +20,7 @@ export const chatApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${process.env.EXPO_PUBLIC_API_URL}/api/chat`,
     prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).user.token;
+      const token = (getState() as any).user.token;
       // If we have a token, set it in the header
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);

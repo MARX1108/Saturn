@@ -18,7 +18,13 @@ import Animated, {
 } from "react-native-reanimated";
 import useGetMode from "../../../../hooks/GetMode";
 import LikeLottie from "../misc/Robot";
-import Lottie from "lottie-react-native";
+let Lottie: any = null;
+try {
+  Lottie = require("lottie-react-native").default;
+} catch (error) {
+  const { View } = require("react-native");
+  Lottie = View;
+}
 import {
   HeartUnfocused,
   HeartsFocused,
