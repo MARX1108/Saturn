@@ -1,5 +1,4 @@
 import { Platform, View, StyleSheet, Text } from "react-native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { RootStackParamList } from "../types/navigation";
 
@@ -60,8 +59,7 @@ import EditProfile from "../screen/App/EditProfile";
 import ChangeData from "../screen/App/ChangeData";
 import { createStackNavigator } from "@react-navigation/stack";
 const BACKGROUND_FETCH_TASK = "background-fetch";
-const Stack = createNativeStackNavigator<RootStackParamList>();
-const JStack = createStackNavigator()
+const Stack = createStackNavigator<RootStackParamList>();
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   const now = Date.now();
 

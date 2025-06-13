@@ -1,11 +1,11 @@
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 
 import Login from "../screen/Auth/Login";
 import useGetMode from "../hooks/GetMode";
 import Register from "../screen/Auth/Register";
 import { AuthRootStackParamList } from "../types/navigation";
 
-const Stack = createNativeStackNavigator<AuthRootStackParamList>();
+const Stack = createStackNavigator<AuthRootStackParamList>();
 
 export default function Auth() {
   const dark = useGetMode();
