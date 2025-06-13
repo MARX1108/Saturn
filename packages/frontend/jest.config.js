@@ -10,7 +10,6 @@ module.exports = {
   ],
   moduleNameMapper: {
     '\\.png$': '<rootDir>/__mocks__/fileMock.js',
-    '^react-native-reanimated$': '<rootDir>/__mocks__/react-native-reanimated.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
