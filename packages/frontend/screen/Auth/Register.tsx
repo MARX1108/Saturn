@@ -88,15 +88,30 @@ export default function Register({ navigation }: RegisterScreen) {
     email: string;
     name: string;
   }) => {
-    registerUser(data)
-      .unwrap()
-      .then((e) => {
-        dispatch(openToast({ type: "Success", text: "Successfully Created" }));
-        navigation.replace("Login");
-      })
-      .catch((e) => {
-        dispatch(openToast({ type: "Failed", text: e?.data.message }));
-      });
+    console.log('[DIAGNOSTIC_ANDROID_SIGNUP] Entry: The handleSignup function was triggered.');
+    console.log('[DIAGNOSTIC_ANDROID_SIGNUP] Data being submitted:', JSON.stringify(data));
+    try {
+      registerUser(data)
+        .unwrap()
+        .then((e) => {
+          console.log('[DIAGNOSTIC_ANDROID_SIGNUP] Success response:', e);
+          dispatch(openToast({ type: "Success", text: "Successfully Created" }));
+          navigation.replace("Login");
+        })
+        .catch((e) => {
+          console.error('[DIAGNOSTIC_ANDROID_SIGNUP] API Error caught:', e);
+          console.error('[DIAGNOSTIC_ANDROID_SIGNUP] Error structure:', {
+            hasData: !!e?.data,
+            hasMessage: !!e?.data?.message,
+            fullError: JSON.stringify(e)
+          });
+          // Fix: Safely access the error message
+          const errorMessage = e?.data?.message || e?.data || 'Registration failed';
+          dispatch(openToast({ type: "Failed", text: errorMessage }));
+        });
+    } catch (error) {
+      console.error('[DIAGNOSTIC_ANDROID_SIGNUP] FATAL: An error was caught inside the handleSignup function.', error);
+    }
   };
   useEffect(() => {
     if (errors.userName) {

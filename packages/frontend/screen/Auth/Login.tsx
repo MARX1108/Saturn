@@ -70,26 +70,35 @@ export default function Login({ navigation }: LoginScreen) {
   }, []);
 
   const onSubmit = (data: { userName: string; password: string }) => {
-    // userApi.util.resetApiState();
-    // servicesApi.util.resetApiState();
-    login({ userName: data.userName.trim(), password: data.password })
-      .unwrap()
-      .then((e) => {
-        Vibration.vibrate(5);
+    console.log('[DIAGNOSTIC_ANDROID_LOGIN] Entry: The handleLogin function was triggered.');
+    console.log('[DIAGNOSTIC_ANDROID_LOGIN] Data being submitted:', JSON.stringify({ userName: data.userName.trim(), password: '***' }));
+    try {
+      // userApi.util.resetApiState();
+      // servicesApi.util.resetApiState();
+      login({ userName: data.userName.trim(), password: data.password })
+        .unwrap()
+        .then((e) => {
+          console.log('[DIAGNOSTIC_ANDROID_LOGIN] Success response received');
+          Vibration.vibrate(5);
 
-        dispatch(openToast({ text: "Successful Login", type: "Success" }));
-      })
-      .catch((e) => {
-        console.log(e);
-        Vibration.vibrate(5);
-        if (e?.data?.msg) {
-          console.log("🚀 ~ file: Login.tsx:84 ~ onSubmit ~ e:", e.status);
-          dispatch(openToast({ text: `${e?.data?.msg}`, type: "Failed" }));
-        } else {
-          console.log("🚀 ~ file: Login.tsx:84 ~ onSubmit ~ e:", e.data);
-          dispatch(openToast({ text: e?.data, type: "Failed" }));
-        }
-      });
+          dispatch(openToast({ text: "Successful Login", type: "Success" }));
+        })
+        .catch((e) => {
+          console.error('[DIAGNOSTIC_ANDROID_LOGIN] API Error caught:', e);
+          console.error('[DIAGNOSTIC_ANDROID_LOGIN] Error structure:', {
+            hasData: !!e?.data,
+            hasMsg: !!e?.data?.msg,
+            status: e?.status,
+            fullError: JSON.stringify(e)
+          });
+          Vibration.vibrate(5);
+          // Fix: Safely access the error message
+          const errorMessage = e?.data?.msg || e?.data || e?.error || 'Login failed';
+          dispatch(openToast({ text: errorMessage, type: "Failed" }));
+        });
+    } catch (error) {
+      console.error('[DIAGNOSTIC_ANDROID_LOGIN] FATAL: An error was caught inside the handleLogin function.', error);
+    }
   };
   useEffect(() => {
     if (errors.userName) {

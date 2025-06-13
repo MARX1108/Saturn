@@ -95,6 +95,7 @@ try {
 }
 import { setHighEnd } from "./redux/slice/prefs";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import SystemNavigationBar from "./utils/systemNavigationBar";
 
 // Skip enableFreeze in Expo Go as it can cause issues
@@ -160,15 +161,17 @@ export default function App() {
   }, []);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Provider store={store}>
-        <PersistGate persistor={persistor}>
-          <PaperProvider>
-            <CustomToast />
-            <LoadingModal /> 
-            <Navigation />
-          </PaperProvider>
-        </PersistGate>
-      </Provider>
+      <SafeAreaProvider>
+        <Provider store={store}>
+          <PersistGate persistor={persistor}>
+            <PaperProvider>
+              <CustomToast />
+              <LoadingModal /> 
+              <Navigation />
+            </PaperProvider>
+          </PersistGate>
+        </Provider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

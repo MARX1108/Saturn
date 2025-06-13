@@ -59,6 +59,15 @@ export default function Onboard() {
       return Number(firstPage) + 1;
     }
   };
+  
+  // [DIAGNOSTIC_ONBOARDING] State/Props Check
+  console.log('[DIAGNOSTIC_ONBOARDING] State/Props Check:', {
+    page,
+    isDark,
+    firstPage,
+    secondPage: secondPage(),
+    animatedSizeValue: size.value
+  });
   return (
     <View
       style={{
@@ -137,12 +146,18 @@ export default function Onboard() {
             ]}
           >
             <Pressable
+              testID="continue-button"
               android_ripple={{
                 foreground: true,
                 color: isDark ? "#65131357" : "#FFFFFFAF",
               }}
               onPress={() => {
-                dispatch(setRoute({ route: "Auth" }));
+                console.log('[DIAGNOSTIC_ONBOARDING] Entry: The handleNext function was triggered.');
+                try {
+                  dispatch(setRoute({ route: "Auth" }));
+                } catch (error) {
+                  console.error('[DIAGNOSTIC_ONBOARDING] FATAL: An error was caught inside the handleNext function.', error);
+                }
               }}
               style={{
                 height: "100%",
