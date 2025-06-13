@@ -1,9 +1,28 @@
 import { View, Text, Pressable } from "react-native";
 import React from "react";
 import { CameraIcon, VideoIcon } from "../icons";
-import ImagePicker, { launchImageLibrary } from "react-native-image-picker";
+let ImagePicker: any = null;
+let launchImageLibrary: any = null;
+try {
+  const imagePickerModule = require("react-native-image-picker");
+  ImagePicker = imagePickerModule.default;
+  launchImageLibrary = imagePickerModule.launchImageLibrary;
+} catch (error) {
+  ImagePicker = {};
+  launchImageLibrary = (options: any, callback: any) => {
+    callback({ didCancel: true });
+  };
+}
 import useGetMode from "../../hooks/GetMode";
-import { Video } from "react-native-compressor";
+let Video: any = null;
+try {
+  const compressorModule = require("react-native-compressor");
+  Video = compressorModule.Video;
+} catch (error) {
+  Video = {
+    compress: (uri: string) => Promise.resolve(uri)
+  };
+}
 export default function PickVideoButton({
   handleSetPhotoPost,
   setProgress,

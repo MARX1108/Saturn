@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import React from "react";
 import { AudioIcon, CameraIcon } from "../icons";
-import DocumentPicker from "react-native-document-picker";
+import DocumentPicker from "../../utils/documentPicker";
 import useGetMode from "../../hooks/GetMode";
 export default function PickAudioButton({
   handleSetAudioPost,

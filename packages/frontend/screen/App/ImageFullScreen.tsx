@@ -22,7 +22,24 @@ import { openToast } from "../../redux/slice/toast/toast";
 import { Image, ImageBackground } from "expo-image";
 import uuid from "react-native-uuid";
 
-import ReactNativeBlobUtil from "react-native-blob-util";
+let ReactNativeBlobUtil: any = null;
+try {
+  ReactNativeBlobUtil = require("react-native-blob-util");
+} catch (error) {
+  ReactNativeBlobUtil = {
+    config: () => ({
+      fileCache: true,
+      path: () => "/tmp/fallback",
+    }),
+    fetch: () => Promise.reject(new Error("Not available in Expo Go")),
+    fs: {
+      dirs: {
+        DocumentDir: "/tmp",
+        CacheDir: "/tmp",
+      },
+    },
+  };
+}
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Feather from '@expo/vector-icons/Feather';
 export default function ImageFullScreen({

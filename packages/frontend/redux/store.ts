@@ -6,7 +6,7 @@ import {
 import routes, { Route } from "./slice/routes";
 import prefs, { Prefs } from "./slice/prefs";
 import bottomSheet, { BottomSheet } from "./slice/bottomSheet";
-import { reduxStorage } from "./storage";
+import { reduxStorage } from "./storage.expoGo";
 import post, { postState } from "./slice/post";
 import searchPost from "./slice/post/search";
 import toast, { ToastState } from "./slice/toast/toast";

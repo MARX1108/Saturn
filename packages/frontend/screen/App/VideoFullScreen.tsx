@@ -15,7 +15,24 @@ import { StatusBar } from "expo-status-bar";
 
 import { useAppDispatch } from "../../redux/hooks/hooks";
 import { openToast } from "../../redux/slice/toast/toast";
-import ReactNativeBlobUtil from "react-native-blob-util";
+let ReactNativeBlobUtil: any = null;
+try {
+  ReactNativeBlobUtil = require("react-native-blob-util");
+} catch (error) {
+  ReactNativeBlobUtil = {
+    config: () => ({
+      fileCache: true,
+      path: () => "/tmp/fallback",
+    }),
+    fetch: () => Promise.reject(new Error("Not available in Expo Go")),
+    fs: {
+      dirs: {
+        DocumentDir: "/tmp",
+        CacheDir: "/tmp",
+      },
+    },
+  };
+}
 import uuid from "react-native-uuid";
 import Feather from "@expo/vector-icons/Feather";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";

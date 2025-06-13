@@ -1,7 +1,15 @@
 import { View, Text, Pressable, ToastAndroid } from "react-native";
 import React from "react";
 import { CameraIcon } from "../icons";
-import ImagePicker from "react-native-image-crop-picker";
+let ImagePicker: any = null;
+try {
+  ImagePicker = require("react-native-image-crop-picker");
+} catch (error) {
+  ImagePicker = {
+    openPicker: () => Promise.reject(new Error("Not available on web")),
+    openCamera: () => Promise.reject(new Error("Not available on web"))
+  };
+}
 import useGetMode from "../../hooks/GetMode";
 import { useAppDispatch } from "../../redux/hooks/hooks";
 import { openToast } from "../../redux/slice/toast/toast";

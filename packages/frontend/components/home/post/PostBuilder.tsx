@@ -15,9 +15,24 @@ import { HomeNavigationProp } from "../../../types/navigation";
 import { dateAgo } from "../../../util/date";
 import { useAppSelector } from "../../../redux/hooks/hooks";
 import LinkPost from "./components/LinkPost";
-import ViewShot from "react-native-view-shot";
+let ViewShot: any = null;
+try {
+  ViewShot = require("react-native-view-shot");
+} catch (error) {
+  const { View } = require("react-native");
+  ViewShot = View;
+}
 import { useRef, useState } from "react";
-import Share from "react-native-share";
+let Share: any = null;
+try {
+  Share = require("react-native-share");
+} catch (error) {
+  Share = {
+    open: () => Promise.resolve(),
+    shareSingle: () => Promise.resolve(),
+    isPackageInstalled: () => Promise.resolve(false)
+  };
+}
 import { Button, Menu, Divider, PaperProvider } from "react-native-paper";
 import Animated, { SlideOutRight } from "react-native-reanimated";
 export default function PostBuilder({

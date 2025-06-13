@@ -1,9 +1,9 @@
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 
 import Onboard from "../screen/Onboard";
 import useGetMode from "../hooks/GetMode";
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 export default function OnboardNavigation() {
   const dark = useGetMode();
   const isDark = dark;

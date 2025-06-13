@@ -19,8 +19,23 @@ import { dateFormatted } from "../../../util/date";
 import EngagementsText from "./misc/EngagementText";
 import { useAppSelector } from "../../../redux/hooks/hooks";
 import LinkPost from "./components/LinkPost";
-import Share from "react-native-share";
-import ViewShot from "react-native-view-shot";
+let Share: any = null;
+try {
+  Share = require("react-native-share");
+} catch (error) {
+  Share = {
+    open: () => Promise.resolve(),
+    shareSingle: () => Promise.resolve(),
+    isPackageInstalled: () => Promise.resolve(false)
+  };
+}
+let ViewShot: any = null;
+try {
+  ViewShot = require("react-native-view-shot");
+} catch (error) {
+  const { View } = require("react-native");
+  ViewShot = View;
+}
 import { useRef, useState } from "react";
 import { Image } from "expo-image";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";

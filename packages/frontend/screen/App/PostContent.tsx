@@ -16,10 +16,7 @@ import useGetMode from "../../hooks/GetMode";
 import TextArea from "../../components/postContent/TextArea";
 import { PostContentProp } from "../../types/navigation";
 
-import {
-  CameraRoll,
-  PhotoIdentifier,
-} from "@react-native-camera-roll/camera-roll";
+import { CameraRoll, PhotoIdentifier } from "../../hooks/useCameraRoll";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
 import PickImageButton from "../../components/postContent/PickImageButton";

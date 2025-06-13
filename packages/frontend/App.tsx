@@ -1,5 +1,14 @@
-import "react-native-gesture-handler";
 import "react-native-get-random-values";
+
+// Polyfill for setImmediate on web
+if (typeof setImmediate === 'undefined') {
+  global.setImmediate = (callback, ...args) => {
+    return setTimeout(callback, 0, ...args);
+  };
+  global.clearImmediate = (id) => {
+    return clearTimeout(id);
+  };
+}
 import { StatusBar } from "expo-status-bar";
 import {
   Text,
@@ -63,21 +72,60 @@ import * as Sentry from "@sentry/react-native";
 import { useGetFollowDetailsQuery } from "./redux/api/user";
 import * as Device from "expo-device";
 import * as NavigationBar from "expo-navigation-bar";
-import Notifications from "./util/notification";
+let Notifications: any = null;
+try {
+  Notifications = require("./util/notification").default;
+} catch (error) {
+  Notifications = {
+    addNotificationReceivedListener: () => ({ remove: () => {} }),
+    addNotificationResponseReceivedListener: () => ({ remove: () => {} }),
+    getNotificationCategoriesAsync: () => Promise.resolve([]),
+    getLastNotificationResponseAsync: () => Promise.resolve(null)
+  };
+}
 import { PixelRatio } from "react-native";
-import DeviceInfo from "react-native-device-info";
+let DeviceInfo: any = null;
+try {
+  DeviceInfo = require("react-native-device-info");
+} catch (error) {
+  DeviceInfo = {
+    getTotalMemorySync: () => 8000000000,
+    getApiLevelSync: () => 34
+  };
+}
 import { setHighEnd } from "./redux/slice/prefs";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import SystemNavigationBar from "react-native-system-navigation-bar";
+import SystemNavigationBar from "./utils/systemNavigationBar";
 
-enableFreeze(true);
-Sentry.init({
-  dsn: "https://a5db1485b6b50a45db57917521128254@o4505750037725184.ingest.sentry.io/4505750586195968",
-  enabled: true,
-});
+// Skip enableFreeze in Expo Go as it can cause issues
+try {
+  if (__DEV__ && typeof __EXPO_GO__ === 'undefined') {
+    enableFreeze(true);
+  }
+} catch (error) {
+  console.warn('enableFreeze failed:', error);
+}
+
+// Skip Sentry in Expo Go
+try {
+  if (typeof __EXPO_GO__ === 'undefined') {
+    Sentry.init({
+      dsn: "https://a5db1485b6b50a45db57917521128254@o4505750037725184.ingest.sentry.io/4505750586195968",
+      enabled: true,
+    });
+  }
+} catch (error) {
+  console.warn('Sentry init failed:', error);
+}
 
 const persistor = persistStore(store);
-SplashScreen.preventAutoHideAsync();
+
+try {
+  SplashScreen.preventAutoHideAsync();
+} catch (error) {
+  console.warn('SplashScreen.preventAutoHideAsync failed:', error);
+}
+
 SystemNavigationBar.setNavigationColor("transparent");
 SystemNavigationBar.setNavigationBarContrastEnforced(true);
 export default function App() {
@@ -115,7 +163,7 @@ export default function App() {
       <Provider store={store}>
         <PersistGate persistor={persistor}>
           <PaperProvider>
-            <CustomToast /> 
+            <CustomToast />
             <LoadingModal /> 
             <Navigation />
           </PaperProvider>
