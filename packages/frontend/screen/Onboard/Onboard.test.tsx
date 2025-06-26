@@ -5,6 +5,13 @@ import { configureStore } from '@reduxjs/toolkit';
 import Onboard from './index';
 import { setRoute } from '../../redux/slice/routes';
 
+// Mock React Navigation (not used but may be imported elsewhere)
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    navigate: jest.fn(),
+  }),
+}));
+
 // Mock the redux slice
 jest.mock('../../redux/slice/routes', () => ({
   setRoute: jest.fn((payload) => ({ type: 'routes/setRoute', payload })),

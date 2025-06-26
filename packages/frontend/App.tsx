@@ -160,19 +160,24 @@ export default function App() {
     };
   }, []);
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <SafeAreaProvider>
         <Provider store={store}>
           <PersistGate persistor={persistor}>
-            <PaperProvider>
-              <CustomToast />
-              <LoadingModal /> 
+            {Platform.OS === 'android' ? (
+              <PaperProvider>
+                <CustomToast />
+                <LoadingModal />
+                <Navigation />
+              </PaperProvider>
+            ) : (
+              // iOS/Web: Skip components that require PaperProvider
               <Navigation />
-            </PaperProvider>
+            )}
           </PersistGate>
         </Provider>
       </SafeAreaProvider>
-    </GestureHandlerRootView>
+    </View>
   );
 }
 function AnimatedSplashScreen({ children }: { children: ReactNode }) {
@@ -392,11 +397,6 @@ const Navigation = () => {
   const style = dark ? "light" : "dark";
   useGetFollowDetailsQuery(null);
   const { route } = useAppSelector((state) => state.routes);
-  const userAuthenticated = useAppSelector((state) => state.user.token);
-  console.log(
-    "🚀 ~ file: App.tsx:330 ~ Navigation ~ userAuthenticated:",
-    userAuthenticated
-  );
 
   const netInfo = useNetInfo();
 
@@ -447,13 +447,13 @@ const Navigation = () => {
   const renderRoute = () => {
     if (route === "onBoard") {
       return <OnboardNavigation />;
-    } else if (userAuthenticated) {
+    } else if (route === "App") {
       return (
         <FadeInView style={{ flex: 1 }}>
           <Main />
         </FadeInView>
       );
-    } else if (route === "Auth" || !userAuthenticated) {
+    } else if (route === "Auth") {
       return (
         <FadeInView style={{ flex: 1 }}>
           <Auth />

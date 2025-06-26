@@ -5,6 +5,7 @@ import {
   Pressable,
   ScrollView,
   useColorScheme,
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Image } from "expo-image";
@@ -19,7 +20,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { useAppDispatch } from "../../redux/hooks/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks/hooks";
 import { setRoute } from "../../redux/slice/routes";
 import { murphyLaws } from "../../data/murphy";
 import useGetMode from "../../hooks/GetMode";
@@ -30,27 +31,12 @@ const width = Dimensions.get("window").width;
 
 export default function Onboard() {
   const [page, setPage] = useState(0);
-  const size = useSharedValue(55);
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: interpolate(size.value, [55, 60], [55, 60]),
-      height: interpolate(size.value, [55, 60], [55, 60]), // map opacity value to range between 0 and 1
-    };
-  });
-
-  useEffect(() => {
-    size.value = withRepeat(withTiming(60, { duration: 500 }), -1, true);
-    return () => {
-      cancelAnimation(size);
-    };
-  }, []);
-
-
+  const dispatch = useAppDispatch();
   const dark = useGetMode();
   const isDark = dark;
   const color = isDark ? "black" : "white";
   const backgroundColor = isDark ? "white" : "black";
-  const dispatch = useAppDispatch();
+  
   const firstPage = (Math.random() * 2).toFixed();
   const secondPage = () => {
     if (Number(firstPage) === 2) {
@@ -60,14 +46,13 @@ export default function Onboard() {
     }
   };
   
-  // [DIAGNOSTIC_ONBOARDING] State/Props Check
   console.log('[DIAGNOSTIC_ONBOARDING] State/Props Check:', {
     page,
     isDark,
     firstPage,
     secondPage: secondPage(),
-    animatedSizeValue: size.value
   });
+
   return (
     <View
       style={{
@@ -125,7 +110,17 @@ export default function Onboard() {
             <TrackerTag key="3" color={!isDark ? "#0000002A" : "#676767CC"} />
           )}
         </View>
-        <View
+        <TouchableOpacity
+          testID="continue-button"
+          activeOpacity={0.8}
+          onPress={() => {
+            console.log('[DIAGNOSTIC_ONBOARDING] Entry: The handleNext function was triggered.');
+            try {
+              dispatch(setRoute({ route: "Auth" }));
+            } catch (error) {
+              console.error('[DIAGNOSTIC_ONBOARDING] FATAL: An error was caught inside the handleNext function.', error);
+            }
+          }}
           style={{
             height: 70,
             width: 70,
@@ -133,45 +128,20 @@ export default function Onboard() {
             alignItems: "center",
           }}
         >
-          <Animated.View
-            style={[
-              {
-                borderRadius: 9999,
-                height: 60,
-                width: 60,
-                backgroundColor,
-                overflow: "hidden",
-              },
-              animatedStyle,
-            ]}
+          <View
+            style={{
+              borderRadius: 9999,
+              height: 60,
+              width: 60,
+              backgroundColor,
+              justifyContent: "center",
+              alignItems: "center",
+              overflow: "hidden",
+            }}
           >
-            <Pressable
-              testID="continue-button"
-              android_ripple={{
-                foreground: true,
-                color: isDark ? "#65131357" : "#FFFFFFAF",
-              }}
-              onPress={() => {
-                console.log('[DIAGNOSTIC_ONBOARDING] Entry: The handleNext function was triggered.');
-                try {
-                  dispatch(setRoute({ route: "Auth" }));
-                } catch (error) {
-                  console.error('[DIAGNOSTIC_ONBOARDING] FATAL: An error was caught inside the handleNext function.', error);
-                }
-              }}
-              style={{
-                height: "100%",
-                width: "100%",
-
-                borderRadius: 9999,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Ionicons name="chevron-forward" size={35} color={color} />
-            </Pressable>
-          </Animated.View>
-        </View>
+            <Ionicons name="chevron-forward" size={35} color={color} />
+          </View>
+        </TouchableOpacity>
       </View>
     </View>
   );

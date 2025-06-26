@@ -42,6 +42,7 @@ export const LoadingModal = () => {
             tint={tint}
             style={{ position: "absolute", height, width }}
             intensity={10}
+            pointerEvents={loadingModal?.isOpen ? "auto" : "none"}
           />
 
           <View style={styles.centeredView}>

@@ -8,6 +8,7 @@ export default function OnboardNavigation() {
   const dark = useGetMode();
   const isDark = dark;
   const backgroundColor = isDark ? "black" : "white";
+  
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false, contentStyle: { backgroundColor } }}
