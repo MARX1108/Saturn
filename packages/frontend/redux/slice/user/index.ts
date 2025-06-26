@@ -16,10 +16,17 @@ const user = createSlice({
     token: null,
   } as UserState,
   reducers: {
+    loginSuccess: (state, action: PayloadAction<{ token: string; data: IUSerData }>) => {
+      state.token = action.payload.token;
+      state.data = action.payload.data;
+      state.error = null;
+      state.loading = false;
+    },
     signOut: (state) => {
       state.error = null;
       state.loading = false;
       state.token = null;
+      state.data = null;
       // Socket disconnect will be handled by middleware
     },
     clearUserData: (state) => {
@@ -35,4 +42,4 @@ const user = createSlice({
 
 export default user.reducer;
 
-export const { signOut, clearUserData } = user.actions;
+export const { loginSuccess, signOut, clearUserData } = user.actions;

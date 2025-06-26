@@ -28,7 +28,7 @@ import {
 } from "react";
 import { openToast } from "../../redux/slice/toast/toast";
 import { useLoginMutation } from "../../redux/api/auth";
-import { clearUserData, signOut } from "../../redux/slice/user";
+import { clearUserData, signOut, loginSuccess } from "../../redux/slice/user";
 import { useForm, Controller } from "react-hook-form";
 import { LoginScreen } from "../../types/navigation";
 import { servicesApi } from "../../redux/api/services";
@@ -46,6 +46,8 @@ export default function Login({ navigation }: LoginScreen) {
   const dispatch = useAppDispatch();
   const borderColor = isDark ? "white" : "black";
   const user = useAppSelector((state) => state?.user?.data);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastSubmissionTime, setLastSubmissionTime] = useState(0);
 
   const {
     control,
@@ -71,16 +73,56 @@ export default function Login({ navigation }: LoginScreen) {
 
   const onSubmit = (data: { userName: string; password: string }) => {
     console.log('[DIAGNOSTIC_ANDROID_LOGIN] Entry: The handleLogin function was triggered.');
+    console.log('[DIAGNOSTIC_ANDROID_LOGIN] Loading state:', loginResponse.isLoading);
     console.log('[DIAGNOSTIC_ANDROID_LOGIN] Data being submitted:', JSON.stringify({ userName: data.userName.trim(), password: '***' }));
+    console.log('[DIAGNOSTIC_ANDROID_LOGIN] Timestamp:', Date.now());
+    
+    // Prevent multiple submissions
+    if (loginResponse.isLoading || isSubmitting) {
+      console.log('[DIAGNOSTIC_ANDROID_LOGIN] Already loading/submitting, skipping submission', { 
+        isLoading: loginResponse.isLoading, 
+        isSubmitting 
+      });
+      return;
+    }
+    
+    // Add cooldown period to prevent rapid successive attempts
+    const now = Date.now();
+    const timeSinceLastSubmission = now - lastSubmissionTime;
+    const minCooldownMs = 2000; // 2 seconds minimum between attempts
+    
+    if (timeSinceLastSubmission < minCooldownMs) {
+      console.log('[DIAGNOSTIC_ANDROID_LOGIN] Cooldown period active, skipping submission', {
+        timeSinceLastSubmission,
+        remainingCooldown: minCooldownMs - timeSinceLastSubmission
+      });
+      dispatch(openToast({ 
+        text: "Please wait a moment before trying again.", 
+        type: "Failed" 
+      }));
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setLastSubmissionTime(now);
+    
     try {
       // userApi.util.resetApiState();
       // servicesApi.util.resetApiState();
-      login({ userName: data.userName.trim(), password: data.password })
+      console.log('[DIAGNOSTIC_ANDROID_LOGIN] Making API call to:', `${process.env.EXPO_PUBLIC_API_URL}/api/auth/login`);
+      login({ username: data.userName.trim(), password: data.password })
         .unwrap()
         .then((e) => {
           console.log('[DIAGNOSTIC_ANDROID_LOGIN] Success response received');
+          console.log('[DIAGNOSTIC_ANDROID_LOGIN] Response data:', { hasToken: !!e.token, hasData: !!e.data, msg: e.msg });
+          
+          // Save login data to Redux
+          dispatch(loginSuccess({ token: e.token, data: e.data }));
+          
+          // Navigate to main app
+          dispatch(setRoute({ route: "App" }));
+          
           Vibration.vibrate(5);
-
           dispatch(openToast({ text: "Successful Login", type: "Success" }));
         })
         .catch((e) => {
@@ -92,12 +134,26 @@ export default function Login({ navigation }: LoginScreen) {
             fullError: JSON.stringify(e)
           });
           Vibration.vibrate(5);
+          
+          // Handle rate limiting specifically
+          if (e?.status === 429) {
+            dispatch(openToast({ 
+              text: "Too many login attempts. Please wait a moment and try again.", 
+              type: "Failed" 
+            }));
+            return;
+          }
+          
           // Fix: Safely access the error message
-          const errorMessage = e?.data?.msg || e?.data || e?.error || 'Login failed';
+          const errorMessage = e?.data?.msg || e?.data?.message || e?.data || e?.error || 'Login failed';
           dispatch(openToast({ text: errorMessage, type: "Failed" }));
+        })
+        .finally(() => {
+          setIsSubmitting(false);
         });
     } catch (error) {
       console.error('[DIAGNOSTIC_ANDROID_LOGIN] FATAL: An error was caught inside the handleLogin function.', error);
+      setIsSubmitting(false);
     }
   };
   useEffect(() => {
@@ -275,7 +331,7 @@ export default function Login({ navigation }: LoginScreen) {
             }}
           >
             <Button
-              loading={loginResponse.isLoading}
+              loading={loginResponse.isLoading || isSubmitting}
               onPress={() => {
                 Keyboard.dismiss();
                 handleSubmit(onSubmit)();

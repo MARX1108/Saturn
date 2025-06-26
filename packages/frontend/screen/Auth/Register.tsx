@@ -91,7 +91,7 @@ export default function Register({ navigation }: RegisterScreen) {
     console.log('[DIAGNOSTIC_ANDROID_SIGNUP] Entry: The handleSignup function was triggered.');
     console.log('[DIAGNOSTIC_ANDROID_SIGNUP] Data being submitted:', JSON.stringify(data));
     try {
-      registerUser(data)
+      registerUser({ username: data.userName, password: data.password, email: data.email, name: data.name })
         .unwrap()
         .then((e) => {
           console.log('[DIAGNOSTIC_ANDROID_SIGNUP] Success response:', e);

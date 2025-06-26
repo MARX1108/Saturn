@@ -114,17 +114,17 @@ export const userApi = createApi({
     updateData: builder.mutation<
       { msg: string },
       {
-        userName?: string;
+        username?: string;
         password: string;
         newPassword?: string;
         name?: string;
       }
     >({
-      query: ({ userName, password, newPassword, name }) => {
+      query: ({ username, password, newPassword, name }) => {
         return {
           url: "/update-data",
           method: "PUT",
-          body: { userName, password, newPassword, name },
+          body: { username, password, newPassword, name },
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
@@ -135,7 +135,7 @@ export const userApi = createApi({
     deleteAccount: builder.mutation<
       { msg: string },
       {
-        userName?: string;
+        username?: string;
         password: string;
         newPassword?: string;
         name?: string;

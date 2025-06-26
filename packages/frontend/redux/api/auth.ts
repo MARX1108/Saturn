@@ -17,7 +17,7 @@ export const authApi = createApi({
     login: builder.mutation<
       loginResult,
       {
-        userName: string;
+        username: string;
         password: string;
       }
     >({
@@ -29,11 +29,12 @@ export const authApi = createApi({
           "Content-type": "application/json; charset=UTF-8",
         },
       }),
+      extraOptions: { maxRetries: 0 },
     }),
     register: builder.mutation<
       loginResult,
       {
-        userName: string;
+        username: string;
         password: string;
         email: string;
         name: string;
@@ -47,7 +48,7 @@ export const authApi = createApi({
           "Content-type": "application/json; charset=UTF-8",
         },
       }),
-     
+      extraOptions: { maxRetries: 0 },
     }),
   }),
 });

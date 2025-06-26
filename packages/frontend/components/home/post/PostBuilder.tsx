@@ -17,7 +17,7 @@ import { useAppSelector } from "../../../redux/hooks/hooks";
 import LinkPost from "./components/LinkPost";
 let ViewShot: any = null;
 try {
-  ViewShot = require("react-native-view-shot");
+  ViewShot = require("react-native-view-shot").default;
 } catch (error) {
   const { View } = require("react-native");
   ViewShot = View;
