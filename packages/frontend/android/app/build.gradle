@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'me.isaacojo.qui'
+    namespace 'org.foryoupage.saturn'
     defaultConfig {
-        applicationId 'me.isaacojo.qui'
+        applicationId 'org.foryoupage.saturn'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

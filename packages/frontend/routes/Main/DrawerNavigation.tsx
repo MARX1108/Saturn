@@ -84,7 +84,7 @@ export default function DrawerNavigator() {
                 ? backgroundColor
                 : "transparent",
             },
-            title: "Qui ",
+            title: "Saturn ",
           };
         }}
       />

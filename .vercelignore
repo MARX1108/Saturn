@@ -1,0 +1,17 @@
+# Ignore all node_modules directories
+**/node_modules
+
+# Ignore the entire frontend package
+packages/frontend/
+
+# Ignore local development and build artifacts
+coverage/
+uploads/
+.expo/
+*.tsbuildinfo
+dist/
+.env
+
+# Ignore documentation and git
+*.md
+.git

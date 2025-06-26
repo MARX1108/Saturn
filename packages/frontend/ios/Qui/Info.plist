@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>me.isaacojo.qui</string>
+          <string>org.foryoupage.saturn</string>
         </array>
       </dict>
     </array>

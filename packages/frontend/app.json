@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Qui",
-    "slug": "qui",
-    "version": "1.0.0",
+    "name": "Saturn",
+    "slug": "saturn",
+    "version": "1.0b",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -23,8 +23,13 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "me.isaacojo.qui"
+      "supportsTablet": false,
+      "bundleIdentifier": "org.foryoupage.saturn",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to let you share photos.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to let you share them."
+      }
     },
     "android": {
       "googleServicesFile": "./google-services.json",
@@ -32,14 +37,14 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "me.isaacojo.qui"
+      "package": "org.foryoupage.saturn"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "e618bb47-6149-4585-8cc8-884c5992795e"
+        "projectId": "0d1d18bd-d1be-47e3-8e0a-0ba68035e7ce"
       }
     },
     "plugins": [
@@ -85,6 +90,6 @@
       ],
       "expo-video"
     ],
-    "owner": "hojoisaac"
+    "owner": "marx1108"
   }
 }

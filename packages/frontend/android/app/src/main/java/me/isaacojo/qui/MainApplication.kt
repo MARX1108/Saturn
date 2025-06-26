@@ -1,4 +1,4 @@
-package me.isaacojo.qui
+package org.foryoupage.saturn
 
 import android.app.Application
 import android.content.res.Configuration
