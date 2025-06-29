@@ -123,9 +123,9 @@ export const servicesApi = createApi({
 
     getAllPosts: builder.query<
       { posts: IPost[] },
-      { take: number; skip: number }
+      { page: number; limit: number }
     >({
-      query: ({ take, skip }) => `/all-posts?take=${take}&skip=${skip}`,
+      query: ({ page, limit }) => `/posts?page=${page}&limit=${limit}`,
       providesTags: ["post"],
       extraOptions: { maxRetries: 2 },
     }),
