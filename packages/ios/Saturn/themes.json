@@ -1,0 +1,26 @@
+[
+  {
+    "id": "Default",
+    "primaryAccent": "#00A0B0",
+    "primaryBackground": "#000000",
+    "primaryText": "#FFFFFF",
+    "secondaryText": "#8E8E93",
+    "secondaryBackground": "#1C1C1E"
+  },
+  {
+    "id": "Midnight",
+    "primaryAccent": "#BB86FC",
+    "primaryBackground": "#121212",
+    "primaryText": "#E1E1E1",
+    "secondaryText": "#B3B3B3",
+    "secondaryBackground": "#1F1F1F"
+  },
+  {
+    "id": "Ocean",
+    "primaryAccent": "#FF6B35",
+    "primaryBackground": "#004E89",
+    "primaryText": "#FFFFFF",
+    "secondaryText": "#A2C4E0",
+    "secondaryBackground": "#1A365D"
+  }
+]

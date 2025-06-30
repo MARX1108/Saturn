@@ -22,6 +22,8 @@ protocol APIServiceProtocol {
     func createPost(content: String) async throws -> CreatedPostResponse
     func likePost(postId: String) async throws
     func unlikePost(postId: String) async throws
+    func searchActors(query: String) async throws -> [Actor]
+    func getNotifications() async throws -> [Notification]
 }
 
 final class APIService: APIServiceProtocol {
@@ -111,6 +113,10 @@ final class APIService: APIServiceProtocol {
         do {
             let response: PostsResponse = try await request<PostsResponse>(endpoint: "posts", method: "GET", body: nil, authToken: token)
             NSLog("🟢 APIService: Successfully decoded \(response.posts.count) posts")
+            // Debug: log the first post's ID format to understand the server response
+            if let firstPost = response.posts.first {
+                NSLog("🔍 DEBUG: First post ID format: '\(firstPost.id)'")
+            }
             return response.posts
         } catch {
             NSLog("🔴 APIService: Error fetching posts: \(error)")
@@ -159,9 +165,12 @@ final class APIService: APIServiceProtocol {
     
     func likePost(postId: String) async throws {
         let token = try await AuthService.shared.getCurrentToken()
+        let cleanPostId = extractPostId(from: postId)
+        
+        NSLog("🔵 DEBUG: Liking post - original ID: \(postId), clean ID: \(cleanPostId)")
         
         let _: EmptyResponse = try await request(
-            endpoint: "posts/\(postId)/like",
+            endpoint: "posts/\(cleanPostId)/like",
             method: "POST",
             body: nil,
             authToken: token
@@ -170,13 +179,41 @@ final class APIService: APIServiceProtocol {
     
     func unlikePost(postId: String) async throws {
         let token = try await AuthService.shared.getCurrentToken()
+        let cleanPostId = extractPostId(from: postId)
+        
+        NSLog("🔵 DEBUG: Unliking post - original ID: \(postId), clean ID: \(cleanPostId)")
         
         let _: EmptyResponse = try await request(
-            endpoint: "posts/\(postId)/unlike",
+            endpoint: "posts/\(cleanPostId)/unlike",
             method: "POST",
             body: nil,
             authToken: token
         )
+    }
+    
+    // Helper function to extract the ID from a full URL
+    private func extractPostId(from id: String) -> String {
+        // If it's a full URL, extract the ID part
+        if id.contains("/posts/") {
+            let components = id.components(separatedBy: "/posts/")
+            if components.count > 1 {
+                let afterPosts = components[1]
+                // Extract just the ID part (before any additional path components)
+                let idPart = afterPosts.components(separatedBy: "/").first ?? afterPosts
+                
+                // The server expects MongoDB ObjectId format (24-char hex)
+                // If this looks like a UUID, we need to handle the server format mismatch
+                if idPart.contains("-") {
+                    // This is a UUID format, but server expects ObjectId
+                    // Log this for debugging - there may be a server configuration issue
+                    NSLog("⚠️ DEBUG: Server sent UUID format but expects ObjectId: \(idPart)")
+                }
+                
+                return idPart
+            }
+        }
+        // If it's already just an ID, return as-is
+        return id
     }
     
     func fetchActor(username: String) async throws -> Actor {
@@ -212,6 +249,90 @@ final class APIService: APIServiceProtocol {
             throw error
         }
     }
+    
+    func searchActors(query: String) async throws -> [Actor] {
+        NSLog("🔍 APIService: Searching actors with query: '\(query)'")
+        
+        // Construct URL with query parameter safely
+        guard var urlComponents = URLComponents(string: "\(baseURL)/actors/search") else {
+            NSLog("🔴 APIService: Failed to create URL components for search")
+            throw APIError.invalidURL
+        }
+        
+        // Add query parameter
+        urlComponents.queryItems = [URLQueryItem(name: "q", value: query)]
+        
+        guard let url = urlComponents.url else {
+            NSLog("🔴 APIService: Failed to construct search URL with query: '\(query)'")
+            throw APIError.invalidURL
+        }
+        
+        NSLog("🔍 APIService: Search URL: \(url.absoluteString)")
+        
+        do {
+            // Make request without authentication as per specification
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            
+            let (data, urlResponse) = try await session.data(for: request)
+            
+            guard let httpResponse = urlResponse as? HTTPURLResponse else {
+                NSLog("🔴 APIService: Invalid response type for search")
+                throw APIError.invalidResponse
+            }
+            
+            let statusCode = httpResponse.statusCode
+            NSLog("🔍 APIService: Search response status: \(statusCode)")
+            
+            if let responseString = String(data: data, encoding: .utf8) {
+                NSLog("🔍 APIService: Search response data: \(responseString)")
+            }
+            
+            guard 200...299 ~= statusCode else {
+                NSLog("🔴 APIService: Search HTTP error - Status: \(statusCode), Data: \(String(data: data, encoding: .utf8) ?? "nil")")
+                throw APIError.httpError(statusCode: statusCode)
+            }
+            
+            let actors = try JSONDecoder().decode([Actor].self, from: data)
+            NSLog("🟢 APIService: Successfully decoded \(actors.count) actors for query: '\(query)'")
+            return actors
+            
+        } catch let error as APIError {
+            throw error
+        } catch {
+            NSLog("🔴 APIService: Search network/decoding error: \(error)")
+            if error is DecodingError {
+                throw APIError.decodingError(error)
+            } else {
+                throw APIError.networkError(error)
+            }
+        }
+    }
+    
+    func getNotifications() async throws -> [Notification] {
+        let token = try await AuthService.shared.getCurrentToken()
+        NSLog("🔔 APIService: Fetching notifications")
+        
+        do {
+            let response: NotificationResponse = try await request<NotificationResponse>(
+                endpoint: "notifications",
+                method: "GET",
+                body: nil,
+                authToken: token
+            )
+            NSLog("🟢 APIService: Successfully fetched \(response.notifications.count) notifications")
+            return response.notifications
+        } catch {
+            NSLog("🔴 APIService: Error fetching notifications: \(error)")
+            throw error
+        }
+    }
 }
 
 private struct EmptyResponse: Codable {}
+
+struct ActorSearchResponse: Codable {
+    let actors: [Actor]
+}

@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     let username: String
     @StateObject private var viewModel: ProfileViewModel
+    @EnvironmentObject private var themeManager: ThemeManager
     
     init(username: String) {
         self.username = username
@@ -10,6 +11,8 @@ struct ProfileView: View {
     }
     
     var body: some View {
+        let colors = themeColors(themeManager)
+        
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                     if viewModel.isLoading {
@@ -52,12 +55,16 @@ struct ProfileView: View {
                         // Header View
                         profileHeaderView
                         
+                        // Settings Section (temporary for theme testing)
+                        settingsSection
+                        
                         // Posts List
                         postsListView
                     }
                 }
                 .padding()
             }
+            .background(colors.primaryBackground)
             .onAppear {
                 print("🔵 DEBUG: ProfileView appeared for user: \(username)")
                 Task {
@@ -66,25 +73,66 @@ struct ProfileView: View {
         }
         .navigationTitle(viewModel.actor?.username ?? "Profile")
         .navigationBarTitleDisplayMode(.large)
+        .configureNavigationBar()
+        .id("profile-\(themeManager.currentTheme.id)")
+    }
+    
+    @ViewBuilder
+    private var settingsSection: some View {
+        let colors = themeColors(themeManager)
+        
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Settings")
+                .font(.headline)
+                .foregroundColor(colors.primaryText)
+                .padding(.horizontal)
+            
+            NavigationLink(destination: ThemeSelectionView()) {
+                HStack {
+                    Image(systemName: "paintpalette")
+                        .foregroundColor(colors.primaryAccent)
+                        .frame(width: 24)
+                    
+                    Text("Themes")
+                        .font(.body)
+                        .foregroundColor(colors.primaryText)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(colors.secondaryText)
+                }
+                .padding()
+                .background(colors.secondaryBackground)
+                .cornerRadius(8)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .padding(.horizontal)
+        }
+        .padding(.bottom, 8)
     }
     
     @ViewBuilder
     private var profileHeaderView: some View {
+        let colors = themeColors(themeManager)
+        
         if let actor = viewModel.actor {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Image(systemName: "person.circle.fill")
                         .font(.system(size: 60))
-                        .foregroundColor(.blue)
+                        .foregroundColor(colors.primaryAccent)
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text(actor.preferredUsername ?? actor.username)
                             .font(.title)
                             .fontWeight(.bold)
+                            .foregroundColor(colors.primaryText)
                         
                         Text("@\(actor.username)")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colors.secondaryText)
                     }
                     
                     Spacer()
@@ -99,18 +147,21 @@ struct ProfileView: View {
     
     @ViewBuilder
     private var postsListView: some View {
+        let colors = themeColors(themeManager)
+        
         if !viewModel.posts.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("Posts")
                         .font(.headline)
                         .fontWeight(.medium)
+                        .foregroundColor(colors.primaryText)
                     
                     Spacer()
                     
                     Text("\(viewModel.posts.count)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(colors.secondaryText)
                 }
                 .padding(.bottom, 12)
                 
@@ -124,7 +175,7 @@ struct ProfileView: View {
                         )
                         .padding(.horizontal, 8)
                         .padding(.vertical, 8)
-                        .background(Color(.systemGray6))
+                        .background(colors.secondaryBackground)
                         .cornerRadius(8)
                     }
                 }
@@ -133,15 +184,15 @@ struct ProfileView: View {
             VStack(spacing: 12) {
                 Image(systemName: "square.and.pencil")
                     .font(.system(size: 32))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(colors.secondaryText)
                 
                 Text("No posts yet")
                     .font(.headline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(colors.primaryText)
                 
                 Text("This user hasn't posted anything yet.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(colors.secondaryText)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)

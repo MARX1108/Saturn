@@ -3,10 +3,13 @@ import SwiftUI
 struct PostRowView: View {
     let post: Post
     let likeAction: () -> Void
+    @EnvironmentObject private var themeManager: ThemeManager
     @State private var debugMessage = ""
     @State private var showDebug = false
     
     var body: some View {
+        let colors = themeColors(themeManager)
+        
         VStack(alignment: .leading, spacing: 12) {
             // Debug indicator
             if showDebug {
@@ -25,24 +28,24 @@ struct PostRowView: View {
                     HStack {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 32))
-                            .foregroundColor(.blue)
+                            .foregroundColor(colors.primaryAccent)
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text(post.actor.preferredUsername ?? post.actor.username)
                                 .font(.headline)
                                 .fontWeight(.medium)
-                                .foregroundColor(.primary)
+                                .foregroundColor(colors.primaryText)
                             
                             Text("@\(post.actor.username)")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(colors.secondaryText)
                         }
                         
                         Spacer()
                         
                         Text(post.createdAt, style: .relative)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colors.secondaryText)
                     }
                 }
                 .buttonStyle(.plain)
@@ -60,6 +63,7 @@ struct PostRowView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(post.content)
                     .font(.body)
+                    .foregroundColor(colors.primaryText)
                     .multilineTextAlignment(.leading)
                 
                 Button {
@@ -72,7 +76,7 @@ struct PostRowView: View {
                 } label: {
                     Text("Tap content test")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(colors.secondaryText)
                 }
                 .buttonStyle(.plain)
             }
@@ -91,16 +95,16 @@ struct PostRowView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: post.isLiked ? "heart.fill" : "heart")
-                            .foregroundColor(post.isLiked ? .red : .secondary)
+                            .foregroundColor(post.isLiked ? .red : colors.secondaryText)
                         Text("\(post.likes)")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colors.secondaryText)
                     }
                 }
                 .buttonStyle(.plain)
                 
                 Text("likes")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(colors.secondaryText)
                 
                 Button {
                     NSLog("💬 DEBUG: Comments button tapped for post \(post.id)")
@@ -112,9 +116,9 @@ struct PostRowView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "bubble.right")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colors.secondaryText)
                         Text("\(post.commentsCount)")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colors.secondaryText)
                     }
                 }
                 .buttonStyle(.plain)

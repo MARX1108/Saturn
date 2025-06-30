@@ -1,17 +1,32 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    
     var body: some View {
+        let colors = themeColors(themeManager)
+        
         TabView {
-            FeedView()
-                .tabItem {
-                    Label("Feed", systemImage: "house")
-                }
+            NavigationStack {
+                FeedView()
+            }
+            .tabItem {
+                Label("Feed", systemImage: "house")
+            }
             
-            SearchView()
-                .tabItem {
-                    Label("Search", systemImage: "magnifyingglass")
-                }
+            NavigationStack {
+                SearchView()
+            }
+            .tabItem {
+                Label("Search", systemImage: "magnifyingglass")
+            }
+            
+            NavigationStack {
+                NotificationsView()
+            }
+            .tabItem {
+                Label("Notifications", systemImage: "bell")
+            }
             
             NavigationStack {
                 ProfileView(username: "Joanna") // TODO: Get current user's username from AuthService
@@ -20,6 +35,9 @@ struct MainTabView: View {
                 Label("Profile", systemImage: "person")
             }
         }
+        .background(colors.primaryBackground)
+        .accentColor(colors.primaryAccent)
+        .id("main-tab-\(themeManager.currentTheme.id)")
     }
 }
 
