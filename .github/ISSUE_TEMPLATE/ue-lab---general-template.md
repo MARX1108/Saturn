@@ -1,5 +1,5 @@
 ---
-name: 'UE Lab '
+name: UE Lab | General Template
 about: Describe this issue template's purpose here.
 title: "[Priority 1/2/3] [Due]"
 labels: "\U0001F4CB backlog"
