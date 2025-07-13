@@ -6,6 +6,10 @@ A federated social platform using ActivityPub with integrated AI capabilities.
 
 ## Getting Started
 
+Backend: https://github.com/ForYouPage-Org/saturn-api
+Frontend-Android: https://github.com/ForYouPage-Org/saturn-android
+
+
 ### Prerequisites
 
 - Node.js v16+
